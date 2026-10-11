@@ -17,8 +17,15 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
 
-  // Storefront público SSR (Fase 3: Home, Catálogo, Detalle y Auth)
-  app.route('/', StorefrontController.createRoutes(compositionRoot.catalogGateway, compositionRoot.identityGateway));
+  // Storefront público SSR (Fases 3 y 4: Home, Banners, Catálogo, Detalle y Auth)
+  app.route(
+    '/',
+    StorefrontController.createRoutes(
+      compositionRoot.catalogGateway,
+      compositionRoot.identityGateway,
+      compositionRoot.storefrontGateway
+    )
+  );
 
   // Salud del Worker y bindings
   app.route('/health', HealthController.createRoutes());

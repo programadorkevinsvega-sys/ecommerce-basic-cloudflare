@@ -1,9 +1,32 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 
-export function renderProductList(products: CatalogProductDto[], searchQuery?: string): string {
+export interface BannerItem {
+  id: string;
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  altText: string;
+}
+
+export function renderProductList(
+  products: CatalogProductDto[],
+  searchQuery?: string,
+  banner?: BannerItem
+): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
 
+  const bannerHtml = banner
+    ? `<div style="margin-bottom: 2rem; border-radius: 8px; overflow: hidden; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 2rem; border: 1px solid var(--border);">
+        <div>
+          <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; font-weight: 800;">${escapeHtml(banner.title)}</h2>
+          <p style="color: #cbd5e1; margin-bottom: 1rem;">Aprovecha nuestras ofertas y promociones exclusivas con envíos a todo el país.</p>
+          <a href="${escapeHtml(banner.linkUrl)}" style="display: inline-block; padding: 0.6rem 1.25rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 700;">Ver Colección →</a>
+        </div>
+      </div>`
+    : '';
+
   let html = `
+    ${bannerHtml}
     <div style="margin-bottom: 2rem;">
       <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem;">Nuestra Colección</h1>
       <p style="color: var(--muted);">Prendas y productos de alta calidad con envíos asegurados a nivel nacional y local.</p>

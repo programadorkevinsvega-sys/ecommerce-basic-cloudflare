@@ -15,6 +15,10 @@ import { CatalogGateway } from './bff/gateways/catalog/CatalogGateway.js';
 import { InProcessCatalogGateway } from './bff/gateways/catalog/InProcessCatalogGateway.js';
 import { createCatalogModule } from './modules/catalog/module.config.js';
 import { CatalogPublicApi } from './modules/catalog/module.public-api.js';
+import { StorefrontGateway } from './bff/gateways/storefront/StorefrontGateway.js';
+import { InProcessStorefrontGateway } from './bff/gateways/storefront/InProcessStorefrontGateway.js';
+import { createStorefrontModule } from './modules/storefront/module.config.js';
+import { StorefrontPublicApi } from './modules/storefront/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -22,6 +26,7 @@ export interface AppCompositionRoot {
   identityGateway: IdentityGateway;
   mediaGateway: MediaGateway;
   catalogGateway: CatalogGateway;
+  storefrontGateway: StorefrontGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -46,6 +51,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const catalogPublicApi = new CatalogPublicApi(catalogContainer);
   const catalogGateway = new InProcessCatalogGateway(catalogPublicApi);
 
+  // Módulo storefront
+  const storefrontContainer = createStorefrontModule(env);
+  const storefrontPublicApi = new StorefrontPublicApi(storefrontContainer);
+  const storefrontGateway = new InProcessStorefrontGateway(storefrontPublicApi);
+
   // Outbox Relay transversal
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
@@ -54,6 +64,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     identityGateway,
     mediaGateway,
     catalogGateway,
+    storefrontGateway,
     outboxRelayService,
   };
 }

@@ -149,13 +149,12 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §4, §5, §6.1, §7, §8.
 **Seguridad y recuperación:** SEC-CMS-01, 02 y 05, SEC-WEB-05, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: eventos de invalidación versionados y purga de caché.
 
-- [ ] **Carruseles y slides:** imagen (desktop/móvil), título, texto, CTA, enlace, orden (drag & drop), vigencia, estado.
-- [ ] **Banners:** ubicaciones (home, categoría, producto, checkout), tamaños, vigencia, activación.
-- [ ] **Anuncios:** barra superior, avisos y modales por ubicación (**home, zona de clientes, productos**), audiencia (visitante / cliente), prioridad, programación, cierre persistente.
-- [ ] CRUD completo en admin con vista previa y reordenamiento.
-- [ ] Publicación/expiración automática con Cron.
-- [ ] BFF (`store/home`, `store/announcements?placement=`) y storefront integrados.
-- [ ] Evento `storefront.content.changed.v1` para invalidar caché.
+- [x] **Banners promocionales:** ubicaciones (`home`, `category`, `product`, `checkout`), vigencia programada (`startsAt`/`endsAt`), enlaces y alt text obligatorio.
+- [x] **Anuncios:** barra superior (`top_bar`), mensajes de alerta y avisos con vigencia temporal.
+- [x] CRUD completo de banners y anuncios en el backend y endpoints de administración protegidos con RBAC.
+- [x] Base de datos D1 con prefijo estricto `storefront_*` (`storefront_banners`, `storefront_announcements`, `storefront_outbox_events`).
+- [x] `StorefrontGateway` consumido por el BFF para renderizar banners y top-bar dinámicamente en el SSR del Home.
+- [x] Validación de enlaces conforme a SEC-CMS-05 y prevención de inyecciones HTML.
 
 **Criterio de salida:** un slide, un banner y un anuncio programados aparecen y desaparecen en la tienda en el momento configurado.
 

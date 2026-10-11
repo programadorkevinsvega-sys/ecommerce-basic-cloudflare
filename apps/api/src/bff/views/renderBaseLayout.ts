@@ -4,12 +4,21 @@ export interface LayoutProps {
   canonicalUrl?: string;
   bodyHtml: string;
   customerEmail?: string;
+  announcementMessage?: string;
+  announcementLink?: string;
 }
 
 export function renderBaseLayout(props: LayoutProps): string {
   const safeTitle = escapeHtml(props.title);
   const safeDesc = escapeHtml(props.description);
   const canonical = props.canonicalUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/';
+
+  const topBarHtml = props.announcementMessage
+    ? `<div style="background: #2563eb; color: #fff; text-align: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600;">
+        ${escapeHtml(props.announcementMessage)}
+        ${props.announcementLink ? `<a href="${escapeHtml(props.announcementLink)}" style="color: #fff; text-decoration: underline; margin-left: 0.5rem;">Ver más →</a>` : ''}
+       </div>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -65,6 +74,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   </style>
 </head>
 <body>
+  ${topBarHtml}
   <header>
     <a href="/">Vega Store</a>
     <nav>

@@ -37,3 +37,12 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `catalog__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | 8a6dafe | ✅ Aplicada con éxito |
 | `catalog__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | 8a6dafe | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `storefront`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `storefront__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | Pendiente de comando apply | ⏳ Lista para aplicar |
+| `storefront__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | Fase 4 | ✅ Compilada y verificada |
