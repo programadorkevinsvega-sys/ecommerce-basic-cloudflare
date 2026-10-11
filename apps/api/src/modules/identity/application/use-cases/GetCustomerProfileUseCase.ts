@@ -1,4 +1,4 @@
-import { Result } from '../../../../shared/domain/Result.js';
+import { Result } from '../../../../shared-kernel/Result.js';
 import { Customer } from '../../domain/entities/Customer.js';
 import { ICustomerRepository } from '../../domain/repositories/ICustomerRepository.js';
 
