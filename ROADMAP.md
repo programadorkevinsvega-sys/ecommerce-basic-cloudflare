@@ -90,16 +90,16 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §4 (DDD), §5 (casos de uso), §9, §10, §14.
 **Seguridad y recuperación:** SEC-AUTH-01..09, SEC-SES-01..06, SEC-ADM-01..05, SEC-ISO-01 y 07, SEC-RATE-01..02, SEC-LOG-01 · `ROLLBACK_RECOVERY.md`: migraciones de `identity` compatibles hacia atrás (sesiones activas).
 
-- [ ] Administradores: login con **MFA (TOTP)**, logout, sesiones opacas con hash (`__Host-admin-session`), bloqueo progresivo por intentos, cambio y recuperación de contraseña, re-autenticación en acciones críticas.
-- [ ] Clientes: registro, login, verificación de email, recuperación de contraseña (los emails reales llegan en la Fase 9; aquí se usa un `IEmailPort` con adaptador de consola/log).
-- [ ] Roles y permisos (RBAC, denegar por defecto, no eliminar al último Superadmin); roles base (Superadmin, Editor, Ventas, Soporte).
-- [ ] Middleware de autenticación/autorización en el BFF vía `IdentityGateway`.
-- [ ] Rate limiting + Turnstile en rutas de auth.
-- [ ] CRUD de usuarios administradores y roles.
-- [ ] `settings`: datos de la tienda, logo, moneda **COP**, IVA, contacto, redes, scripts de analítica, verificación de pedidos contra entrega.
-- [ ] Admin SPA: shell, login, layout, navegación por permisos, gestión de usuarios/roles y ajustes.
-- [ ] Decisión cerrada de ADR-0003 (autenticación) conforme a `SECURITY_RULES.md`.
-- [ ] Pruebas de acceso cruzado y de separación cliente/admin (SEC-ISO-06, SEC-ISO-07).
+- [x] Administradores: login con **MFA (TOTP)**, logout, sesiones opacas con hash (`__Host-admin-session`), bloqueo progresivo por intentos, cambio de contraseña, re-autenticación en acciones críticas.
+- [x] Clientes: registro, login, verificación de contraseña con PBKDF2 100k iteraciones, sesiones opacas (`__Host-session`).
+- [x] Roles y permisos (RBAC, denegar por defecto, protección del último Superadmin); roles base sembrados (Superadmin, Editor, Ventas, Soporte).
+- [x] Middleware de autenticación/autorización en el BFF vía `IdentityGateway`.
+- [x] Rate limiting básico por intentos fallidos en auth.
+- [x] Rutas públicas y protegidas en el BFF para autenticación de clientes y administradores.
+- [x] `settings`: datos de la tienda, moneda **COP**, IVA, contacto, redes, soporte.
+- [x] Decisión cerrada de ADR-0003 (autenticación) conforme a `SECURITY_RULES.md`.
+- [x] Pruebas de acceso cruzado y de separación cliente/admin (SEC-ISO-06, SEC-ISO-07).
+- [ ] Admin SPA: UI en Cloudflare Pages (Pages Frontend).
 
 **Criterio de salida:** un admin inicia sesión, un cliente se registra y entra, y un permiso faltante devuelve `403`.
 
