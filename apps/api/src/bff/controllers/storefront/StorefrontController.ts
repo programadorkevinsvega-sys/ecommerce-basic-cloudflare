@@ -9,6 +9,7 @@ import { renderAuthPage } from '../../views/renderAuthPage.js';
 
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
+import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -43,9 +44,16 @@ export class StorefrontController {
       const activeAnnouncement = homeContent.announcements[0];
       const bodyHtml = renderProductList(products, undefined, primaryBanner);
 
+      const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');
+      const orgJsonLd = StructuredDataHelper.generateOrganizationSchema(storeUrl, 'Vega Store');
+      const combinedHomeJsonLd = `[${webSiteJsonLd}, ${orgJsonLd}]`;
+
       const html = renderBaseLayout({
         title: 'Tienda Oficial - Alta Calidad y Confianza',
         description: 'Compra online con envíos locales y nacionales, y opción de pago contra entrega en Colombia.',
+        canonicalUrl: `${storeUrl}/`,
+        jsonLd: combinedHomeJsonLd,
         bodyHtml,
         customerEmail,
         announcementMessage: activeAnnouncement?.message,
@@ -55,7 +63,7 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    // Listado y búsqueda SSR
+    // Listado y búsqueda SSR (SEO: noindex para búsquedas internas y facetas)
     router.get('/productos', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const query = c.req.query('q');
@@ -66,9 +74,24 @@ export class StorefrontController {
       });
       const bodyHtml = renderProductList(products, query);
 
+      const isSearchOrFiltered = Boolean(query && query.trim().length > 0);
+      const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const canonical = `${storeUrl}/productos`;
+
+      const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
+        products.map((p, idx) => ({
+          name: p.name,
+          url: `${storeUrl}/productos/${p.slug}`,
+          position: idx + 1,
+        }))
+      );
+
       const html = renderBaseLayout({
         title: query ? `Búsqueda: ${query}` : 'Catálogo de Productos',
         description: 'Explora nuestra variedad de productos con garantía de satisfacción.',
+        canonicalUrl: canonical,
+        noindex: isSearchOrFiltered,
+        jsonLd: itemListJsonLd,
         bodyHtml,
         customerEmail,
       });
@@ -76,7 +99,7 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    // Detalle de producto SSR con metadatos SEO y JSON-LD
+    // Detalle de producto SSR con metadatos SEO, Product y BreadcrumbList JSON-LD
     router.get('/productos/:slug', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const slug = c.req.param('slug');
@@ -86,9 +109,10 @@ export class StorefrontController {
 
         const pageTitle = ProductSeoHelper.resolveTitle(product.seoTitle, product.name);
         const pageDesc = ProductSeoHelper.resolveDescription(product.seoDescription, product.description);
-        const canonical = product.canonicalUrl || `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/productos/${product.slug}`;
+        const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+        const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 
-        const jsonLd = ProductSeoHelper.generateJsonLd({
+        const productJsonLd = ProductSeoHelper.generateJsonLd({
           name: product.name,
           description: product.description,
           priceInCents: product.priceInCents,
@@ -100,12 +124,20 @@ export class StorefrontController {
           imageUrl: product.mediaIds?.[0] ? `/media/${product.mediaIds[0]}` : undefined,
         });
 
+        const breadcrumbsJsonLd = StructuredDataHelper.generateBreadcrumbList([
+          { name: 'Inicio', url: `${storeUrl}/` },
+          { name: 'Catálogo', url: `${storeUrl}/productos` },
+          { name: product.name, url: canonical },
+        ]);
+
+        const combinedJsonLd = `[${productJsonLd}, ${breadcrumbsJsonLd}]`;
+
         const html = renderBaseLayout({
           title: pageTitle,
           description: pageDesc,
           canonicalUrl: canonical,
           noindex: product.noindex,
-          jsonLd,
+          jsonLd: combinedJsonLd,
           bodyHtml,
           customerEmail,
         });

@@ -40,12 +40,17 @@ export class ProductSeoHelper {
     condition?: string;
     url: string;
     imageUrl?: string;
+    ratingValue?: number;
+    reviewCount?: number;
   }): string {
     const itemCondition = product.condition === 'used'
       ? 'https://schema.org/UsedCondition'
       : product.condition === 'refurbished'
       ? 'https://schema.org/RefurbishedCondition'
       : 'https://schema.org/NewCondition';
+
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
 
     const schema = {
       '@context': 'https://schema.org',
@@ -56,10 +61,16 @@ export class ProductSeoHelper {
       image: product.imageUrl || undefined,
       brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
       itemCondition,
+      aggregateRating: product.ratingValue && product.reviewCount ? {
+        '@type': 'AggregateRating',
+        ratingValue: product.ratingValue.toFixed(1),
+        reviewCount: product.reviewCount,
+      } : undefined,
       offers: {
         '@type': 'Offer',
         price: (product.priceInCents / 100).toFixed(2),
         priceCurrency: 'COP',
+        priceValidUntil: validUntil.toISOString().split('T')[0],
         availability: product.stockQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         url: product.url,
       },

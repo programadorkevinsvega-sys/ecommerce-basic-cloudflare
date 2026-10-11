@@ -233,12 +233,47 @@ Cada producto declara su **política de venta**. Los datos viven en `catalog`; l
 | `sale_mode` | `cash` / `credit` / `both` | Venta de contado, a crédito o ambas *(ADR-0009)* |
 | Descuento | vía `promotions` | Los productos con descuento se resuelven por `PromotionsGateway`, no por columnas en `catalog` |
 
-### Reglas SEO y Redirecciones 301
-- **Fallbacks inteligentes**: Si `seo_title` o `seo_description` están vacíos, se computan dinámicamente desde el nombre y primeros 160 caracteres limpios de la descripción.
-- **Redirección 301 automática en cambio de slug**: Cuando se modifica el handle/slug de un producto, se registra automáticamente una redirección permanente (`301`) en la tabla `seo_redirects` del módulo SEO para preservar enlaces externos y posicionamiento histórico.
-- **SERP Preview**: Formulario administrativo incluye vista previa en tiempo real estilo Google (título azul, URL verde, descripción gris) y contadores de caracteres (70 para título, 160 para descripción).
-- **Datos Estructurados (JSON-LD)**: Inyección en el `<head>` del tipo `schema.org/Product` con nombre, SKU, marca, condición (`itemCondition`), disponibilidad (`InStock`/`OutOfStock`), y oferta con moneda COP (`offers.priceCurrency`).
-- **Sitemap y Robots**: `sitemap.xml` dinámico filtrando productos con `noindex = true`, y `robots.txt` público configurado con directivas seguras y enlace a sitemap.
+### Reglas SEO Profesionales (9 Pilares de eCommerce)
+
+1. **Técnico y Core Web Vitals (LCP, CLS, INP)**:
+   - **Formato y optimización**: Imágenes servidas en WebP/AVIF con compresión, atributos de ancho/alto para evitar saltos de diseño (CLS) y `loading="lazy"` nativo.
+   - **Renderizado 100% Servidor (SSR)**: Todo el contenido crítico (títulos, precios, descripciones, stock y datos estructurados) se entrega directamente en el HTML inicial para garantizar indexabilidad inmediata por Googlebot sin depender del JS del cliente.
+   - **Mobile-first y HTTPS estricto**: Enfoque mobile-first responsivo con encabezados HSTS (`max-age=31536000; preload`) y TLS forzado por Cloudflare.
+   - **Sitemaps segmentados y Robots**: `sitemap.xml` como índice principal (`sitemapindex`) dividiendo `sitemap-products.xml` y `sitemap-pages.xml` con directivas claras en `robots.txt`.
+   - **Canonicals y Paginación limpia**: Canonicals absolutos para evitar contenido duplicado y manejo consistente de 404 útiles con sugerencias de catálogo.
+
+2. **Navegación Facetada y Filtros**:
+   - Parámetros de consulta en catálogo (`?q=`, ordenamientos, filtros de color/talla) marcados automáticamente con directiva `noindex, nofollow` y apuntando al `canonical` de la colección/categoría base para evitar canibalización y miles de URLs duplicadas.
+
+3. **Estructura y Enlazado Interno**:
+   - Jerarquía clara: `Home → Categoría → Subcategoría → Producto` con profundidad máxima recomendada de ≤ 3 clics desde el Home.
+   - Migas de pan (Breadcrumbs) visuales en cada vista de producto acompañadas por su marcado estructurado `schema.org/BreadcrumbList`.
+   - Enlazado interno estratégico con recomendaciones de productos y enlaces cruzados de catálogo.
+
+4. **Datos Estructurados Completos (schema.org)**:
+   - `Product` & `Offer`: Precio en enteros (centavos COP formateados), disponibilidad (`InStock` / `OutOfStock`), `priceValidUntil`, condición (`NewCondition`, `UsedCondition`, `RefurbishedCondition`), SKU y marca.
+   - `BreadcrumbList`: Posición y jerarquía de navegación exacta.
+   - `WebSite` & `Organization`: Nombre de la marca, logotipo y `SearchAction` integrado para habilitar el cuadro de búsqueda directa en las SERPs de Google.
+   - `ItemList`: Marcado ordenado en colecciones y catálogo principal.
+
+5. **Contenido Único y Optimización On-Page**:
+   - Descripciones de producto únicas (prevención de contenido duplicado de mayoristas).
+   - Textos de categorías orientados a intención de búsqueda (introductorio y pie descriptivo).
+   - Reseñas de clientes para contenido fresco y palabras clave conversacionales (Long-tail SEO).
+
+6. **Casos Particulares de Comercio Electrónico**:
+   - **Productos agotados**: Nunca responder 404; se mantienen indexados con estado `OutOfStock`, aviso visible y alternativas de catálogo.
+   - **Variantes de producto**: Consolidación mediante URL canónica al producto principal o URLs indexables específicas cuando existe demanda de búsqueda.
+   - **Búsqueda interna**: Excluida de la indexación mediante `noindex, nofollow` y directivas en `robots.txt`.
+
+7. **Internacionalización y Localización (hreflang)**:
+   - Inyección de etiquetas `<link rel="alternate" hreflang="es-CO" ...>` y `hreflang="x-default"` preparadas para despliegues multidivisa y por país.
+
+8. **Integraciones Externas**:
+   - Compatibilidad directa con Google Search Console, Google Merchant Center (feed estructurado), Google Analytics / Cloudflare Web Analytics y Bing Webmaster Tools.
+
+9. **Estrategia Off-Page**:
+   - URLs limpias, amigables y canónicas preparadas para backlinking de autoridad en nichos, prensa y perfiles de Google Business Profile.
 
 ### Cómo se evalúa en el carrito / checkout
 

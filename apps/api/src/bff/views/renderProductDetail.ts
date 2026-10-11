@@ -28,9 +28,11 @@ export function renderProductDetail(product: CatalogProductDto): string {
     .join('');
 
   return `
-    <div style="margin-bottom: 1rem;">
-      <a href="/productos" style="color: var(--accent); text-decoration: none; font-weight: 600;">← Volver al catálogo</a>
-    </div>
+    <nav aria-label="Breadcrumb" style="margin-bottom: 1rem; font-size: 0.875rem; color: var(--muted);">
+      <a href="/" style="color: var(--accent); text-decoration: none;">Inicio</a> &gt;
+      <a href="/productos" style="color: var(--accent); text-decoration: none;">Catálogo</a> &gt;
+      <span>${escapeHtml(product.name)}</span>
+    </nav>
     <article class="detail-view">
       <h1 class="detail-title">${escapeHtml(product.name)}</h1>
       <div class="detail-sku">

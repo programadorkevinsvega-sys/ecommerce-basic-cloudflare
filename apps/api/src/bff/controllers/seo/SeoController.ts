@@ -23,47 +23,66 @@ export class SeoController {
       });
     });
 
-    // sitemap.xml
-    router.get('/sitemap.xml', async (c) => {
+    // sitemap.xml principal (Sitemap Index)
+    router.get('/sitemap.xml', (c) => {
       const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
-      const products = await catalogGateway.listProducts({ limit: 1000, status: 'published' });
+      const today = new Date().toISOString().split('T')[0];
 
-      // Filtrar productos con noindex activo
-      const indexableProducts = products.filter((p: CatalogProductDto) => !p.noindex);
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '  <sitemap>',
+        `    <loc>${baseUrl}/sitemap-pages.xml</loc>`,
+        `    <lastmod>${today}</lastmod>`,
+        '  </sitemap>',
+        '  <sitemap>',
+        `    <loc>${baseUrl}/sitemap-products.xml</loc>`,
+        `    <lastmod>${today}</lastmod>`,
+        '  </sitemap>',
+        '</sitemapindex>',
+      ].join('\n');
 
-      interface SitemapItem {
-        loc: string;
-        priority: string;
-        changefreq: string;
-        lastmod?: string;
-      }
+      return c.text(xml, 200, {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=86400',
+      });
+    });
 
-      const staticUrls: SitemapItem[] = [
+    // sitemap-pages.xml (Páginas estáticas y colecciones)
+    router.get('/sitemap-pages.xml', (c) => {
+      const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const today = new Date().toISOString().split('T')[0];
+
+      const staticUrls = [
         { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'daily' },
         { loc: `${baseUrl}/productos`, priority: '0.9', changefreq: 'daily' },
       ];
 
-      const productUrls: SitemapItem[] = indexableProducts.map((p: CatalogProductDto) => ({
-        loc: `${baseUrl}/productos/${p.slug}`,
-        lastmod: (p.updatedAt || p.createdAt).split('T')[0],
-        priority: '0.8',
-        changefreq: 'weekly',
-      }));
+      const xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ...staticUrls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`),
+        '</urlset>',
+      ].join('\n');
 
-      const allUrls = [...staticUrls, ...productUrls];
+      return c.text(xml, 200, {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=86400',
+      });
+    });
+
+    // sitemap-products.xml (Productos publicados e indexables)
+    router.get('/sitemap-products.xml', async (c) => {
+      const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const products = await catalogGateway.listProducts({ limit: 1000, status: 'published' });
+      const indexableProducts = products.filter((p: CatalogProductDto) => !p.noindex);
 
       const xml = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        ...allUrls.map((u) => {
-          return [
-            '  <url>',
-            `    <loc>${u.loc}</loc>`,
-            u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>` : '',
-            `    <changefreq>${u.changefreq}</changefreq>`,
-            `    <priority>${u.priority}</priority>`,
-            '  </url>',
-          ].filter(Boolean).join('\n');
+        ...indexableProducts.map((p: CatalogProductDto) => {
+          const lastmod = (p.updatedAt || p.createdAt).split('T')[0];
+          return `  <url>\n    <loc>${baseUrl}/productos/${p.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
         }),
         '</urlset>',
       ].join('\n');

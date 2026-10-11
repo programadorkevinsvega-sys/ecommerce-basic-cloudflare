@@ -37,7 +37,10 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="${escapeHtml(ogImage)}">
+  <meta property="og:site_name" content="Vega Store">
+  <meta property="og:locale" content="es_CO">
+  <link rel="alternate" hreflang="es-CO" href="${canonical}">
+  <link rel="alternate" hreflang="x-default" href="${canonical}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeDesc}">
