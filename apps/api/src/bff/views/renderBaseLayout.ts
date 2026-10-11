@@ -1,3 +1,10 @@
+export interface LayoutMenuItem {
+  title: string;
+  url: string;
+  target?: string;
+  children?: LayoutMenuItem[];
+}
+
 export interface LayoutProps {
   title: string;
   description: string;
@@ -9,6 +16,8 @@ export interface LayoutProps {
   customerEmail?: string;
   announcementMessage?: string;
   announcementLink?: string;
+  headerMenuItems?: LayoutMenuItem[];
+  footerMenuItems?: LayoutMenuItem[];
 }
 
 export function renderBaseLayout(props: LayoutProps): string {
@@ -23,6 +32,16 @@ export function renderBaseLayout(props: LayoutProps): string {
     ? `<div style="background: #2563eb; color: #fff; text-align: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600;">
         ${escapeHtml(props.announcementMessage)}
         ${props.announcementLink ? `<a href="${escapeHtml(props.announcementLink)}" style="color: #fff; text-decoration: underline; margin-left: 0.5rem;">Ver más →</a>` : ''}
+       </div>`
+    : '';
+
+  const headerLinksHtml = (props.headerMenuItems && props.headerMenuItems.length > 0)
+    ? props.headerMenuItems.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')
+    : `<a href="/">Inicio</a><a href="/productos">Catálogo</a>`;
+
+  const footerLinksHtml = (props.footerMenuItems && props.footerMenuItems.length > 0)
+    ? `<div style="margin-bottom:1rem; display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
+        ${props.footerMenuItems.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}" style="color:#94a3b8; text-decoration:none; font-size:0.875rem;">${escapeHtml(item.title)}</a>`).join('')}
        </div>`
     : '';
 
@@ -86,6 +105,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     .detail-policy { margin: 1.5rem 0; padding: 1rem; background: var(--bg); border-radius: 6px; }
     .detail-policy p { margin-bottom: 0.5rem; font-size: 0.95rem; }
     footer { background: var(--primary); color: #94a3b8; text-align: center; padding: 2rem 1rem; margin-top: 4rem; font-size: 0.875rem; }
+    footer a:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -93,8 +113,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <header>
     <a href="/">Vega Store</a>
     <nav>
-      <a href="/">Inicio</a>
-      <a href="/productos">Catálogo</a>
+      ${headerLinksHtml}
       ${props.customerEmail ? `<span style="color:#93c5fd; margin-left:1rem;">👤 ${escapeHtml(props.customerEmail)}</span>` : '<a href="/auth/login">Ingresar</a>'}
     </nav>
   </header>
@@ -102,6 +121,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     ${props.bodyHtml}
   </main>
   <footer>
+    ${footerLinksHtml}
     <p>&copy; ${new Date().getFullYear()} Vega Store Oficial. Todos los derechos reservados. Monolito modular 100% Cloudflare.</p>
   </footer>
 </body>

@@ -75,6 +75,13 @@ export class D1PageRepository implements IPageRepository {
     return Promise.all((results || []).map((r) => this.hydrate(r)));
   }
 
+  public async delete(id: string): Promise<void> {
+    await this.db.batch([
+      this.db.prepare('DELETE FROM cms_page_versions WHERE page_id = ?').bind(id),
+      this.db.prepare('DELETE FROM cms_pages WHERE id = ?').bind(id),
+    ]);
+  }
+
   private async hydrate(row: PageRow): Promise<Page> {
     const version = await this.db
       .prepare('SELECT blocks FROM cms_page_versions WHERE page_id = ? AND version_number = ?')

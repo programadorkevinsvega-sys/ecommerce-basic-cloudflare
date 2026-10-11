@@ -9,6 +9,8 @@ export interface ICmsPublicApi {
   updatePageContent(input: UpdatePageContentInput): Promise<Page>;
   getPageBySlug(slug: string): Promise<Page>;
   getMenuByCode(code: string): Promise<Menu>;
+  listPages(limit?: number, offset?: number, status?: string): Promise<Page[]>;
+  deletePage(id: string): Promise<void>;
 }
 
 export class CmsPublicApi implements ICmsPublicApi {
@@ -40,5 +42,16 @@ export class CmsPublicApi implements ICmsPublicApi {
     const res = await this.container.getMenuByCodeUseCase.execute(code);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async listPages(limit?: number, offset?: number, status?: string): Promise<Page[]> {
+    const res = await this.container.listPagesUseCase.execute({ limit, offset, status });
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async deletePage(id: string): Promise<void> {
+    const res = await this.container.deletePageUseCase.execute(id);
+    if (res.isFail()) throw res.error;
   }
 }

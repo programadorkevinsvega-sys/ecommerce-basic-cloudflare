@@ -49,7 +49,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       compositionRoot.identityGateway,
       compositionRoot.catalogGateway,
       compositionRoot.settingsGateway,
-      compositionRoot.storefrontGateway
+      compositionRoot.storefrontGateway,
+      compositionRoot.cmsGateway
     )
   );
 
@@ -61,7 +62,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       compositionRoot.catalogGateway,
       compositionRoot.identityGateway,
       compositionRoot.storefrontGateway,
-      compositionRoot.seoGateway
+      compositionRoot.seoGateway,
+      compositionRoot.cmsGateway
     )
   );
 

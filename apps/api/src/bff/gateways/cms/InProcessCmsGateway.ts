@@ -48,4 +48,13 @@ export class InProcessCmsGateway implements CmsGateway {
     const menu = await this.publicApi.getMenuByCode(code);
     return menu.toPrimitives() as CmsMenuDto;
   }
+
+  public async listPages(limit?: number, offset?: number, status?: string): Promise<CmsPageDto[]> {
+    const pages = await this.publicApi.listPages(limit, offset, status);
+    return pages.map((p) => p.toPrimitives() as CmsPageDto);
+  }
+
+  public async deletePage(id: string): Promise<void> {
+    await this.publicApi.deletePage(id);
+  }
 }

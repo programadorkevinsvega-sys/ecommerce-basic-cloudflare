@@ -1,14 +1,17 @@
 import { CatalogProductDto, CategoryDto, BrandDto, AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
+import { CmsPageDto } from '../../gateways/cms/CmsGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
 import { renderStorefrontActionsScript } from './renderStorefrontActionsScript.js';
 import { renderProductFormsScript } from './renderProductFormsScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
+import { renderCmsFormsScript } from './renderCmsFormsScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductTable } from './renderProductTable.js';
 import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
+import { renderCmsManagementSection } from './renderCmsManagementSection.js';
 
 
 
@@ -19,6 +22,7 @@ export interface AdminDashboardProps {
   attributes: AttributeDto[];
   banners: BannerItemDto[];
   announcements: AnnouncementItemDto[];
+  cmsPages: CmsPageDto[];
   settings: SettingsDto;
   adminEmail: string;
 }
@@ -46,6 +50,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
       <button class="tab-btn active" onclick="switchTab('products')">Catálogo & Productos</button>
       <button class="tab-btn" onclick="switchTab('taxonomies')">Categorías & Marcas</button>
       <button class="tab-btn" onclick="switchTab('storefront')">Banners & Anuncios</button>
+      <button class="tab-btn" onclick="switchTab('cms')">Páginas CMS</button>
       <button class="tab-btn" onclick="switchTab('settings')">Configuración</button>
     </div>
 
@@ -138,6 +143,9 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
       ${renderStorefrontManagementSection(props.banners, props.announcements)}
     </div>
 
+    <div id="tab-cms" class="tab-content">
+      ${renderCmsManagementSection(props.cmsPages)}
+    </div>
 
     <div id="tab-settings" class="tab-content">
       <div class="card">
@@ -160,6 +168,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
+  <script>${renderCmsFormsScript()}</script>
 </body>
 </html>`;
 }

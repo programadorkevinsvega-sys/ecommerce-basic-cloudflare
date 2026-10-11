@@ -56,4 +56,6 @@ export interface CmsGateway {
   }): Promise<CmsPageDto>;
   getPageBySlug(slug: string): Promise<CmsPageDto>;
   getMenuByCode(code: string): Promise<CmsMenuDto>;
+  listPages(limit?: number, offset?: number, status?: string): Promise<CmsPageDto[]>;
+  deletePage(id: string): Promise<void>;
 }

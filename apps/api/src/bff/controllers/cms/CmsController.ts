@@ -12,6 +12,13 @@ export class CmsController {
     // Visualización pública SSR de páginas institucionales /p/:slug
     router.get('/p/:slug', async (c) => {
       const slug = c.req.param('slug');
+      const [headerMenu, footerMenu] = await Promise.all([
+        cmsGateway.getMenuByCode('header').catch(() => null),
+        cmsGateway.getMenuByCode('footer').catch(() => null),
+      ]);
+      const headerMenuItems = headerMenu?.items?.map((it) => ({ title: it.title, url: it.url, target: it.target }));
+      const footerMenuItems = footerMenu?.items?.map((it) => ({ title: it.title, url: it.url, target: it.target }));
+
       try {
         const page = await cmsGateway.getPageBySlug(slug);
         const blocksHtml = renderCmsBlocks(page.blocks);
@@ -34,6 +41,8 @@ export class CmsController {
           description: page.seoDescription || `Página oficial de ${page.title} en Vega Store.`,
           canonicalUrl: canonical,
           bodyHtml,
+          headerMenuItems,
+          footerMenuItems,
         });
 
         return c.html(html);
@@ -42,6 +51,8 @@ export class CmsController {
           title: 'Página no encontrada',
           description: 'El contenido solicitado no existe.',
           bodyHtml: '<div style="text-align:center; padding:4rem;"><h2>404 - Página no encontrada</h2><p><a href="/">Volver al inicio</a></p></div>',
+          headerMenuItems,
+          footerMenuItems,
         });
         return c.html(notFoundHtml, 404);
       }
@@ -86,6 +97,37 @@ export class CmsController {
           return c.json({ data: page });
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Error al actualizar página';
+          return c.json({ error: msg }, 400);
+        }
+      }
+    );
+
+    // Listar páginas (Admin)
+    router.get(
+      '/api/v1/admin/cms/pages',
+      createAuthMiddleware(identityGateway, 'admin', 'cms:read'),
+      async (c) => {
+        try {
+          const pages = await cmsGateway.listPages(50, 0);
+          return c.json({ data: pages });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Error al listar páginas';
+          return c.json({ error: msg }, 500);
+        }
+      }
+    );
+
+    // Eliminar página (Admin)
+    router.delete(
+      '/api/v1/admin/cms/pages/:id',
+      createAuthMiddleware(identityGateway, 'admin', 'cms:delete'),
+      async (c) => {
+        try {
+          const id = c.req.param('id');
+          await cmsGateway.deletePage(id);
+          return c.json({ success: true, message: 'Página eliminada con éxito' });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Error al eliminar página';
           return c.json({ error: msg }, 400);
         }
       }
