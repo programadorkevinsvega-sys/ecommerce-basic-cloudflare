@@ -4,22 +4,25 @@ Este documento concreta los nombres, bindings, bounded contexts y convenciones f
 
 ---
 
-## 1. Nombres de Infraestructura en Cloudflare
+## 1. Nombres de Infraestructura en Cloudflare (100% Producción Directa)
 
-| Recurso | Entorno Dev | Entorno Staging | Entorno Production |
-|---|---|---|---|
-| **Worker (BFF + módulos)** | `ecommerce-api` | `ecommerce-api-staging` | `ecommerce-api-production` |
-| **D1 Única** | `ecommerce-db-dev` | `ecommerce-db-staging` | `ecommerce-db-production` |
-| **R2 Bucket** | `ecommerce-media-dev` | `ecommerce-media-staging` | `ecommerce-media-production` |
-| **KV Cache** | `ecommerce-cache-dev` | `ecommerce-cache-staging` | `ecommerce-cache-production` |
-| **Queues Principal** | `ecommerce-events-dev` | `ecommerce-events-staging` | `ecommerce-events-production` |
-| **Queues DLQ** | `ecommerce-events-dlq-dev` | `ecommerce-events-dlq-staging` | `ecommerce-events-dlq-production` |
+Todos los recursos operan directamente en el entorno de producción configurado en `apps/api/wrangler.jsonc`:
+
+| Recurso | Nombre en Cloudflare | Binding en Worker |
+|---|---|---|
+| **Worker (BFF + módulos)** | `ecommerce-vega-api` | Entrypoint principal |
+| **D1 Única** | `ecommerce-vega-production` | `env.DB` |
+| **R2 Bucket** | `ecommerce-vega-production` | `env.MEDIA_BUCKET` |
+| **KV Cache** | `ecommerce-vega-cache-production` | `env.CACHE` |
+| **Queues Principal** | `ecommerce-vega-events-production` | `env.EVENTS_QUEUE` |
+| **Queues DLQ (Dead Letter Queue)** | `ecommerce-vega-events-dlq-production` | Manejo de mensajes fallidos |
+| **Analytics Engine** | `ecommerce_vega_analytics_production` | `env.ANALYTICS` |
 
 ---
 
 ## 2. Bounded Contexts y Prefijos de Tablas
 
-Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo:
+Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<modulo>_*`):
 
 1. `identity` -> `identity_*`
 2. `catalog` -> `catalog_*`
@@ -46,3 +49,4 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo:
 
 - **Moneda oficial:** COP (pesos colombianos). Todos los importes en base de datos y APIs viajan en **enteros** (centavos de COP).
 - **Inmutabilidad:** Las tablas `orders_items` e `invoicing_invoices` guardan *snapshots* inmutables que nunca dependen de cambios futuros en `catalog`.
+- **Integridad de Pagos:** Confirmación de Wompi estrictamente por webhook con checksum y reconciliación de API, nunca por redirección del navegador.

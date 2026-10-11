@@ -2,22 +2,34 @@
   "name": "ecommerce-basic-cloudflare",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Ecommerce Profesional 100% Cloudflare Serverless",
   "packageManager": "pnpm@9.15.4",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "build": "pnpm --filter @ecommerce/api build",
+    "deploy": "pnpm --filter @ecommerce/api deploy",
     "dev:api": "pnpm --filter @ecommerce/api dev",
     "dev:storefront": "pnpm --filter @ecommerce/storefront dev",
     "dev:admin": "pnpm --filter @ecommerce/admin dev",
-    "db:build-migrations": "pnpm --filter @ecommerce/api db:build-migrations",
+    "db:build-migrations": "node scripts/build-migrations.js",
     "db:migrate:local": "pnpm --filter @ecommerce/api db:migrate:local",
+    "db:migrate:remote": "pnpm --filter @ecommerce/api db:migrate:remote",
     "test": "pnpm --filter @ecommerce/api test",
     "test:isolation": "pnpm --filter @ecommerce/api test:isolation",
     "test:architecture": "pnpm --filter @ecommerce/api test:architecture",
     "lint": "pnpm --filter @ecommerce/api lint",
     "typecheck": "pnpm --filter @ecommerce/api typecheck"
   },
+  "dependencies": {
+    "@hono/zod-openapi": "^0.18.4",
+    "hono": "^4.7.0",
+    "zod": "^3.24.2"
+  },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "@cloudflare/workers-types": "^4.20250224.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.111.0"
   }
 }
