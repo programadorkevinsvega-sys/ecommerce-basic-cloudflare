@@ -42,15 +42,19 @@ export function renderProductFormsScript(): string {
         status: 'published'
       };
 
+      const editId = document.getElementById('pEditId')?.value;
+      const url = editId ? '/api/v1/admin/products/' + editId : '/api/v1/admin/products';
+      const method = editId ? 'PUT' : 'POST';
+
       try {
-        const res = await fetch('/api/v1/admin/products', {
-          method: 'POST',
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok) {
-          msg.textContent = '✅ Producto creado con éxito';
+          msg.textContent = editId ? '✅ Producto actualizado con éxito' : '✅ Producto creado con éxito';
           msg.style.background = '#065f46';
           msg.style.display = 'block';
           setTimeout(() => window.location.reload(), 1000);
@@ -64,6 +68,7 @@ export function renderProductFormsScript(): string {
         msg.style.display = 'block';
       }
     });
+
 
     document.getElementById('newCategoryForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();

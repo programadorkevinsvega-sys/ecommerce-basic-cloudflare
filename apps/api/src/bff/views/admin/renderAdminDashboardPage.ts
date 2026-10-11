@@ -3,11 +3,13 @@ import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/St
 import { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
+import { renderStorefrontActionsScript } from './renderStorefrontActionsScript.js';
 import { renderProductFormsScript } from './renderProductFormsScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductTable } from './renderProductTable.js';
 import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
+
 
 
 export interface AdminDashboardProps {
@@ -49,10 +51,12 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
 
     <div id="tab-products" class="tab-content active">
       <div class="card">
-        <h2>Crear Nuevo Producto</h2>
+        <h2 id="pFormTitle">Crear Nuevo Producto</h2>
         <form id="newProductForm">
+          <input type="hidden" id="pEditId" value="" />
           <div class="form-grid">
             <div><label>Nombre</label><input type="text" id="pName" required placeholder="Ej. Camiseta Negra" /></div>
+
             <div><label>Slug / Handle</label><input type="text" id="pSlug" required placeholder="camiseta-negra" /></div>
             <div><label>SKU</label><input type="text" id="pSku" required placeholder="TSHIRT-001" /></div>
             <div><label>Precio en COP</label><input type="number" id="pPrice" required placeholder="80000" /></div>
@@ -115,11 +119,13 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
           </div>
 
           <div style="margin-top: 1.5rem;">
-            <button type="submit" class="btn-primary">Guardar Producto</button>
+            <button type="submit" class="btn-primary" id="pSubmitBtn">Guardar Producto</button>
+            <button type="button" class="btn-action" id="pCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetProductForm()">Cancelar Edición</button>
             <div id="pMsg" class="msg"></div>
           </div>
         </form>
       </div>
+
 
       ${renderProductTable(props.products)}
     </div>
@@ -151,11 +157,13 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
   </main>
   <script>${renderAdminDashboardScript()}</script>
+  <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
 </body>
 </html>`;
 }
+
 
 
 

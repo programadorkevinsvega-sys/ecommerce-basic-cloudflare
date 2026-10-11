@@ -18,6 +18,8 @@ export function renderProductTable(products: CatalogProductDto[]): string {
       ? `<button class="btn-action btn-action-hide" onclick="setProductStatus('${p.id}', 'draft')">Ocultar</button>`
       : `<button class="btn-action btn-action-publish" onclick="setProductStatus('${p.id}', 'published')">Publicar</button>`;
 
+    const escapedProductJson = escapeJs(JSON.stringify(p));
+
     return `
       <tr>
         <td style="padding: 0.75rem; border-bottom: 1px solid #334155; font-weight:600;">
@@ -31,6 +33,7 @@ export function renderProductTable(products: CatalogProductDto[]): string {
         <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${cod}</td>
         <td style="padding: 0.75rem; border-bottom: 1px solid #334155; text-align:right; white-space:nowrap;">
           <a class="btn-action btn-action-view" href="/productos/${escapeHtml(p.slug)}" target="_blank">Ver</a>
+          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editProduct('${escapedProductJson}')">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>
         </td>
@@ -63,4 +66,8 @@ export function renderProductTable(products: CatalogProductDto[]): string {
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function escapeJs(str: string): string {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
