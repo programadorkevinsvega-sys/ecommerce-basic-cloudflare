@@ -1,0 +1,135 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ecommerce-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ecommerce-db-dev",
+      "database_id": "local-ecommerce-db",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "ecommerce-media-dev"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "ecommerce-cache-dev"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "EVENTS_QUEUE",
+        "queue": "ecommerce-events-dev"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "ecommerce-events-dev",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "ecommerce-events-dlq-dev"
+      }
+    ]
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "ecommerce_analytics_dev"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "env": {
+    "staging": {
+      "name": "ecommerce-api-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ecommerce-db-staging",
+          "database_id": "placeholder-staging-d1-id",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA_BUCKET",
+          "bucket_name": "ecommerce-media-staging"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "placeholder-staging-kv-id"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "EVENTS_QUEUE",
+            "queue": "ecommerce-events-staging"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "ecommerce-events-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "ecommerce-events-dlq-staging"
+          }
+        ]
+      }
+    },
+    "production": {
+      "name": "ecommerce-api-production",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ecommerce-db-production",
+          "database_id": "placeholder-production-d1-id",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA_BUCKET",
+          "bucket_name": "ecommerce-media-production"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "placeholder-production-kv-id"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "EVENTS_QUEUE",
+            "queue": "ecommerce-events-production"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "ecommerce-events-production",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "ecommerce-events-dlq-production"
+          }
+        ]
+      }
+    }
+  }
+}

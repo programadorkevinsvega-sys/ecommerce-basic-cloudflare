@@ -1,0 +1,11 @@
+{
+  "name": "@ecommerce/admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Panel de administración SPA en Cloudflare Pages",
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Admin SPA pendiente para Fase 1'",
+    "build": "echo 'Admin build'"
+  }
+}

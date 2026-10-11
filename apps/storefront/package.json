@@ -1,0 +1,11 @@
+{
+  "name": "@ecommerce/storefront",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Storefront público SSR en Cloudflare Pages",
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Storefront pendiente para Fase 3'",
+    "build": "echo 'Storefront build'"
+  }
+}

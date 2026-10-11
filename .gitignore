@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Entornos y Secretos (SEC-SEC-02)
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+
+# Cloudflare Wrangler y compilados
+.wrangler/
+dist/
+.mf/
+
+# Caché y logs
+*.log
+.cache/
+.DS_Store
+
+# Pruebas y cobertura
+coverage/
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
