@@ -65,11 +65,44 @@ export class Product {
   public get createdAt(): string { return this.props.createdAt; }
   public get updatedAt(): string { return this.props.updatedAt; }
 
-  public updateSlug(newSlug: string): void {
-    if (!newSlug || newSlug.trim().length === 0) {
-      throw new Error('El slug no puede estar vacío');
+  public updateDetails(updates: Partial<Omit<ProductProps, 'id' | 'createdAt' | 'updatedAt'>>): void {
+    if (updates.name !== undefined) this.props.name = updates.name.trim();
+    if (updates.slug !== undefined) {
+      const normalizedSlug = updates.slug.trim().toLowerCase();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)) {
+        throw new Error('El slug debe contener solo letras minúsculas, números y guiones');
+      }
+      this.props.slug = normalizedSlug;
     }
-    this.props.slug = newSlug.trim();
+    if (updates.description !== undefined) this.props.description = updates.description;
+    if (updates.priceInCents !== undefined) {
+      if (updates.priceInCents < 0 || !Number.isInteger(updates.priceInCents)) {
+        throw new Error('El precio debe ser un número entero positivo en centavos COP');
+      }
+      this.props.priceInCents = updates.priceInCents;
+    }
+    if (updates.sku !== undefined) this.props.sku = updates.sku.trim();
+    if (updates.stockQuantity !== undefined) this.props.stockQuantity = updates.stockQuantity;
+    if (updates.status !== undefined) this.props.status = updates.status;
+    if (updates.condition !== undefined) this.props.condition = updates.condition;
+    if (updates.specifications !== undefined) this.props.specifications = { ...updates.specifications };
+    if (updates.brand !== undefined) this.props.brand = updates.brand;
+    if (updates.productType !== undefined) this.props.productType = updates.productType;
+    if (updates.tags !== undefined) this.props.tags = [...updates.tags];
+    if (updates.barcodeGtin !== undefined) this.props.barcodeGtin = updates.barcodeGtin;
+    if (updates.seoTitle !== undefined) this.props.seoTitle = updates.seoTitle;
+    if (updates.seoDescription !== undefined) this.props.seoDescription = updates.seoDescription;
+    if (updates.canonicalUrl !== undefined) this.props.canonicalUrl = updates.canonicalUrl;
+    if (updates.ogImageId !== undefined) this.props.ogImageId = updates.ogImageId;
+    if (updates.noindex !== undefined) this.props.noindex = updates.noindex;
+    if (updates.salePolicy !== undefined) this.props.salePolicy = updates.salePolicy;
+    if (updates.categoryIds !== undefined) this.props.categoryIds = [...updates.categoryIds];
+    if (updates.mediaIds !== undefined) this.props.mediaIds = [...updates.mediaIds];
+    this.props.updatedAt = new Date().toISOString();
+  }
+
+  public setStatus(newStatus: ProductStatus): void {
+    this.props.status = newStatus;
     this.props.updatedAt = new Date().toISOString();
   }
 

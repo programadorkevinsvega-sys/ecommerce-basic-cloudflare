@@ -25,6 +25,34 @@ export interface CreateProductGatewayRequest {
   mediaIds?: string[];
 }
 
+export interface UpdateProductGatewayRequest {
+  id: string;
+  name?: string;
+  slug?: string;
+  description?: string;
+  priceInCents?: number;
+  sku?: string;
+  stockQuantity?: number;
+  status?: 'draft' | 'published' | 'archived';
+  condition?: 'new' | 'used' | 'refurbished';
+  specifications?: Record<string, unknown>;
+  brand?: string;
+  productType?: string;
+  tags?: string[];
+  barcodeGtin?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  canonicalUrl?: string;
+  ogImageId?: string;
+  noindex?: boolean;
+  allowsCashOnDelivery?: boolean;
+  shippingScope?: 'national' | 'local';
+  localCoverageZones?: string[];
+  saleMode?: 'cash' | 'credit' | 'both';
+  categoryIds?: string[];
+  mediaIds?: string[];
+}
+
 export interface CatalogProductDto {
   id: string;
   name: string;
@@ -57,9 +85,41 @@ export interface CatalogProductDto {
   updatedAt: string;
 }
 
+export interface CategoryDto {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  parentId?: string;
+}
+
+export interface BrandDto {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  websiteUrl?: string;
+}
+
+export interface AttributeDto {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  options: string[];
+}
+
 export interface CatalogGateway {
   createProduct(request: CreateProductGatewayRequest): Promise<CatalogProductDto>;
+  updateProduct(request: UpdateProductGatewayRequest): Promise<CatalogProductDto>;
+  deleteProduct(id: string): Promise<void>;
   getProductBySlug(slug: string): Promise<CatalogProductDto>;
   listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string }): Promise<CatalogProductDto[]>;
-  createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<{ id: string; name: string; slug: string }>;
+  createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
+  listCategories(): Promise<CategoryDto[]>;
+  deleteCategory(id: string): Promise<void>;
+  createBrand(request: { name: string; slug?: string; description?: string; websiteUrl?: string }): Promise<BrandDto>;
+  listBrands(): Promise<BrandDto[]>;
+  createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;
+  listAttributes(): Promise<AttributeDto[]>;
 }

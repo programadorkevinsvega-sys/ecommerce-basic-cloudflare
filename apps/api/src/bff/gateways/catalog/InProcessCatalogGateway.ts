@@ -1,7 +1,11 @@
 import {
   CatalogGateway,
   CreateProductGatewayRequest,
+  UpdateProductGatewayRequest,
   CatalogProductDto,
+  CategoryDto,
+  BrandDto,
+  AttributeDto,
 } from './CatalogGateway.js';
 import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
 
@@ -15,6 +19,15 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public async createProduct(request: CreateProductGatewayRequest): Promise<CatalogProductDto> {
     const product = await this.publicApi.createProduct(request);
     return product.toPrimitives();
+  }
+
+  public async updateProduct(request: UpdateProductGatewayRequest): Promise<CatalogProductDto> {
+    const product = await this.publicApi.updateProduct(request);
+    return product.toPrimitives();
+  }
+
+  public async deleteProduct(id: string): Promise<void> {
+    await this.publicApi.deleteProduct(id);
   }
 
   public async getProductBySlug(slug: string): Promise<CatalogProductDto> {
@@ -37,12 +50,48 @@ export class InProcessCatalogGateway implements CatalogGateway {
     slug: string;
     description?: string;
     parentId?: string;
-  }): Promise<{ id: string; name: string; slug: string }> {
+  }): Promise<CategoryDto> {
     const category = await this.publicApi.createCategory(request);
-    return {
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-    };
+    return category.toPrimitives();
+  }
+
+  public async listCategories(): Promise<CategoryDto[]> {
+    const categories = await this.publicApi.listCategories();
+    return categories.map((c) => c.toPrimitives());
+  }
+
+  public async deleteCategory(id: string): Promise<void> {
+    await this.publicApi.deleteCategory(id);
+  }
+
+  public async createBrand(request: {
+    name: string;
+    slug?: string;
+    description?: string;
+    websiteUrl?: string;
+  }): Promise<BrandDto> {
+    const brand = await this.publicApi.createBrand(request);
+    return brand.toPrimitives();
+  }
+
+  public async listBrands(): Promise<BrandDto[]> {
+    const brands = await this.publicApi.listBrands();
+    return brands.map((b) => b.toPrimitives());
+  }
+
+  public async createAttribute(request: {
+    name: string;
+    code: string;
+    type: 'text' | 'select' | 'number';
+    options?: string[];
+  }): Promise<AttributeDto> {
+    const attribute = await this.publicApi.createAttribute(request);
+    return attribute.toPrimitives();
+  }
+
+  public async listAttributes(): Promise<AttributeDto[]> {
+    const attributes = await this.publicApi.listAttributes();
+    return attributes.map((a) => a.toPrimitives());
   }
 }
+

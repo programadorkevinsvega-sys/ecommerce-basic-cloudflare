@@ -16,7 +16,7 @@ describe('HealthController BFF', () => {
       MEDIA_BUCKET: {},
     } as unknown as Env;
 
-    const res = await app.request('/health', {}, mockEnv);
+    const res = await app.request('/', {}, mockEnv);
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as { status: string; checks: Record<string, string> };

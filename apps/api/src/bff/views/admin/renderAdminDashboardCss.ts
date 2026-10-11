@@ -26,5 +26,16 @@ export function renderAdminDashboardCss(): string {
     .serp-url { color: #006621; font-size: 0.85rem; margin: 2px 0 4px; }
     .serp-desc { color: #545454; font-size: 0.85rem; line-height: 1.4; }
     .char-count { font-size: 0.75rem; color: #94a3b8; float: right; font-weight: normal; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge-published { background: #065f46; color: #6ee7b7; }
+    .badge-draft { background: #78350f; color: #fde68a; }
+    .badge-archived { background: #374151; color: #9ca3af; }
+    .btn-action { padding: 0.3rem 0.6rem; border-radius: 4px; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.25rem; }
+    .btn-action-view { background: #0284c7; color: #fff; text-decoration: none; display: inline-block; }
+    .btn-action-publish { background: #059669; color: #fff; }
+    .btn-action-hide { background: #d97706; color: #fff; }
+    .btn-action-delete { background: #dc2626; color: #fff; }
+    .tag-pill { display: inline-block; background: #334155; color: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin: 0.1rem; }
   `;
 }
+

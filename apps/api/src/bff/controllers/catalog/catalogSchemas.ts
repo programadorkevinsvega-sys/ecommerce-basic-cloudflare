@@ -1,0 +1,76 @@
+import { z } from 'zod';
+
+export const createProductSchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  description: z.string().min(1),
+  priceInCents: z.number().int().positive(),
+  sku: z.string().min(1).max(50),
+  stockQuantity: z.number().int().nonnegative().default(0),
+  status: z.enum(['draft', 'published', 'archived']).default('draft'),
+  condition: z.enum(['new', 'used', 'refurbished']).default('new'),
+  specifications: z.record(z.unknown()).default({}),
+  brand: z.string().max(100).optional(),
+  productType: z.string().max(100).optional(),
+  tags: z.array(z.string()).default([]),
+  barcodeGtin: z.string().max(50).optional(),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(300).optional(),
+  canonicalUrl: z.string().url().optional(),
+  ogImageId: z.string().optional(),
+  noindex: z.boolean().default(false),
+  allowsCashOnDelivery: z.boolean().default(true),
+  shippingScope: z.enum(['national', 'local']).default('national'),
+  localCoverageZones: z.array(z.string()).default([]),
+  saleMode: z.enum(['cash', 'credit', 'both']).default('cash'),
+  categoryIds: z.array(z.string()).default([]),
+  mediaIds: z.array(z.string()).default([]),
+}).strict();
+
+export const updateProductSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  description: z.string().min(1).optional(),
+  priceInCents: z.number().int().positive().optional(),
+  sku: z.string().min(1).max(50).optional(),
+  stockQuantity: z.number().int().nonnegative().optional(),
+  status: z.enum(['draft', 'published', 'archived']).optional(),
+  condition: z.enum(['new', 'used', 'refurbished']).optional(),
+  specifications: z.record(z.unknown()).optional(),
+  brand: z.string().max(100).optional(),
+  productType: z.string().max(100).optional(),
+  tags: z.array(z.string()).optional(),
+  barcodeGtin: z.string().max(50).optional(),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(300).optional(),
+  canonicalUrl: z.string().url().optional(),
+  ogImageId: z.string().optional(),
+  noindex: z.boolean().optional(),
+  allowsCashOnDelivery: z.boolean().optional(),
+  shippingScope: z.enum(['national', 'local']).optional(),
+  localCoverageZones: z.array(z.string()).optional(),
+  saleMode: z.enum(['cash', 'credit', 'both']).optional(),
+  categoryIds: z.array(z.string()).optional(),
+  mediaIds: z.array(z.string()).optional(),
+}).strict();
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  description: z.string().max(500).optional(),
+  parentId: z.string().optional(),
+}).strict();
+
+export const createBrandSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  description: z.string().max(500).optional(),
+  websiteUrl: z.string().url().optional(),
+}).strict();
+
+export const createAttributeSchema = z.object({
+  name: z.string().min(1).max(100),
+  code: z.string().min(1).max(50).regex(/^[a-z0-9_]+$/),
+  type: z.enum(['text', 'select', 'number']),
+  options: z.array(z.string()).default([]),
+}).strict();

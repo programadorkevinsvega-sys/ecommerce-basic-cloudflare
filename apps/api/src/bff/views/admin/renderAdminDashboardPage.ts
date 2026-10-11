@@ -1,34 +1,21 @@
-import { CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
+import { CatalogProductDto, CategoryDto, BrandDto, AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 import { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
+import { renderAdminFormsScript } from './renderAdminFormsScript.js';
+import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
+import { renderProductTable } from './renderProductTable.js';
 
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
+  categories: CategoryDto[];
+  brands: BrandDto[];
+  attributes: AttributeDto[];
   settings: SettingsDto;
   adminEmail: string;
 }
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
-  const productsRows = props.products.map((p) => {
-    const price = (p.priceInCents / 100).toLocaleString('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    });
-    const cod = p.salePolicy.allowsCashOnDelivery ? '✅ Sí' : '❌ No';
-    return `
-      <tr>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${escapeHtml(p.name)}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155; font-family: monospace;">${escapeHtml(p.sku)}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${price}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${p.stockQuantity}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${cod}</td>
-        <td style="padding: 0.75rem; border-bottom: 1px solid #334155;">${escapeHtml(p.salePolicy.shippingScope)}</td>
-      </tr>
-    `;
-  }).join('');
-
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -48,6 +35,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <main class="container">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('products')">Catálogo & Productos</button>
+      <button class="tab-btn" onclick="switchTab('taxonomies')">Categorías & Marcas</button>
       <button class="tab-btn" onclick="switchTab('storefront')">Banners & Anuncios</button>
       <button class="tab-btn" onclick="switchTab('settings')">Configuración</button>
     </div>
@@ -126,17 +114,11 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
         </form>
       </div>
 
-      <div class="card">
-        <h2>Productos en Catálogo (${props.products.length})</h2>
-        <table>
-          <thead>
-            <tr><th>Nombre</th><th>SKU</th><th>Precio</th><th>Stock</th><th>Contra Entrega</th><th>Envío</th></tr>
-          </thead>
-          <tbody>
-            ${productsRows || '<tr><td colspan="6" style="padding:1rem; text-align:center; color:#94a3b8;">No hay productos registrados</td></tr>'}
-          </tbody>
-        </table>
-      </div>
+      ${renderProductTable(props.products)}
+    </div>
+
+    <div id="tab-taxonomies" class="tab-content">
+      ${renderCatalogManagementSection(props.categories, props.brands, props.attributes)}
     </div>
 
     <div id="tab-storefront" class="tab-content">
@@ -184,9 +166,11 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
   </main>
   <script>${renderAdminDashboardScript()}</script>
+  <script>${renderAdminFormsScript()}</script>
 </body>
 </html>`;
 }
+
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');

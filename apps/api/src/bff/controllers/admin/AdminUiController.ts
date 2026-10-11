@@ -34,13 +34,19 @@ export class AdminUiController {
           return c.redirect('/admin/login');
         }
 
-        const [products, settings] = await Promise.all([
+        const [products, categories, brands, attributes, settings] = await Promise.all([
           catalogGateway.listProducts({ limit: 50 }),
+          catalogGateway.listCategories(),
+          catalogGateway.listBrands(),
+          catalogGateway.listAttributes(),
           settingsGateway.getSettings(),
         ]);
 
         const html = renderAdminDashboardPage({
           products,
+          categories,
+          brands,
+          attributes,
           settings,
           adminEmail: 'admin@vega.com',
         });
