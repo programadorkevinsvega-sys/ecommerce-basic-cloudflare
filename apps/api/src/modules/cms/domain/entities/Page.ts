@@ -53,9 +53,21 @@ export class Page {
     this.props.updatedAt = new Date().toISOString();
   }
 
-  public publish(): void {
-    this.props.status = 'published';
+  public setStatus(status: PageStatus): void {
+    this.props.status = status;
     this.props.updatedAt = new Date().toISOString();
+  }
+
+  public updateSlug(slug: string): void {
+    if (!slug || slug.trim().length === 0) {
+      throw new Error('El slug de la página no puede estar vacío');
+    }
+    this.props.slug = slug.trim();
+    this.props.updatedAt = new Date().toISOString();
+  }
+
+  public publish(): void {
+    this.setStatus('published');
   }
 
   public toPrimitives(): PageProps {

@@ -5,7 +5,9 @@ import { IPageRepository } from '../../domain/ports/IPageRepository.js';
 export interface UpdatePageContentInput {
   id: string;
   title: string;
-  blocks: CmsBlock[];
+  slug?: string;
+  status?: 'draft' | 'published' | 'archived';
+  blocks?: CmsBlock[];
   seoTitle?: string;
   seoDescription?: string;
   adminId?: string;
@@ -25,7 +27,20 @@ export class UpdatePageContentUseCase {
     }
 
     try {
-      page.updateContent(input.title, input.blocks, input.seoTitle, input.seoDescription);
+      if (input.slug && input.slug !== page.slug) {
+        const existing = await this.pageRepo.findBySlug(input.slug);
+        if (existing && existing.id !== page.id) {
+          return Result.fail(new Error(`Ya existe una página con el slug '${input.slug}'`));
+        }
+        page.updateSlug(input.slug);
+      }
+
+      if (input.status) {
+        page.setStatus(input.status);
+      }
+
+      const blocks = input.blocks ?? page.blocks;
+      page.updateContent(input.title, blocks, input.seoTitle, input.seoDescription);
       await this.pageRepo.save(page, input.adminId);
       return Result.ok(page);
     } catch (err) {

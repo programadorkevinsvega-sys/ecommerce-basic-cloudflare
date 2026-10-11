@@ -27,14 +27,16 @@ export class InProcessCmsGateway implements CmsGateway {
   public async updatePageContent(input: {
     id: string;
     title: string;
-    blocks: CmsBlockDto[];
+    slug?: string;
+    status?: 'draft' | 'published' | 'archived';
+    blocks?: CmsBlockDto[];
     seoTitle?: string;
     seoDescription?: string;
     adminId?: string;
   }): Promise<CmsPageDto> {
     const page = await this.publicApi.updatePageContent({
       ...input,
-      blocks: input.blocks as any,
+      blocks: input.blocks ? (input.blocks as any) : undefined,
     });
     return page.toPrimitives() as CmsPageDto;
   }

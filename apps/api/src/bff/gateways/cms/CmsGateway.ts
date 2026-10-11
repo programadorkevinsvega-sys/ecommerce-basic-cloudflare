@@ -49,7 +49,9 @@ export interface CmsGateway {
   updatePageContent(input: {
     id: string;
     title: string;
-    blocks: CmsBlockDto[];
+    slug?: string;
+    status?: 'draft' | 'published' | 'archived';
+    blocks?: CmsBlockDto[];
     seoTitle?: string;
     seoDescription?: string;
     adminId?: string;
