@@ -1,5 +1,5 @@
-import { ISettingsRepository } from '../../../domain/repositories/ISettingsRepository.js';
-import { StoreSettings } from '../../../domain/entities/StoreSettings.js';
+import { ISettingsRepository } from '../../../../domain/repositories/ISettingsRepository.js';
+import { StoreSettings } from '../../../../domain/entities/StoreSettings.js';
 
 export class D1SettingsRepository implements ISettingsRepository {
   private readonly db: D1Database;
