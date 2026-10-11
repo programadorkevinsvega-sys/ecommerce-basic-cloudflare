@@ -10,7 +10,7 @@ export default {
     return app.fetch(request, env, ctx);
   },
 
-  async queue(batch: MessageBatch<unknown>, env: Env, _ctx: ExecutionContext): Promise<void> {
+  async queue(batch: MessageBatch<unknown>, _env: Env, _ctx: ExecutionContext): Promise<void> {
     const logger = new JsonLogger('queue-consumer');
 
     for (const message of batch.messages) {

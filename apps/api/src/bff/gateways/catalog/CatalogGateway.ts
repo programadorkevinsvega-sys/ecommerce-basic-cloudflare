@@ -1,11 +1,22 @@
 export interface CreateProductGatewayRequest {
   name: string;
-  slug: string;
+  slug?: string;
   description: string;
   priceInCents: number;
   sku: string;
   stockQuantity: number;
   status?: 'draft' | 'published' | 'archived';
+  condition?: 'new' | 'used' | 'refurbished';
+  specifications?: Record<string, unknown>;
+  brand?: string;
+  productType?: string;
+  tags?: string[];
+  barcodeGtin?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  canonicalUrl?: string;
+  ogImageId?: string;
+  noindex?: boolean;
   allowsCashOnDelivery: boolean;
   shippingScope: 'national' | 'local';
   localCoverageZones?: string[];
@@ -23,6 +34,17 @@ export interface CatalogProductDto {
   sku: string;
   stockQuantity: number;
   status: string;
+  condition: 'new' | 'used' | 'refurbished';
+  specifications: Record<string, unknown>;
+  brand?: string;
+  productType?: string;
+  tags: string[];
+  barcodeGtin?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  canonicalUrl?: string;
+  ogImageId?: string;
+  noindex: boolean;
   salePolicy: {
     allowsCashOnDelivery: boolean;
     shippingScope: 'national' | 'local';

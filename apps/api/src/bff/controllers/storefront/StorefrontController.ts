@@ -7,13 +7,29 @@ import { renderProductList } from '../../views/renderProductList.js';
 import { renderProductDetail } from '../../views/renderProductDetail.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
 
+import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
+import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
+
 export class StorefrontController {
   public static createRoutes(
     catalogGateway: CatalogGateway,
     identityGateway: IdentityGateway,
-    storefrontGateway: StorefrontGateway
+    storefrontGateway: StorefrontGateway,
+    seoGateway: SeoGateway
   ): Hono {
     const router = new Hono();
+
+    // Redirecciones dinámicas 301 gestionadas por el módulo SEO
+    router.use('*', async (c, next) => {
+      const path = c.req.path;
+      if (!path.startsWith('/api/') && !path.startsWith('/admin')) {
+        const redirect = await seoGateway.resolveRedirect(path);
+        if (redirect) {
+          return c.redirect(redirect.toPath, redirect.statusCode as 301 | 302);
+        }
+      }
+      return next();
+    });
 
     // Home / Catálogo inicial SSR con Banners y Anuncios
     router.get('/', async (c) => {
@@ -60,7 +76,7 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    // Detalle de producto SSR
+    // Detalle de producto SSR con metadatos SEO y JSON-LD
     router.get('/productos/:slug', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const slug = c.req.param('slug');
@@ -68,10 +84,28 @@ export class StorefrontController {
         const product = await catalogGateway.getProductBySlug(slug);
         const bodyHtml = renderProductDetail(product);
 
+        const pageTitle = ProductSeoHelper.resolveTitle(product.seoTitle, product.name);
+        const pageDesc = ProductSeoHelper.resolveDescription(product.seoDescription, product.description);
+        const canonical = product.canonicalUrl || `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/productos/${product.slug}`;
+
+        const jsonLd = ProductSeoHelper.generateJsonLd({
+          name: product.name,
+          description: product.description,
+          priceInCents: product.priceInCents,
+          sku: product.sku,
+          brand: product.brand,
+          stockQuantity: product.stockQuantity,
+          condition: product.condition,
+          url: canonical,
+          imageUrl: product.mediaIds?.[0] ? `/media/${product.mediaIds[0]}` : undefined,
+        });
+
         const html = renderBaseLayout({
-          title: product.name,
-          description: product.description.substring(0, 160),
-          canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/productos/${product.slug}`,
+          title: pageTitle,
+          description: pageDesc,
+          canonicalUrl: canonical,
+          noindex: product.noindex,
+          jsonLd,
           bodyHtml,
           customerEmail,
         });

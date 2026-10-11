@@ -1,4 +1,4 @@
-import { Product, ProductStatus } from '../../../../domain/entities/Product.js';
+import { Product, ProductStatus, ProductCondition } from '../../../../domain/entities/Product.js';
 import { ProductSalePolicy, ShippingScope, SaleMode } from '../../../../domain/entities/ProductSalePolicy.js';
 import { IProductRepository } from '../../../../domain/ports/IProductRepository.js';
 
@@ -11,6 +11,17 @@ interface ProductRow {
   sku: string;
   stock_quantity: number;
   status: string;
+  condition: string;
+  specifications: string;
+  brand?: string;
+  product_type?: string;
+  tags: string;
+  barcode_gtin?: string;
+  seo_title?: string;
+  seo_description?: string;
+  canonical_url?: string;
+  og_image_id?: string;
+  noindex: number;
   allows_cash_on_delivery: number;
   shipping_scope: string;
   sale_mode: string;
@@ -43,8 +54,10 @@ export class D1ProductRepository implements IProductRepository {
       this.db.prepare(
         `INSERT INTO catalog_products (
           id, name, slug, description, price_in_cents, sku, stock_quantity,
-          status, allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          status, condition, specifications, brand, product_type, tags, barcode_gtin,
+          seo_title, seo_description, canonical_url, og_image_id, noindex,
+          allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
@@ -53,13 +66,28 @@ export class D1ProductRepository implements IProductRepository {
           sku = excluded.sku,
           stock_quantity = excluded.stock_quantity,
           status = excluded.status,
+          condition = excluded.condition,
+          specifications = excluded.specifications,
+          brand = excluded.brand,
+          product_type = excluded.product_type,
+          tags = excluded.tags,
+          barcode_gtin = excluded.barcode_gtin,
+          seo_title = excluded.seo_title,
+          seo_description = excluded.seo_description,
+          canonical_url = excluded.canonical_url,
+          og_image_id = excluded.og_image_id,
+          noindex = excluded.noindex,
           allows_cash_on_delivery = excluded.allows_cash_on_delivery,
           shipping_scope = excluded.shipping_scope,
           sale_mode = excluded.sale_mode,
           updated_at = excluded.updated_at`
       ).bind(
         p.id, p.name, p.slug, p.description, p.priceInCents, p.sku, p.stockQuantity,
-        p.status, p.salePolicy.allowsCashOnDelivery ? 1 : 0, p.salePolicy.shippingScope,
+        p.status, p.condition, JSON.stringify(p.specifications), p.brand ?? null,
+        p.productType ?? null, JSON.stringify(p.tags), p.barcodeGtin ?? null,
+        p.seoTitle ?? null, p.seoDescription ?? null, p.canonicalUrl ?? null,
+        p.ogImageId ?? null, p.noindex ? 1 : 0,
+        p.salePolicy.allowsCashOnDelivery ? 1 : 0, p.salePolicy.shippingScope,
         p.salePolicy.saleMode, p.createdAt, p.updatedAt
       ),
       this.db.prepare('DELETE FROM catalog_product_categories WHERE product_id = ?').bind(p.id),
@@ -74,7 +102,7 @@ export class D1ProductRepository implements IProductRepository {
     }
     for (let i = 0; i < p.mediaIds.length; i++) {
       const mediaId = p.mediaIds[i] as string;
-      await this.db.prepare('INSERT INTO catalog_product_images (id, product_id, media_id, sort_order, created_at) VALUES (?, ?, ?, ?, ?)').bind(crypto.randomUUID(), p.id, mediaId, i, p.createdAt).run();
+      await this.db.prepare('INSERT INTO catalog_product_images (id, product_id, media_id, sort_order, alt_text, created_at) VALUES (?, ?, ?, ?, ?, ?)').bind(crypto.randomUUID(), p.id, mediaId, i, p.name, p.createdAt).run();
     }
     for (const zoneId of p.salePolicy.localCoverageZones) {
       await this.db.prepare('INSERT INTO catalog_product_coverage (product_id, zone_id) VALUES (?, ?)').bind(p.id, zoneId).run();
@@ -125,6 +153,12 @@ export class D1ProductRepository implements IProductRepository {
     const images = await this.db.prepare('SELECT media_id FROM catalog_product_images WHERE product_id = ? ORDER BY sort_order ASC').bind(row.id).all<{ media_id: string }>();
     const coverage = await this.db.prepare('SELECT zone_id FROM catalog_product_coverage WHERE product_id = ?').bind(row.id).all<{ zone_id: string }>();
 
+    let specs: Record<string, unknown> = {};
+    try { specs = JSON.parse(row.specifications || '{}'); } catch { specs = {}; }
+
+    let tags: string[] = [];
+    try { tags = JSON.parse(row.tags || '[]'); } catch { tags = []; }
+
     return new Product({
       id: row.id,
       name: row.name,
@@ -134,6 +168,17 @@ export class D1ProductRepository implements IProductRepository {
       sku: row.sku,
       stockQuantity: row.stock_quantity,
       status: row.status as ProductStatus,
+      condition: (row.condition || 'new') as ProductCondition,
+      specifications: specs,
+      brand: row.brand ?? undefined,
+      productType: row.product_type ?? undefined,
+      tags,
+      barcodeGtin: row.barcode_gtin ?? undefined,
+      seoTitle: row.seo_title ?? undefined,
+      seoDescription: row.seo_description ?? undefined,
+      canonicalUrl: row.canonical_url ?? undefined,
+      ogImageId: row.og_image_id ?? undefined,
+      noindex: row.noindex === 1,
       salePolicy: new ProductSalePolicy({
         allowsCashOnDelivery: row.allows_cash_on_delivery === 1,
         shippingScope: row.shipping_scope as ShippingScope,

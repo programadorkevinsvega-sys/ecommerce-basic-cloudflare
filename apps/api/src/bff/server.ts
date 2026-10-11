@@ -10,6 +10,7 @@ import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
+import { SeoController } from './controllers/seo/SeoController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -17,6 +18,15 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+
+  // SEO: robots.txt, sitemap.xml y gestión de redirects
+  app.route(
+    '/',
+    SeoController.createRoutes(
+      compositionRoot.seoGateway,
+      compositionRoot.catalogGateway
+    )
+  );
 
   // Panel Visual Administrativo (Fase 1 / Admin UI)
   app.route(
@@ -34,7 +44,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
     StorefrontController.createRoutes(
       compositionRoot.catalogGateway,
       compositionRoot.identityGateway,
-      compositionRoot.storefrontGateway
+      compositionRoot.storefrontGateway,
+      compositionRoot.seoGateway
     )
   );
 

@@ -1,5 +1,5 @@
 import { Result } from '../../../../shared-kernel/Result.js';
-import { IMediaStoragePort, StoredMediaObject } from '../../domain/ports/IMediaStoragePort.js';
+import { IMediaStoragePort } from '../../domain/ports/IMediaStoragePort.js';
 import { IMediaAssetRepository } from '../../domain/ports/IMediaAssetRepository.js';
 
 export interface ServeMediaOutput {

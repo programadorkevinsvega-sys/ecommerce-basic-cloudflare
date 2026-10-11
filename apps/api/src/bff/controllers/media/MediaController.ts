@@ -3,9 +3,17 @@ import { MediaGateway } from '../../gateways/media/MediaGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
+type MediaVariables = {
+  Variables: {
+    actorId: string;
+    actorType: string;
+    permissions: string[];
+  };
+};
+
 export class MediaController {
-  public static createRoutes(mediaGateway: MediaGateway, identityGateway: IdentityGateway): Hono {
-    const router = new Hono();
+  public static createRoutes(mediaGateway: MediaGateway, identityGateway: IdentityGateway): Hono<MediaVariables> {
+    const router = new Hono<MediaVariables>();
 
     // SEC-R2-01 & SEC-R2-06: Servir medios a través del Worker con X-Content-Type-Options: nosniff
     router.get('/:id', async (c) => {

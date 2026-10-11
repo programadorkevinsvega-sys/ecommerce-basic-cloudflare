@@ -2,6 +2,9 @@ export interface LayoutProps {
   title: string;
   description: string;
   canonicalUrl?: string;
+  ogImageUrl?: string;
+  noindex?: boolean;
+  jsonLd?: string;
   bodyHtml: string;
   customerEmail?: string;
   announcementMessage?: string;
@@ -12,6 +15,9 @@ export function renderBaseLayout(props: LayoutProps): string {
   const safeTitle = escapeHtml(props.title);
   const safeDesc = escapeHtml(props.description);
   const canonical = props.canonicalUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/';
+  const robots = props.noindex ? 'noindex, nofollow' : 'index, follow';
+  const ogImage = props.ogImageUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/media/og-default.jpg';
+  const jsonLdScript = props.jsonLd ? `<script type="application/ld+json">${props.jsonLd}</script>` : '';
 
   const topBarHtml = props.announcementMessage
     ? `<div style="background: #2563eb; color: #fff; text-align: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600;">
@@ -31,7 +37,13 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
   <meta property="og:type" content="website">
-  <meta name="robots" content="index, follow">
+  <meta property="og:image" content="${escapeHtml(ogImage)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${safeTitle}">
+  <meta name="twitter:description" content="${safeDesc}">
+  <meta name="twitter:image" content="${escapeHtml(ogImage)}">
+  <meta name="robots" content="${robots}">
+  ${jsonLdScript}
   <style>
     :root {
       --primary: #0f172a;

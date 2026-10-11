@@ -21,15 +21,32 @@ export function renderProductDetail(product: CatalogProductDto): string {
     ? 'Venta exclusiva a crédito.'
     : 'Venta de contado.';
 
+  const conditionText = product.condition === 'refurbished' ? 'Reacondicionado' : product.condition === 'used' ? 'Usado' : 'Nuevo';
+
+  const specsList = Object.entries(product.specifications || {})
+    .map(([k, v]) => `<li><strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(v))}</li>`)
+    .join('');
+
   return `
     <div style="margin-bottom: 1rem;">
       <a href="/productos" style="color: var(--accent); text-decoration: none; font-weight: 600;">← Volver al catálogo</a>
     </div>
     <article class="detail-view">
       <h1 class="detail-title">${escapeHtml(product.name)}</h1>
-      <div class="detail-sku">SKU: ${escapeHtml(product.sku)} | Disponibilidad: ${product.stockQuantity} unidades</div>
+      <div class="detail-sku">
+        SKU: ${escapeHtml(product.sku)} | Condición: <strong>${conditionText}</strong> | Stock: ${product.stockQuantity} un.
+        ${product.brand ? ` | Marca: <strong>${escapeHtml(product.brand)}</strong>` : ''}
+        ${product.barcodeGtin ? ` | GTIN: <code>${escapeHtml(product.barcodeGtin)}</code>` : ''}
+      </div>
       <div class="detail-price">${formattedPrice}</div>
-      <p style="font-size: 1.05rem; color: var(--text); margin-bottom: 2rem;">${escapeHtml(product.description)}</p>
+      <p style="font-size: 1.05rem; color: var(--text); margin-bottom: 1.5rem;">${escapeHtml(product.description)}</p>
+
+      ${specsList ? `
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 6px;">
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem;">Especificaciones Técnicas</h3>
+          <ul style="padding-left: 1.25rem; font-size: 0.95rem; line-height: 1.6;">${specsList}</ul>
+        </div>
+      ` : ''}
 
       <div class="detail-policy">
         <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Políticas Comerciales y Envío</h3>

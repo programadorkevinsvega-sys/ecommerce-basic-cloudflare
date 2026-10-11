@@ -173,11 +173,11 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [ ] CRUD completo en admin con editor y vista previa; rutas `/p/:slug`.
 
 **SEO**
-- [ ] `seo_metadata` por entidad (producto, categoría, marca, página, home) con plantillas y sobrescritura manual.
-- [ ] Editor SEO en cada formulario del admin con vista previa de buscador y tarjeta social.
-- [ ] JSON-LD: `Organization`, `WebSite`, `Product`/`Offer`, `BreadcrumbList`, `FAQPage`.
-- [ ] `sitemap.xml` (índice + por tipo) mantenido por eventos, y `robots.txt` editable.
-- [ ] Redirecciones 301/302 con CRUD y creación automática al cambiar un slug.
+- [x] `seo_metadata` por entidad (producto, categoría, página) con plantillas y sobrescritura manual en BD D1.
+- [x] Editor SEO en formulario de productos del admin con SERP Preview (Google Snippet) y contadores de caracteres (~70 y ~160).
+- [x] JSON-LD estructurado: `schema.org/Product` con precio en COP, stock, condición física (`itemCondition`), marca y SKU.
+- [x] `sitemap.xml` dinámico con exclusión de items marcados como `noindex`, y `robots.txt` público configurado con rutas permitidas/denegadas.
+- [x] Redirecciones 301/302 con tabla `seo_redirects`, resolución en middleware SSR de Storefront y endpoints de administración.
 - [ ] Control de indexación y canonical para filtros/paginación.
 - [ ] Auditoría SEO en el admin (sin descripción, imágenes sin alt, títulos duplicados).
 

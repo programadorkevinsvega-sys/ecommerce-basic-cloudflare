@@ -19,6 +19,10 @@ import { StorefrontGateway } from './bff/gateways/storefront/StorefrontGateway.j
 import { InProcessStorefrontGateway } from './bff/gateways/storefront/InProcessStorefrontGateway.js';
 import { createStorefrontModule } from './modules/storefront/module.config.js';
 import { StorefrontPublicApi } from './modules/storefront/module.public-api.js';
+import { SeoGateway } from './bff/gateways/seo/SeoGateway.js';
+import { InProcessSeoGateway } from './bff/gateways/seo/InProcessSeoGateway.js';
+import { createSeoModule } from './modules/seo/module.config.js';
+import { SeoPublicApi } from './modules/seo/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -27,6 +31,7 @@ export interface AppCompositionRoot {
   mediaGateway: MediaGateway;
   catalogGateway: CatalogGateway;
   storefrontGateway: StorefrontGateway;
+  seoGateway: SeoGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -56,6 +61,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const storefrontPublicApi = new StorefrontPublicApi(storefrontContainer);
   const storefrontGateway = new InProcessStorefrontGateway(storefrontPublicApi);
 
+  // Módulo SEO
+  const seoContainer = createSeoModule(env);
+  const seoPublicApi = new SeoPublicApi(seoContainer);
+  const seoGateway = new InProcessSeoGateway(seoPublicApi);
+
   // Outbox Relay transversal
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
@@ -65,6 +75,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     mediaGateway,
     catalogGateway,
     storefrontGateway,
+    seoGateway,
     outboxRelayService,
   };
 }

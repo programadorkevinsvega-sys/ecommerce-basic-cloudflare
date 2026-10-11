@@ -12,7 +12,7 @@ export interface MediaModuleContainer {
 }
 
 export function createMediaModule(env: Env): MediaModuleContainer {
-  const storagePort = new R2MediaStorageAdapter(env.BUCKET);
+  const storagePort = new R2MediaStorageAdapter(env.MEDIA_BUCKET);
   const assetRepo = new D1MediaAssetRepository(env.DB);
 
   return {

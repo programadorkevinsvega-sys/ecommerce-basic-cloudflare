@@ -1,6 +1,6 @@
 import { Result } from '../../../../shared-kernel/Result.js';
-import { Banner, BannerProps } from '../../domain/entities/Banner.js';
-import { Announcement, AnnouncementProps } from '../../domain/entities/Announcement.js';
+import { BannerProps } from '../../domain/entities/Banner.js';
+import { AnnouncementProps } from '../../domain/entities/Announcement.js';
 import { IStorefrontContentRepository } from '../../domain/ports/IStorefrontContentRepository.js';
 
 export interface StorefrontHomeContentOutput {

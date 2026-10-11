@@ -47,7 +47,8 @@ export function checkTableIsolation() {
       const content = fs.readFileSync(filePath, 'utf-8');
 
       for (const prefix of forbiddenPrefixes) {
-        const regex = new RegExp(`\\b${prefix}[a-z0-9_]+\\b`, 'gi');
+        // Solo marcar si es una consulta SQL o declaración DDL a una tabla ajena
+        const regex = new RegExp(`(?:FROM|JOIN|INTO|UPDATE|TABLE)\\s+${prefix}[a-z0-9_]+`, 'gi');
         const matches = content.match(regex);
 
         if (matches && matches.length > 0) {

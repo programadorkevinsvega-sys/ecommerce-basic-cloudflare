@@ -1,4 +1,4 @@
-import { IMediaStoragePort, StoredMediaObject } from '../../domain/ports/IMediaStoragePort.js';
+import { IMediaStoragePort, StoredMediaObject } from '../../../domain/ports/IMediaStoragePort.js';
 
 export class R2MediaStorageAdapter implements IMediaStoragePort {
   private readonly bucket: R2Bucket;

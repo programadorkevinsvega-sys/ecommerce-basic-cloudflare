@@ -215,11 +215,30 @@ Cada producto declara su **política de venta**. Los datos viven en `catalog`; l
 
 | Atributo del producto | Valores | Significado |
 |---|---|---|
+| `slug` | `string` (único, indexado) | URL / handle autogenerado desde el nombre y editable (`/productos/:slug`) |
+| `condition` | `new` / `used` / `refurbished` | Condición física del producto |
+| `specifications` | `JSON` | Ficha técnica y atributos específicos como objeto clave-valor |
+| `brand` | `string` | Marca o proveedor del producto |
+| `product_type` | `string` | Categorización o tipo de producto |
+| `tags` | `JSON array` | Etiquetas para filtrado y categorización |
+| `barcode_gtin` | `string` | Código de barras estándar (GTIN/EAN) para indexación comercial |
+| `seo_title` | `string` (nullable) | Título optimizado para buscadores (~60-70 caracteres). Fallback: nombre del producto |
+| `seo_description` | `string` (nullable) | Meta descripción para Google (~155-160 caracteres). Fallback: extracto de la descripción |
+| `canonical_url` | `string` (nullable) | URL canónica para evitar contenido duplicado |
+| `og_image_id` | `string` (nullable) | Imagen personalizada para Open Graph / Twitter Cards |
+| `noindex` | `boolean` (default `false`) | Bandera para ocultar el producto de motores de búsqueda (`robots: noindex, nofollow`) |
 | `allows_cash_on_delivery` | `true` / `false` | Si el producto admite pago contra entrega |
 | `shipping_scope` | `national` / `local` | Envío a todo el país o solo a zonas concretas |
 | `catalog_product_coverage` | lista de `zone_id` (`TEXT`, sin FK) | Zonas válidas cuando el alcance es `local` (ciudad o municipio) |
 | `sale_mode` | `cash` / `credit` / `both` | Venta de contado, a crédito o ambas *(ADR-0009)* |
 | Descuento | vía `promotions` | Los productos con descuento se resuelven por `PromotionsGateway`, no por columnas en `catalog` |
+
+### Reglas SEO y Redirecciones 301
+- **Fallbacks inteligentes**: Si `seo_title` o `seo_description` están vacíos, se computan dinámicamente desde el nombre y primeros 160 caracteres limpios de la descripción.
+- **Redirección 301 automática en cambio de slug**: Cuando se modifica el handle/slug de un producto, se registra automáticamente una redirección permanente (`301`) en la tabla `seo_redirects` del módulo SEO para preservar enlaces externos y posicionamiento histórico.
+- **SERP Preview**: Formulario administrativo incluye vista previa en tiempo real estilo Google (título azul, URL verde, descripción gris) y contadores de caracteres (70 para título, 160 para descripción).
+- **Datos Estructurados (JSON-LD)**: Inyección en el `<head>` del tipo `schema.org/Product` con nombre, SKU, marca, condición (`itemCondition`), disponibilidad (`InStock`/`OutOfStock`), y oferta con moneda COP (`offers.priceCurrency`).
+- **Sitemap y Robots**: `sitemap.xml` dinámico filtrando productos con `noindex = true`, y `robots.txt` público configurado con directivas seguras y enlace a sitemap.
 
 ### Cómo se evalúa en el carrito / checkout
 

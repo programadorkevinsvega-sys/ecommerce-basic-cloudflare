@@ -50,7 +50,7 @@ export function createAuthMiddleware(
       c.set('actorType', session.actorType);
       c.set('permissions', session.permissions);
 
-      await next();
+      return next();
     } catch {
       return c.json({ error: 'Sesión inválida o expirada' }, 401);
     }
