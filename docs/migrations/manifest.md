@@ -1,6 +1,6 @@
 # Manifiesto de Migraciones D1
 
-Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio de esquema debe reflejarse en este archivo antes de ser considerado cerrado en PR.
+Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio de esquema debe reflejarse en este archivo conforme al contrato de arquitectura y reglas de recuperación (ROLLBACK_RECOVERY.md).
 
 ---
 
@@ -8,6 +8,5 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
-| `0001_init.sql` | v1 | Dev (Local) | Fase 0 | Inicial | Pendiente de despliegue |
-| `0001_init.sql` | v1 | Staging | Fase 0 | Inicial | Pendiente |
-| `0001_init.sql` | v1 | Production | Fase 0 | Inicial | Pendiente |
+| `settings__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | 6092431 | ✅ Aplicada con éxito |
+| `settings__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | 6092431 | ✅ Verificada |
