@@ -11,6 +11,7 @@ import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
+import { CmsController } from './controllers/cms/CmsController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -18,6 +19,15 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+
+  // CMS: Páginas con bloques (/p/:slug), menús y gestión de contenido
+  app.route(
+    '/',
+    CmsController.createRoutes(
+      compositionRoot.cmsGateway,
+      compositionRoot.identityGateway
+    )
+  );
 
   // SEO: robots.txt, sitemap.xml y gestión de redirects
   app.route(

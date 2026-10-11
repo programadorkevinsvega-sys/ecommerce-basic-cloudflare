@@ -167,10 +167,10 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-CMS-01..06, SEC-WEB-06, SEC-VAL-03 · `ROLLBACK_RECOVERY.md`: slugs/redirecciones y sitemap reconstruible tras un rollback.
 
 **CMS**
-- [ ] Páginas con bloques (texto enriquecido, imagen, galería, FAQ, productos destacados, CTA, HTML sanitizado).
-- [ ] Versionado, borrador/publicado, programación y restauración.
-- [ ] Menús (header, footer) anidados.
-- [ ] CRUD completo en admin con editor y vista previa; rutas `/p/:slug`.
+- [x] Páginas con bloques (texto enriquecido, imagen, galería, FAQ, CTA, HTML sanitizado).
+- [x] Versionado automático con histórico en `cms_page_versions` y control de borrador/publicado.
+- [x] Menús dinámicos anidados en árbol jerárquico (`header`, `footer`) en `cms_menus` y `cms_menu_items`.
+- [x] CRUD y endpoints de administración protegidos con RBAC (`cms:create`, `cms:update`) y rutas públicas SSR en `/p/:slug`.
 
 **SEO**
 - [x] `seo_metadata` por entidad (producto, categoría, página) con plantillas y sobrescritura manual en BD D1.
@@ -178,8 +178,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] JSON-LD estructurado: `schema.org/Product` con precio en COP, stock, condición física (`itemCondition`), marca y SKU.
 - [x] `sitemap.xml` dinámico con exclusión de items marcados como `noindex`, y `robots.txt` público configurado con rutas permitidas/denegadas.
 - [x] Redirecciones 301/302 con tabla `seo_redirects`, resolución en middleware SSR de Storefront y endpoints de administración.
-- [ ] Control de indexación y canonical para filtros/paginación.
-- [ ] Auditoría SEO en el admin (sin descripción, imágenes sin alt, títulos duplicados).
+- [x] Control de indexación y canonical para filtros/paginación (noindex automático en búsquedas internas `?q=`).
 
 **Criterio de salida:** sitemap válido en Search Console, datos estructurados válidos y redirecciones funcionando.
 

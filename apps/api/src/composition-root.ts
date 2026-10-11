@@ -23,6 +23,10 @@ import { SeoGateway } from './bff/gateways/seo/SeoGateway.js';
 import { InProcessSeoGateway } from './bff/gateways/seo/InProcessSeoGateway.js';
 import { createSeoModule } from './modules/seo/module.config.js';
 import { SeoPublicApi } from './modules/seo/module.public-api.js';
+import { CmsGateway } from './bff/gateways/cms/CmsGateway.js';
+import { InProcessCmsGateway } from './bff/gateways/cms/InProcessCmsGateway.js';
+import { createCmsModule } from './modules/cms/module.config.js';
+import { CmsPublicApi } from './modules/cms/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -32,6 +36,7 @@ export interface AppCompositionRoot {
   catalogGateway: CatalogGateway;
   storefrontGateway: StorefrontGateway;
   seoGateway: SeoGateway;
+  cmsGateway: CmsGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -66,6 +71,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const seoPublicApi = new SeoPublicApi(seoContainer);
   const seoGateway = new InProcessSeoGateway(seoPublicApi);
 
+  // Módulo CMS
+  const cmsContainer = createCmsModule(env);
+  const cmsPublicApi = new CmsPublicApi(cmsContainer);
+  const cmsGateway = new InProcessCmsGateway(cmsPublicApi);
+
   // Outbox Relay transversal
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
@@ -76,6 +86,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     catalogGateway,
     storefrontGateway,
     seoGateway,
+    cmsGateway,
     outboxRelayService,
   };
 }
