@@ -38,29 +38,25 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
 
   public async findActiveBanners(placement: string): Promise<Banner[]> {
     const { results } = await this.db
-      .prepare(
-        'SELECT * FROM storefront_banners WHERE placement = ? AND is_active = 1 ORDER BY sort_order ASC'
-      )
+      .prepare('SELECT * FROM storefront_banners WHERE placement = ? AND is_active = 1 ORDER BY sort_order ASC')
       .bind(placement)
       .all<BannerRow>();
+    return (results || []).map((r) => this.hydrateBanner(r));
+  }
 
-    return (results || []).map(
-      (r) =>
-        new Banner({
-          id: r.id,
-          title: r.title,
-          placement: r.placement,
-          imageUrl: r.image_url,
-          linkUrl: r.link_url,
-          altText: r.alt_text,
-          isActive: r.is_active === 1,
-          startsAt: r.starts_at,
-          endsAt: r.ends_at,
-          sortOrder: r.sort_order,
-          createdAt: r.created_at,
-          updatedAt: r.updated_at,
-        })
-    );
+  public async findAllBanners(): Promise<Banner[]> {
+    const { results } = await this.db
+      .prepare('SELECT * FROM storefront_banners ORDER BY sort_order ASC, created_at DESC')
+      .all<BannerRow>();
+    return (results || []).map((r) => this.hydrateBanner(r));
+  }
+
+  public async findBannerById(id: string): Promise<Banner | null> {
+    const row = await this.db
+      .prepare('SELECT * FROM storefront_banners WHERE id = ?')
+      .bind(id)
+      .first<BannerRow>();
+    return row ? this.hydrateBanner(row) : null;
   }
 
   public async saveBanner(banner: Banner): Promise<void> {
@@ -87,26 +83,31 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
       .run();
   }
 
+  public async deleteBanner(id: string): Promise<void> {
+    await this.db.prepare('DELETE FROM storefront_banners WHERE id = ?').bind(id).run();
+  }
+
   public async findActiveAnnouncements(placement: string): Promise<Announcement[]> {
     const { results } = await this.db
-      .prepare('SELECT * FROM storefront_announcements WHERE placement = ? AND is_active = 1')
+      .prepare('SELECT * FROM storefront_announcements WHERE placement = ? AND is_active = 1 ORDER BY created_at DESC')
       .bind(placement)
       .all<AnnouncementRow>();
+    return (results || []).map((r) => this.hydrateAnnouncement(r));
+  }
 
-    return (results || []).map(
-      (r) =>
-        new Announcement({
-          id: r.id,
-          message: r.message,
-          placement: r.placement,
-          linkUrl: r.link_url,
-          isActive: r.is_active === 1,
-          startsAt: r.starts_at,
-          endsAt: r.ends_at,
-          createdAt: r.created_at,
-          updatedAt: r.updated_at,
-        })
-    );
+  public async findAllAnnouncements(): Promise<Announcement[]> {
+    const { results } = await this.db
+      .prepare('SELECT * FROM storefront_announcements ORDER BY created_at DESC')
+      .all<AnnouncementRow>();
+    return (results || []).map((r) => this.hydrateAnnouncement(r));
+  }
+
+  public async findAnnouncementById(id: string): Promise<Announcement | null> {
+    const row = await this.db
+      .prepare('SELECT * FROM storefront_announcements WHERE id = ?')
+      .bind(id)
+      .first<AnnouncementRow>();
+    return row ? this.hydrateAnnouncement(row) : null;
   }
 
   public async saveAnnouncement(announcement: Announcement): Promise<void> {
@@ -129,5 +130,40 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
         p.createdAt, p.updatedAt
       )
       .run();
+  }
+
+  public async deleteAnnouncement(id: string): Promise<void> {
+    await this.db.prepare('DELETE FROM storefront_announcements WHERE id = ?').bind(id).run();
+  }
+
+  private hydrateBanner(r: BannerRow): Banner {
+    return new Banner({
+      id: r.id,
+      title: r.title,
+      placement: r.placement,
+      imageUrl: r.image_url,
+      linkUrl: r.link_url,
+      altText: r.alt_text,
+      isActive: r.is_active === 1,
+      startsAt: r.starts_at,
+      endsAt: r.ends_at,
+      sortOrder: r.sort_order,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    });
+  }
+
+  private hydrateAnnouncement(r: AnnouncementRow): Announcement {
+    return new Announcement({
+      id: r.id,
+      message: r.message,
+      placement: r.placement,
+      linkUrl: r.link_url,
+      isActive: r.is_active === 1,
+      startsAt: r.starts_at,
+      endsAt: r.ends_at,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    });
   }
 }

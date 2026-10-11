@@ -8,7 +8,11 @@ import { Announcement } from './domain/entities/Announcement.js';
 export interface IStorefrontPublicApi {
   getHomeContent(): Promise<StorefrontHomeContentOutput>;
   createBanner(input: CreateBannerInput): Promise<Banner>;
+  listBanners(): Promise<Banner[]>;
+  deleteBanner(id: string): Promise<void>;
   createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement>;
+  listAnnouncements(): Promise<Announcement[]>;
+  deleteAnnouncement(id: string): Promise<void>;
 }
 
 export class StorefrontPublicApi implements IStorefrontPublicApi {
@@ -30,9 +34,31 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
     return res.value;
   }
 
+  public async listBanners(): Promise<Banner[]> {
+    const res = await this.container.listBannersUseCase.execute();
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async deleteBanner(id: string): Promise<void> {
+    const res = await this.container.deleteBannerUseCase.execute(id);
+    if (res.isFail()) throw res.error;
+  }
+
   public async createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement> {
     const res = await this.container.createAnnouncementUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async listAnnouncements(): Promise<Announcement[]> {
+    const res = await this.container.listAnnouncementsUseCase.execute();
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async deleteAnnouncement(id: string): Promise<void> {
+    const res = await this.container.deleteAnnouncementUseCase.execute(id);
+    if (res.isFail()) throw res.error;
   }
 }

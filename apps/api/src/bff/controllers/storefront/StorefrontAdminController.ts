@@ -1,0 +1,60 @@
+import { Hono } from 'hono';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+
+export class StorefrontAdminController {
+  public static createRoutes(storefrontGateway: StorefrontGateway): Hono {
+    const router = new Hono();
+
+    // Banners CRUD
+    router.get('/api/v1/admin/storefront/banners', async (c) => {
+      const banners = await storefrontGateway.listBanners();
+      return c.json({ data: banners });
+    });
+
+    router.post('/api/v1/admin/storefront/banners', async (c) => {
+      try {
+        const body = await c.req.json();
+        const banner = await storefrontGateway.createBanner(body);
+        return c.json({ data: banner }, 201);
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al crear banner' }, 400);
+      }
+    });
+
+    router.delete('/api/v1/admin/storefront/banners/:id', async (c) => {
+      try {
+        await storefrontGateway.deleteBanner(c.req.param('id'));
+        return c.json({ success: true });
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar banner' }, 400);
+      }
+    });
+
+    // Anuncios CRUD
+    router.get('/api/v1/admin/storefront/announcements', async (c) => {
+      const announcements = await storefrontGateway.listAnnouncements();
+      return c.json({ data: announcements });
+    });
+
+    router.post('/api/v1/admin/storefront/announcements', async (c) => {
+      try {
+        const body = await c.req.json();
+        const announcement = await storefrontGateway.createAnnouncement(body);
+        return c.json({ data: announcement }, 201);
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al crear anuncio' }, 400);
+      }
+    });
+
+    router.delete('/api/v1/admin/storefront/announcements/:id', async (c) => {
+      try {
+        await storefrontGateway.deleteAnnouncement(c.req.param('id'));
+        return c.json({ success: true });
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar anuncio' }, 400);
+      }
+    });
+
+    return router;
+  }
+}

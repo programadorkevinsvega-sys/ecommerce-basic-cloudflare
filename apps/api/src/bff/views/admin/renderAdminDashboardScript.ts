@@ -82,9 +82,26 @@ export function renderAdminDashboardScript(): string {
       else alert('Error al eliminar categoría');
     }
 
+    async function deleteBanner(id) {
+      if (!confirm('¿Deseas eliminar este banner?')) return;
+      const res = await fetch('/api/v1/admin/storefront/banners/' + id, { method: 'DELETE' });
+      if (res.ok) window.location.reload();
+      else alert('Error al eliminar banner');
+    }
+
+    async function deleteAnnouncement(id) {
+      if (!confirm('¿Deseas eliminar este anuncio?')) return;
+      const res = await fetch('/api/v1/admin/storefront/announcements/' + id, { method: 'DELETE' });
+      if (res.ok) window.location.reload();
+      else alert('Error al eliminar anuncio');
+    }
+
     window.switchTab = switchTab;
     window.setProductStatus = setProductStatus;
     window.deleteProduct = deleteProduct;
     window.deleteCategory = deleteCategory;
+    window.deleteBanner = deleteBanner;
+    window.deleteAnnouncement = deleteAnnouncement;
   `;
 }
+

@@ -164,33 +164,10 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    // Admin: Crear banner promocional (RBAC storefront:create)
-    router.post('/api/v1/admin/storefront/banners', async (c) => {
-      try {
-        const body = await c.req.json();
-        const banner = await storefrontGateway.createBanner(body);
-        return c.json({ data: banner }, 201);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al crear banner';
-        return c.json({ error: msg }, 400);
-      }
-    });
-
-    // Admin: Crear anuncio / barra superior (RBAC storefront:create)
-    router.post('/api/v1/admin/storefront/announcements', async (c) => {
-      try {
-        const body = await c.req.json();
-        const announcement = await storefrontGateway.createAnnouncement(body);
-        return c.json({ data: announcement }, 201);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al crear anuncio';
-        return c.json({ error: msg }, 400);
-      }
-    });
-
     return router;
   }
 }
+
 
 async function getCustomerEmail(c: { req: { header: (k: string) => string | undefined } }, identityGateway: IdentityGateway): Promise<string | undefined> {
   const cookieHeader = c.req.header('cookie') || '';

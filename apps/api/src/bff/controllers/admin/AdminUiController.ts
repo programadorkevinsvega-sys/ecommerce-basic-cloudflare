@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { renderAdminLoginPage } from '../../views/admin/renderAdminLoginPage.js';
 import { renderAdminDashboardPage } from '../../views/admin/renderAdminDashboardPage.js';
 
@@ -9,7 +10,8 @@ export class AdminUiController {
   public static createRoutes(
     identityGateway: IdentityGateway,
     catalogGateway: CatalogGateway,
-    settingsGateway: SettingsGateway
+    settingsGateway: SettingsGateway,
+    storefrontGateway: StorefrontGateway
   ): Hono {
     const router = new Hono();
 
@@ -34,11 +36,13 @@ export class AdminUiController {
           return c.redirect('/admin/login');
         }
 
-        const [products, categories, brands, attributes, settings] = await Promise.all([
+        const [products, categories, brands, attributes, banners, announcements, settings] = await Promise.all([
           catalogGateway.listProducts({ limit: 50 }),
           catalogGateway.listCategories(),
           catalogGateway.listBrands(),
           catalogGateway.listAttributes(),
+          storefrontGateway.listBanners(),
+          storefrontGateway.listAnnouncements(),
           settingsGateway.getSettings(),
         ]);
 
@@ -47,6 +51,8 @@ export class AdminUiController {
           categories,
           brands,
           attributes,
+          banners,
+          announcements,
           settings,
           adminEmail: 'admin@vega.com',
         });
@@ -56,6 +62,7 @@ export class AdminUiController {
         return c.redirect('/admin/login');
       }
     });
+
 
     return router;
   }

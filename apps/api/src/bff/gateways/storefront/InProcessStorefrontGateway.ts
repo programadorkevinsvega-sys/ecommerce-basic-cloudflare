@@ -1,6 +1,8 @@
 import {
   StorefrontGateway,
   StorefrontHomeData,
+  BannerItemDto,
+  AnnouncementItemDto,
   CreateBannerGatewayRequest,
 } from './StorefrontGateway.js';
 import { IStorefrontPublicApi } from '../../../modules/storefront/module.public-api.js';
@@ -36,6 +38,15 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
     return { id: banner.id, title: banner.title };
   }
 
+  public async listBanners(): Promise<BannerItemDto[]> {
+    const banners = await this.publicApi.listBanners();
+    return banners.map((b) => b.toPrimitives());
+  }
+
+  public async deleteBanner(id: string): Promise<void> {
+    await this.publicApi.deleteBanner(id);
+  }
+
   public async createAnnouncement(request: {
     message: string;
     placement: 'top_bar' | 'home' | 'products';
@@ -43,5 +54,14 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
   }): Promise<{ id: string; message: string }> {
     const announcement = await this.publicApi.createAnnouncement(request);
     return { id: announcement.id, message: announcement.message };
+  }
+
+  public async listAnnouncements(): Promise<AnnouncementItemDto[]> {
+    const announcements = await this.publicApi.listAnnouncements();
+    return announcements.map((a) => a.toPrimitives());
+  }
+
+  public async deleteAnnouncement(id: string): Promise<void> {
+    await this.publicApi.deleteAnnouncement(id);
   }
 }

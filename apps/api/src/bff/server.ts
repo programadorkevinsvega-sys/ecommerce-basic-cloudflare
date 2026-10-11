@@ -9,6 +9,7 @@ import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
+import { StorefrontAdminController } from './controllers/storefront/StorefrontAdminController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
@@ -19,6 +20,9 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+
+  // Storefront Admin API (Banners & Anuncios CRUD)
+  app.route('/', StorefrontAdminController.createRoutes(compositionRoot.storefrontGateway));
 
   // CMS: Páginas con bloques (/p/:slug), menús y gestión de contenido
   app.route(
@@ -44,9 +48,11 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
     AdminUiController.createRoutes(
       compositionRoot.identityGateway,
       compositionRoot.catalogGateway,
-      compositionRoot.settingsGateway
+      compositionRoot.settingsGateway,
+      compositionRoot.storefrontGateway
     )
   );
+
 
   // Storefront público SSR (Fases 3 y 4: Home, Banners, Catálogo, Detalle y Auth)
   app.route(

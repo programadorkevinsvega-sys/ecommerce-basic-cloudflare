@@ -152,6 +152,7 @@ export function renderAdminFormsScript(): string {
         msg.textContent = '✅ Banner publicado con éxito';
         msg.style.background = '#065f46';
         msg.style.display = 'block';
+        setTimeout(() => window.location.reload(), 800);
       }
     });
 
@@ -161,7 +162,7 @@ export function renderAdminFormsScript(): string {
       const payload = {
         message: document.getElementById('aMsgText').value,
         linkUrl: document.getElementById('aLink').value || undefined,
-        placement: 'top_bar'
+        placement: document.getElementById('aPlacement')?.value || 'top_bar'
       };
       const res = await fetch('/api/v1/admin/storefront/announcements', {
         method: 'POST',
@@ -172,8 +173,10 @@ export function renderAdminFormsScript(): string {
         msg.textContent = '✅ Anuncio superior publicado';
         msg.style.background = '#065f46';
         msg.style.display = 'block';
+        setTimeout(() => window.location.reload(), 800);
       }
     });
+
 
     document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();

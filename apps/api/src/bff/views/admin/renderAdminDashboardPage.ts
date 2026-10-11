@@ -1,19 +1,24 @@
 import { CatalogProductDto, CategoryDto, BrandDto, AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
+import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
 import { renderAdminFormsScript } from './renderAdminFormsScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductTable } from './renderProductTable.js';
+import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
 
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
   categories: CategoryDto[];
   brands: BrandDto[];
   attributes: AttributeDto[];
+  banners: BannerItemDto[];
+  announcements: AnnouncementItemDto[];
   settings: SettingsDto;
   adminEmail: string;
 }
+
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -122,31 +127,9 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-storefront" class="tab-content">
-      <div class="card">
-        <h2>Publicar Banner Hero</h2>
-        <form id="newBannerForm">
-          <div class="form-grid">
-            <div><label>Título</label><input type="text" id="bTitle" required /></div>
-            <div><label>Enlace</label><input type="text" id="bLink" required value="/productos" /></div>
-            <div><label>Texto Alt</label><input type="text" id="bAlt" required /></div>
-          </div>
-          <button type="submit" class="btn-primary">Publicar Banner</button>
-          <div id="bMsg" class="msg"></div>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2>Publicar Anuncio Superior</h2>
-        <form id="newAnnouncementForm">
-          <div class="form-grid">
-            <div style="grid-column: 1 / -1;"><label>Mensaje</label><input type="text" id="aMsgText" required /></div>
-            <div><label>Enlace Opcional</label><input type="text" id="aLink" placeholder="/productos" /></div>
-          </div>
-          <button type="submit" class="btn-primary">Publicar Anuncio</button>
-          <div id="aMsg" class="msg"></div>
-        </form>
-      </div>
+      ${renderStorefrontManagementSection(props.banners, props.announcements)}
     </div>
+
 
     <div id="tab-settings" class="tab-content">
       <div class="card">
