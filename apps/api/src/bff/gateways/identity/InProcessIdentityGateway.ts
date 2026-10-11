@@ -35,4 +35,8 @@ export class InProcessIdentityGateway implements IdentityGateway {
   public async logout(rawToken: string): Promise<void> {
     return this.publicApi.logout(rawToken);
   }
+
+  public async getCustomerProfile(customerId: string) {
+    return this.publicApi.getCustomerProfile(customerId);
+  }
 }

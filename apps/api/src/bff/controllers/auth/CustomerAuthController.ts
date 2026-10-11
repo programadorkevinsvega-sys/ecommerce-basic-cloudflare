@@ -76,6 +76,28 @@ export class CustomerAuthController {
       return c.json({ status: 'ok' });
     });
 
+    router.get('/me', async (c) => {
+      const cookieHeader = c.req.header('cookie') || '';
+      const match = cookieHeader.match(/__Host-session=([^;]+)/);
+      const token = match ? match[1] : c.req.header('authorization')?.replace('Bearer ', '');
+
+      if (!token) {
+        return c.json({ error: 'No autenticado: sesión requerida' }, 401);
+      }
+
+      try {
+        const session = await gateway.validateSession(token);
+        if (session.actorType !== 'customer') {
+          return c.json({ error: 'Acceso denegado: se requiere sesión de cliente' }, 403);
+        }
+
+        const profile = await gateway.getCustomerProfile(session.actorId);
+        return c.json({ data: profile });
+      } catch {
+        return c.json({ error: 'Sesión inválida o expirada' }, 401);
+      }
+    });
+
     return router;
   }
 }

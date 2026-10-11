@@ -3,6 +3,7 @@ import { RegisterCustomerInput, RegisterCustomerOutput } from './application/use
 import { LoginCustomerInput, LoginCustomerOutput } from './application/use-cases/LoginCustomerUseCase.js';
 import { LoginAdminInput, LoginAdminOutput } from './application/use-cases/LoginAdminUseCase.js';
 import { AuthenticatedActor } from './application/use-cases/ValidateSessionUseCase.js';
+import { CustomerProfileOutput } from './application/use-cases/GetCustomerProfileUseCase.js';
 
 export interface IIdentityPublicApi {
   registerCustomer(input: RegisterCustomerInput): Promise<RegisterCustomerOutput>;
@@ -10,6 +11,7 @@ export interface IIdentityPublicApi {
   loginAdmin(input: LoginAdminInput): Promise<LoginAdminOutput>;
   validateSession(rawToken: string): Promise<AuthenticatedActor>;
   logout(rawToken: string): Promise<void>;
+  getCustomerProfile(customerId: string): Promise<CustomerProfileOutput>;
 }
 
 export class IdentityPublicApi implements IIdentityPublicApi {
@@ -45,5 +47,11 @@ export class IdentityPublicApi implements IIdentityPublicApi {
 
   public async logout(rawToken: string): Promise<void> {
     await this.container.logoutUseCase.execute(rawToken);
+  }
+
+  public async getCustomerProfile(customerId: string): Promise<CustomerProfileOutput> {
+    const res = await this.container.getCustomerProfileUseCase.execute(customerId);
+    if (res.isFail()) throw res.error;
+    return res.value;
   }
 }

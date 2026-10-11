@@ -26,10 +26,20 @@ export interface AuthenticatedSession {
   permissions: string[];
 }
 
+export interface CustomerProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface IdentityGateway {
   registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ id: string; email: string; fullName: string }>;
   loginCustomer(input: LoginCustomerGatewayInput): Promise<{ rawToken: string; expiresAt: string }>;
   loginAdmin(input: LoginAdminGatewayInput): Promise<{ rawToken: string; expiresAt: string }>;
   validateSession(rawToken: string): Promise<AuthenticatedSession>;
   logout(rawToken: string): Promise<void>;
+  getCustomerProfile(customerId: string): Promise<CustomerProfile>;
 }
