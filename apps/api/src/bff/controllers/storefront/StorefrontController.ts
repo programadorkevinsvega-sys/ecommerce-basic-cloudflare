@@ -32,6 +32,9 @@ export class StorefrontController {
       return next();
     });
 
+    // Alias común /home -> raíz /
+    router.get('/home', (c) => c.redirect('/', 301));
+
     // Home / Catálogo inicial SSR con Banners y Anuncios
     router.get('/', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
