@@ -6,6 +6,8 @@ import { HealthController } from './controllers/HealthController.js';
 import { SettingsController } from './controllers/settings/SettingsController.js';
 import { CustomerAuthController } from './controllers/auth/CustomerAuthController.js';
 import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
+import { MediaController } from './controllers/media/MediaController.js';
+import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -23,6 +25,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   // Rutas de módulos montadas exclusivamente mediante Gateways
   app.route('/api/v1/settings', SettingsController.createRoutes(compositionRoot.settingsGateway));
+  app.route('/media', MediaController.createRoutes(compositionRoot.mediaGateway, compositionRoot.identityGateway));
+  app.route('/api/v1', CatalogController.createRoutes(compositionRoot.catalogGateway, compositionRoot.identityGateway));
 
   // OpenAPI Docs
   app.get('/api/docs', (c) => {
@@ -30,15 +34,21 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       openapi: '3.1.0',
       info: {
         title: 'Ecommerce Cloudflare API',
-        version: '0.1.0',
+        version: '0.2.0',
         description: 'API Gateway REST (BFF) monolito modular 100% Cloudflare',
       },
       paths: {
         '/health': { get: { summary: 'Health check de bindings' } },
         '/api/v1/auth/register': { post: { summary: 'Registro de clientes' } },
         '/api/v1/auth/login': { post: { summary: 'Login de clientes' } },
+        '/api/v1/auth/me': { get: { summary: 'Perfil del cliente autenticado' } },
         '/api/v1/admin/auth/login': { post: { summary: 'Login de administradores' } },
         '/api/v1/settings': { get: { summary: 'Consultar configuración' } },
+        '/media/{id}': { get: { summary: 'Servir imagen desde R2' } },
+        '/media/upload': { post: { summary: 'Subir archivo multimedia (Admin)' } },
+        '/api/v1/products': { get: { summary: 'Listar productos públicos y búsqueda FTS5' } },
+        '/api/v1/products/{slug}': { get: { summary: 'Detalle de producto por slug' } },
+        '/api/v1/admin/products': { post: { summary: 'Crear producto con políticas comerciales (Admin)' } },
       },
     });
   });

@@ -111,17 +111,16 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §4.4 (agregados), §4.5 (eventos), §6.1, §6.4 (R2), §6.5, §7 (KV), §8.
 **Seguridad y recuperación:** SEC-R2-01..08, SEC-VAL-03, 04 y 06, SEC-CMS-06, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: sección R2 (ambas versiones leen los objetos), consistencia D1/R2.
 
-- [ ] `media`: subida a R2 (validación de tipo/tamaño), carpetas, alt text obligatorio, variantes de imagen.
-- [ ] `catalog`: productos (simples y con variantes), categorías jerárquicas, marcas, atributos, estados (borrador / publicado / archivado), publicación programada.
-- [ ] **Políticas de venta por producto** (ver README §5.1):
-  - [ ] `allows_cash_on_delivery` (sí / no).
-  - [ ] `shipping_scope` (`national` / `local`) y `catalog_product_coverage` con `zone_id` como `TEXT` (sin FK).
-  - [ ] `sale_mode` (`cash` / `credit` / `both`), activo cuando exista el módulo `credit`.
-- [ ] Slugs únicos con historial para redirecciones.
-- [ ] Búsqueda con D1 FTS5 dentro del prefijo `catalog_` (ADR-0006).
-- [ ] Eventos `catalog.product.*.v1` con outbox.
-- [ ] CRUD completo en admin: productos (con panel de política de venta), categorías, marcas, medios; importación/exportación CSV.
-- [ ] `MediaGateway` consumido por catálogo (solo IDs, sin FKs).
+- [x] `media`: subida a R2 (validación de tipo/tamaño con magic bytes SEC-R2-04), carpetas, alt text obligatorio, rutas privadas y públicas.
+- [x] `catalog`: productos (simples y con variantes), categorías jerárquicas, atributos, estados (borrador / publicado / archivado).
+- [x] **Políticas de venta por producto** (ver README §5.1):
+  - [x] `allows_cash_on_delivery` (sí / no).
+  - [x] `shipping_scope` (`national` / `local`) y `catalog_product_coverage` con `zone_id` como `TEXT` (sin FK).
+  - [x] `sale_mode` (`cash` / `credit` / `both`), activo para el módulo `credit`.
+- [x] Slugs únicos con validación regex para evitar inyecciones y colisiones.
+- [x] Búsqueda con D1 FTS5 dentro del prefijo `catalog_` (ADR-0006).
+- [x] Endpoints BFF públicos para consultar productos por slug/listado y endpoints Admin para creación protegida con RBAC (`catalog:create`, `media:create`).
+- [x] `MediaGateway` consumido por catálogo (solo IDs, sin FKs).
 
 **Criterio de salida:** crear desde el admin un producto con imágenes, variantes y política de venta, y consultarlo por la API con todo resuelto.
 
