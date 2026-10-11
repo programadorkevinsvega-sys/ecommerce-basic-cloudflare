@@ -38,7 +38,26 @@ export class Announcement {
     return true;
   }
 
+  public updateDetails(updates: Partial<Omit<AnnouncementProps, 'id' | 'createdAt' | 'updatedAt'>>): void {
+    if (updates.message !== undefined) {
+      if (!updates.message.trim()) throw new Error('El mensaje del anuncio es obligatorio');
+      this.props.message = updates.message.trim();
+    }
+    if (updates.placement !== undefined) this.props.placement = updates.placement;
+    if (updates.linkUrl !== undefined) this.props.linkUrl = updates.linkUrl;
+    if (updates.isActive !== undefined) this.props.isActive = updates.isActive;
+    if (updates.startsAt !== undefined) this.props.startsAt = updates.startsAt;
+    if (updates.endsAt !== undefined) this.props.endsAt = updates.endsAt;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
+  public setActive(isActive: boolean): void {
+    this.props.isActive = isActive;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public toPrimitives(): AnnouncementProps {
     return { ...this.props };
   }
 }
+

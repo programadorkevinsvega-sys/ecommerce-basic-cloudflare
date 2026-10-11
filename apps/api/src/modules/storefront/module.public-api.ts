@@ -1,16 +1,20 @@
 import { StorefrontModuleContainer } from './module.config.js';
 import { StorefrontHomeContentOutput } from './application/use-cases/GetStorefrontHomeContentUseCase.js';
 import { CreateBannerInput } from './application/use-cases/CreateBannerUseCase.js';
+import { UpdateBannerInput } from './application/use-cases/UpdateBannerUseCase.js';
 import { CreateAnnouncementInput } from './application/use-cases/CreateAnnouncementUseCase.js';
+import { UpdateAnnouncementInput } from './application/use-cases/UpdateAnnouncementUseCase.js';
 import { Banner } from './domain/entities/Banner.js';
 import { Announcement } from './domain/entities/Announcement.js';
 
 export interface IStorefrontPublicApi {
   getHomeContent(): Promise<StorefrontHomeContentOutput>;
   createBanner(input: CreateBannerInput): Promise<Banner>;
+  updateBanner(input: UpdateBannerInput): Promise<Banner>;
   listBanners(): Promise<Banner[]>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement>;
+  updateAnnouncement(input: UpdateAnnouncementInput): Promise<Announcement>;
   listAnnouncements(): Promise<Announcement[]>;
   deleteAnnouncement(id: string): Promise<void>;
 }
@@ -34,6 +38,12 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
     return res.value;
   }
 
+  public async updateBanner(input: UpdateBannerInput): Promise<Banner> {
+    const res = await this.container.updateBannerUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
   public async listBanners(): Promise<Banner[]> {
     const res = await this.container.listBannersUseCase.execute();
     if (res.isFail()) throw res.error;
@@ -47,6 +57,12 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
 
   public async createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement> {
     const res = await this.container.createAnnouncementUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async updateAnnouncement(input: UpdateAnnouncementInput): Promise<Announcement> {
+    const res = await this.container.updateAnnouncementUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
   }

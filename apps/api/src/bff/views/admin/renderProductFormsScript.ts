@@ -1,4 +1,4 @@
-export function renderAdminFormsScript(): string {
+export function renderProductFormsScript(): string {
   return `
     document.getElementById('newProductForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -130,72 +130,6 @@ export function renderAdminFormsScript(): string {
         msg.style.background = '#065f46';
         msg.style.display = 'block';
         setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
-    document.getElementById('newBannerForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('bMsg');
-      const payload = {
-        title: document.getElementById('bTitle').value,
-        linkUrl: document.getElementById('bLink').value,
-        altText: document.getElementById('bAlt').value,
-        imageUrl: '/media/banner-default.webp',
-        placement: 'home'
-      };
-      const res = await fetch('/api/v1/admin/storefront/banners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Banner publicado con éxito';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
-    document.getElementById('newAnnouncementForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('aMsg');
-      const payload = {
-        message: document.getElementById('aMsgText').value,
-        linkUrl: document.getElementById('aLink').value || undefined,
-        placement: document.getElementById('aPlacement')?.value || 'top_bar'
-      };
-      const res = await fetch('/api/v1/admin/storefront/announcements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Anuncio superior publicado';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
-
-    document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('sMsg');
-      const payload = {
-        storeName: document.getElementById('sName').value,
-        taxRatePercent: Number(document.getElementById('sTax').value),
-        supportEmail: document.getElementById('sEmail').value || undefined,
-        supportPhone: document.getElementById('sPhone').value || undefined
-      };
-      const res = await fetch('/api/v1/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Configuración actualizada con éxito';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
       }
     });
   `;

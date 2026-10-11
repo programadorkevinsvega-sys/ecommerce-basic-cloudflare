@@ -47,7 +47,32 @@ export class Banner {
     return true;
   }
 
+  public updateDetails(updates: Partial<Omit<BannerProps, 'id' | 'createdAt' | 'updatedAt'>>): void {
+    if (updates.title !== undefined) {
+      if (!updates.title.trim()) throw new Error('El título del banner es obligatorio');
+      this.props.title = updates.title.trim();
+    }
+    if (updates.altText !== undefined) {
+      if (!updates.altText.trim()) throw new Error('El texto alternativo es obligatorio (SEC-R2-04)');
+      this.props.altText = updates.altText.trim();
+    }
+    if (updates.placement !== undefined) this.props.placement = updates.placement;
+    if (updates.imageUrl !== undefined) this.props.imageUrl = updates.imageUrl;
+    if (updates.linkUrl !== undefined) this.props.linkUrl = updates.linkUrl;
+    if (updates.isActive !== undefined) this.props.isActive = updates.isActive;
+    if (updates.startsAt !== undefined) this.props.startsAt = updates.startsAt;
+    if (updates.endsAt !== undefined) this.props.endsAt = updates.endsAt;
+    if (updates.sortOrder !== undefined) this.props.sortOrder = updates.sortOrder;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
+  public setActive(isActive: boolean): void {
+    this.props.isActive = isActive;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public toPrimitives(): BannerProps {
     return { ...this.props };
   }
 }
+

@@ -21,6 +21,16 @@ export class StorefrontAdminController {
       }
     });
 
+    router.put('/api/v1/admin/storefront/banners/:id', async (c) => {
+      try {
+        const body = await c.req.json();
+        const banner = await storefrontGateway.updateBanner({ id: c.req.param('id'), ...body });
+        return c.json({ data: banner });
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al actualizar banner' }, 400);
+      }
+    });
+
     router.delete('/api/v1/admin/storefront/banners/:id', async (c) => {
       try {
         await storefrontGateway.deleteBanner(c.req.param('id'));
@@ -43,6 +53,16 @@ export class StorefrontAdminController {
         return c.json({ data: announcement }, 201);
       } catch (err) {
         return c.json({ error: err instanceof Error ? err.message : 'Error al crear anuncio' }, 400);
+      }
+    });
+
+    router.put('/api/v1/admin/storefront/announcements/:id', async (c) => {
+      try {
+        const body = await c.req.json();
+        const announcement = await storefrontGateway.updateAnnouncement({ id: c.req.param('id'), ...body });
+        return c.json({ data: announcement });
+      } catch (err) {
+        return c.json({ error: err instanceof Error ? err.message : 'Error al actualizar anuncio' }, 400);
       }
     });
 

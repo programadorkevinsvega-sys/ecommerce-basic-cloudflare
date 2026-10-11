@@ -27,12 +27,35 @@ export interface BannerItemDto {
   sortOrder: number;
 }
 
+export interface UpdateBannerGatewayRequest {
+  id: string;
+  title?: string;
+  placement?: 'home' | 'category' | 'product' | 'checkout';
+  imageUrl?: string;
+  linkUrl?: string;
+  altText?: string;
+  isActive?: boolean;
+  startsAt?: string;
+  endsAt?: string;
+  sortOrder?: number;
+}
+
 export interface AnnouncementItemDto {
   id: string;
   message: string;
   placement: 'top_bar' | 'home' | 'products';
   linkUrl?: string;
   isActive: boolean;
+}
+
+export interface UpdateAnnouncementGatewayRequest {
+  id: string;
+  message?: string;
+  placement?: 'top_bar' | 'home' | 'products';
+  linkUrl?: string;
+  isActive?: boolean;
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export interface CreateBannerGatewayRequest {
@@ -50,9 +73,11 @@ export interface CreateBannerGatewayRequest {
 export interface StorefrontGateway {
   getHomeContent(): Promise<StorefrontHomeData>;
   createBanner(request: CreateBannerGatewayRequest): Promise<{ id: string; title: string }>;
+  updateBanner(request: UpdateBannerGatewayRequest): Promise<BannerItemDto>;
   listBanners(): Promise<BannerItemDto[]>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(request: { message: string; placement: 'top_bar' | 'home' | 'products'; linkUrl?: string }): Promise<{ id: string; message: string }>;
+  updateAnnouncement(request: UpdateAnnouncementGatewayRequest): Promise<AnnouncementItemDto>;
   listAnnouncements(): Promise<AnnouncementItemDto[]>;
   deleteAnnouncement(id: string): Promise<void>;
 }

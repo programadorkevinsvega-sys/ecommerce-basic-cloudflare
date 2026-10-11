@@ -3,10 +3,12 @@ import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/St
 import { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
-import { renderAdminFormsScript } from './renderAdminFormsScript.js';
+import { renderProductFormsScript } from './renderProductFormsScript.js';
+import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductTable } from './renderProductTable.js';
 import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
+
 
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
@@ -149,10 +151,12 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
   </main>
   <script>${renderAdminDashboardScript()}</script>
-  <script>${renderAdminFormsScript()}</script>
+  <script>${renderProductFormsScript()}</script>
+  <script>${renderStorefrontFormsScript()}</script>
 </body>
 </html>`;
 }
+
 
 
 function escapeHtml(str: string): string {
