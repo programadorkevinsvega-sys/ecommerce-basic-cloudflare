@@ -99,9 +99,9 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] `settings`: datos de la tienda, moneda **COP**, IVA, contacto, redes, soporte.
 - [x] Decisión cerrada de ADR-0003 (autenticación) conforme a `SECURITY_RULES.md`.
 - [x] Pruebas de acceso cruzado y de separación cliente/admin (SEC-ISO-06, SEC-ISO-07).
-- [ ] Admin SPA: UI en Cloudflare Pages (Pages Frontend).
+- [x] Admin SPA: UI integrada en `/admin` y `/admin/login` con gestión de catálogo, banners, anuncios, configuración y logout.
 
-**Criterio de salida:** un admin inicia sesión, un cliente se registra y entra, y un permiso faltante devuelve `403`.
+**Criterio de salida:** un admin inicia sesión, un cliente se registra y entra, y un permiso faltante devuelve `403`. (Completado y verificado en producción).
 
 ---
 

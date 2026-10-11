@@ -9,6 +9,7 @@ import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
+import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -16,6 +17,16 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+
+  // Panel Visual Administrativo (Fase 1 / Admin UI)
+  app.route(
+    '/admin',
+    AdminUiController.createRoutes(
+      compositionRoot.identityGateway,
+      compositionRoot.catalogGateway,
+      compositionRoot.settingsGateway
+    )
+  );
 
   // Storefront público SSR (Fases 3 y 4: Home, Banners, Catálogo, Detalle y Auth)
   app.route(
