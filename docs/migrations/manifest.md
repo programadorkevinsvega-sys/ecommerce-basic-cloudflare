@@ -68,3 +68,13 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `cms__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `cms__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `promotions`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `promotions__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `promotions__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+

@@ -1,4 +1,5 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
+import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 
 export interface BannerItem {
   id: string;
@@ -11,7 +12,8 @@ export interface BannerItem {
 export function renderProductList(
   products: CatalogProductDto[],
   searchQuery?: string,
-  banner?: BannerItem
+  banner?: BannerItem,
+  discountMap?: Map<string, ProductDiscountDto>
 ): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
 
@@ -64,15 +66,34 @@ export function renderProductList(
       ? '<span class="tag tag-scope">Envío Nacional</span>'
       : '<span class="tag tag-scope" style="background:#fef3c7; color:#b45309;">Envío Local</span>';
 
+    const discountInfo = discountMap?.get(product.id);
+    let priceHtml = `<div class="card-price">${formattedPrice}</div>`;
+    let promoBadge = '';
+
+    if (discountInfo?.hasDiscount) {
+      const finalFormatted = (discountInfo.finalPriceCents / 100).toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        maximumFractionDigits: 0,
+      });
+      priceHtml = `
+        <div style="display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.75rem;">
+          <span style="font-size:1.3rem; font-weight:700; color:#dc2626;">${finalFormatted}</span>
+          <span style="font-size:0.95rem; text-decoration:line-through; color:var(--muted);">${formattedPrice}</span>
+        </div>
+      `;
+      promoBadge = `<span class="tag" style="background:#fee2e2; color:#b91c1c; font-weight:700;">-${discountInfo.discountPercentage}% OFF</span>`;
+    }
+
     html += `
       <article class="card">
         <div class="card-body">
-          <div style="margin-bottom: 0.5rem;">${codTag} ${scopeTag}</div>
+          <div style="margin-bottom: 0.5rem;">${promoBadge} ${codTag} ${scopeTag}</div>
           <h2 class="card-title">
             <a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a>
           </h2>
           <p class="card-desc">${escapeHtml(product.description)}</p>
-          <div class="card-price">${formattedPrice}</div>
+          ${priceHtml}
           <a href="/productos/${escapeHtml(product.slug)}" style="display:block; text-align:center; padding:0.6rem; background:var(--primary); color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:0.9rem;">Ver Producto</a>
         </div>
       </article>

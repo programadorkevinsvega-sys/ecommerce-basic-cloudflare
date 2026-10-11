@@ -4,13 +4,15 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
+import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderProductDetail } from '../../views/renderProductDetail.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
-import { getCustomerEmail, getStorefrontNavMenus } from './storefrontHelpers.js';
+import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
+import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -18,7 +20,8 @@ export class StorefrontController {
     identityGateway: IdentityGateway,
     storefrontGateway: StorefrontGateway,
     seoGateway: SeoGateway,
-    cmsGateway: CmsGateway
+    cmsGateway: CmsGateway,
+    promotionsGateway: PromotionsGateway
   ): Hono {
     const router = new Hono();
 
@@ -43,9 +46,10 @@ export class StorefrontController {
         getStorefrontNavMenus(cmsGateway),
       ]);
 
+      const discountMap = await resolveProductDiscounts(products, promotionsGateway);
       const primaryBanner = homeContent.banners[0];
       const activeAnnouncement = homeContent.announcements[0];
-      const bodyHtml = renderProductList(products, undefined, primaryBanner);
+      const bodyHtml = renderProductList(products, undefined, primaryBanner, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');
@@ -74,7 +78,9 @@ export class StorefrontController {
         catalogGateway.listProducts({ limit: 24, status: 'published', searchQuery: query }),
         getStorefrontNavMenus(cmsGateway),
       ]);
-      const bodyHtml = renderProductList(products, query);
+
+      const discountMap = await resolveProductDiscounts(products, promotionsGateway);
+      const bodyHtml = renderProductList(products, query, undefined, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
@@ -102,14 +108,19 @@ export class StorefrontController {
       const nav = await getStorefrontNavMenus(cmsGateway);
       try {
         const product = await catalogGateway.getProductBySlug(slug);
-        const bodyHtml = renderProductDetail(product);
+        const discount = await promotionsGateway.evaluateProductDiscount({
+          productId: product.id,
+          priceInCents: product.priceInCents,
+        }).catch(() => undefined);
+
+        const bodyHtml = renderProductDetail(product, discount);
         const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 
         const productJsonLd = ProductSeoHelper.generateJsonLd({
           name: product.name,
           description: product.description,
-          priceInCents: product.priceInCents,
+          priceInCents: discount?.hasDiscount ? discount.finalPriceCents : product.priceInCents,
           sku: product.sku,
           brand: product.brand,
           stockQuantity: product.stockQuantity,

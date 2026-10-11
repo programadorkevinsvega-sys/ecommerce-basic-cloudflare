@@ -27,6 +27,10 @@ import { CmsGateway } from './bff/gateways/cms/CmsGateway.js';
 import { InProcessCmsGateway } from './bff/gateways/cms/InProcessCmsGateway.js';
 import { createCmsModule } from './modules/cms/module.config.js';
 import { CmsPublicApi } from './modules/cms/module.public-api.js';
+import { PromotionsGateway } from './bff/gateways/promotions/PromotionsGateway.js';
+import { InProcessPromotionsGateway } from './bff/gateways/promotions/InProcessPromotionsGateway.js';
+import { createPromotionsModule } from './modules/promotions/module.config.js';
+import { PromotionsPublicApi } from './modules/promotions/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -37,6 +41,7 @@ export interface AppCompositionRoot {
   storefrontGateway: StorefrontGateway;
   seoGateway: SeoGateway;
   cmsGateway: CmsGateway;
+  promotionsGateway: PromotionsGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -76,6 +81,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const cmsPublicApi = new CmsPublicApi(cmsContainer);
   const cmsGateway = new InProcessCmsGateway(cmsPublicApi);
 
+  // Módulo Promotions
+  const promotionsContainer = createPromotionsModule(env);
+  const promotionsPublicApi = new PromotionsPublicApi(promotionsContainer);
+  const promotionsGateway = new InProcessPromotionsGateway(promotionsPublicApi);
+
   // Outbox Relay transversal
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
@@ -87,6 +97,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     storefrontGateway,
     seoGateway,
     cmsGateway,
+    promotionsGateway,
     outboxRelayService,
   };
 }

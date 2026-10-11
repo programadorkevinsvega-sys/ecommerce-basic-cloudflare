@@ -13,6 +13,7 @@ import { StorefrontAdminController } from './controllers/storefront/StorefrontAd
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
+import { PromotionsController } from './controllers/promotions/PromotionsController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -23,6 +24,15 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   // Storefront Admin API (Banners & Anuncios CRUD)
   app.route('/', StorefrontAdminController.createRoutes(compositionRoot.storefrontGateway));
+
+  // Promociones y cupones (Evaluación pública y administración protegida)
+  app.route(
+    '/',
+    PromotionsController.createRoutes(
+      compositionRoot.promotionsGateway,
+      compositionRoot.identityGateway
+    )
+  );
 
   // CMS: Páginas con bloques (/p/:slug), menús y gestión de contenido
   app.route(
@@ -50,7 +60,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       compositionRoot.catalogGateway,
       compositionRoot.settingsGateway,
       compositionRoot.storefrontGateway,
-      compositionRoot.cmsGateway
+      compositionRoot.cmsGateway,
+      compositionRoot.promotionsGateway
     )
   );
 
@@ -63,7 +74,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       compositionRoot.identityGateway,
       compositionRoot.storefrontGateway,
       compositionRoot.seoGateway,
-      compositionRoot.cmsGateway
+      compositionRoot.cmsGateway,
+      compositionRoot.promotionsGateway
     )
   );
 

@@ -1,11 +1,31 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
+import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 
-export function renderProductDetail(product: CatalogProductDto): string {
+export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto): string {
   const formattedPrice = (product.priceInCents / 100).toLocaleString('es-CO', {
     style: 'currency',
     currency: 'COP',
     maximumFractionDigits: 0,
   });
+
+  let priceHtml = `<div class="detail-price">${formattedPrice}</div>`;
+  let promoBanner = '';
+
+  if (discount?.hasDiscount) {
+    const finalFormatted = (discount.finalPriceCents / 100).toLocaleString('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    });
+    priceHtml = `
+      <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:1.5rem;">
+        <span class="detail-price" style="color:#dc2626; margin-bottom:0;">${finalFormatted}</span>
+        <span style="font-size:1.4rem; text-decoration:line-through; color:var(--muted);">${formattedPrice}</span>
+        <span class="tag" style="background:#fee2e2; color:#b91c1c; font-size:1rem; padding:0.3rem 0.6rem; font-weight:700;">-${discount.discountPercentage}% OFF</span>
+      </div>
+    `;
+    promoBanner = `<div style="background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:0.75rem 1rem; border-radius:6px; margin-bottom:1.5rem; font-weight:600;">🔥 ¡Promoción activa: ${escapeHtml(discount.promotionName || 'Descuento especial')}!</div>`;
+  }
 
   const codText = product.salePolicy.allowsCashOnDelivery
     ? '✅ Disponible pago contra entrega en efectivo al recibir el pedido.'
@@ -34,13 +54,14 @@ export function renderProductDetail(product: CatalogProductDto): string {
       <span>${escapeHtml(product.name)}</span>
     </nav>
     <article class="detail-view">
+      ${promoBanner}
       <h1 class="detail-title">${escapeHtml(product.name)}</h1>
       <div class="detail-sku">
         SKU: ${escapeHtml(product.sku)} | Condición: <strong>${conditionText}</strong> | Stock: ${product.stockQuantity} un.
         ${product.brand ? ` | Marca: <strong>${escapeHtml(product.brand)}</strong>` : ''}
         ${product.barcodeGtin ? ` | GTIN: <code>${escapeHtml(product.barcodeGtin)}</code>` : ''}
       </div>
-      <div class="detail-price">${formattedPrice}</div>
+      ${priceHtml}
       <p style="font-size: 1.05rem; color: var(--text); margin-bottom: 1.5rem;">${escapeHtml(product.description)}</p>
 
       ${specsList ? `
