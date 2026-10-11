@@ -1,0 +1,55 @@
+name: CI / CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-validate:
+    name: Lint, Arquitectura y Aislamiento de Tablas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout de código
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Verificación de tipos TypeScript
+        run: pnpm typecheck
+
+      - name: Lint de reglas de arquitectura (200 líneas, capas, imports)
+        run: pnpm lint
+
+      - name: Test de aislamiento estricto de tablas D1
+        run: pnpm test:isolation
+
+      - name: Ejecución de pruebas unitarias
+        run: pnpm test
+
+  security-scan:
+    name: Escaneo de Secretos (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout de código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
