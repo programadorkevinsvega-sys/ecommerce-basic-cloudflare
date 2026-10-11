@@ -8,6 +8,7 @@ import { CustomerAuthController } from './controllers/auth/CustomerAuthControlle
 import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
+import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -15,6 +16,9 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+
+  // Storefront público SSR (Fase 3: Home, Catálogo, Detalle y Auth)
+  app.route('/', StorefrontController.createRoutes(compositionRoot.catalogGateway, compositionRoot.identityGateway));
 
   // Salud del Worker y bindings
   app.route('/health', HealthController.createRoutes());

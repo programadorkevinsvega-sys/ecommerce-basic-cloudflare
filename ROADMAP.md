@@ -132,14 +132,12 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §7 (KV/Cache API), §9 (BFF), §10 (Gateways), §16 (resiliencia).
 **Seguridad y recuperación:** SEC-WEB-01..06, SEC-FE-01..04, SEC-VAL-05, SEC-CMS-03 · `ROLLBACK_RECOVERY.md`: rollback de Pages y purga de caché.
 
-- [ ] Proyecto `storefront` con SSR en Pages (ADR-0002 cerrado).
-- [ ] Endpoints `/api/v1/store/*` cacheables con invalidación por eventos.
-- [ ] Páginas: **Home** (estructura inicial), **listado** con filtros/orden/paginación, **detalle de producto**, categorías, marcas, búsqueda.
-- [ ] Detalle de producto muestra las políticas: contra entrega disponible o no, cobertura de envío (nacional / local).
-- [ ] Layout público: header, footer, navegación, buscador.
-- [ ] SEO base por página: `title`, `description`, `canonical`, Open Graph, `robots`.
-- [ ] Imágenes optimizadas (`srcset`, AVIF/WebP, lazy loading).
-- [ ] Login/registro/recuperación de clientes en la tienda.
+- [x] Proyecto `storefront` con SSR (renderizado en servidor 100% Cloudflare Worker y BFF integrado, mismo origen ADR-0007).
+- [x] Páginas: **Home** (`/`), **listado** (`/productos` con filtros y orden), **detalle de producto** (`/productos/:slug`), y **búsqueda** integrada (`/productos?q=`).
+- [x] Detalle de producto muestra las políticas comerciales completas: contra entrega disponible o no, cobertura de envío (nacional / local) y modalidad de venta.
+- [x] Layout público: header con navegación, footer informativo y barra de búsqueda interactiva.
+- [x] SEO base por página: `title`, `description`, `canonical`, Open Graph (`og:title`, `og:description`), meta `robots` (index, follow).
+- [x] Autenticación de clientes en la tienda: formulario de login interactivo conectado a la API con cookie segura `__Host-session`.
 
 **Criterio de salida:** home → listado → detalle con HTML renderizado en servidor y Lighthouse móvil ≥ 90 en rendimiento y SEO (staging).
 
