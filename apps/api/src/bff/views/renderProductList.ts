@@ -26,7 +26,7 @@ export function renderProductList(
         <p>Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.</p>
         <a class="campaign-action" href="${escapeHtml(item.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
       </div>
-      ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" /></div>` : ''}
+      ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.remove();this.parentElement.classList.add(\'campaign-image-missing\')" /></div>` : ''}
     </article>`;
   const bannerHtml = banners.length > 1
     ? `<section class="campaign-carousel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section>`
