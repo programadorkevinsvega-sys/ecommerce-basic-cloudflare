@@ -1,10 +1,20 @@
 import { IEmailPort, EmailMessage, EmailSendResult } from '../../domain/ports/IEmailPort.js';
 
 export class ResendEmailAdapter implements IEmailPort {
+  private readonly defaultFrom: string;
+
   constructor(
     private readonly apiKey?: string,
-    private readonly defaultFrom = 'Vega Store <pedidos@vegastore.com>'
-  ) {}
+    fromEmail?: string
+  ) {
+    if (!fromEmail) {
+      this.defaultFrom = 'Vega Store <pedidos@vegastore.com>';
+    } else if (fromEmail.includes('<') && fromEmail.includes('>')) {
+      this.defaultFrom = fromEmail;
+    } else {
+      this.defaultFrom = `Vega Store <${fromEmail}>`;
+    }
+  }
 
   public async sendEmail(message: EmailMessage): Promise<EmailSendResult> {
     if (!this.apiKey) {
