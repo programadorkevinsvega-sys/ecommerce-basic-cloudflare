@@ -57,6 +57,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
       <span>${escapeHtml(product.name)}</span>
     </nav>
     <article class="detail-view">
+      ${product.mediaIds?.[0] ? `<div class="detail-media"><img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" fetchpriority="high" /></div>` : '<div class="detail-media detail-media-empty" aria-hidden="true">Vega Store</div>'}
       ${promoBanner}
       <h1 class="detail-title">${escapeHtml(product.name)}</h1>
       <div class="detail-sku">
@@ -84,7 +85,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
       ${renderProductShippingWidget(product)}
 
       <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
-        <input type="number" id="buy-qty" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" style="width: 70px; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1.1rem; text-align: center;">
+        <label class="quantity-control"><span>Cantidad</span><input type="number" id="buy-qty" aria-label="Cantidad de ${escapeHtml(product.name)}" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" style="width: 70px; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1.1rem; text-align: center;">
         <button type="button" id="btn-add-cart" style="flex:1; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer;">
           Añadir al Carrito 🛒
         </button>
