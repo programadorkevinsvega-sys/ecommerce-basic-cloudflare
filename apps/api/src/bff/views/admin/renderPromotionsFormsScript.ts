@@ -156,8 +156,21 @@ export function renderPromotionsFormsScript(): string {
       }
     });
 
+    function onProductSelectChanged(selectId, infoId) {
+      const sel = document.getElementById(selectId);
+      const info = document.getElementById(infoId);
+      if (!sel || !info) return;
+      const selectedOpt = sel.options[sel.selectedIndex];
+      if (selectedOpt && selectedOpt.value) {
+        info.textContent = '✓ Producto seleccionado: ' + selectedOpt.text;
+      } else {
+        info.textContent = '';
+      }
+    }
+
     window.filterTargetSelect = filterTargetSelect;
     window.onPromoTargetTypeChange = onPromoTargetTypeChange;
     window.onCouponTargetTypeChange = onCouponTargetTypeChange;
+    window.onProductSelectChanged = onProductSelectChanged;
   `;
 }

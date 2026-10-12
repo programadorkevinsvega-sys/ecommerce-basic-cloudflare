@@ -1,4 +1,4 @@
-import { PromotionRuleDto } from '../../gateways/promotions/PromotionsGateway.js';
+import { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
 
 export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], productMap: Map<string, string>, categoryMap: Map<string, string>): string {
   if (rules.length === 0) {
@@ -22,7 +22,7 @@ export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], product
       ? `<button class="btn-action btn-action-hide" onclick="togglePromoRuleStatus('${r.id}', false)">Desactivar</button>`
       : `<button class="btn-action btn-action-publish" onclick="togglePromoRuleStatus('${r.id}', true)">Activar</button>`;
 
-    const ruleData = escapeHtml(JSON.stringify(r));
+    const encData = encodeURIComponent(JSON.stringify(r));
 
     return `
       <tr>
@@ -36,18 +36,17 @@ export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], product
           ${isAct ? '<span class="badge badge-published">Activa</span>' : '<span class="badge badge-draft">Inactiva</span>'}
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          <button class="btn-action btn-action-view" onclick="viewPromoRuleModal('${r.id}')">Ver</button>
-          <button class="btn-action btn-action-edit" onclick="editPromoRuleModal('${r.id}')">Editar</button>
+          <button class="btn-action btn-action-view" data-item="${encData}" onclick="viewPromoRuleModal(this)">Ver</button>
+          <button class="btn-action btn-action-edit" data-item="${encData}" onclick="editPromoRuleModal(this)">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deletePromoRule('${r.id}')">Eliminar</button>
-          <script type="application/json" id="promo-rule-data-${r.id}">${ruleData}</script>
         </td>
       </tr>
     `;
   }).join('');
 }
 
-export function renderCouponsTableRows(coupons: import('../../gateways/promotions/PromotionsGateway.js').CouponDto[], productMap: Map<string, string>, categoryMap: Map<string, string>): string {
+export function renderCouponsTableRows(coupons: CouponDto[], productMap: Map<string, string>, categoryMap: Map<string, string>): string {
   if (coupons.length === 0) {
     return '<tr><td colspan="5" style="text-align:center; padding:1rem; color:#94a3b8;">No hay cupones creados</td></tr>';
   }
@@ -70,7 +69,7 @@ export function renderCouponsTableRows(coupons: import('../../gateways/promotion
       : `<button class="btn-action btn-action-publish" onclick="toggleCouponStatus('${c.id}', true)">Activar</button>`;
 
     const usesLabel = c.maxUsesGlobal ? `${c.currentUsesCount} / ${c.maxUsesGlobal}` : `${c.currentUsesCount} (ilimitado)`;
-    const couponData = escapeHtml(JSON.stringify(c));
+    const encData = encodeURIComponent(JSON.stringify(c));
 
     return `
       <tr>
@@ -85,11 +84,10 @@ export function renderCouponsTableRows(coupons: import('../../gateways/promotion
           ${isAct ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          <button class="btn-action btn-action-view" onclick="viewCouponModal('${c.id}')">Ver</button>
-          <button class="btn-action btn-action-edit" onclick="editCouponModal('${c.id}')">Editar</button>
+          <button class="btn-action btn-action-view" data-item="${encData}" onclick="viewCouponModal(this)">Ver</button>
+          <button class="btn-action btn-action-edit" data-item="${encData}" onclick="editCouponModal(this)">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteCoupon('${c.id}')">Eliminar</button>
-          <script type="application/json" id="coupon-data-${c.id}">${couponData}</script>
         </td>
       </tr>
     `;

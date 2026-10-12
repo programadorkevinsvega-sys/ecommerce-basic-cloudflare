@@ -46,13 +46,17 @@ export function renderPromotionsManagementSection(
             </select>
           </div>
           <div id="prProductTargetWrapper" style="display:none;">
-            <label>Buscar Producto</label>
-            <input type="text" id="prProductSearch" placeholder="Escribe para filtrar productos..." oninput="filterTargetSelect('prProductSearch', 'prTargetProductSelect')" style="margin-bottom:0.25rem;" />
-            <select id="prTargetProductSelect" size="4" style="height:auto;">${productOptions}</select>
+            <label>Producto Objetivo (Escribe para filtrar o selecciona)</label>
+            <input type="text" id="prProductSearch" placeholder="🔍 Escribe para buscar..." oninput="filterTargetSelect('prProductSearch', 'prTargetProductSelect')" style="margin-bottom:0.25rem;" />
+            <select id="prTargetProductSelect" onchange="onProductSelectChanged('prTargetProductSelect', 'prSelectedProductInfo')">
+              <option value="">-- Selecciona un producto --</option>
+              ${productOptions}
+            </select>
+            <div id="prSelectedProductInfo" style="font-size:0.8rem; color:#38bdf8; margin-top:0.25rem; font-weight:600;"></div>
           </div>
           <div id="prCategoryTargetWrapper" style="display:none;">
             <label>Categoría Objetivo</label>
-            <select id="prTargetCategorySelect"><option value="">Selecciona una categoría...</option>${categoryOptions}</select>
+            <select id="prTargetCategorySelect"><option value="">-- Selecciona una categoría --</option>${categoryOptions}</select>
           </div>
           <div><label>Fecha Inicio (YYYY-MM-DD)</label><input type="date" id="prStartsAt" required /></div>
           <div><label>Fecha Fin (YYYY-MM-DD)</label><input type="date" id="prEndsAt" required /></div>
@@ -93,13 +97,17 @@ export function renderPromotionsManagementSection(
             </select>
           </div>
           <div id="cpProductTargetWrapper" style="display:none;">
-            <label>Buscar Producto</label>
-            <input type="text" id="cpProductSearch" placeholder="Escribe para filtrar productos..." oninput="filterTargetSelect('cpProductSearch', 'cpTargetProductSelect')" style="margin-bottom:0.25rem;" />
-            <select id="cpTargetProductSelect" size="4" style="height:auto;">${productOptions}</select>
+            <label>Producto Objetivo (Escribe para filtrar o selecciona)</label>
+            <input type="text" id="cpProductSearch" placeholder="🔍 Escribe para buscar..." oninput="filterTargetSelect('cpProductSearch', 'cpTargetProductSelect')" style="margin-bottom:0.25rem;" />
+            <select id="cpTargetProductSelect" onchange="onProductSelectChanged('cpTargetProductSelect', 'cpSelectedProductInfo')">
+              <option value="">-- Selecciona un producto --</option>
+              ${productOptions}
+            </select>
+            <div id="cpSelectedProductInfo" style="font-size:0.8rem; color:#38bdf8; margin-top:0.25rem; font-weight:600;"></div>
           </div>
           <div id="cpCategoryTargetWrapper" style="display:none;">
             <label>Categoría Objetivo</label>
-            <select id="cpTargetCategorySelect"><option value="">Selecciona una categoría...</option>${categoryOptions}</select>
+            <select id="cpTargetCategorySelect"><option value="">-- Selecciona una categoría --</option>${categoryOptions}</select>
           </div>
           <div><label>Compra Mínima en COP</label><input type="number" id="cpMinAmount" value="0" placeholder="0" /></div>
           <div><label>Límite Usos Global (Vacío = Ilimitado)</label><input type="number" id="cpMaxGlobal" placeholder="100" /></div>
