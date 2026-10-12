@@ -1,5 +1,31 @@
 export function renderPromotionsFormsScript(): string {
   return `
+    function filterTargetSelect(searchInputId, selectId) {
+      const query = document.getElementById(searchInputId).value.toLowerCase();
+      const select = document.getElementById(selectId);
+      for (let i = 0; i < select.options.length; i++) {
+        const opt = select.options[i];
+        const match = opt.text.toLowerCase().includes(query);
+        opt.style.display = match ? '' : 'none';
+      }
+    }
+
+    function onPromoTargetTypeChange() {
+      const val = document.getElementById('prTargetType').value;
+      const pWrap = document.getElementById('prProductTargetWrapper');
+      const cWrap = document.getElementById('prCategoryTargetWrapper');
+      if (pWrap) pWrap.style.display = val === 'product' ? 'block' : 'none';
+      if (cWrap) cWrap.style.display = val === 'category' ? 'block' : 'none';
+    }
+
+    function onCouponTargetTypeChange() {
+      const val = document.getElementById('cpTargetType').value;
+      const pWrap = document.getElementById('cpProductTargetWrapper');
+      const cWrap = document.getElementById('cpCategoryTargetWrapper');
+      if (pWrap) pWrap.style.display = val === 'product' ? 'block' : 'none';
+      if (cWrap) cWrap.style.display = val === 'category' ? 'block' : 'none';
+    }
+
     document.getElementById('newPromoRuleForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('prMsg');
@@ -8,12 +34,20 @@ export function renderPromotionsFormsScript(): string {
       msg.className = 'msg';
       submitBtn.disabled = true;
 
+      const editId = document.getElementById('prEditId').value;
       const name = document.getElementById('prName').value.trim();
       const discountType = document.getElementById('prDiscountType').value;
       const rawVal = Number(document.getElementById('prDiscountValue').value);
       const discountValue = discountType === 'fixed_amount' ? Math.round(rawVal * 100) : rawVal;
       const targetType = document.getElementById('prTargetType').value;
-      const targetId = document.getElementById('prTargetId').value.trim() || undefined;
+
+      let targetId = undefined;
+      if (targetType === 'product') {
+        targetId = document.getElementById('prTargetProductSelect').value || undefined;
+      } else if (targetType === 'category') {
+        targetId = document.getElementById('prTargetCategorySelect').value || undefined;
+      }
+
       const startsAt = new Date(document.getElementById('prStartsAt').value + 'T00:00:00Z').toISOString();
       const endsAt = new Date(document.getElementById('prEndsAt').value + 'T23:59:59Z').toISOString();
       const priority = Number(document.getElementById('prPriority').value) || 0;
@@ -29,15 +63,18 @@ export function renderPromotionsFormsScript(): string {
         priority
       };
 
+      const url = editId ? '/api/v1/admin/promotions/rules/' + editId : '/api/v1/admin/promotions/rules';
+      const method = editId ? 'PUT' : 'POST';
+
       try {
-        const res = await fetch('/api/v1/admin/promotions/rules', {
-          method: 'POST',
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok) {
-          msg.textContent = '¡Regla de promoción creada con éxito!';
+          msg.textContent = editId ? '¡Regla actualizada con éxito!' : '¡Regla creada con éxito!';
           msg.className = 'msg success';
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -60,10 +97,20 @@ export function renderPromotionsFormsScript(): string {
       msg.className = 'msg';
       submitBtn.disabled = true;
 
+      const editId = document.getElementById('cpEditId').value;
       const code = document.getElementById('cpCode').value.trim().toUpperCase();
       const discountType = document.getElementById('cpDiscountType').value;
       const rawVal = Number(document.getElementById('cpDiscountValue').value);
       const discountValue = discountType === 'fixed_amount' ? Math.round(rawVal * 100) : rawVal;
+      const targetType = document.getElementById('cpTargetType').value;
+
+      let targetId = undefined;
+      if (targetType === 'product') {
+        targetId = document.getElementById('cpTargetProductSelect').value || undefined;
+      } else if (targetType === 'category') {
+        targetId = document.getElementById('cpTargetCategorySelect').value || undefined;
+      }
+
       const minAmount = Math.round(Number(document.getElementById('cpMinAmount').value || 0) * 100);
       const maxGlobal = document.getElementById('cpMaxGlobal').value ? Number(document.getElementById('cpMaxGlobal').value) : undefined;
       const maxPerCust = Number(document.getElementById('cpMaxPerCustomer').value) || 1;
@@ -74,6 +121,8 @@ export function renderPromotionsFormsScript(): string {
         code,
         discountType,
         discountValue,
+        targetType,
+        targetId,
         minOrderAmountCents: minAmount,
         maxUsesGlobal: maxGlobal,
         maxUsesPerCustomer: maxPerCust,
@@ -81,15 +130,18 @@ export function renderPromotionsFormsScript(): string {
         endsAt
       };
 
+      const url = editId ? '/api/v1/admin/promotions/coupons/' + editId : '/api/v1/admin/promotions/coupons';
+      const method = editId ? 'PUT' : 'POST';
+
       try {
-        const res = await fetch('/api/v1/admin/promotions/coupons', {
-          method: 'POST',
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok) {
-          msg.textContent = '¡Cupón creado con éxito!';
+          msg.textContent = editId ? '¡Cupón actualizado con éxito!' : '¡Cupón creado con éxito!';
           msg.className = 'msg success';
           setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -104,45 +156,8 @@ export function renderPromotionsFormsScript(): string {
       }
     });
 
-    async function togglePromoRuleStatus(id, isActive) {
-      if (!confirm('¿Deseas cambiar el estado de la promoción?')) return;
-      const res = await fetch('/api/v1/admin/promotions/rules/' + id + '/toggle', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive })
-      });
-      if (res.ok) window.location.reload();
-      else alert('Error al actualizar estado');
-    }
-
-    async function deletePromoRule(id) {
-      if (!confirm('¿Seguro que deseas eliminar esta promoción?')) return;
-      const res = await fetch('/api/v1/admin/promotions/rules/' + id, { method: 'DELETE' });
-      if (res.ok) window.location.reload();
-      else alert('Error al eliminar regla');
-    }
-
-    async function toggleCouponStatus(id, isActive) {
-      if (!confirm('¿Deseas cambiar el estado del cupón?')) return;
-      const res = await fetch('/api/v1/admin/promotions/coupons/' + id + '/toggle', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive })
-      });
-      if (res.ok) window.location.reload();
-      else alert('Error al actualizar cupón');
-    }
-
-    async function deleteCoupon(id) {
-      if (!confirm('¿Seguro que deseas eliminar este cupón?')) return;
-      const res = await fetch('/api/v1/admin/promotions/coupons/' + id, { method: 'DELETE' });
-      if (res.ok) window.location.reload();
-      else alert('Error al eliminar cupón');
-    }
-
-    window.togglePromoRuleStatus = togglePromoRuleStatus;
-    window.deletePromoRule = deletePromoRule;
-    window.toggleCouponStatus = toggleCouponStatus;
-    window.deleteCoupon = deleteCoupon;
+    window.filterTargetSelect = filterTargetSelect;
+    window.onPromoTargetTypeChange = onPromoTargetTypeChange;
+    window.onCouponTargetTypeChange = onCouponTargetTypeChange;
   `;
 }

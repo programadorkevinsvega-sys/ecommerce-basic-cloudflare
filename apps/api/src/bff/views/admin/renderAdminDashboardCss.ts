@@ -32,10 +32,15 @@ export function renderAdminDashboardCss(): string {
     .badge-archived { background: #374151; color: #9ca3af; }
     .btn-action { padding: 0.3rem 0.6rem; border-radius: 4px; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.25rem; }
     .btn-action-view { background: #0284c7; color: #fff; text-decoration: none; display: inline-block; }
+    .btn-action-edit { background: #4f46e5; color: #fff; }
     .btn-action-publish { background: #059669; color: #fff; }
     .btn-action-hide { background: #d97706; color: #fff; }
     .btn-action-delete { background: #dc2626; color: #fff; }
     .tag-pill { display: inline-block; background: #334155; color: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; margin: 0.1rem; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: #1e293b; border: 1px solid #334155; border-radius: 8px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; position: relative; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; }
   `;
 }
 

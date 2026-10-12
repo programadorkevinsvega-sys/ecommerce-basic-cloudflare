@@ -10,6 +10,7 @@ import { renderProductFormsScript } from './renderProductFormsScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
 import { renderCmsFormsScript } from './renderCmsFormsScript.js';
 import { renderPromotionsFormsScript } from './renderPromotionsFormsScript.js';
+import { renderPromotionsHandlersScript } from './renderPromotionsHandlersScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductTable } from './renderProductTable.js';
 import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
@@ -154,7 +155,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-promotions" class="tab-content">
-      ${renderPromotionsManagementSection(props.promotionRules, props.coupons)}
+      ${renderPromotionsManagementSection(props.promotionRules, props.coupons, props.products, props.categories)}
     </div>
 
     <div id="tab-settings" class="tab-content">
@@ -180,6 +181,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderStorefrontFormsScript()}</script>
   <script>${renderCmsFormsScript()}</script>
   <script>${renderPromotionsFormsScript()}</script>
+  <script>${renderPromotionsHandlersScript()}</script>
 </body>
 </html>`;
 }

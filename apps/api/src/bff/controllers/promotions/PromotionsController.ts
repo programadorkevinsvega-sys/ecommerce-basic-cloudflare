@@ -57,6 +57,22 @@ export class PromotionsController {
     );
 
     router.put(
+      '/api/v1/admin/promotions/rules/:id',
+      createAuthMiddleware(identityGateway, 'admin', 'promotions:update'),
+      async (c) => {
+        try {
+          const id = c.req.param('id');
+          const body = await c.req.json();
+          const rule = await promotionsGateway.updatePromotionRule({ ...body, id });
+          return c.json({ data: rule });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Error al actualizar regla';
+          return c.json({ error: msg }, 400);
+        }
+      }
+    );
+
+    router.put(
       '/api/v1/admin/promotions/rules/:id/toggle',
       createAuthMiddleware(identityGateway, 'admin', 'promotions:update'),
       async (c) => {
@@ -97,6 +113,22 @@ export class PromotionsController {
           return c.json({ data: coupon }, 201);
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Error al crear cupón';
+          return c.json({ error: msg }, 400);
+        }
+      }
+    );
+
+    router.put(
+      '/api/v1/admin/promotions/coupons/:id',
+      createAuthMiddleware(identityGateway, 'admin', 'promotions:update'),
+      async (c) => {
+        try {
+          const id = c.req.param('id');
+          const body = await c.req.json();
+          const coupon = await promotionsGateway.updateCoupon({ ...body, id });
+          return c.json({ data: coupon });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Error al actualizar cupón';
           return c.json({ error: msg }, 400);
         }
       }

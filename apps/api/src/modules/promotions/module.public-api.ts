@@ -1,6 +1,8 @@
 import { PromotionsModuleContainer } from './module.config.js';
 import { CreatePromotionRuleInput } from './application/use-cases/CreatePromotionRuleUseCase.js';
+import { UpdatePromotionRuleInput } from './application/use-cases/UpdatePromotionRuleUseCase.js';
 import { CreateCouponInput } from './application/use-cases/CreateCouponUseCase.js';
+import { UpdateCouponInput } from './application/use-cases/UpdateCouponUseCase.js';
 import { EvaluateProductDiscountInput, ProductDiscountResult } from './application/use-cases/EvaluateProductDiscountUseCase.js';
 import { ValidateCouponInput, CouponValidationResult } from './application/use-cases/ValidateCouponUseCase.js';
 import { PromotionRule } from './domain/entities/PromotionRule.js';
@@ -8,10 +10,12 @@ import { Coupon } from './domain/entities/Coupon.js';
 
 export interface IPromotionsPublicApi {
   createPromotionRule(input: CreatePromotionRuleInput): Promise<PromotionRule>;
+  updatePromotionRule(input: UpdatePromotionRuleInput): Promise<PromotionRule>;
   listPromotionRules(activeOnly?: boolean): Promise<PromotionRule[]>;
   deletePromotionRule(id: string): Promise<void>;
   togglePromotionRule(id: string, active: boolean): Promise<PromotionRule>;
   createCoupon(input: CreateCouponInput): Promise<Coupon>;
+  updateCoupon(input: UpdateCouponInput): Promise<Coupon>;
   listCoupons(activeOnly?: boolean): Promise<Coupon[]>;
   deleteCoupon(id: string): Promise<void>;
   toggleCoupon(id: string, active: boolean): Promise<Coupon>;
@@ -28,6 +32,12 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
 
   public async createPromotionRule(input: CreatePromotionRuleInput): Promise<PromotionRule> {
     const res = await this.container.createPromotionRuleUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async updatePromotionRule(input: UpdatePromotionRuleInput): Promise<PromotionRule> {
+    const res = await this.container.updatePromotionRuleUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
   }
@@ -51,6 +61,12 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
 
   public async createCoupon(input: CreateCouponInput): Promise<Coupon> {
     const res = await this.container.createCouponUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async updateCoupon(input: UpdateCouponInput): Promise<Coupon> {
+    const res = await this.container.updateCouponUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
   }

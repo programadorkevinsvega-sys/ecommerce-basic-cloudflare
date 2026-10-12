@@ -25,6 +25,23 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     return rule.toPrimitives() as PromotionRuleDto;
   }
 
+  public async updatePromotionRule(input: {
+    id: string;
+    name?: string;
+    description?: string;
+    discountType?: 'percentage' | 'fixed_amount';
+    discountValue?: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
+    minOrderAmountCents?: number;
+    startsAt?: string;
+    endsAt?: string;
+    priority?: number;
+  }): Promise<PromotionRuleDto> {
+    const rule = await this.publicApi.updatePromotionRule(input);
+    return rule.toPrimitives() as PromotionRuleDto;
+  }
+
   public async listPromotionRules(activeOnly = false): Promise<PromotionRuleDto[]> {
     const rules = await this.publicApi.listPromotionRules(activeOnly);
     return rules.map((r) => r.toPrimitives() as PromotionRuleDto);
@@ -44,6 +61,8 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     description?: string;
     discountType: 'percentage' | 'fixed_amount';
     discountValue: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
     minOrderAmountCents?: number;
     maxUsesGlobal?: number;
     maxUsesPerCustomer?: number;
@@ -52,6 +71,24 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     isActive?: boolean;
   }): Promise<CouponDto> {
     const coupon = await this.publicApi.createCoupon(input);
+    return coupon.toPrimitives() as CouponDto;
+  }
+
+  public async updateCoupon(input: {
+    id: string;
+    code?: string;
+    description?: string;
+    discountType?: 'percentage' | 'fixed_amount';
+    discountValue?: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
+    minOrderAmountCents?: number;
+    maxUsesGlobal?: number;
+    maxUsesPerCustomer?: number;
+    startsAt?: string;
+    endsAt?: string;
+  }): Promise<CouponDto> {
+    const coupon = await this.publicApi.updateCoupon(input);
     return coupon.toPrimitives() as CouponDto;
   }
 
@@ -81,6 +118,7 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     code: string;
     orderSubtotalCents: number;
     customerId?: string;
+    items?: Array<{ productId: string; categoryId?: string; priceCents: number }>;
   }): Promise<CouponValidationDto> {
     return this.publicApi.validateCoupon(input);
   }

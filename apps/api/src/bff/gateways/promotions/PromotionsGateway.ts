@@ -21,6 +21,8 @@ export interface CouponDto {
   description?: string;
   discountType: 'percentage' | 'fixed_amount';
   discountValue: number;
+  targetType: 'all' | 'product' | 'category';
+  targetId?: string;
   minOrderAmountCents: number;
   maxUsesGlobal?: number;
   maxUsesPerCustomer?: number;
@@ -65,6 +67,19 @@ export interface PromotionsGateway {
     isActive?: boolean;
     priority?: number;
   }): Promise<PromotionRuleDto>;
+  updatePromotionRule(input: {
+    id: string;
+    name?: string;
+    description?: string;
+    discountType?: 'percentage' | 'fixed_amount';
+    discountValue?: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
+    minOrderAmountCents?: number;
+    startsAt?: string;
+    endsAt?: string;
+    priority?: number;
+  }): Promise<PromotionRuleDto>;
   listPromotionRules(activeOnly?: boolean): Promise<PromotionRuleDto[]>;
   deletePromotionRule(id: string): Promise<void>;
   togglePromotionRule(id: string, active: boolean): Promise<PromotionRuleDto>;
@@ -74,12 +89,28 @@ export interface PromotionsGateway {
     description?: string;
     discountType: 'percentage' | 'fixed_amount';
     discountValue: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
     minOrderAmountCents?: number;
     maxUsesGlobal?: number;
     maxUsesPerCustomer?: number;
     startsAt: string;
     endsAt: string;
     isActive?: boolean;
+  }): Promise<CouponDto>;
+  updateCoupon(input: {
+    id: string;
+    code?: string;
+    description?: string;
+    discountType?: 'percentage' | 'fixed_amount';
+    discountValue?: number;
+    targetType?: 'all' | 'product' | 'category';
+    targetId?: string;
+    minOrderAmountCents?: number;
+    maxUsesGlobal?: number;
+    maxUsesPerCustomer?: number;
+    startsAt?: string;
+    endsAt?: string;
   }): Promise<CouponDto>;
   listCoupons(activeOnly?: boolean): Promise<CouponDto[]>;
   deleteCoupon(id: string): Promise<void>;
@@ -95,5 +126,6 @@ export interface PromotionsGateway {
     code: string;
     orderSubtotalCents: number;
     customerId?: string;
+    items?: Array<{ productId: string; categoryId?: string; priceCents: number }>;
   }): Promise<CouponValidationDto>;
 }

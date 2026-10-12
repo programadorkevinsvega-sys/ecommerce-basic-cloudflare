@@ -1,82 +1,35 @@
 import { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
+import { CatalogProductDto, CategoryDto } from '../../gateways/catalog/CatalogGateway.js';
+import { renderPromotionRulesTableRows, renderCouponsTableRows } from './renderPromotionsTableRows.js';
 
 export function renderPromotionsManagementSection(
   rules: PromotionRuleDto[],
-  coupons: CouponDto[]
+  coupons: CouponDto[],
+  products: CatalogProductDto[] = [],
+  categories: CategoryDto[] = []
 ): string {
-  const ruleRows = rules.map((r) => {
-    const isAct = r.isActive;
-    const discountLabel = r.discountType === 'percentage'
-      ? `${r.discountValue}%`
-      : `$${Math.round(r.discountValue / 100).toLocaleString('es-CO')} COP`;
+  const productMap = new Map<string, string>();
+  products.forEach((p) => productMap.set(p.id, `${p.name} (${p.sku})`));
 
-    const targetLabel = r.targetType === 'all'
-      ? 'Todos los productos'
-      : r.targetType === 'product'
-      ? `Producto (${escapeHtml(r.targetId || '')})`
-      : `Categoría (${escapeHtml(r.targetId || '')})`;
+  const categoryMap = new Map<string, string>();
+  categories.forEach((c) => categoryMap.set(c.id, c.name));
 
-    const toggleAction = isAct
-      ? `<button class="btn-action btn-action-hide" onclick="togglePromoRuleStatus('${r.id}', false)">Desactivar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="togglePromoRuleStatus('${r.id}', true)">Activar</button>`;
+  const productOptions = products.map((p) =>
+    `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} [SKU: ${escapeHtml(p.sku)}]</option>`
+  ).join('');
 
-    return `
-      <tr>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
-          ${escapeHtml(r.name)}
-          <div style="font-size:0.75rem; color:#94a3b8;">${targetLabel} | Prioridad: ${r.priority}</div>
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:700; color:#38bdf8;">${discountLabel}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-size:0.8rem; color:#cbd5e1;">${r.startsAt.substring(0, 10)} al ${r.endsAt.substring(0, 10)}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">
-          ${isAct ? '<span class="badge badge-published">Activa</span>' : '<span class="badge badge-draft">Inactiva</span>'}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deletePromoRule('${r.id}')">Eliminar</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-
-  const couponRows = coupons.map((c) => {
-    const isAct = c.isActive;
-    const discountLabel = c.discountType === 'percentage'
-      ? `${c.discountValue}%`
-      : `$${Math.round(c.discountValue / 100).toLocaleString('es-CO')} COP`;
-
-    const toggleAction = isAct
-      ? `<button class="btn-action btn-action-hide" onclick="toggleCouponStatus('${c.id}', false)">Desactivar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="toggleCouponStatus('${c.id}', true)">Activar</button>`;
-
-    const usesLabel = c.maxUsesGlobal ? `${c.currentUsesCount} / ${c.maxUsesGlobal}` : `${c.currentUsesCount} (ilimitado)`;
-
-    return `
-      <tr>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:700;">
-          <code style="background:#0f172a; padding:0.2rem 0.4rem; border-radius:4px; color:#f59e0b;">${escapeHtml(c.code)}</code>
-          <div style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">${escapeHtml(c.description || 'Sin descripción')}</div>
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:700; color:#38bdf8;">${discountLabel}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-size:0.85rem;">${usesLabel}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">
-          ${isAct ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteCoupon('${c.id}')">Eliminar</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const categoryOptions = categories.map((c) =>
+    `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`
+  ).join('');
 
   return `
     <div class="card">
-      <h2>Reglas de Promoción Automáticas (${rules.length})</h2>
+      <h2 id="prFormTitle">Crear Nueva Regla de Promoción</h2>
       <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
         Descuentos automáticos aplicados en catálogo y detalle de productos por fecha y alcance.
       </p>
       <form id="newPromoRuleForm" style="margin-bottom: 1.5rem;">
+        <input type="hidden" id="prEditId" value="" />
         <div class="form-grid">
           <div><label>Nombre de la Promoción</label><input type="text" id="prName" required placeholder="Ej. Cyber Promo 20%" /></div>
           <div>
@@ -86,28 +39,44 @@ export function renderPromotionsManagementSection(
           <div><label>Valor del Descuento</label><input type="number" id="prDiscountValue" required placeholder="Ej. 20 (para 20%) o 15000 (en COP)" /></div>
           <div>
             <label>Alcance del Descuento</label>
-            <select id="prTargetType"><option value="all">Todo el Catálogo</option><option value="product">Producto Específico</option><option value="category">Categoría</option></select>
+            <select id="prTargetType" onchange="onPromoTargetTypeChange()">
+              <option value="all">Todo el Catálogo</option>
+              <option value="product">Producto Específico</option>
+              <option value="category">Categoría</option>
+            </select>
           </div>
-          <div><label>ID Objetivo (Opcional)</label><input type="text" id="prTargetId" placeholder="ID de producto o categoría" /></div>
+          <div id="prProductTargetWrapper" style="display:none;">
+            <label>Buscar Producto</label>
+            <input type="text" id="prProductSearch" placeholder="Escribe para filtrar productos..." oninput="filterTargetSelect('prProductSearch', 'prTargetProductSelect')" style="margin-bottom:0.25rem;" />
+            <select id="prTargetProductSelect" size="4" style="height:auto;">${productOptions}</select>
+          </div>
+          <div id="prCategoryTargetWrapper" style="display:none;">
+            <label>Categoría Objetivo</label>
+            <select id="prTargetCategorySelect"><option value="">Selecciona una categoría...</option>${categoryOptions}</select>
+          </div>
           <div><label>Fecha Inicio (YYYY-MM-DD)</label><input type="date" id="prStartsAt" required /></div>
           <div><label>Fecha Fin (YYYY-MM-DD)</label><input type="date" id="prEndsAt" required /></div>
           <div><label>Prioridad (Mayor = se aplica antes)</label><input type="number" id="prPriority" value="10" /></div>
         </div>
-        <button type="submit" class="btn-primary" id="prSubmitBtn">Crear Regla de Promoción</button>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button type="submit" class="btn-primary" id="prSubmitBtn">Crear Regla de Promoción</button>
+          <button type="button" class="btn-action btn-action-hide" id="prCancelBtn" style="display:none;" onclick="resetPromoRuleForm()">Cancelar Edición</button>
+        </div>
         <div id="prMsg" class="msg"></div>
       </form>
       <table>
         <thead><tr><th>Nombre y Alcance</th><th>Descuento</th><th>Vigencia</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${ruleRows || '<tr><td colspan="5" style="text-align:center; padding:1rem; color:#94a3b8;">No hay promociones automáticas configuradas</td></tr>'}</tbody>
+        <tbody>${renderPromotionRulesTableRows(rules, productMap, categoryMap)}</tbody>
       </table>
     </div>
 
     <div class="card">
-      <h2>Cupones de Descuento (${coupons.length})</h2>
+      <h2 id="cpFormTitle">Crear Nuevo Cupón de Descuento</h2>
       <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
-        Códigos canjeables al momento de pagar o en el carrito con límites de uso por cliente.
+        Códigos canjeables al pagar o en carrito. Pueden ser para todo el catálogo, un producto específico o una categoría.
       </p>
       <form id="newCouponForm" style="margin-bottom: 1.5rem;">
+        <input type="hidden" id="cpEditId" value="" />
         <div class="form-grid">
           <div><label>Código del Cupón</label><input type="text" id="cpCode" required placeholder="EJ: BIENVENIDO10" style="text-transform:uppercase;" /></div>
           <div>
@@ -115,19 +84,48 @@ export function renderPromotionsManagementSection(
             <select id="cpDiscountType"><option value="percentage">Porcentaje (%)</option><option value="fixed_amount">Monto Fijo (COP)</option></select>
           </div>
           <div><label>Valor del Descuento</label><input type="number" id="cpDiscountValue" required placeholder="Ej. 10 (%) o 20000 (COP)" /></div>
+          <div>
+            <label>Alcance del Cupón</label>
+            <select id="cpTargetType" onchange="onCouponTargetTypeChange()">
+              <option value="all">General (Todo el Catálogo)</option>
+              <option value="product">Producto Específico</option>
+              <option value="category">Categoría Específica</option>
+            </select>
+          </div>
+          <div id="cpProductTargetWrapper" style="display:none;">
+            <label>Buscar Producto</label>
+            <input type="text" id="cpProductSearch" placeholder="Escribe para filtrar productos..." oninput="filterTargetSelect('cpProductSearch', 'cpTargetProductSelect')" style="margin-bottom:0.25rem;" />
+            <select id="cpTargetProductSelect" size="4" style="height:auto;">${productOptions}</select>
+          </div>
+          <div id="cpCategoryTargetWrapper" style="display:none;">
+            <label>Categoría Objetivo</label>
+            <select id="cpTargetCategorySelect"><option value="">Selecciona una categoría...</option>${categoryOptions}</select>
+          </div>
           <div><label>Compra Mínima en COP</label><input type="number" id="cpMinAmount" value="0" placeholder="0" /></div>
           <div><label>Límite Usos Global (Vacío = Ilimitado)</label><input type="number" id="cpMaxGlobal" placeholder="100" /></div>
           <div><label>Límite por Cliente</label><input type="number" id="cpMaxPerCustomer" value="1" /></div>
           <div><label>Fecha Inicio</label><input type="date" id="cpStartsAt" required /></div>
           <div><label>Fecha Fin</label><input type="date" id="cpEndsAt" required /></div>
         </div>
-        <button type="submit" class="btn-primary" id="cpSubmitBtn">Crear Cupón</button>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button type="submit" class="btn-primary" id="cpSubmitBtn">Crear Cupón</button>
+          <button type="button" class="btn-action btn-action-hide" id="cpCancelBtn" style="display:none;" onclick="resetCouponForm()">Cancelar Edición</button>
+        </div>
         <div id="cpMsg" class="msg"></div>
       </form>
       <table>
-        <thead><tr><th>Código</th><th>Descuento</th><th>Usos</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${couponRows || '<tr><td colspan="5" style="text-align:center; padding:1rem; color:#94a3b8;">No hay cupones creados</td></tr>'}</tbody>
+        <thead><tr><th>Código y Alcance</th><th>Descuento</th><th>Usos</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
+        <tbody>${renderCouponsTableRows(coupons, productMap, categoryMap)}</tbody>
       </table>
+    </div>
+
+    <!-- Modales para Ver Detalle -->
+    <div id="promoDetailsModal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closePromoModal()">&times;</button>
+        <h2 id="modalPromoTitle" style="color:#38bdf8; margin-bottom:1rem;">Detalle de Promoción</h2>
+        <div id="modalPromoBody" style="line-height:1.6; font-size:0.9rem; color:#cbd5e1;"></div>
+      </div>
     </div>
   `;
 }

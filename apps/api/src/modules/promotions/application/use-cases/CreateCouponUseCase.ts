@@ -1,6 +1,6 @@
 import { Result } from '../../../../shared-kernel/Result.js';
 import { Coupon } from '../../domain/entities/Coupon.js';
-import { DiscountType } from '../../domain/entities/PromotionRule.js';
+import { DiscountType, TargetType } from '../../domain/entities/PromotionRule.js';
 import { ICouponRepository } from '../../domain/ports/ICouponRepository.js';
 
 export interface CreateCouponInput {
@@ -8,6 +8,8 @@ export interface CreateCouponInput {
   description?: string;
   discountType: DiscountType;
   discountValue: number;
+  targetType?: TargetType;
+  targetId?: string;
   minOrderAmountCents?: number;
   maxUsesGlobal?: number;
   maxUsesPerCustomer?: number;
@@ -38,6 +40,8 @@ export class CreateCouponUseCase {
         description: input.description,
         discountType: input.discountType,
         discountValue: input.discountValue,
+        targetType: input.targetType ?? 'all',
+        targetId: input.targetId,
         minOrderAmountCents: input.minOrderAmountCents ?? 0,
         maxUsesGlobal: input.maxUsesGlobal,
         maxUsesPerCustomer: input.maxUsesPerCustomer ?? 1,

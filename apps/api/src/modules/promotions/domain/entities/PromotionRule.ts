@@ -67,6 +67,26 @@ export class PromotionRule {
     this.props.updatedAt = new Date().toISOString();
   }
 
+  public update(props: Partial<Pick<PromotionRuleProps, 'name' | 'description' | 'discountType' | 'discountValue' | 'targetType' | 'targetId' | 'minOrderAmountCents' | 'startsAt' | 'endsAt' | 'priority'>>): void {
+    if (props.name !== undefined) {
+      if (!props.name || props.name.trim().length === 0) throw new Error('El nombre no puede estar vacío');
+      this.props.name = props.name.trim();
+    }
+    if (props.description !== undefined) this.props.description = props.description;
+    if (props.discountType !== undefined) this.props.discountType = props.discountType;
+    if (props.discountValue !== undefined) {
+      if (props.discountValue <= 0) throw new Error('El valor del descuento debe ser mayor a 0');
+      this.props.discountValue = props.discountValue;
+    }
+    if (props.targetType !== undefined) this.props.targetType = props.targetType;
+    if (props.targetId !== undefined) this.props.targetId = props.targetId;
+    if (props.minOrderAmountCents !== undefined) this.props.minOrderAmountCents = props.minOrderAmountCents;
+    if (props.startsAt !== undefined) this.props.startsAt = props.startsAt;
+    if (props.endsAt !== undefined) this.props.endsAt = props.endsAt;
+    if (props.priority !== undefined) this.props.priority = props.priority;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public toPrimitives(): PromotionRuleProps {
     return { ...this.props };
   }

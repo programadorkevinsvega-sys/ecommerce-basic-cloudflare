@@ -5,6 +5,7 @@ export interface ValidateCouponInput {
   code: string;
   orderSubtotalCents: number;
   customerId?: string;
+  items?: Array<{ productId: string; categoryId?: string; priceCents: number }>;
 }
 
 export interface CouponValidationResult {
@@ -42,7 +43,7 @@ export class ValidateCouponUseCase {
         customerUsageCount = await this.couponRepo.getCustomerUsageCount(coupon.id, input.customerId);
       }
 
-      const check = coupon.canBeUsed(input.orderSubtotalCents, customerUsageCount);
+      const check = coupon.canBeUsed(input.orderSubtotalCents, customerUsageCount, input.items);
       if (!check.allowed) {
         return Result.ok({
           valid: false,
@@ -53,7 +54,8 @@ export class ValidateCouponUseCase {
         });
       }
 
-      const discountCents = coupon.calculateDiscount(input.orderSubtotalCents);
+      const baseAmountForDiscount = check.eligibleAmountCents ?? input.orderSubtotalCents;
+      const discountCents = coupon.calculateDiscount(baseAmountForDiscount);
       const newSubtotalCents = Math.max(0, input.orderSubtotalCents - discountCents);
 
       return Result.ok({
