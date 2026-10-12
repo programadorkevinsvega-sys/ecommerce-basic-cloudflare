@@ -197,6 +197,31 @@ export function renderBaseLayout(props: LayoutProps): string {
     .detail-price { margin-bottom: 1.3rem; color: var(--text); font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 850; letter-spacing: -.05em; }
     .detail-policy, .shipping-coverage-widget { margin: 1.5rem 0; padding: 1.2rem; background: #f6f8f2 !important; border: 1px solid var(--border); border-radius: var(--radius-md); }
     .detail-policy p { margin: .45rem 0; }
+    .detail-media {
+      display: grid; place-items: center; width: 100%; max-height: 420px; min-height: 180px;
+      margin-bottom: 2rem; overflow: hidden; border-radius: 20px; background: #f0f2eb;
+    }
+    .detail-media img { width: 100%; max-height: 420px; aspect-ratio: 16 / 7; object-fit: contain; }
+    .detail-media-empty { color: #899285; font-size: .8rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .quantity-control { display: flex; flex-direction: column; gap: .35rem; color: var(--muted); font-size: .78rem; font-weight: 750; }
+    .quantity-control input { width: 88px !important; }
+    .detail-view #btn-add-cart { min-height: 52px; background: var(--primary) !important; color: #fff !important; border-radius: 12px !important; }
+    .detail-view #btn-add-cart:hover { background: #304638 !important; }
+    .container div[style*="background: var(--surface)"],
+    .container div[style*="background: var(--card)"],
+    .container section[style*="background: var(--surface)"],
+    .container form[style*="background: var(--surface)"] {
+      background: var(--card) !important; border-color: var(--border) !important;
+      border-radius: var(--radius-md) !important; box-shadow: var(--shadow-soft);
+    }
+    .container button[style*="background: var(--accent)"],
+    .container a[style*="background: var(--accent)"] {
+      background: var(--primary) !important; color: #fff !important; border-radius: 12px !important;
+    }
+    .container button[style*="background: var(--accent)"]:hover,
+    .container a[style*="background: var(--accent)"]:hover { background: #304638 !important; }
+    .container [style*="grid-template-columns: 1fr 1fr"] { min-width: 0; }
+    .container [style*="grid-template-columns: 1fr 1fr"] > * { min-width: 0; }
     .container section { min-width: 0; }
     .container form, .container table, .container section > div { min-width: 0; }
     .container input:not([type="radio"]):not([type="checkbox"]), .container select {
@@ -279,7 +304,7 @@ export function renderBaseLayout(props: LayoutProps): string {
       .card-price { font-size: 1.2rem; }
       .tag { font-size: .6rem; }
       .checkout-grid { grid-template-columns: minmax(0, 1fr) !important; }
-      .container section > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: minmax(0, 1fr) !important; }
+      .container [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: minmax(0, 1fr) !important; }
       .container form { padding: 1rem !important; }
       .site-footer { padding: 2.25rem 1rem 1.5rem; }
     }
