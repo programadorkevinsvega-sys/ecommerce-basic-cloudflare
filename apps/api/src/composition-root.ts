@@ -35,6 +35,26 @@ import { ShippingGateway } from './bff/gateways/shipping/ShippingGateway.js';
 import { InProcessShippingGateway } from './bff/gateways/shipping/InProcessShippingGateway.js';
 import { createShippingModule } from './modules/shipping/module.config.js';
 import { ShippingPublicApi } from './modules/shipping/module.public-api.js';
+import { InventoryGateway } from './bff/gateways/inventory/InventoryGateway.js';
+import { InProcessInventoryGateway } from './bff/gateways/inventory/InProcessInventoryGateway.js';
+import { createInventoryModule } from './modules/inventory/module.config.js';
+import { InventoryPublicApi } from './modules/inventory/module.public-api.js';
+import { CartGateway } from './bff/gateways/cart/CartGateway.js';
+import { InProcessCartGateway } from './bff/gateways/cart/InProcessCartGateway.js';
+import { createCartModule } from './modules/cart/module.config.js';
+import { CartPublicApi } from './modules/cart/module.public-api.js';
+import { OrdersGateway } from './bff/gateways/orders/OrdersGateway.js';
+import { InProcessOrdersGateway } from './bff/gateways/orders/InProcessOrdersGateway.js';
+import { createOrdersModule } from './modules/orders/module.config.js';
+import { OrdersPublicApi } from './modules/orders/module.public-api.js';
+import { PaymentsGateway } from './bff/gateways/payments/PaymentsGateway.js';
+import { InProcessPaymentsGateway } from './bff/gateways/payments/InProcessPaymentsGateway.js';
+import { createPaymentsModule } from './modules/payments/module.config.js';
+import { PaymentsPublicApi } from './modules/payments/module.public-api.js';
+import { RealtimeGateway } from './bff/gateways/realtime/RealtimeGateway.js';
+import { InProcessRealtimeGateway } from './bff/gateways/realtime/InProcessRealtimeGateway.js';
+import { createRealtimeModule } from './modules/realtime/module.config.js';
+import { RealtimePublicApi } from './modules/realtime/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -47,56 +67,57 @@ export interface AppCompositionRoot {
   cmsGateway: CmsGateway;
   promotionsGateway: PromotionsGateway;
   shippingGateway: ShippingGateway;
+  inventoryGateway: InventoryGateway;
+  cartGateway: CartGateway;
+  ordersGateway: OrdersGateway;
+  paymentsGateway: PaymentsGateway;
+  realtimeGateway: RealtimeGateway;
   outboxRelayService: OutboxRelayService;
 }
 
 export function buildCompositionRoot(env: Env): AppCompositionRoot {
-  // Módulo settings
   const settingsContainer = createSettingsModule(env);
-  const settingsPublicApi = new SettingsPublicApi(settingsContainer);
-  const settingsGateway = new InProcessSettingsGateway(settingsPublicApi);
+  const settingsGateway = new InProcessSettingsGateway(new SettingsPublicApi(settingsContainer));
 
-  // Módulo identity
   const identityContainer = createIdentityModule(env);
-  const identityPublicApi = new IdentityPublicApi(identityContainer);
-  const identityGateway = new InProcessIdentityGateway(identityPublicApi);
+  const identityGateway = new InProcessIdentityGateway(new IdentityPublicApi(identityContainer));
 
-  // Módulo media
   const mediaContainer = createMediaModule(env);
-  const mediaPublicApi = new MediaPublicApi(mediaContainer);
-  const mediaGateway = new InProcessMediaGateway(mediaPublicApi);
+  const mediaGateway = new InProcessMediaGateway(new MediaPublicApi(mediaContainer));
 
-  // Módulo catalog
   const catalogContainer = createCatalogModule(env);
-  const catalogPublicApi = new CatalogPublicApi(catalogContainer);
-  const catalogGateway = new InProcessCatalogGateway(catalogPublicApi);
+  const catalogGateway = new InProcessCatalogGateway(new CatalogPublicApi(catalogContainer));
 
-  // Módulo storefront
   const storefrontContainer = createStorefrontModule(env);
-  const storefrontPublicApi = new StorefrontPublicApi(storefrontContainer);
-  const storefrontGateway = new InProcessStorefrontGateway(storefrontPublicApi);
+  const storefrontGateway = new InProcessStorefrontGateway(new StorefrontPublicApi(storefrontContainer));
 
-  // Módulo SEO
   const seoContainer = createSeoModule(env);
-  const seoPublicApi = new SeoPublicApi(seoContainer);
-  const seoGateway = new InProcessSeoGateway(seoPublicApi);
+  const seoGateway = new InProcessSeoGateway(new SeoPublicApi(seoContainer));
 
-  // Módulo CMS
   const cmsContainer = createCmsModule(env);
-  const cmsPublicApi = new CmsPublicApi(cmsContainer);
-  const cmsGateway = new InProcessCmsGateway(cmsPublicApi);
+  const cmsGateway = new InProcessCmsGateway(new CmsPublicApi(cmsContainer));
 
-  // Módulo Promotions
   const promotionsContainer = createPromotionsModule(env);
-  const promotionsPublicApi = new PromotionsPublicApi(promotionsContainer);
-  const promotionsGateway = new InProcessPromotionsGateway(promotionsPublicApi);
+  const promotionsGateway = new InProcessPromotionsGateway(new PromotionsPublicApi(promotionsContainer));
 
-  // Módulo Shipping
   const shippingContainer = createShippingModule(env);
-  const shippingPublicApi = new ShippingPublicApi(shippingContainer);
-  const shippingGateway = new InProcessShippingGateway(shippingPublicApi);
+  const shippingGateway = new InProcessShippingGateway(new ShippingPublicApi(shippingContainer));
 
-  // Outbox Relay transversal
+  const inventoryContainer = createInventoryModule(env);
+  const inventoryGateway = new InProcessInventoryGateway(new InventoryPublicApi(inventoryContainer));
+
+  const cartContainer = createCartModule(env);
+  const cartGateway = new InProcessCartGateway(new CartPublicApi(cartContainer));
+
+  const ordersContainer = createOrdersModule(env);
+  const ordersGateway = new InProcessOrdersGateway(new OrdersPublicApi(ordersContainer));
+
+  const paymentsContainer = createPaymentsModule(env);
+  const paymentsGateway = new InProcessPaymentsGateway(new PaymentsPublicApi(paymentsContainer));
+
+  const realtimeContainer = createRealtimeModule(env);
+  const realtimeGateway = new InProcessRealtimeGateway(new RealtimePublicApi(realtimeContainer));
+
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
   return {
@@ -109,6 +130,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     cmsGateway,
     promotionsGateway,
     shippingGateway,
+    inventoryGateway,
+    cartGateway,
+    ordersGateway,
+    paymentsGateway,
+    realtimeGateway,
     outboxRelayService,
   };
 }

@@ -88,3 +88,49 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `shipping__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `shipping__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 
+---
+
+## Módulo: `cart`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `cart__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `cart__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `inventory`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `inventory__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `inventory__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `orders`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `orders__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `orders__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `payments`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `payments__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `payments__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+---
+
+## Módulo: `realtime`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `realtime__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `realtime__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+
+

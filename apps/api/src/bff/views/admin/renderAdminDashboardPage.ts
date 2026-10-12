@@ -14,6 +14,7 @@ import { renderPromotionsFormsScript } from './renderPromotionsFormsScript.js';
 import { renderPromotionsHandlersScript } from './renderPromotionsHandlersScript.js';
 import { renderShippingFormsScript } from './renderShippingFormsScript.js';
 import { renderShippingHandlersScript } from './renderShippingHandlersScript.js';
+import { renderPhase8AdminScript } from './renderPhase8AdminScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductFormCard } from './renderProductFormCard.js';
 import { renderProductTable } from './renderProductTable.js';
@@ -21,6 +22,9 @@ import { renderStorefrontManagementSection } from './renderStorefrontManagementS
 import { renderCmsManagementSection } from './renderCmsManagementSection.js';
 import { renderPromotionsManagementSection } from './renderPromotionsManagementSection.js';
 import { renderShippingManagementSection } from './renderShippingManagementSection.js';
+import { renderOrdersManagementSection } from './renderOrdersManagementSection.js';
+import { renderInventoryManagementSection } from './renderInventoryManagementSection.js';
+import { renderPaymentsManagementSection } from './renderPaymentsManagementSection.js';
 
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
@@ -51,6 +55,9 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <header>
     <div class="brand">Vega Store — Panel de Control</div>
     <div class="nav-user">
+      <span style="position:relative; margin-right:1rem; cursor:pointer;" onclick="switchTab('orders')">
+        🔔 <span id="notification-bell-badge" style="display:none; background:#ef4444; color:#fff; border-radius:50%; font-size:0.75rem; padding:0.15rem 0.4rem; font-weight:700;">0</span>
+      </span>
       <span>🛡️ ${escapeHtml(props.adminEmail)}</span>
       <button class="btn-logout" id="logoutBtn">Cerrar Sesión</button>
     </div>
@@ -58,6 +65,9 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <main class="container">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('products')">Catálogo & Productos</button>
+      <button class="tab-btn" onclick="switchTab('orders'); loadAdminOrders();">Pedidos 📦</button>
+      <button class="tab-btn" onclick="switchTab('inventory'); loadAdminInventory();">Inventario 📊</button>
+      <button class="tab-btn" onclick="switchTab('payments'); loadAdminPayments();">Pagos & Recaudos 💳</button>
       <button class="tab-btn" onclick="switchTab('taxonomies')">Categorías & Marcas</button>
       <button class="tab-btn" onclick="switchTab('storefront')">Banners & Anuncios</button>
       <button class="tab-btn" onclick="switchTab('cms')">Páginas CMS</button>
@@ -69,6 +79,18 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     <div id="tab-products" class="tab-content active">
       ${renderProductFormCard(props.shippingZones)}
       ${renderProductTable(props.products)}
+    </div>
+
+    <div id="tab-orders" class="tab-content">
+      ${renderOrdersManagementSection()}
+    </div>
+
+    <div id="tab-inventory" class="tab-content">
+      ${renderInventoryManagementSection()}
+    </div>
+
+    <div id="tab-payments" class="tab-content">
+      ${renderPaymentsManagementSection()}
     </div>
 
     <div id="tab-taxonomies" class="tab-content">
@@ -117,6 +139,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderPromotionsHandlersScript()}</script>
   <script>${renderShippingFormsScript()}</script>
   <script>${renderShippingHandlersScript()}</script>
+  <script>${renderPhase8AdminScript()}</script>
 </body>
 </html>`;
 }

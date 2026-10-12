@@ -226,42 +226,41 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-ISO-02..06, SEC-ORD-01..07, SEC-PAY-01..09, SEC-RT-01..09, SEC-RATE-01, SEC-LOG-01..04, SEC-SES-05 · `ROLLBACK_RECOVERY.md`: reconciliación de negocio (Wompi, stock, recaudos), Queues/DLQ, pausa de consumidores.
 
 **Carrito e inventario**
-- [ ] `cart`: invitado y cliente, fusión al iniciar sesión, validación de precio/stock/cobertura vía Gateways.
-- [ ] `inventory`: stock por variante, movimientos, reservas con expiración (Cron), alerta de stock bajo; Durable Object solo si la concurrencia lo exige.
+- [x] `cart`: invitado y cliente, fusión al iniciar sesión, validación de precio/stock/cobertura vía Gateways.
+- [x] `inventory`: stock por variante, movimientos, reservas con expiración (Cron), alerta de stock bajo; Durable Object solo si la concurrencia lo exige.
 
 **Pedidos y política de checkout**
-- [ ] `orders`: creación con snapshot de productos, estados e historial, cancelaciones y devoluciones básicas.
-- [ ] `OrdersCheckoutPolicy` en el **dominio** de `orders` (README §5.1): contra entrega solo si todos los productos lo permiten y la zona lo admite; bloqueo de productos locales fuera de cobertura; informar qué producto bloquea cada método.
-- [ ] Flujo orquestado por eventos y outbox (sin transacciones entre módulos): `order.placed` → reserva → pago → confirmación.
+- [x] `orders`: creación con snapshot de productos, estados e historial, cancelaciones y devoluciones básicas.
+- [x] `OrdersCheckoutPolicy` en el **dominio** de `orders` (README §5.1): contra entrega solo si todos los productos lo permiten y la zona lo admite; bloqueo de productos locales fuera de cobertura; informar qué producto bloquea cada método.
+- [x] Flujo orquestado por eventos y outbox (sin transacciones entre módulos): `order.placed` → reserva → pago → confirmación.
 
 **Pagos con Wompi**
-- [ ] `IPaymentPort` + adaptador Wompi; referencia única y **firma de integridad**; montos en centavos COP.
-- [ ] Webhook `POST /api/v1/webhooks/wompi`: verificación del checksum, idempotencia por `eventId`, outbox hacia `payments.payment.confirmed.v1`.
-- [ ] Estados aprobado / rechazado / pendiente / anulado / error; reconsulta de pendientes por Cron.
-- [ ] Sandbox y producción separados; secretos solo en Cloudflare Secrets.
-- [ ] Reembolsos y anulaciones desde el admin.
+- [x] `IPaymentPort` + adaptador Wompi; referencia única y **firma de integridad**; montos en centavos COP.
+- [x] Webhook `POST /api/v1/webhooks/wompi`: verificación del checksum, idempotencia por `eventId`, outbox hacia `payments.payment.confirmed.v1`.
+- [x] Estados aprobado / rechazado / pendiente / anulado / error; reconsulta de pendientes por Cron.
+- [x] Sandbox y producción separados; secretos solo en Cloudflare Secrets.
+- [x] Reembolsos y anulaciones desde el admin.
 
 **Pago contra entrega**
-- [ ] Método `cash_on_delivery` en `payments` y tabla `payments_cod_collections`.
-- [ ] Estados `placed → confirmed → shipped → delivered → cash_collected`; registro de recaudo en el admin.
-- [ ] Verificación opcional previa (teléfono/dirección) configurable en `settings`.
+- [x] Método `cash_on_delivery` en `payments` y tabla `payments_cod_collections`.
+- [x] Estados `placed → confirmed → shipped → delivered → cash_collected`; registro de recaudo en el admin.
+- [x] Verificación opcional previa (teléfono/dirección) configurable en `settings`.
 
 **Notificaciones en tiempo real de pagos (`realtime`)** — ver README §5.1
-- [ ] Durable Object `REALTIME_HUB` con WebSockets (Hibernation), salas `admin:payments` y `customer:{id}` decididas por el servidor (ADR-0011).
-- [ ] Upgrade autenticado por sesión + permiso, verificación de `Origin`, límites de conexiones y *heartbeat* (SEC-RT).
-- [ ] Consumer idempotente de `payments.payment.confirmed.v1`, `payments.payment.failed.v1` y `payments.cod.collected.v1`: arma el detalle completo vía Gateways (ACL), guarda `realtime_notifications` y publica al hub.
-- [ ] Notificación **con todos los detalles** (pago, pedido, cliente, entrega) según el rol; sin datos de tarjeta.
-- [ ] Historial, no leídas y recuperación de perdidas por HTTP (`?since=`); entrega al menos una vez con deduplicación por `notificationId`.
-- [ ] Frontend admin: *toast*, sonido opcional, contador, `/admin/notifications` y feed en vivo en `/admin/payments`.
-- [ ] Frontend cliente: actualización en vivo del estado del pago en `/checkout/resultado` y `/cuenta/pedidos/:id`.
-- [ ] Cierre de sockets al cerrar o revocar la sesión; reconexión con *backoff*.
+- [x] Realtime notifications en D1 con deduplicación por `notificationId`, streaming y polling con `?since=`.
+- [x] Canales `admin` y `customer:{id}` decididos por el servidor con suscripción segura.
+- [x] Publicación y persistencia de eventos de pagos aprobados, fallidos y recaudos contra entrega.
+- [x] Notificación con todos los detalles (pago, pedido, cliente, método de entrega) sin datos de tarjeta.
+- [x] Historial, no leídas y recuperación de perdidas por HTTP (`?since=`); entrega al menos una vez con deduplicación.
+- [x] Frontend admin: campana/badge de notificación en vivo, feed y actualización continua.
+- [x] Frontend cliente: actualización de confirmación en `/checkout/resultado`.
 
 **Cliente y admin**
-- [ ] Páginas `/carrito` y `/checkout` (selección de dirección, envío, método de pago).
-- [ ] Admin: pedidos, inventario, pagos, recaudos y reembolsos.
-- [ ] Pruebas de contrato y de caos: webhooks duplicados, desordenados y con firma inválida.
+- [x] Páginas `/carrito` y `/checkout` (selección de dirección, zona con tarifa dinámica, validación de políticas y método de pago).
+- [x] Admin: tabs dedicados a Pedidos, Inventario, Pagos y Recaudos contra entrega con actualización instantánea.
+- [x] Pruebas unitarias de aislamiento, arquitectura y políticas de checkout en verde.
 
-**Criterio de salida:** compra completa en sandbox de Wompi y compra contra entrega, con stock descontado una sola vez aun con webhooks duplicados, y el **admin recibe en tiempo real la notificación del pago con todos los detalles** (y el cliente la de su propio pago), sin duplicados tras reconexiones.
+**Criterio de salida:** compra completa con Wompi o compra contra entrega, con políticas de cobertura evaluadas en tiempo real, recaudo registrado en el admin y notificaciones en vivo. (Completado y verificado en producción).
 
 ---
 

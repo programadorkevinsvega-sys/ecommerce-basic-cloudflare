@@ -1,0 +1,160 @@
+import { Order, OrderPaymentStatus, OrderStatus, ShippingAddressSnapshot } from '../../../../domain/entities/Order.js';
+import { OrderLine } from '../../../../domain/entities/OrderLine.js';
+import { IOrderRepository, OrderHistoryRecord } from '../../../../domain/ports/IOrderRepository.js';
+
+interface OrderRow {
+  id: string;
+  customer_id: string | null;
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  shipping_address: string;
+  shipping_zone_id: string;
+  shipping_cost_cents: number;
+  subtotal_cents: number;
+  discount_cents: number;
+  coupon_code: string | null;
+  total_cents: number;
+  payment_method: string;
+  status: string;
+  payment_status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface OrderLineRow {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  product_sku: string;
+  quantity: number;
+  unit_price_cents: number;
+  total_cents: number;
+}
+
+export class D1OrderRepository implements IOrderRepository {
+  private readonly db: D1Database;
+
+  public constructor(db: D1Database) {
+    this.db = db;
+  }
+
+  public async findById(id: string): Promise<Order | null> {
+    const row = await this.db.prepare('SELECT * FROM orders_orders WHERE id = ?').bind(id).first<OrderRow>();
+    if (!row) return null;
+
+    const lines = await this.loadLines(id);
+    return this.hydrate(row, lines);
+  }
+
+  public async save(order: Order): Promise<void> {
+    await this.db.prepare(
+      `INSERT INTO orders_orders (
+         id, customer_id, customer_email, customer_name, customer_phone,
+         shipping_address, shipping_zone_id, shipping_cost_cents,
+         subtotal_cents, discount_cents, coupon_code, total_cents,
+         payment_method, status, payment_status, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         status = excluded.status,
+         payment_status = excluded.payment_status,
+         updated_at = excluded.updated_at`
+    ).bind(
+      order.id, order.customerId, order.customerEmail, order.customerName, order.customerPhone,
+      JSON.stringify(order.shippingAddress), order.shippingZoneId, order.shippingCostCents,
+      order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
+      order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt
+    ).run();
+
+    await this.db.prepare('DELETE FROM orders_lines WHERE order_id = ?').bind(order.id).run();
+
+    for (const l of order.lines) {
+      await this.db.prepare(
+        `INSERT INTO orders_lines (id, order_id, product_id, product_name, product_sku, quantity, unit_price_cents, total_cents)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(l.id, order.id, l.productId, l.productName, l.productSku, l.quantity, l.unitPriceCents, l.totalCents).run();
+    }
+  }
+
+  public async addHistory(record: OrderHistoryRecord): Promise<void> {
+    const id = record.id || crypto.randomUUID();
+    const now = record.createdAt || new Date().toISOString();
+    await this.db.prepare(
+      `INSERT INTO orders_history (id, order_id, from_status, to_status, note, actor, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(id, record.orderId, record.fromStatus || null, record.toStatus, record.note || null, record.actor, now).run();
+  }
+
+  public async list(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]> {
+    let query = 'SELECT * FROM orders_orders';
+    const params: unknown[] = [];
+    const conditions: string[] = [];
+
+    if (filters?.customerId) {
+      conditions.push('customer_id = ?');
+      params.push(filters.customerId);
+    }
+    if (filters?.status) {
+      conditions.push('status = ?');
+      params.push(filters.status);
+    }
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(filters?.limit || 50, filters?.offset || 0);
+
+    const { results } = await this.db.prepare(query).bind(...params).all<OrderRow>();
+    if (!results || results.length === 0) return [];
+
+    const orders: Order[] = [];
+    for (const r of results) {
+      const lines = await this.loadLines(r.id);
+      orders.push(this.hydrate(r, lines));
+    }
+    return orders;
+  }
+
+  private async loadLines(orderId: string): Promise<OrderLine[]> {
+    const { results } = await this.db
+      .prepare('SELECT * FROM orders_lines WHERE order_id = ?')
+      .bind(orderId)
+      .all<OrderLineRow>();
+
+    return (results || []).map((r) => new OrderLine({
+      id: r.id,
+      orderId: r.order_id,
+      productId: r.product_id,
+      productName: r.product_name,
+      productSku: r.product_sku,
+      quantity: r.quantity,
+      unitPriceCents: r.unit_price_cents,
+      totalCents: r.total_cents,
+    }));
+  }
+
+  private hydrate(row: OrderRow, lines: OrderLine[]): Order {
+    return new Order({
+      id: row.id,
+      customerId: row.customer_id,
+      customerEmail: row.customer_email,
+      customerName: row.customer_name,
+      customerPhone: row.customer_phone,
+      shippingAddress: JSON.parse(row.shipping_address) as ShippingAddressSnapshot,
+      shippingZoneId: row.shipping_zone_id,
+      shippingCostCents: row.shipping_cost_cents,
+      subtotalCents: row.subtotal_cents,
+      discountCents: row.discount_cents,
+      couponCode: row.coupon_code,
+      totalCents: row.total_cents,
+      paymentMethod: row.payment_method as 'wompi' | 'cash_on_delivery',
+      status: row.status as OrderStatus,
+      paymentStatus: row.payment_status as OrderPaymentStatus,
+      lines,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    });
+  }
+}

@@ -75,6 +75,7 @@ export function renderBaseLayout(props: LayoutProps): string {
       --text: #1e293b;
       --muted: #64748b;
       --border: #e2e8f0;
+      --surface: #ffffff;
       --success: #16a34a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -114,6 +115,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     <a href="/">Vega Store</a>
     <nav>
       ${headerLinksHtml}
+      <a href="/carrito" style="color:#38bdf8; font-weight:700;">🛒 Carrito</a>
       ${props.customerEmail ? `<span style="color:#93c5fd; margin-left:1rem;">👤 ${escapeHtml(props.customerEmail)}</span>` : '<a href="/auth/login">Ingresar</a>'}
     </nav>
   </header>

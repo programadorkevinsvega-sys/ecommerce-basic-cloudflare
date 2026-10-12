@@ -10,9 +10,11 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
   });
 
   let priceHtml = `<div class="detail-price">${formattedPrice}</div>`;
+  let effectivePriceCents = product.priceInCents;
   let promoBanner = '';
 
   if (discount?.hasDiscount) {
+    effectivePriceCents = discount.finalPriceCents;
     const finalFormatted = (discount.finalPriceCents / 100).toLocaleString('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -81,11 +83,54 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
 
       ${renderProductShippingWidget(product)}
 
-      <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-        <button type="button" style="flex:1; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer;">
-          Añadir al Carrito
+      <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
+        <input type="number" id="buy-qty" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" style="width: 70px; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1.1rem; text-align: center;">
+        <button type="button" id="btn-add-cart" style="flex:1; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer;">
+          Añadir al Carrito 🛒
         </button>
       </div>
+      <div id="cart-msg" style="margin-top: 0.75rem; font-weight: 600; display: none;"></div>
+
+      <script>
+        document.getElementById('btn-add-cart').addEventListener('click', async () => {
+          const btn = document.getElementById('btn-add-cart');
+          const msg = document.getElementById('cart-msg');
+          const qty = parseInt(document.getElementById('buy-qty').value, 10) || 1;
+          btn.disabled = true;
+          btn.innerText = 'Agregando...';
+          try {
+            const res = await fetch('/api/v1/cart/items', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                productId: '${product.id}',
+                quantity: qty,
+                unitPriceCents: ${effectivePriceCents}
+              })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              msg.style.display = 'block';
+              msg.style.color = '#15803d';
+              msg.innerHTML = '¡Producto agregado al carrito! <a href="/carrito" style="text-decoration:underline; font-weight:bold;">Ver Carrito &rarr;</a>';
+              btn.innerText = '¡Añadido!';
+              setTimeout(() => { btn.disabled = false; btn.innerText = 'Añadir al Carrito 🛒'; }, 2000);
+            } else {
+              msg.style.display = 'block';
+              msg.style.color = '#b91c1c';
+              msg.innerText = data.error || 'Error al agregar al carrito';
+              btn.disabled = false;
+              btn.innerText = 'Añadir al Carrito 🛒';
+            }
+          } catch (e) {
+            msg.style.display = 'block';
+            msg.style.color = '#b91c1c';
+            msg.innerText = 'Error de conexión';
+            btn.disabled = false;
+            btn.innerText = 'Añadir al Carrito 🛒';
+          }
+        });
+      </script>
     </article>
   `;
 }

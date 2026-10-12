@@ -1,0 +1,21 @@
+import { InventoryStock } from '../entities/InventoryStock.js';
+
+export interface InventoryMovementRecord {
+  id: string;
+  productId: string;
+  type: 'adjustment' | 'restock' | 'sale' | 'reservation' | 'release';
+  quantity: number;
+  reason?: string;
+  referenceId?: string;
+  createdAt: string;
+}
+
+export interface IInventoryRepository {
+  getStock(productId: string): Promise<InventoryStock | null>;
+  saveStock(stock: InventoryStock): Promise<void>;
+  recordMovement(movement: InventoryMovementRecord): Promise<void>;
+  createReservation(orderId: string, productId: string, quantity: number, expiresAt: string): Promise<void>;
+  releaseReservation(orderId: string): Promise<void>;
+  confirmReservation(orderId: string): Promise<void>;
+  listStocks(): Promise<InventoryStock[]>;
+}

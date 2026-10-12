@@ -15,117 +15,65 @@ import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
 import { PromotionsController } from './controllers/promotions/PromotionsController.js';
 import { ShippingController } from './controllers/shipping/ShippingController.js';
+import { CartController } from './controllers/cart/CartController.js';
+import { InventoryController } from './controllers/inventory/InventoryController.js';
+import { OrdersController } from './controllers/orders/OrdersController.js';
+import { PaymentsController } from './controllers/payments/PaymentsController.js';
+import { RealtimeController } from './controllers/realtime/RealtimeController.js';
+import { StorefrontCheckoutController } from './controllers/checkout/StorefrontCheckoutController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
-export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
+export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
 
-  // Storefront Admin API (Banners & Anuncios CRUD)
-  app.route('/', StorefrontAdminController.createRoutes(compositionRoot.storefrontGateway));
+  // Storefront Admin API
+  app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway));
+  app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
+  app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
+  app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
+  app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway));
 
-  // Promociones y cupones (Evaluación pública y administración protegida)
-  app.route(
-    '/',
-    PromotionsController.createRoutes(
-      compositionRoot.promotionsGateway,
-      compositionRoot.identityGateway
-    )
-  );
+  // Cart, Inventory, Orders, Payments, Realtime BFF APIs
+  app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
+  app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway));
+  app.route('/', OrdersController.createRoutes(cRoot.ordersGateway, cRoot.identityGateway, cRoot.shippingGateway, cRoot.catalogGateway, cRoot.realtimeGateway));
+  app.route('/', PaymentsController.createRoutes(cRoot.paymentsGateway, cRoot.ordersGateway, cRoot.identityGateway, cRoot.realtimeGateway));
+  app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway));
 
-  // Envíos y cobertura (Consulta pública y administración de zonas)
-  app.route(
-    '/',
-    ShippingController.createRoutes(
-      compositionRoot.shippingGateway,
-      compositionRoot.identityGateway
-    )
-  );
+  // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado)
+  app.route('/', StorefrontCheckoutController.createRoutes(cRoot.cartGateway, cRoot.catalogGateway, cRoot.shippingGateway, cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway));
 
-  // CMS: Páginas con bloques (/p/:slug), menús y gestión de contenido
-  app.route(
-    '/',
-    CmsController.createRoutes(
-      compositionRoot.cmsGateway,
-      compositionRoot.identityGateway
-    )
-  );
+  // Panel Visual Administrativo
+  app.route('/admin', AdminUiController.createRoutes(
+    cRoot.identityGateway,
+    cRoot.catalogGateway,
+    cRoot.settingsGateway,
+    cRoot.storefrontGateway,
+    cRoot.cmsGateway,
+    cRoot.promotionsGateway,
+    cRoot.shippingGateway
+  ));
 
-  // SEO: robots.txt, sitemap.xml y gestión de redirects
-  app.route(
-    '/',
-    SeoController.createRoutes(
-      compositionRoot.seoGateway,
-      compositionRoot.catalogGateway
-    )
-  );
+  // Storefront público SSR
+  app.route('/', StorefrontController.createRoutes(
+    cRoot.catalogGateway,
+    cRoot.identityGateway,
+    cRoot.storefrontGateway,
+    cRoot.seoGateway,
+    cRoot.cmsGateway,
+    cRoot.promotionsGateway
+  ));
 
-  // Panel Visual Administrativo (Fase 1 / Admin UI)
-  app.route(
-    '/admin',
-    AdminUiController.createRoutes(
-      compositionRoot.identityGateway,
-      compositionRoot.catalogGateway,
-      compositionRoot.settingsGateway,
-      compositionRoot.storefrontGateway,
-      compositionRoot.cmsGateway,
-      compositionRoot.promotionsGateway,
-      compositionRoot.shippingGateway
-    )
-  );
-
-
-  // Storefront público SSR (Fases 3 y 4: Home, Banners, Catálogo, Detalle y Auth)
-  app.route(
-    '/',
-    StorefrontController.createRoutes(
-      compositionRoot.catalogGateway,
-      compositionRoot.identityGateway,
-      compositionRoot.storefrontGateway,
-      compositionRoot.seoGateway,
-      compositionRoot.cmsGateway,
-      compositionRoot.promotionsGateway
-    )
-  );
-
-  // Salud del Worker y bindings
+  // Infra y Auth
   app.route('/health', HealthController.createRoutes());
-
-  // Rutas de autenticación de clientes y administradores
-  app.route('/api/v1/auth', CustomerAuthController.createRoutes(compositionRoot.identityGateway));
-  app.route('/api/v1/admin/auth', AdminAuthController.createRoutes(compositionRoot.identityGateway));
-
-  // Rutas de módulos montadas exclusivamente mediante Gateways
-  app.route('/api/v1/settings', SettingsController.createRoutes(compositionRoot.settingsGateway));
-  app.route('/media', MediaController.createRoutes(compositionRoot.mediaGateway, compositionRoot.identityGateway));
-  app.route('/api/v1', CatalogController.createRoutes(compositionRoot.catalogGateway, compositionRoot.identityGateway));
-
-  // OpenAPI Docs
-  app.get('/api/docs', (c) => {
-    return c.json({
-      openapi: '3.1.0',
-      info: {
-        title: 'Ecommerce Cloudflare API',
-        version: '0.2.0',
-        description: 'API Gateway REST (BFF) monolito modular 100% Cloudflare',
-      },
-      paths: {
-        '/health': { get: { summary: 'Health check de bindings' } },
-        '/api/v1/auth/register': { post: { summary: 'Registro de clientes' } },
-        '/api/v1/auth/login': { post: { summary: 'Login de clientes' } },
-        '/api/v1/auth/me': { get: { summary: 'Perfil del cliente autenticado' } },
-        '/api/v1/admin/auth/login': { post: { summary: 'Login de administradores' } },
-        '/api/v1/settings': { get: { summary: 'Consultar configuración' } },
-        '/media/{id}': { get: { summary: 'Servir imagen desde R2' } },
-        '/media/upload': { post: { summary: 'Subir archivo multimedia (Admin)' } },
-        '/api/v1/products': { get: { summary: 'Listar productos públicos y búsqueda FTS5' } },
-        '/api/v1/products/{slug}': { get: { summary: 'Detalle de producto por slug' } },
-        '/api/v1/admin/products': { post: { summary: 'Crear producto con políticas comerciales (Admin)' } },
-      },
-    });
-  });
+  app.route('/api/v1/auth', CustomerAuthController.createRoutes(cRoot.identityGateway));
+  app.route('/api/v1/admin/auth', AdminAuthController.createRoutes(cRoot.identityGateway));
+  app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway));
+  app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
+  app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
 
   app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));
   app.onError((err, c) => {
