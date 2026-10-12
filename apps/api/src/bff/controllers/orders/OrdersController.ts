@@ -59,7 +59,31 @@ export class OrdersController {
 
     // POST /api/v1/orders
     app.post('/api/v1/orders', async (c) => {
-      const body = await c.req.json();
+      let body: any;
+      try { body = await c.req.json(); }
+      catch { return c.json({ error: 'Body JSON inválido' }, 400); }
+
+      // Validar campos mínimos requeridos
+      if (!body.customerEmail || !body.customerName || !body.customerPhone) {
+        return c.json({ error: 'customerEmail, customerName y customerPhone son requeridos' }, 400);
+      }
+      if (!body.paymentMethod || !['wompi', 'cash_on_delivery'].includes(body.paymentMethod)) {
+        return c.json({ error: 'paymentMethod debe ser wompi o cash_on_delivery' }, 400);
+      }
+      if (!Array.isArray(body.lines) || body.lines.length === 0) {
+        return c.json({ error: 'Se requiere al menos una línea de pedido' }, 400);
+      }
+
+      // Normalizar shippingAddress al esquema del dominio
+      const raw = body.shippingAddress || {};
+      const shippingAddress = {
+        department:   raw.department  || raw.dept   || '',
+        municipality: raw.municipality || raw.city   || raw.department || '',
+        daneCode:     raw.daneCode    || raw.dane    || '000000',
+        addressLine:  raw.addressLine || raw.address || '',
+        notes:        raw.notes,
+      };
+
       const auth = c.req.header('Authorization');
       const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'vega_customer_token');
       let customerId: string | null = null;
@@ -70,36 +94,41 @@ export class OrdersController {
         } catch {}
       }
 
-      const order = await ordersGateway.createOrder({
-        customerId,
-        customerEmail: body.customerEmail,
-        customerName: body.customerName,
-        customerPhone: body.customerPhone,
-        shippingAddress: body.shippingAddress,
-        shippingZoneId: body.shippingZoneId,
-        shippingCostCents: body.shippingCostCents,
-        subtotalCents: body.subtotalCents,
-        discountCents: body.discountCents,
-        couponCode: body.couponCode,
-        totalCents: body.totalCents,
-        paymentMethod: body.paymentMethod,
-        lines: body.lines,
-      });
+      try {
+        const order = await ordersGateway.createOrder({
+          customerId,
+          customerEmail:    body.customerEmail,
+          customerName:     body.customerName,
+          customerPhone:    body.customerPhone,
+          shippingAddress,
+          shippingZoneId:   body.shippingZoneId   || 'unknown',
+          shippingCostCents: Number(body.shippingCostCents)  || 0,
+          subtotalCents:    Number(body.subtotalCents)  || 0,
+          discountCents:    Number(body.discountCents)  || 0,
+          couponCode:       body.couponCode || null,
+          totalCents:       Number(body.totalCents),
+          paymentMethod:    body.paymentMethod,
+          lines:            body.lines,
+        });
 
-      await realtimeGateway.publishNotification({
-        channel: 'admin',
-        eventType: 'orders.new_order',
-        title: `Nuevo Pedido #${order.id}`,
-        body: `Cliente: ${order.customerName} - Total: $${(order.totalCents / 100).toLocaleString('es-CO')} COP`,
-        data: {
-          orderId: order.id,
-          totalCents: order.totalCents,
-          customerName: order.customerName,
-          paymentMethod: order.paymentMethod,
-        },
-      });
+        await realtimeGateway.publishNotification({
+          channel: 'admin',
+          eventType: 'orders.new_order',
+          title: `Nuevo Pedido #${order.id}`,
+          body: `Cliente: ${order.customerName} - Total: $${(order.totalCents / 100).toLocaleString('es-CO')} COP`,
+          data: {
+            orderId: order.id,
+            totalCents: order.totalCents,
+            customerName: order.customerName,
+            paymentMethod: order.paymentMethod,
+          },
+        });
 
-      return c.json({ success: true, order: order.toJSON() }, 201);
+        return c.json({ success: true, order: order.toJSON() }, 201);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Error al crear el pedido';
+        return c.json({ error: msg }, 400);
+      }
     });
 
     // GET /api/v1/orders/:orderId

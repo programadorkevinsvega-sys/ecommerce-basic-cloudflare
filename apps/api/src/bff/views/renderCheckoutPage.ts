@@ -3,16 +3,37 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ShippingZoneDto } from '../gateways/shipping/ShippingGateway.js';
 import { getCheckoutScript } from './getCheckoutScript.js';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export function renderCheckoutPage(
   cart: CartDto,
   productsMap: Map<string, CatalogProductDto>,
-  zones: ShippingZoneDto[]
+  zones: ShippingZoneDto[],
+  taxRatePercent = 19
 ): string {
   const items = cart.items;
   const subtotalCents = items.reduce((sum, item) => sum + item.subtotalCents, 0);
+  const taxCents = Math.round(subtotalCents * taxRatePercent / 100);
 
+  // Incluir nombre y SKU del producto en el JSON del carrito para el script
   const itemsJson = JSON.stringify(
-    items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPriceCents: i.unitPriceCents }))
+    items.map((i) => {
+      const p = productsMap.get(i.productId);
+      return {
+        productId: i.productId,
+        productName: p?.name ?? 'Producto',
+        productSku: p?.sku ?? i.productId.slice(0, 8),
+        quantity: i.quantity,
+        unitPriceCents: i.unitPriceCents,
+      };
+    })
   );
 
   return `
@@ -103,31 +124,26 @@ export function renderCheckoutPage(
               }).join('')}
             </div>
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.95rem;">
               <span>Subtotal:</span>
               <span id="txt-subtotal">$${(subtotalCents / 100).toLocaleString('es-CO')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.95rem; color: var(--muted);">
+              <span>IVA (${taxRatePercent}%):</span>
+              <span id="txt-tax">$${(taxCents / 100).toLocaleString('es-CO')}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.95rem;">
               <span>Envío:</span>
               <span id="txt-shipping">$0</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-top: 1rem; border-top: 2px solid var(--border); padding-top: 1rem; font-size: 1.25rem; font-weight: 700;">
               <span>Total:</span>
-              <span id="txt-total" style="color: var(--accent);">$${(subtotalCents / 100).toLocaleString('es-CO')}</span>
+              <span id="txt-total" style="color: var(--accent);">$${((subtotalCents + taxCents) / 100).toLocaleString('es-CO')}</span>
             </div>
           </div>
         </div>
       </div>
     </section>
-    ${getCheckoutScript(itemsJson, subtotalCents)}
+    ${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}
   `;
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

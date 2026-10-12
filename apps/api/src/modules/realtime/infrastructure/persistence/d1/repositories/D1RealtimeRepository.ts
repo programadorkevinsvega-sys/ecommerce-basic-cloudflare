@@ -9,9 +9,15 @@ export class D1RealtimeRepository implements IRealtimeRepository {
   }
 
   public async save(notification: RealtimeNotification): Promise<void> {
+    const dataJson = notification.data ? JSON.stringify(notification.data) : null;
+    // Escribe en columnas nuevas (recipient_id, body, data_json, read)
+    // y también en las originales NOT NULL (message, payload) para compatibilidad
     const q = `INSERT INTO realtime_notifications (
-      id, channel, recipient_id, event_type, title, body, data_json, read, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      id, channel, recipient_id, event_type, title,
+      body, data_json, read,
+      message, payload, is_read,
+      created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     await this.db.prepare(q).bind(
       notification.id,
@@ -20,8 +26,11 @@ export class D1RealtimeRepository implements IRealtimeRepository {
       notification.eventType,
       notification.title,
       notification.body,
-      notification.data ? JSON.stringify(notification.data) : null,
+      dataJson,
       notification.read ? 1 : 0,
+      notification.body,           // message (original NOT NULL)
+      dataJson ?? '{}',            // payload (original NOT NULL)
+      notification.read ? 1 : 0,  // is_read (original)
       notification.createdAt
     ).run();
   }
@@ -50,9 +59,9 @@ export class D1RealtimeRepository implements IRealtimeRepository {
       recipientId: (r.recipient_id as string) ?? null,
       eventType: r.event_type as string,
       title: r.title as string,
-      body: r.body as string,
-      data: r.data_json ? JSON.parse(r.data_json as string) : null,
-      read: Number(r.read) === 1,
+      body: (r.body ?? r.message) as string,
+      data: r.data_json ? JSON.parse(r.data_json as string) : (r.payload ? JSON.parse(r.payload as string) : null),
+      read: Number(r.read ?? r.is_read) === 1,
       createdAt: r.created_at as string,
     }));
   }
@@ -61,7 +70,8 @@ export class D1RealtimeRepository implements IRealtimeRepository {
     if (notificationIds.length === 0) return;
     const placeholders = notificationIds.map(() => '?').join(',');
     await this.db.prepare(
-      `UPDATE realtime_notifications SET read = 1 WHERE id IN (${placeholders})`
+      `UPDATE realtime_notifications SET read = 1, is_read = 1 WHERE id IN (${placeholders})`
     ).bind(...notificationIds).run();
   }
 }
+

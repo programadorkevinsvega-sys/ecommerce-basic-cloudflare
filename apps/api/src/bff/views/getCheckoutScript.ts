@@ -1,9 +1,16 @@
-export function getCheckoutScript(cartItemsJson: string, subtotalCents: number): string {
+export function getCheckoutScript(
+  cartItemsJson: string,
+  subtotalCents: number,
+  taxRatePercent: number
+): string {
   return `
     <script>
       const cartItems = ${cartItemsJson};
       const subtotalCents = ${subtotalCents};
+      const TAX_RATE = ${taxRatePercent} / 100;
       let shippingCostCents = 0;
+
+      function calcTax(sub) { return Math.round(sub * TAX_RATE); }
 
       async function handleZoneChange() {
         const sel = document.getElementById('dest-zone');
@@ -65,9 +72,13 @@ export function getCheckoutScript(cartItemsJson: string, subtotalCents: number):
       }
 
       function updateTotals() {
-        const total = subtotalCents + shippingCostCents;
-        document.getElementById('txt-shipping').innerText = '$' + (shippingCostCents / 100).toLocaleString('es-CO');
-        document.getElementById('txt-total').innerText = '$' + (total / 100).toLocaleString('es-CO');
+        const taxCents = calcTax(subtotalCents);
+        const total = subtotalCents + taxCents + shippingCostCents;
+        const fmt = v => '$' + (v / 100).toLocaleString('es-CO');
+        document.getElementById('txt-subtotal').innerText = fmt(subtotalCents);
+        document.getElementById('txt-tax').innerText      = fmt(taxCents);
+        document.getElementById('txt-shipping').innerText = fmt(shippingCostCents);
+        document.getElementById('txt-total').innerText    = fmt(total);
       }
 
       async function submitOrder() {
@@ -78,20 +89,21 @@ export function getCheckoutScript(cartItemsJson: string, subtotalCents: number):
           return;
         }
 
-        const name = document.getElementById('cust-name').value.trim();
+        const name  = document.getElementById('cust-name').value.trim();
         const phone = document.getElementById('cust-phone').value.trim();
         const email = document.getElementById('cust-email').value.trim();
-        const dept = document.getElementById('addr-dept').value.trim();
-        const city = document.getElementById('addr-city').value.trim();
-        const line = document.getElementById('addr-line').value.trim();
+        const dept  = document.getElementById('addr-dept').value.trim();
+        const city  = document.getElementById('addr-city').value.trim();
+        const line  = document.getElementById('addr-line').value.trim();
 
         if (!name || !phone || !email || !dept || !city || !line) {
           alert('Por favor completa todos los campos requeridos');
           return;
         }
 
-        const method = document.querySelector('input[name="payment-method"]:checked').value;
-        const totalCents = subtotalCents + shippingCostCents;
+        const method     = document.querySelector('input[name="payment-method"]:checked').value;
+        const taxCents   = calcTax(subtotalCents);
+        const totalCents = subtotalCents + taxCents + shippingCostCents;
 
         btn.disabled = true;
         btn.innerText = 'Procesando pedido...';
@@ -107,6 +119,8 @@ export function getCheckoutScript(cartItemsJson: string, subtotalCents: number):
               shippingZoneId: zoneSel.value,
               shippingCostCents: shippingCostCents,
               subtotalCents: subtotalCents,
+              taxCents: taxCents,
+              discountCents: 0,
               totalCents: totalCents,
               paymentMethod: method,
               shippingAddress: {
@@ -117,10 +131,10 @@ export function getCheckoutScript(cartItemsJson: string, subtotalCents: number):
                 addressLine: line,
               },
               lines: cartItems.map(i => ({
-                productId: i.productId,
-                productName: 'Producto',
-                productSku: 'SKU',
-                quantity: i.quantity,
+                productId:     i.productId,
+                productName:   i.productName || 'Producto',
+                productSku:    i.productSku  || i.productId.slice(0,8),
+                quantity:      i.quantity,
                 unitPriceCents: i.unitPriceCents
               }))
             })
@@ -140,16 +154,19 @@ export function getCheckoutScript(cartItemsJson: string, subtotalCents: number):
               body: JSON.stringify({ orderId })
             });
             const payData = await payRes.json();
-            window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=wompi_pending&ref=' + payData.checkout.reference;
+            window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=wompi_pending&ref=' + (payData.checkout?.reference || '');
           } else {
             window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=cod_placed';
           }
         } catch (e) {
           alert(e.message);
           btn.disabled = false;
-          btn.innerText = 'Confirmar y Proceder al Pago →';
+          btn.innerText = 'Confirmar y Proceder al Pago \u2192';
         }
       }
+
+      // Inicializar totales al cargar
+      updateTotals();
     </script>
   `;
 }

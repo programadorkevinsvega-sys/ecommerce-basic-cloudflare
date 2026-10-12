@@ -6,6 +6,7 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderCartPage } from '../../views/renderCartPage.js';
 import { renderCheckoutPage } from '../../views/renderCheckoutPage.js';
@@ -19,7 +20,8 @@ export class StorefrontCheckoutController {
     shippingGateway: ShippingGateway,
     ordersGateway: OrdersGateway,
     cmsGateway: CmsGateway,
-    identityGateway: IdentityGateway
+    identityGateway: IdentityGateway,
+    settingsGateway: SettingsGateway
   ): Hono {
     const router = new Hono();
 
@@ -68,11 +70,12 @@ export class StorefrontCheckoutController {
     router.get('/checkout', async (c) => {
       const cartId = getOrCreateCartId(c);
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [cart, zones, nav, allProducts] = await Promise.all([
+      const [cart, zones, nav, allProducts, settings] = await Promise.all([
         cartGateway.getCart(cartId),
         shippingGateway.listZones(true),
         getStorefrontNavMenus(cmsGateway),
         catalogGateway.listProducts({ limit: 100 }),
+        settingsGateway.getSettings(),
       ]);
 
       if (cart.items.length === 0) {
@@ -82,7 +85,8 @@ export class StorefrontCheckoutController {
       const productsMap = new Map();
       allProducts.forEach((p) => productsMap.set(p.id, p));
 
-      const bodyHtml = renderCheckoutPage(cart, productsMap, zones);
+      const taxRate = settings?.taxRatePercent ?? 19;
+      const bodyHtml = renderCheckoutPage(cart, productsMap, zones, taxRate);
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',
