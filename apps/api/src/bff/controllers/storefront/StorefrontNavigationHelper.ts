@@ -44,6 +44,11 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
           { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
         ];
 
+    const isLegalItem = (item: LayoutMenuItem): boolean =>
+      /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
+
+    const cleanHeaderMenuItems = headerMenuItems.filter((item) => !isLegalItem(item));
+
     const footerMenuItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
       ? footerMenu.items.map((it: CmsMenuItemDto) => ({
           title: it.title,
@@ -56,13 +61,12 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
           { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
         ];
 
-    return { headerMenuItems, footerMenuItems };
+    return { headerMenuItems: cleanHeaderMenuItems, footerMenuItems };
   } catch {
     return {
       headerMenuItems: [
         { title: 'Inicio', url: '/' },
         { title: 'Catálogo', url: '/productos' },
-        { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
       ],
       footerMenuItems: [
         { title: 'Inicio', url: '/' },
