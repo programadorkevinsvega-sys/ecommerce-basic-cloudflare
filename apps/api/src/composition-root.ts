@@ -31,6 +31,10 @@ import { PromotionsGateway } from './bff/gateways/promotions/PromotionsGateway.j
 import { InProcessPromotionsGateway } from './bff/gateways/promotions/InProcessPromotionsGateway.js';
 import { createPromotionsModule } from './modules/promotions/module.config.js';
 import { PromotionsPublicApi } from './modules/promotions/module.public-api.js';
+import { ShippingGateway } from './bff/gateways/shipping/ShippingGateway.js';
+import { InProcessShippingGateway } from './bff/gateways/shipping/InProcessShippingGateway.js';
+import { createShippingModule } from './modules/shipping/module.config.js';
+import { ShippingPublicApi } from './modules/shipping/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -42,6 +46,7 @@ export interface AppCompositionRoot {
   seoGateway: SeoGateway;
   cmsGateway: CmsGateway;
   promotionsGateway: PromotionsGateway;
+  shippingGateway: ShippingGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -86,6 +91,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const promotionsPublicApi = new PromotionsPublicApi(promotionsContainer);
   const promotionsGateway = new InProcessPromotionsGateway(promotionsPublicApi);
 
+  // Módulo Shipping
+  const shippingContainer = createShippingModule(env);
+  const shippingPublicApi = new ShippingPublicApi(shippingContainer);
+  const shippingGateway = new InProcessShippingGateway(shippingPublicApi);
+
   // Outbox Relay transversal
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
@@ -98,6 +108,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     seoGateway,
     cmsGateway,
     promotionsGateway,
+    shippingGateway,
     outboxRelayService,
   };
 }

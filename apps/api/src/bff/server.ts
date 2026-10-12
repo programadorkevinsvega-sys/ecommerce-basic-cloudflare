@@ -14,6 +14,7 @@ import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
 import { PromotionsController } from './controllers/promotions/PromotionsController.js';
+import { ShippingController } from './controllers/shipping/ShippingController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -30,6 +31,15 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
     '/',
     PromotionsController.createRoutes(
       compositionRoot.promotionsGateway,
+      compositionRoot.identityGateway
+    )
+  );
+
+  // Envíos y cobertura (Consulta pública y administración de zonas)
+  app.route(
+    '/',
+    ShippingController.createRoutes(
+      compositionRoot.shippingGateway,
       compositionRoot.identityGateway
     )
   );
@@ -61,7 +71,8 @@ export function createBffApp(compositionRoot: AppCompositionRoot): Hono<{ Bindin
       compositionRoot.settingsGateway,
       compositionRoot.storefrontGateway,
       compositionRoot.cmsGateway,
-      compositionRoot.promotionsGateway
+      compositionRoot.promotionsGateway,
+      compositionRoot.shippingGateway
     )
   );
 

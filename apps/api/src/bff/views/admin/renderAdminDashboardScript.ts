@@ -90,7 +90,17 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pGtin').value = p.barcodeGtin || '';
         document.getElementById('pTags').value = (p.tags || []).join(', ');
         document.getElementById('pCod').value = p.salePolicy?.allowsCashOnDelivery ? 'true' : 'false';
-        document.getElementById('pScope').value = p.salePolicy?.shippingScope || 'national';
+        const scope = p.salePolicy?.shippingScope || 'national';
+        document.getElementById('pScope').value = scope;
+        const wrap = document.getElementById('pLocalZonesWrapper');
+        if (wrap) wrap.style.display = scope === 'local' ? 'block' : 'none';
+        const localSelect = document.getElementById('pLocalZones');
+        if (localSelect) {
+          const coveredSet = new Set(p.salePolicy?.localCoverageZones || []);
+          for (let i = 0; i < localSelect.options.length; i++) {
+            localSelect.options[i].selected = coveredSet.has(localSelect.options[i].value);
+          }
+        }
         document.getElementById('pSaleMode').value = p.salePolicy?.saleMode || 'both';
         document.getElementById('pDesc').value = p.description || '';
         document.getElementById('pSpecs').value = JSON.stringify(p.specifications || {});
@@ -112,6 +122,8 @@ export function renderAdminDashboardScript(): string {
     function resetProductForm() {
       document.getElementById('pEditId').value = '';
       document.getElementById('newProductForm').reset();
+      const wrap = document.getElementById('pLocalZonesWrapper');
+      if (wrap) wrap.style.display = 'none';
       document.getElementById('pFormTitle').textContent = 'Crear Nuevo Producto';
       document.getElementById('pSubmitBtn').textContent = 'Guardar Producto';
       document.getElementById('pCancelBtn').style.display = 'none';

@@ -5,6 +5,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
+import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { renderAdminLoginPage } from '../../views/admin/renderAdminLoginPage.js';
 import { renderAdminDashboardPage } from '../../views/admin/renderAdminDashboardPage.js';
 
@@ -15,7 +16,8 @@ export class AdminUiController {
     settingsGateway: SettingsGateway,
     storefrontGateway: StorefrontGateway,
     cmsGateway: CmsGateway,
-    promotionsGateway: PromotionsGateway
+    promotionsGateway: PromotionsGateway,
+    shippingGateway: ShippingGateway
   ): Hono {
     const router = new Hono();
 
@@ -40,7 +42,20 @@ export class AdminUiController {
           return c.redirect('/admin/login');
         }
 
-        const [products, categories, brands, attributes, banners, announcements, cmsPages, promotionRules, coupons, settings] = await Promise.all([
+        const [
+          products,
+          categories,
+          brands,
+          attributes,
+          banners,
+          announcements,
+          cmsPages,
+          promotionRules,
+          coupons,
+          shippingZones,
+          divipolaLocations,
+          settings,
+        ] = await Promise.all([
           catalogGateway.listProducts({ limit: 50 }),
           catalogGateway.listCategories(),
           catalogGateway.listBrands(),
@@ -50,6 +65,8 @@ export class AdminUiController {
           cmsGateway.listPages(50, 0),
           promotionsGateway.listPromotionRules(),
           promotionsGateway.listCoupons(),
+          shippingGateway.listZones(),
+          shippingGateway.listLocations(),
           settingsGateway.getSettings(),
         ]);
 
@@ -63,6 +80,8 @@ export class AdminUiController {
           cmsPages,
           promotionRules,
           coupons,
+          shippingZones,
+          divipolaLocations,
           settings,
           adminEmail: 'admin@vega.com',
         });

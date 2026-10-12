@@ -1,5 +1,6 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
+import { renderProductShippingWidget } from './renderProductShippingWidget.js';
 
 export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto): string {
   const formattedPrice = (product.priceInCents / 100).toLocaleString('es-CO', {
@@ -77,6 +78,8 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
         <p>${scopeText}</p>
         <p>💳 Modalidad: ${saleModeText}</p>
       </div>
+
+      ${renderProductShippingWidget(product)}
 
       <div style="margin-top: 2rem; display: flex; gap: 1rem;">
         <button type="button" style="flex:1; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer;">

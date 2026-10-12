@@ -208,14 +208,14 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §4, §6.1 (IDs sin FK), §10 (`ShippingGateway`), §4.7 (ACL).
 **Seguridad y recuperación:** SEC-ISO-02, SEC-ORD-07, SEC-VAL-04, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: migraciones de zonas y seed idempotentes.
 
-- [ ] Seed de divisiones político-administrativas (departamentos, ciudades, municipios; códigos DANE/DIVIPOLA).
-- [ ] Zonas `national`, `department`, `city`, `municipality` con tarifas, plazos y **si admiten contra entrega**.
-- [ ] `ShippingGateway`: ¿cobertura para dirección X?, tarifa, ¿zona admite contra entrega?
-- [ ] CRUD completo en admin: zonas, cobertura y tarifas; selector de zonas en el formulario de producto (`local`).
-- [ ] Validación en detalle de producto: "¿llega a mi ciudad?" por selector de municipio.
-- [ ] Evento `shipping.zone.changed.v1` para invalidar caché.
+- [x] Seed de divisiones político-administrativas (departamentos, ciudades, municipios; códigos DANE/DIVIPOLA).
+- [x] Zonas `national`, `department`, `city`, `municipality` con tarifas, plazos y **si admiten contra entrega**.
+- [x] `ShippingGateway`: ¿cobertura para dirección X?, tarifa, ¿zona admite contra entrega?
+- [x] CRUD completo en admin: zonas, cobertura y tarifas; selector de zonas en el formulario de producto (`local`).
+- [x] Validación en detalle de producto: "¿llega a mi ciudad?" por selector de municipio.
+- [x] Evento `shipping.zone.changed.v1` para invalidar caché.
 
-**Criterio de salida:** un producto `local` solo se acepta para direcciones de sus zonas, y uno `national` para cualquier dirección cubierta.
+**Criterio de salida:** un producto `local` solo se acepta para direcciones de sus zonas, y uno `national` para cualquier dirección cubierta. (Completado y verificado en producción).
 
 ---
 

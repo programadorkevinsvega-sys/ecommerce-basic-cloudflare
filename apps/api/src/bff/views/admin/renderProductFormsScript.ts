@@ -37,6 +37,9 @@ export function renderProductFormsScript(): string {
         tags,
         allowsCashOnDelivery: document.getElementById('pCod').value === 'true',
         shippingScope: document.getElementById('pScope').value,
+        localCoverageZones: document.getElementById('pScope').value === 'local' && document.getElementById('pLocalZones')
+          ? Array.from(document.getElementById('pLocalZones').selectedOptions).map(opt => opt.value)
+          : [],
         saleMode: document.getElementById('pSaleMode').value,
         description: document.getElementById('pDesc').value,
         status: 'published'
@@ -137,5 +140,14 @@ export function renderProductFormsScript(): string {
         setTimeout(() => window.location.reload(), 800);
       }
     });
+
+    function onProductScopeChange() {
+      const scope = document.getElementById('pScope')?.value;
+      const wrap = document.getElementById('pLocalZonesWrapper');
+      if (wrap) {
+        wrap.style.display = scope === 'local' ? 'block' : 'none';
+      }
+    }
+    window.onProductScopeChange = onProductScopeChange;
   `;
 }
