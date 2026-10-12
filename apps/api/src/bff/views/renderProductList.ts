@@ -18,25 +18,32 @@ export function renderProductList(
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
 
   const bannerHtml = banner
-    ? `<div style="margin-bottom: 2rem; border-radius: 8px; overflow: hidden; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 2rem; border: 1px solid var(--border);">
-        <div>
-          <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; font-weight: 800;">${escapeHtml(banner.title)}</h2>
-          <p style="color: #cbd5e1; margin-bottom: 1rem;">Aprovecha nuestras ofertas y promociones exclusivas con envíos a todo el país.</p>
-          <a href="${escapeHtml(banner.linkUrl)}" style="display: inline-block; padding: 0.6rem 1.25rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 700;">Ver Colección →</a>
+    ? `<section class="campaign-banner" aria-label="Campaña destacada">
+        <div class="campaign-copy">
+          <span class="eyebrow">Selección de la tienda</span>
+          <h2>${escapeHtml(banner.title)}</h2>
+          <p>Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.</p>
+          <a class="campaign-action" href="${escapeHtml(banner.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
         </div>
-      </div>`
+        ${banner.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(banner.imageUrl)}" alt="${escapeHtml(banner.altText || banner.title)}" loading="eager" /></div>` : ''}
+      </section>`
     : '';
 
   let html = `
     ${bannerHtml}
-    <div style="margin-bottom: 2rem;">
-      <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem;">Nuestra Colección</h1>
-      <p style="color: var(--muted);">Prendas y productos de alta calidad con envíos asegurados a nivel nacional y local.</p>
-    </div>
-    <form class="search-bar" action="/productos" method="GET">
-      <input type="text" name="q" placeholder="Buscar por nombre, SKU o descripción..." value="${queryVal}" required />
-      <button type="submit">Buscar</button>
-      ${searchQuery ? '<a href="/productos" style="padding: 0.75rem 1rem; background:#cbd5e1; color:#1e293b; text-decoration:none; border-radius:6px; font-weight:600;">Limpiar</a>' : ''}
+    <section class="collection-hero">
+      <div class="collection-copy">
+        <span class="eyebrow">${searchQuery ? 'Resultados de búsqueda' : 'Diseñado para tu día a día'}</span>
+        <h1>${searchQuery ? 'Encuentra lo que buscas.' : 'Menos ruido.\nMejores elecciones.'}</h1>
+        <p>${searchQuery ? 'Explora los resultados y encuentra justo lo que necesitas.' : 'Una selección cuidada de productos útiles, con precios claros y una compra que se siente fácil desde el primer clic.'}</p>
+      </div>
+      <div class="collection-note" aria-hidden="true"><span class="note-mark">V.</span><span>Compra con intención<br /><strong>Vive mejor lo cotidiano.</strong></span></div>
+    </section>
+    <form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
+      <label class="search-label" for="store-search">Buscar</label>
+      <input id="store-search" type="search" name="q" placeholder="¿Qué estás buscando hoy?" value="${queryVal}" required />
+      <button type="submit">Buscar <span aria-hidden="true">↗</span></button>
+      ${searchQuery ? '<a href="/productos" class="clear-search">Limpiar</a>' : ''}
     </form>
   `;
 
@@ -66,6 +73,10 @@ export function renderProductList(
       ? '<span class="tag tag-scope">Envío Nacional</span>'
       : '<span class="tag tag-scope" style="background:#fef3c7; color:#b45309;">Envío Local</span>';
 
+    const imageHtml = product.mediaIds?.[0]
+      ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+      : '<div class="product-media-placeholder" aria-hidden="true">Vega Store</div>';
+
     const discountInfo = discountMap?.get(product.id);
     let priceHtml = `<div class="card-price">${formattedPrice}</div>`;
     let promoBadge = '';
@@ -94,7 +105,7 @@ export function renderProductList(
           </h2>
           <p class="card-desc">${escapeHtml(product.description)}</p>
           ${priceHtml}
-          <a href="/productos/${escapeHtml(product.slug)}" style="display:block; text-align:center; padding:0.6rem; background:var(--primary); color:#fff; text-decoration:none; border-radius:6px; font-weight:600; font-size:0.9rem;">Ver Producto</a>
+          <a class="product-action" href="/productos/${escapeHtml(product.slug)}">Ver producto <span aria-hidden="true">↗</span></a>
         </div>
       </article>
     `;
