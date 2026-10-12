@@ -47,9 +47,8 @@ export class StorefrontController {
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const primaryBanner = homeContent.banners[0];
       const activeAnnouncement = homeContent.announcements[0];
-      const bodyHtml = renderProductList(products, undefined, primaryBanner, discountMap);
+      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');
