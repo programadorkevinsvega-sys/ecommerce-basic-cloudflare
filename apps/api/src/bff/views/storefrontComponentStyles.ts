@@ -36,6 +36,8 @@ export const storefrontComponentStyles = String.raw`
     }
     .campaign-action:hover, .product-action:hover { background: #d7f994; }
     .campaign-image { min-height: 240px; background: #34473a; }
+    .campaign-image-missing { display: grid; place-items: center; color: #d2dcd1; }
+    .campaign-image-missing::after { content: 'Imagen de colección no disponible'; padding: 1rem; text-align: center; font-size: .9rem; }
     .campaign-image img { width: 100%; height: 100%; object-fit: cover; }
     .search-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     .clear-search { display: inline-flex; align-items: center; padding: 0 .9rem; color: var(--muted); font-size: .88rem; font-weight: 700; text-decoration: none; }
