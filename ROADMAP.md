@@ -28,21 +28,21 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 
 ## Vista general
 
-| Fase | Nombre | Tamaño | Resultado |
-|---|---|:---:|---|
-| 0 | Fundaciones | M | Monorepo, Worker base, CI, aislamiento de tablas |
-| 1 | Identidad y configuración | M | Login de admin y clientes, RBAC, ajustes de tienda |
-| 2 | Medios y catálogo | L | CRUD de productos con políticas de venta por producto |
-| 3 | Tienda pública base | L | Home, listado, detalle, SEO básico en SSR |
-| 4 | Contenido de la tienda | M | Carrusel, banners y anuncios con su gestión |
-| 5 | CMS y SEO completo | L | Páginas, menús, sitemap, JSON-LD, redirecciones |
-| 6 | Promociones | M | Promociones, cupones y productos con descuento |
-| 7 | Envíos y cobertura | M | Envío nacional o local (ciudad/municipio) por producto |
-| 8 | Compra, pagos (Wompi + contra entrega) y notificaciones en tiempo real | L | Carrito, checkout, pedidos, pagos y aviso en vivo con todos los detalles |
-| 9 | Facturación, email con Resend y cuenta del cliente | L | Facturas completas almacenadas, emails, `/cuenta`, auditoría |
-| 10 | Venta a crédito | M | Planes, cuotas y abonos (alcance por confirmar) |
-| 11 | Endurecimiento y lanzamiento | M | Carga, caos, seguridad, alertas, go-live |
-| 12 | Evolución | — | Reseñas, wishlist, i18n, extracción de módulos |
+| Fase | Nombre | Tamaño | Estado | Resultado |
+|---|---|:---:|:---:|---|
+| 0 | Fundaciones | M | ✅ Completada | Monorepo, Worker base, CI, aislamiento de tablas |
+| 1 | Identidad y configuración | M | ✅ Completada | Login de admin y clientes, RBAC, ajustes de tienda |
+| 2 | Medios y catálogo | L | ✅ Completada | CRUD de productos con políticas de venta por producto |
+| 3 | Tienda pública base | L | ✅ Completada | Home, listado, detalle, SEO básico en SSR |
+| 4 | Contenido de la tienda | M | ✅ Completada | Carrusel, banners y anuncios con su gestión |
+| 5 | CMS y SEO completo | L | ✅ Completada | Páginas, menús, sitemap, JSON-LD, redirecciones |
+| 6 | Promociones | M | ✅ Completada | Promociones, cupones y productos con descuento |
+| 7 | Envíos y cobertura | M | ✅ Completada | Envío nacional o local (ciudad/municipio) por producto |
+| 8 | Compra, pagos (Wompi + contra entrega) y notificaciones en tiempo real | L | ✅ Certificada | Carrito, checkout, pedidos, pagos y aviso en vivo con todos los detalles |
+| 9 | Facturación, email con Resend y cuenta del cliente | L | ✅ Certificada | Facturas completas almacenadas, emails, `/cuenta`, auditoría y datos fiscales dinámicos |
+| 10 | Venta a crédito | M | ⏳ Siguiente | Planes, cuotas y abonos (alcance por confirmar) |
+| 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
+| 12 | Evolución | — | 📋 Planificada | Reseñas, wishlist, i18n, extracción de módulos |
 
 ```text
 0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12

@@ -649,9 +649,9 @@ Se resolverán como ADR antes de la fase que las necesite:
 | ADR-0008 | Moneda, impuestos y envíos | COP (por Wompi); IVA configurable en `settings`; envíos en el módulo `shipping` |
 | ADR-0009 | Alcance de "productos a crédito" | **Por confirmar.** Supuesto actual: venta financiada en cuotas con módulo `credit` (alternativa: créditos/saldo a favor del cliente) |
 | ADR-0010 | Reglas de combinación en carritos mixtos (contra entrega, local/nacional, crédito) | Propuesta de la sección 5.1 |
-| ADR-0011 | Transporte de tiempo real | WebSockets sobre Durable Objects (Hibernation), historial en D1 y recuperación por HTTP |
-| ADR-0012 | Alcance de la facturación | **Por confirmar:** documento interno completo (supuesto actual) vs. factura electrónica con validez legal mediante un proveedor tecnológico (`IElectronicInvoicingPort`) |
-| ADR-0013 | Generación del PDF de facturas | Librería JS pura en el Worker detrás de `IInvoicePdfPort`; alternativa: Browser Rendering de Cloudflare |
+| ADR-0011 | Transporte de tiempo real | ✅ **Decidido y operativo:** Polling atómico HTTP `?since=` con persistencia de eventos en D1 y broadcast a paneles admin y checkout. |
+| ADR-0012 | Alcance de la facturación | ✅ **Decidido y certificado:** Documento soporte interno inmutable con resolución y consecutivos atómicos en D1 y R2; puerto `IElectronicInvoicingPort` listo para futura conexión DIAN. |
+| ADR-0013 | Generación del documento de facturas | ✅ **Decidido y operativo:** Adaptador HTML formal inmutable almacenado en R2 (`HtmlInvoicePdfAdapter`) servible y descargable de forma segura desde el Worker. |
 
 ---
 

@@ -73,3 +73,38 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | `WOMPI_INTEGRITY_SECRET` | Wompi Colombia | Secreto para calcular y verificar el hash SHA-256 de integridad de pagos. |
 | `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
 
+---
+
+## 6. Identidad y Clientes en Órdenes (Invitado vs. Autenticado)
+
+- **Guest Checkout (Compra como invitado):**
+  - Si el usuario no tiene una sesión activa (`vega_customer_token` o cookie `__Host-session`), la orden se crea con `customer_id = NULL` en la tabla `orders_orders`.
+  - Los datos de contacto, identificación fiscal (`customerTaxId` / Cédula / NIT), teléfono y dirección de entrega se almacenan inmutables en el campo JSON `shipping_address` de la orden y en el snapshot fiscal de `invoicing_invoices`.
+- **Registered Customer Checkout (Compra autenticada):**
+  - Si el usuario cuenta con sesión validada por `IdentityGateway`, `customer_id` se vincula con su identificador UUID en `identity_customers`.
+  - Esto habilita al cliente a consultar el pedido y descargar sus facturas formalmente desde el portal `/cuenta`.
+
+---
+
+## 7. Configuración Fiscal de la Tienda y Facturación Dinámica
+
+- **Datos de la Empresa en `settings_store`:**
+  - `store_name`: Nombre comercial de la tienda (ej. *Vega Store*).
+  - `company_legal_name`: Razón social legal del comercio (ej. *Vega Store S.A.S.*).
+  - `company_nit`: Identificación fiscal / NIT de la empresa (ej. *900.123.456-7*).
+  - `company_address`: Dirección fiscal y ciudad sede del negocio.
+  - `support_email` / `support_phone`: Correo y teléfono de atención al cliente.
+- **Inmutabilidad en Facturación (`invoicing_invoices`):**
+  - Al emitirse una factura tras la confirmación del pago, se toma un *snapshot* fiscal que congela tanto los datos vigentes de la empresa como los datos del cliente (`customerTaxId`, nombre, dirección).
+  - El documento generado en R2 (`private/invoices/{num}.html`) renderiza dinámicamente estos datos sin valores fijos hardcodeados.
+
+---
+
+## 8. Notificaciones Transaccionales y Políticas de Deliverability
+
+- **Remitente (`RESEND_FROM_EMAIL`):**
+  - Debe corresponder a un dominio verificado con registros SPF, DKIM y DMARC en Resend (ej. `no-reply@tudominio.com`).
+  - Para pruebas iniciales, el dominio de desarrollo permitido es `onboarding@resend.dev` (limitado a envíos a la cuenta del titular de Resend).
+- **Entregabilidad y Filtros Anti-Spam:**
+  - Los correos transaccionales (confirmación de compra, despacho `shipped`, entrega `delivered`, cancelación `cancelled`) emplean pie de página corporativo, encabezados conformes a RFC y evitan patrones de spam (asuntos agresivos, exceso de mayúsculas o enlaces acortados).
+
