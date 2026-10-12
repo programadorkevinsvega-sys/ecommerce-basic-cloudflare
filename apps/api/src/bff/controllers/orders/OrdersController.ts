@@ -110,10 +110,18 @@ export class OrdersController {
       return c.json({ success: true, order: order.toJSON() });
     });
 
+    // Helper: extrae token de Bearer header o cookie __Host-admin-session
+    const getAdminToken = (c: any): string | null => {
+      const auth = c.req.header('Authorization');
+      if (auth?.startsWith('Bearer ')) return auth.slice(7);
+      const cookieHeader = c.req.header('cookie') || '';
+      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
+      return match ? match[1] : null;
+    };
+
     // GET /api/v1/admin/orders
     app.get('/api/v1/admin/orders', async (c) => {
-      const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+      const token = getAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
       if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -124,8 +132,7 @@ export class OrdersController {
 
     // PATCH /api/v1/admin/orders/:orderId/status
     app.patch('/api/v1/admin/orders/:orderId/status', async (c) => {
-      const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+      const token = getAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
       if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);

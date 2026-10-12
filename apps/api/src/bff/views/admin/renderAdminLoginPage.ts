@@ -53,6 +53,7 @@ export function renderAdminLoginPage(): string {
         });
         const data = await res.json();
         if (res.ok) {
+          localStorage.setItem('vega_admin_token', data.token);
           window.location.href = '/admin';
         } else {
           errBox.textContent = data.error || 'Credenciales inválidas';

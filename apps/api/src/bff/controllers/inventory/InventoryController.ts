@@ -17,10 +17,15 @@ export class InventoryController {
       return c.json(stock);
     });
 
-    // Admin Auth Middleware
+    // Admin Auth Middleware — acepta Bearer header O cookie __Host-admin-session
     const requireAdmin = async (c: any, next: () => Promise<void>) => {
       const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+      let token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+      if (!token) {
+        const cookieHeader = c.req.header('cookie') || '';
+        const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
+        token = match ? match[1] : null;
+      }
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       try {
         const session = await identityGateway.validateSession(token);
