@@ -12,22 +12,27 @@ export interface BannerItem {
 export function renderProductList(
   products: CatalogProductDto[],
   searchQuery?: string,
-  banner?: BannerItem,
+  banner?: BannerItem | BannerItem[],
   discountMap?: Map<string, ProductDiscountDto>
 ): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
 
-  const bannerHtml = banner
-    ? `<section class="campaign-banner" aria-label="Campaña destacada">
-        <div class="campaign-copy">
-          <span class="eyebrow">Selección de la tienda</span>
-          <h2>${escapeHtml(banner.title)}</h2>
-          <p>Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.</p>
-          <a class="campaign-action" href="${escapeHtml(banner.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
-        </div>
-        ${banner.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(banner.imageUrl)}" alt="${escapeHtml(banner.altText || banner.title)}" loading="eager" /></div>` : ''}
-      </section>`
-    : '';
+  const banners = (Array.isArray(banner) ? banner : banner ? [banner] : []).filter(Boolean);
+  const renderBanner = (item: BannerItem, index: number): string => `
+    <article class="campaign-banner">
+      <div class="campaign-copy">
+        <span class="eyebrow">Selección de la tienda</span>
+        <h2>${escapeHtml(item.title)}</h2>
+        <p>Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.</p>
+        <a class="campaign-action" href="${escapeHtml(item.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
+      </div>
+      ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" /></div>` : ''}
+    </article>`;
+  const bannerHtml = banners.length > 1
+    ? `<section class="campaign-carousel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section>`
+    : banners.length === 1
+      ? renderBanner(banners[0], 0).replace('<article class="campaign-banner">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
+      : '';
 
   let html = `
     ${bannerHtml}
