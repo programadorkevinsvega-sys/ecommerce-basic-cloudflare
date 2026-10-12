@@ -14,6 +14,13 @@ export const storefrontComponentStyles = String.raw`
     }
     .collection-note strong { color: var(--text); font-size: .88rem; }
     .note-mark { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 12px; background: var(--accent); color: var(--primary); font-size: 1.2rem; font-weight: 900; }
+    .campaign-carousel {
+      display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; overscroll-behavior-inline: contain;
+      scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; padding: .25rem .25rem .85rem;
+      scrollbar-width: thin; scrollbar-color: #b9c4b2 transparent;
+    }
+    .campaign-carousel > .campaign-banner { flex: 0 0 min(92%, 1080px); min-width: 0; margin: 0; scroll-snap-align: start; }
+    .campaign-carousel:focus-visible { outline: 3px solid #6b9d26; outline-offset: 3px; }
     .campaign-banner {
       display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr); align-items: stretch;
       overflow: hidden; margin-bottom: 2rem; background: var(--primary); color: #fff; border-radius: var(--radius-lg);
@@ -46,6 +53,7 @@ export const storefrontComponentStyles = String.raw`
       .collection-hero { min-height: 0; flex-direction: column; align-items: flex-start; gap: 1.5rem; }
       .collection-note { width: 100%; }
       .campaign-banner { grid-template-columns: minmax(0, 1fr); }
+      .campaign-carousel > .campaign-banner { flex-basis: 94%; }
       .campaign-image { min-height: 190px; max-height: 260px; }
       .campaign-image img { max-height: 260px; }
       .site-header { align-items: flex-start; flex-direction: column; gap: .8rem; padding: .9rem 1rem; }
