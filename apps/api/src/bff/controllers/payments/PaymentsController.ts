@@ -16,35 +16,41 @@ export class PaymentsController {
 
     // POST /api/v1/payments/wompi/init
     app.post('/api/v1/payments/wompi/init', async (c) => {
-      const body = await c.req.json();
-      const order = await ordersGateway.getOrder(body.orderId);
-      if (!order) {
-        return c.json({ error: 'Pedido no encontrado' }, 404);
+      try {
+        const body = await c.req.json();
+        const order = await ordersGateway.getOrder(body.orderId);
+        if (!order) {
+          return c.json({ error: 'Pedido no encontrado' }, 404);
+        }
+
+        const env = c.env;
+        const publicKey      = env.WOMPI_PUBLIC_KEY      || 'pub_prod_mock_vega';
+        const integritySecret = env.WOMPI_INTEGRITY_SECRET || 'test_integrity_secret_vega_cop';
+
+        const checkoutData = await paymentsGateway.createWompiTransaction({
+          orderId: order.id,
+          amountInCents: order.totalCents,
+          currency: 'COP',
+          publicKey,
+          integritySecret,
+          redirectUrl: `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`,
+        });
+
+        // URL del widget de pago de Wompi (hosted checkout)
+        const wompiCheckoutUrl = new URL('https://checkout.wompi.co/p/');
+        wompiCheckoutUrl.searchParams.set('public-key', publicKey);
+        wompiCheckoutUrl.searchParams.set('currency', 'COP');
+        wompiCheckoutUrl.searchParams.set('amount-in-cents', String(order.totalCents));
+        wompiCheckoutUrl.searchParams.set('reference', checkoutData.reference);
+        wompiCheckoutUrl.searchParams.set('signature:integrity', checkoutData.signature);
+        wompiCheckoutUrl.searchParams.set('redirect-url', `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`);
+
+        return c.json({ success: true, checkout: { ...checkoutData, wompiCheckoutUrl: wompiCheckoutUrl.toString() } });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[wompi/init] Error:', msg);
+        return c.json({ error: msg }, 500);
       }
-
-      const env = c.env;
-      const publicKey = env.WOMPI_PUBLIC_KEY || 'pub_prod_mock_vega';
-      const integritySecret = env.WOMPI_INTEGRITY_SECRET || 'test_integrity_secret_vega_cop';
-
-      const checkoutData = await paymentsGateway.createWompiTransaction({
-        orderId: order.id,
-        amountInCents: order.totalCents,
-        currency: 'COP',
-        publicKey,
-        integritySecret,
-        redirectUrl: `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`,
-      });
-
-      // URL del widget de pago de Wompi (hosted checkout)
-      const wompiCheckoutUrl = new URL('https://checkout.wompi.co/p/');
-      wompiCheckoutUrl.searchParams.set('public-key', publicKey);
-      wompiCheckoutUrl.searchParams.set('currency', 'COP');
-      wompiCheckoutUrl.searchParams.set('amount-in-cents', String(order.totalCents));
-      wompiCheckoutUrl.searchParams.set('reference', checkoutData.reference);
-      wompiCheckoutUrl.searchParams.set('signature:integrity', checkoutData.signature);
-      wompiCheckoutUrl.searchParams.set('redirect-url', `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`);
-
-      return c.json({ success: true, checkout: { ...checkoutData, wompiCheckoutUrl: wompiCheckoutUrl.toString() } });
     });
 
     // POST /api/v1/webhooks/wompi

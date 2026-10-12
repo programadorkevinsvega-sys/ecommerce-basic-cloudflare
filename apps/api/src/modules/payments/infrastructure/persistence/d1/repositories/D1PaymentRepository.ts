@@ -10,11 +10,14 @@ export class D1PaymentRepository implements IPaymentRepository {
   }
 
   public async saveTransaction(tx: PaymentTransaction): Promise<void> {
+    // Escribe en columnas nuevas Y en las originales para compatibilidad
     const q = `INSERT INTO payments_transactions (
       id, order_id, amount_in_cents, currency, payment_method,
-      status, reference, external_transaction_id, signature,
-      metadata_json, error_message, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      status, reference,
+      external_transaction_id, signature, metadata_json, error_message,
+      wompi_transaction_id, integrity_signature,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     await this.db.prepare(q).bind(
       tx.id,
@@ -28,6 +31,8 @@ export class D1PaymentRepository implements IPaymentRepository {
       tx.signature ?? null,
       tx.metadata ? JSON.stringify(tx.metadata) : null,
       tx.errorMessage ?? null,
+      tx.externalTransactionId ?? null,   // wompi_transaction_id (original)
+      tx.signature ?? null,               // integrity_signature (original)
       tx.createdAt,
       tx.updatedAt
     ).run();
@@ -36,11 +41,14 @@ export class D1PaymentRepository implements IPaymentRepository {
   public async updateTransaction(tx: PaymentTransaction): Promise<void> {
     const q = `UPDATE payments_transactions SET
       status = ?, external_transaction_id = ?, signature = ?,
+      wompi_transaction_id = ?, integrity_signature = ?,
       metadata_json = ?, error_message = ?, updated_at = ?
       WHERE id = ?`;
 
     await this.db.prepare(q).bind(
       tx.status,
+      tx.externalTransactionId ?? null,
+      tx.signature ?? null,
       tx.externalTransactionId ?? null,
       tx.signature ?? null,
       tx.metadata ? JSON.stringify(tx.metadata) : null,
@@ -78,16 +86,18 @@ export class D1PaymentRepository implements IPaymentRepository {
 
   public async saveWebhookEvent(record: WebhookEventRecord): Promise<boolean> {
     const existing = await this.db.prepare(
-      `SELECT id FROM payments_webhook_events WHERE event_id = ? AND provider = ?`
-    ).bind(record.eventId, record.provider).first<{ id: string }>();
+      `SELECT id FROM payments_webhook_events WHERE event_id = ?`
+    ).bind(record.eventId).first<{ id: string }>();
 
     if (existing) {
-      return false; // already recorded
+      return false; // already recorded (idempotente)
     }
 
+    // Escribe en nuevas columnas + originales NOT NULL (payload, processed_at)
     await this.db.prepare(
-      `INSERT INTO payments_webhook_events (id, provider, event_id, event_type, payload_json, processed, received_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO payments_webhook_events
+        (id, provider, event_id, event_type, payload_json, processed, received_at, payload, processed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       record.id,
       record.provider,
@@ -95,7 +105,9 @@ export class D1PaymentRepository implements IPaymentRepository {
       record.eventType,
       record.payload,
       record.processed ? 1 : 0,
-      record.receivedAt
+      record.receivedAt,
+      record.payload,                // payload (original NOT NULL)
+      record.receivedAt              // processed_at (original NOT NULL)
     ).run();
 
     return true;
