@@ -107,6 +107,10 @@ export function renderProductList(
       promoBadge = `<span class="tag tag-promo">-${discountInfo.discountPercentage}%</span>`;
     }
 
+    const conditionText = product.condition === 'refurbished' ? 'Reacondicionado' : product.condition === 'used' ? 'Usado' : 'Nuevo';
+    const saleModeText = product.salePolicy.saleMode === 'both' ? 'Contado / Crédito' : product.salePolicy.saleMode === 'credit' ? 'Solo Crédito' : 'Solo Contado';
+    const effectivePrice = discountInfo?.hasDiscount ? discountInfo.finalPriceCents : product.priceInCents;
+
     html += `
       <article class="card">
         <a class="product-media" href="/productos/${escapeHtml(product.slug)}" tabindex="-1" aria-hidden="true">
@@ -114,21 +118,62 @@ export function renderProductList(
           ${promoBadge ? `<span class="product-promo">${promoBadge}</span>` : ''}
         </a>
         <div class="card-body">
-          <div class="product-meta">${availabilityTag}</div>
+          <div class="product-meta">
+            ${availabilityTag}
+            <span class="badge-attr">Stock: ${product.stockQuantity} un.</span>
+          </div>
           <h2 class="card-title">
             <a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a>
           </h2>
+          <div class="product-badges">
+            ${product.brand ? `<span class="badge-attr">🏷️ ${escapeHtml(product.brand)}</span>` : ''}
+            <span class="badge-attr">SKU: ${escapeHtml(product.sku)}</span>
+            <span class="badge-attr">✨ ${conditionText}</span>
+            <span class="badge-attr badge-attr-highlight">💳 ${saleModeText}</span>
+          </div>
           <p class="card-desc">${escapeHtml(product.description)}</p>
           ${priceHtml}
           <div class="product-card-footer">
-            <span class="product-shipping-note">${product.salePolicy.shippingScope === 'national' ? 'Envíos nacionales' : 'Envío local'} · ${product.salePolicy.allowsCashOnDelivery ? 'Contra entrega disponible' : 'Pago anticipado'}</span>
-            <a class="product-action" href="/productos/${escapeHtml(product.slug)}"${product.stockQuantity <= 0 ? ' aria-label="' + escapeHtml(product.name) + ', agotado. Ver detalles"' : ''}>${product.stockQuantity > 0 ? 'Comprar' : 'Ver producto'} <span aria-hidden="true">→</span></a>
+            <span class="product-shipping-note">${product.salePolicy.shippingScope === 'national' ? 'Envíos nacionales' : 'Envío local'} · ${product.salePolicy.allowsCashOnDelivery ? 'Contra entrega' : 'Pago anticipado'}</span>
+            <div class="card-actions-group">
+              ${product.stockQuantity > 0
+                ? `<button type="button" class="product-action btn-add-cart-card" onclick="addToCartFromCard('${product.id}', ${effectivePrice}, this)">Añadir al Carrito 🛒</button>`
+                : ''}
+              <a class="product-action" href="/productos/${escapeHtml(product.slug)}" style="text-align:center;">Detalles <span aria-hidden="true">→</span></a>
+            </div>
           </div>
         </div>
       </article>
     `;
   }
-  html += '</div>';
+  html += `</div>
+  <script>
+    async function addToCartFromCard(productId, priceCents, btn) {
+      const origText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Agregando...';
+      try {
+        const res = await fetch('/api/v1/cart/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity: 1, unitPriceCents: priceCents })
+        });
+        if (res.ok) {
+          btn.innerText = '¡Añadido! ✅';
+          setTimeout(() => { btn.disabled = false; btn.innerText = origText; }, 1800);
+        } else {
+          const err = await res.json();
+          alert(err.error || 'No se pudo agregar al carrito');
+          btn.disabled = false;
+          btn.innerText = origText;
+        }
+      } catch {
+        alert('Error de conexión al agregar al carrito');
+        btn.disabled = false;
+        btn.innerText = origText;
+      }
+    }
+  </script>`;
 
   return html;
 }

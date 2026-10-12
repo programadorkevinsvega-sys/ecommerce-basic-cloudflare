@@ -127,6 +127,19 @@ export const storefrontComponentStyles = String.raw`
       border-radius: 9px; background: #fff; color: #253c29; font-size: .86rem; font-weight: 750;
     }
     .product-action:hover { background: #f1f5eb; border-color: #cbd7c1; }
+    .product-badges { display: flex; flex-wrap: wrap; gap: .3rem; margin: .25rem 0 .4rem; }
+    .badge-attr {
+      display: inline-flex; align-items: center; gap: .25rem; padding: .18rem .45rem;
+      border-radius: 6px; background: #f0f4ec; color: #324734; font-size: .7rem; font-weight: 600;
+      border: 1px solid #dce4d6;
+    }
+    .badge-attr-highlight { background: #e8f3ea; color: #1e5a2f; border-color: #c7dec9; }
+    .card-actions-group { display: flex; gap: .5rem; margin-top: .35rem; }
+    .card-actions-group .product-action { margin-top: 0; }
+    .btn-add-cart-card {
+      background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important;
+    }
+    .btn-add-cart-card:hover { background: #283e2e !important; }
     @media (max-width: 760px) {
       .grid { gap: .8rem; }
       .product-media { padding: .65rem; }
@@ -144,6 +157,6 @@ export const storefrontComponentStyles = String.raw`
       .card-title { font-size: .91rem; }
       .card-price { font-size: 1.08rem; }
       .product-action { padding: .62rem .65rem; font-size: .8rem; }
+      .card-actions-group { flex-direction: column; }
     }
-
 `;

@@ -60,10 +60,13 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
       ${product.mediaIds?.[0] ? `<div class="detail-media"><img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" fetchpriority="high" /></div>` : '<div class="detail-media detail-media-empty" aria-hidden="true">Vega Store</div>'}
       ${promoBanner}
       <h1 class="detail-title">${escapeHtml(product.name)}</h1>
-      <div class="detail-sku">
-        SKU: ${escapeHtml(product.sku)} | Condición: <strong>${conditionText}</strong> | Stock: ${product.stockQuantity} un.
-        ${product.brand ? ` | Marca: <strong>${escapeHtml(product.brand)}</strong>` : ''}
-        ${product.barcodeGtin ? ` | GTIN: <code>${escapeHtml(product.barcodeGtin)}</code>` : ''}
+      <div class="product-badges" style="margin-bottom: 1rem; font-size: 0.85rem;">
+        ${product.brand ? `<span class="badge-attr" style="font-size:0.85rem; padding:0.3rem 0.6rem;">🏷️ Marca: <strong>${escapeHtml(product.brand)}</strong></span>` : ''}
+        <span class="badge-attr" style="font-size:0.85rem; padding:0.3rem 0.6rem;">SKU: <strong>${escapeHtml(product.sku)}</strong></span>
+        <span class="badge-attr" style="font-size:0.85rem; padding:0.3rem 0.6rem;">Condición: <strong>${conditionText}</strong></span>
+        <span class="badge-attr ${product.stockQuantity > 0 ? 'badge-attr-highlight' : ''}" style="font-size:0.85rem; padding:0.3rem 0.6rem;">Stock: <strong>${product.stockQuantity} unidades</strong></span>
+        <span class="badge-attr badge-attr-highlight" style="font-size:0.85rem; padding:0.3rem 0.6rem;">💳 Modalidad: <strong>${saleModeText}</strong></span>
+        ${product.barcodeGtin ? `<span class="badge-attr" style="font-size:0.85rem; padding:0.3rem 0.6rem;">GTIN: <code>${escapeHtml(product.barcodeGtin)}</code></span>` : ''}
       </div>
       ${priceHtml}
       <p style="font-size: 1.05rem; color: var(--text); margin-bottom: 1.5rem;">${escapeHtml(product.description)}</p>

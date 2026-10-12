@@ -42,11 +42,23 @@ export function renderAdminDashboardScript(): string {
           .replace(/^-+|-+$/g, '');
       }
       updateSerpPreview();
+      const canon = document.getElementById('pCanonical');
+      if (canon && !canon.dataset.manual) {
+        canon.value = window.location.origin + '/productos/' + slugInput.value;
+      }
     });
 
     document.getElementById('pSlug')?.addEventListener('input', (e) => {
       e.target.dataset.manual = 'true';
       updateSerpPreview();
+      const canon = document.getElementById('pCanonical');
+      if (canon && !canon.dataset.manual) {
+        canon.value = window.location.origin + '/productos/' + e.target.value;
+      }
+    });
+
+    document.getElementById('pCanonical')?.addEventListener('input', (e) => {
+      e.target.dataset.manual = 'true';
     });
     document.getElementById('pSeoTitle')?.addEventListener('input', updateSerpPreview);
     document.getElementById('pDesc')?.addEventListener('input', updateSerpPreview);

@@ -88,7 +88,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = []): st
               <label>Título SEO <span id="titleCount" class="char-count">0/70 car.</span></label>
               <input type="text" id="pSeoTitle" placeholder="Vacío usa el nombre del producto" />
             </div>
-            <div><label>URL Canónica</label><input type="url" id="pCanonical" placeholder="https://ejemplo.com/productos/..." /></div>
+            <div><label>URL Canónica</label><input type="url" id="pCanonical" placeholder="Autogenerado: https://tienda.com/productos/slug" /></div>
           </div>
           <div style="margin-bottom: 0.75rem;">
             <label>Meta Descripción SEO <span id="descCount" class="char-count">0/160 car.</span></label>
