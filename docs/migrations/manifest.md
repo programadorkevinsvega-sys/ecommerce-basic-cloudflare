@@ -135,4 +135,28 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `realtime__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `realtime__0002_expand_columns.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-12 | 576d038 | ✅ Aplicada con éxito (expand-only: body, data_json, read, recipient_id) |
 
+---
+
+## Módulo: `invoicing`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `invoicing__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (secuencias, facturas, notas crédito, outbox) |
+
+---
+
+## Módulo: `notifications`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `notifications__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (bitácora de emails e idempotencia) |
+
+---
+
+## Módulo: `audit`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `audit__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (auditoría inmutable de acciones admin) |
+
 

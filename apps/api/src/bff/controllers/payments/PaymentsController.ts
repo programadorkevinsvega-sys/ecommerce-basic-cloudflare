@@ -5,8 +5,12 @@ import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
+import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { verifyWompiSignature } from './verifyWompiSignature.js';
 import { buildWompiCheckoutUrl } from './buildWompiCheckoutUrl.js';
+import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
 
 export class PaymentsController {
   public static createRoutes(
@@ -14,7 +18,10 @@ export class PaymentsController {
     ordersGateway: OrdersGateway,
     identityGateway: IdentityGateway,
     realtimeGateway: RealtimeGateway,
-    inventoryGateway: InventoryGateway
+    inventoryGateway: InventoryGateway,
+    invoicingGateway: InvoicingGateway,
+    notificationsGateway: NotificationsGateway,
+    auditGateway: AuditGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -82,18 +89,17 @@ export class PaymentsController {
           actor: 'wompi-webhook',
         });
 
-        const fullOrder = await ordersGateway.getOrder(res.orderId);
-        if (fullOrder?.lines?.length) {
-          const items = fullOrder.lines.map((l) => ({ productId: l.productId, quantity: l.quantity }));
-          await inventoryGateway.consumeStock(res.orderId, items).catch(() => {});
-        }
-
-        await realtimeGateway.publishNotification({
-          channel: 'admin',
-          eventType: 'payments.approved',
-          title: `✅ Pago Aprobado — #${res.orderId}`,
-          body: `${fullOrder?.customerName ?? 'Cliente'} pagó $${((fullOrder?.totalCents ?? 0) / 100).toLocaleString('es-CO')} COP vía Wompi.`,
-          data: { orderId: res.orderId, transactionId: txData.id, status: 'approved' },
+        await processOrderPaymentSuccess({
+          orderId: res.orderId,
+          paymentMethod: 'wompi',
+          paymentReference: String(txData.id || ''),
+          actor: 'wompi-webhook',
+          ordersGateway,
+          inventoryGateway,
+          invoicingGateway,
+          notificationsGateway,
+          auditGateway,
+          realtimeGateway,
         });
       } else if (res.orderId && ['DECLINED', 'VOIDED', 'ERROR'].includes(wompiStatus)) {
         await ordersGateway.updateOrderStatus({
@@ -150,18 +156,17 @@ export class PaymentsController {
         actor: adminRes.actorId,
       });
 
-      const fullOrder = await ordersGateway.getOrder(body.orderId);
-      if (fullOrder?.lines?.length) {
-        const items = fullOrder.lines.map((l) => ({ productId: l.productId, quantity: l.quantity }));
-        await inventoryGateway.consumeStock(body.orderId, items).catch(() => {});
-      }
-
-      await realtimeGateway.publishNotification({
-        channel: 'admin',
-        eventType: 'payments.cod_collected',
-        title: `💵 Recaudo Registrado — #${body.orderId}`,
-        body: `Recaudo de $${(body.amountInCents / 100).toLocaleString('es-CO')} COP registrado con éxito.`,
-        data: { orderId: body.orderId },
+      await processOrderPaymentSuccess({
+        orderId: body.orderId,
+        paymentMethod: 'cash_on_delivery',
+        paymentReference: body.receiptNumber || 'COD-REC',
+        actor: adminRes.actorId,
+        ordersGateway,
+        inventoryGateway,
+        invoicingGateway,
+        notificationsGateway,
+        auditGateway,
+        realtimeGateway,
       });
 
       return c.json({ success: true, collection: cod.toJSON() });

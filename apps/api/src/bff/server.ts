@@ -21,6 +21,9 @@ import { OrdersController } from './controllers/orders/OrdersController.js';
 import { PaymentsController } from './controllers/payments/PaymentsController.js';
 import { RealtimeController } from './controllers/realtime/RealtimeController.js';
 import { StorefrontCheckoutController } from './controllers/checkout/StorefrontCheckoutController.js';
+import { InvoicingController } from './controllers/invoicing/InvoicingController.js';
+import { CustomerAccountController } from './controllers/account/CustomerAccountController.js';
+import { AuditController } from './controllers/audit/AuditController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
@@ -36,15 +39,27 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway));
 
-  // Cart, Inventory, Orders, Payments, Realtime BFF APIs
+  // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway));
   app.route('/', OrdersController.createRoutes(cRoot.ordersGateway, cRoot.identityGateway, cRoot.shippingGateway, cRoot.catalogGateway, cRoot.realtimeGateway, cRoot.inventoryGateway));
-  app.route('/', PaymentsController.createRoutes(cRoot.paymentsGateway, cRoot.ordersGateway, cRoot.identityGateway, cRoot.realtimeGateway, cRoot.inventoryGateway));
+  app.route('/', PaymentsController.createRoutes(
+    cRoot.paymentsGateway,
+    cRoot.ordersGateway,
+    cRoot.identityGateway,
+    cRoot.realtimeGateway,
+    cRoot.inventoryGateway,
+    cRoot.invoicingGateway,
+    cRoot.notificationsGateway,
+    cRoot.auditGateway
+  ));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway));
+  app.route('/', InvoicingController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway));
+  app.route('/', AuditController.createRoutes(cRoot.auditGateway, cRoot.identityGateway));
 
-  // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado)
+  // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado) y Cuenta del cliente (/cuenta)
   app.route('/', StorefrontCheckoutController.createRoutes(cRoot.cartGateway, cRoot.catalogGateway, cRoot.shippingGateway, cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
+  app.route('/', CustomerAccountController.createRoutes(cRoot.identityGateway, cRoot.ordersGateway, cRoot.invoicingGateway));
 
   // Panel Visual Administrativo
   app.route('/admin', AdminUiController.createRoutes(

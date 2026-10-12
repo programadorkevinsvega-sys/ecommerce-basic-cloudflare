@@ -25,6 +25,8 @@ import { renderShippingManagementSection } from './renderShippingManagementSecti
 import { renderOrdersManagementSection } from './renderOrdersManagementSection.js';
 import { renderInventoryManagementSection } from './renderInventoryManagementSection.js';
 import { renderPaymentsManagementSection } from './renderPaymentsManagementSection.js';
+import { renderInvoicesManagementSection } from './renderInvoicesManagementSection.js';
+import { renderAuditManagementSection } from './renderAuditManagementSection.js';
 
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
@@ -74,6 +76,8 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
       <button class="tab-btn" onclick="switchTab('cms')">Páginas CMS</button>
       <button class="tab-btn" onclick="switchTab('promotions')">Promociones & Cupones</button>
       <button class="tab-btn" onclick="switchTab('shipping')">Envíos & Cobertura</button>
+      <button class="tab-btn" onclick="switchTab('invoices'); loadAdminInvoices();">Facturación 🧾</button>
+      <button class="tab-btn" onclick="switchTab('audit'); loadAdminAudit();">Auditoría 📜</button>
       <button class="tab-btn" onclick="switchTab('settings')">Configuración</button>
     </div>
 
@@ -92,6 +96,14 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
 
     <div id="tab-payments" class="tab-content">
       ${renderPaymentsManagementSection()}
+    </div>
+
+    <div id="tab-invoices" class="tab-content">
+      ${renderInvoicesManagementSection()}
+    </div>
+
+    <div id="tab-audit" class="tab-content">
+      ${renderAuditManagementSection()}
     </div>
 
     <div id="tab-taxonomies" class="tab-content">

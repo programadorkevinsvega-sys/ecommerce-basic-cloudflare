@@ -55,6 +55,18 @@ import { RealtimeGateway } from './bff/gateways/realtime/RealtimeGateway.js';
 import { InProcessRealtimeGateway } from './bff/gateways/realtime/InProcessRealtimeGateway.js';
 import { createRealtimeModule } from './modules/realtime/module.config.js';
 import { RealtimePublicApi } from './modules/realtime/module.public-api.js';
+import { InvoicingGateway } from './bff/gateways/invoicing/InvoicingGateway.js';
+import { InProcessInvoicingGateway } from './bff/gateways/invoicing/InProcessInvoicingGateway.js';
+import { InvoicingModuleContainer } from './modules/invoicing/module.config.js';
+import { InvoicingPublicApi } from './modules/invoicing/module.public-api.js';
+import { NotificationsGateway } from './bff/gateways/notifications/NotificationsGateway.js';
+import { InProcessNotificationsGateway } from './bff/gateways/notifications/InProcessNotificationsGateway.js';
+import { NotificationsModuleContainer } from './modules/notifications/module.config.js';
+import { NotificationsPublicApi } from './modules/notifications/module.public-api.js';
+import { AuditGateway } from './bff/gateways/audit/AuditGateway.js';
+import { InProcessAuditGateway } from './bff/gateways/audit/InProcessAuditGateway.js';
+import { AuditModuleContainer } from './modules/audit/module.config.js';
+import { AuditPublicApi } from './modules/audit/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -72,6 +84,9 @@ export interface AppCompositionRoot {
   ordersGateway: OrdersGateway;
   paymentsGateway: PaymentsGateway;
   realtimeGateway: RealtimeGateway;
+  invoicingGateway: InvoicingGateway;
+  notificationsGateway: NotificationsGateway;
+  auditGateway: AuditGateway;
   outboxRelayService: OutboxRelayService;
 }
 
@@ -118,6 +133,15 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const realtimeContainer = createRealtimeModule(env);
   const realtimeGateway = new InProcessRealtimeGateway(new RealtimePublicApi(realtimeContainer));
 
+  const invoicingContainer = new InvoicingModuleContainer({ db: env.DB, bucket: env.MEDIA_BUCKET });
+  const invoicingGateway = new InProcessInvoicingGateway(new InvoicingPublicApi(invoicingContainer));
+
+  const notificationsContainer = new NotificationsModuleContainer({ db: env.DB, resendApiKey: env.RESEND_API_KEY });
+  const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
+
+  const auditContainer = new AuditModuleContainer({ db: env.DB });
+  const auditGateway = new InProcessAuditGateway(new AuditPublicApi(auditContainer));
+
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
   return {
@@ -135,6 +159,9 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     ordersGateway,
     paymentsGateway,
     realtimeGateway,
+    invoicingGateway,
+    notificationsGateway,
+    auditGateway,
     outboxRelayService,
   };
 }
