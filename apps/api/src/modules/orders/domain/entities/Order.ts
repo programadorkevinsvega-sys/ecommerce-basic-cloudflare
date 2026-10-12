@@ -17,6 +17,7 @@ export interface OrderProps {
   customerEmail: string;
   customerName: string;
   customerPhone: string;
+  customerTaxId?: string | null;
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
@@ -38,6 +39,7 @@ export class Order {
   public readonly customerEmail: string;
   public readonly customerName: string;
   public readonly customerPhone: string;
+  public readonly customerTaxId: string | null;
   public readonly shippingAddress: ShippingAddressSnapshot;
   public readonly shippingZoneId: string;
   public readonly shippingCostCents: number;
@@ -61,6 +63,7 @@ export class Order {
     this.customerEmail = props.customerEmail.trim();
     this.customerName = props.customerName.trim();
     this.customerPhone = props.customerPhone.trim();
+    this.customerTaxId = props.customerTaxId ? props.customerTaxId.trim() : null;
     this.shippingAddress = props.shippingAddress;
     this.shippingZoneId = props.shippingZoneId;
     this.shippingCostCents = props.shippingCostCents;
@@ -110,6 +113,7 @@ export class Order {
       customerEmail: this.customerEmail,
       customerName: this.customerName,
       customerPhone: this.customerPhone,
+      customerTaxId: this.customerTaxId,
       shippingAddress: this.shippingAddress,
       shippingZoneId: this.shippingZoneId,
       shippingCostCents: this.shippingCostCents,

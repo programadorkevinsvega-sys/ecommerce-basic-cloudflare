@@ -49,6 +49,11 @@ export class D1OrderRepository implements IOrderRepository {
   }
 
   public async save(order: Order): Promise<void> {
+    const addressWithTax = {
+      ...order.shippingAddress,
+      customerTaxId: order.customerTaxId || null,
+    };
+
     await this.db.prepare(
       `INSERT INTO orders_orders (
          id, customer_id, customer_email, customer_name, customer_phone,
@@ -62,7 +67,7 @@ export class D1OrderRepository implements IOrderRepository {
          updated_at = excluded.updated_at`
     ).bind(
       order.id, order.customerId, order.customerEmail, order.customerName, order.customerPhone,
-      JSON.stringify(order.shippingAddress), order.shippingZoneId, order.shippingCostCents,
+      JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt
     ).run();
@@ -136,13 +141,18 @@ export class D1OrderRepository implements IOrderRepository {
   }
 
   private hydrate(row: OrderRow, lines: OrderLine[]): Order {
+    let parsedAddress: any = {};
+    try { parsedAddress = JSON.parse(row.shipping_address); } catch {}
+    const customerTaxId = parsedAddress?.customerTaxId || null;
+
     return new Order({
       id: row.id,
       customerId: row.customer_id,
       customerEmail: row.customer_email,
       customerName: row.customer_name,
       customerPhone: row.customer_phone,
-      shippingAddress: JSON.parse(row.shipping_address) as ShippingAddressSnapshot,
+      customerTaxId,
+      shippingAddress: parsedAddress as ShippingAddressSnapshot,
       shippingZoneId: row.shipping_zone_id,
       shippingCostCents: row.shipping_cost_cents,
       subtotalCents: row.subtotal_cents,

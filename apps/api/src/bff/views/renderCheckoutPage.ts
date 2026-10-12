@@ -54,9 +54,15 @@ export function renderCheckoutPage(
                 <input type="tel" id="cust-phone" required style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px;" />
               </div>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Correo Electrónico *</label>
-              <input type="email" id="cust-email" required style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px;" />
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Correo Electrónico *</label>
+                <input type="email" id="cust-email" required placeholder="ejemplo@correo.com" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px;" />
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem;">Cédula / NIT (Facturación) *</label>
+                <input type="text" id="cust-tax-id" required placeholder="C.C. o NIT sin puntos" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px;" />
+              </div>
             </div>
 
             <h2 style="font-size: 1.25rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">2. Destino y Dirección de Envío</h2>

@@ -24,6 +24,14 @@ export interface InvoiceSnapshot {
     municipality: string;
     department: string;
   };
+  company?: {
+    storeName?: string;
+    nit?: string;
+    legalName?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+  };
   subtotalCents: number;
   taxCents: number;
   shippingCostCents: number;

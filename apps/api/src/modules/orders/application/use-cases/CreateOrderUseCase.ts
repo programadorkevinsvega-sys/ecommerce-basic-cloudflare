@@ -16,6 +16,7 @@ export interface CreateOrderCommand {
   customerEmail: string;
   customerName: string;
   customerPhone: string;
+  customerTaxId?: string | null;
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
@@ -56,6 +57,7 @@ export class CreateOrderUseCase {
       customerEmail: cmd.customerEmail,
       customerName: cmd.customerName,
       customerPhone: cmd.customerPhone,
+      customerTaxId: cmd.customerTaxId,
       shippingAddress: cmd.shippingAddress,
       shippingZoneId: cmd.shippingZoneId,
       shippingCostCents: cmd.shippingCostCents,

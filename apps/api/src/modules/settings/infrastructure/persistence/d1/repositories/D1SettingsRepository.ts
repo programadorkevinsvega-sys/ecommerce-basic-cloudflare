@@ -10,7 +10,9 @@ export class D1SettingsRepository implements ISettingsRepository {
 
   public async get(): Promise<StoreSettings | null> {
     const query = `
-      SELECT id, store_name, currency, tax_rate_percent, support_email, support_phone, require_cod_verification, updated_at
+      SELECT id, store_name, currency, tax_rate_percent, support_email, support_phone,
+             company_nit, company_legal_name, company_address,
+             require_cod_verification, updated_at
       FROM settings_store
       WHERE id = 'default'
       LIMIT 1
@@ -29,6 +31,9 @@ export class D1SettingsRepository implements ISettingsRepository {
       taxRatePercent: Number(result.tax_rate_percent),
       supportEmail: result.support_email as string,
       supportPhone: (result.support_phone as string) || undefined,
+      companyNit: (result.company_nit as string) || undefined,
+      companyLegalName: (result.company_legal_name as string) || undefined,
+      companyAddress: (result.company_address as string) || undefined,
       requireCodVerification: Boolean(result.require_cod_verification),
       updatedAt: result.updated_at as string,
     });
@@ -38,14 +43,19 @@ export class D1SettingsRepository implements ISettingsRepository {
     const snapshot = settings.toSnapshot();
     const query = `
       INSERT INTO settings_store (
-        id, store_name, currency, tax_rate_percent, support_email, support_phone, require_cod_verification, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        id, store_name, currency, tax_rate_percent, support_email, support_phone,
+        company_nit, company_legal_name, company_address,
+        require_cod_verification, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         store_name = excluded.store_name,
         currency = excluded.currency,
         tax_rate_percent = excluded.tax_rate_percent,
         support_email = excluded.support_email,
         support_phone = excluded.support_phone,
+        company_nit = excluded.company_nit,
+        company_legal_name = excluded.company_legal_name,
+        company_address = excluded.company_address,
         require_cod_verification = excluded.require_cod_verification,
         updated_at = excluded.updated_at
     `;
@@ -59,6 +69,9 @@ export class D1SettingsRepository implements ISettingsRepository {
         snapshot.taxRatePercent,
         snapshot.supportEmail,
         snapshot.supportPhone || null,
+        snapshot.companyNit || null,
+        snapshot.companyLegalName || null,
+        snapshot.companyAddress || null,
         snapshot.requireCodVerification ? 1 : 0,
         snapshot.updatedAt
       )

@@ -103,6 +103,7 @@ export class OrdersController {
           customerEmail:    body.customerEmail,
           customerName:     body.customerName,
           customerPhone:    body.customerPhone,
+          customerTaxId:    body.customerTaxId || null,
           shippingAddress,
           shippingZoneId:   body.shippingZoneId   || 'unknown',
           shippingCostCents: Number(body.shippingCostCents)  || 0,

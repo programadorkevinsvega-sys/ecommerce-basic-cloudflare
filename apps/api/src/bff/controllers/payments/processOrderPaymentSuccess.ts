@@ -47,6 +47,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
 
   // 2. Emitir factura inmutable
   let invoiceNumber = '';
+  const storeSettings = await settingsGateway.getSettings().catch(() => null);
   try {
     const taxCents = Math.round(order.subtotalCents * 0.19);
     const invoice = await invoicingGateway.issueInvoice({
@@ -54,6 +55,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       customerId: order.customerId,
       customerName: order.customerName,
       customerEmail: order.customerEmail,
+      customerTaxId: order.customerTaxId || null,
       customerPhone: order.customerPhone,
       subtotalCents: order.subtotalCents,
       taxCents,
@@ -77,6 +79,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
           id: order.customerId,
           name: order.customerName,
           email: order.customerEmail,
+          taxId: order.customerTaxId || null,
           phone: order.customerPhone,
         },
         shippingAddress: {
@@ -84,6 +87,14 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
           municipality: order.shippingAddress?.municipality || '',
           department: order.shippingAddress?.department || '',
         },
+        company: storeSettings ? {
+          storeName: storeSettings.storeName,
+          nit: storeSettings.companyNit,
+          legalName: storeSettings.companyLegalName,
+          address: storeSettings.companyAddress,
+          email: storeSettings.supportEmail,
+          phone: storeSettings.supportPhone,
+        } : undefined,
         subtotalCents: order.subtotalCents,
         taxCents,
         shippingCostCents: order.shippingCostCents,
@@ -112,7 +123,6 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
     });
 
     // 3.2 A la Empresa / Administrador
-    const storeSettings = await settingsGateway.getSettings().catch(() => null);
     const adminEmail = storeSettings?.supportEmail || 'contacto@tienda.com';
     const adminHtml = OrderEmailTemplates.renderAdminPaidAlertEmail(order, invoiceNumber, paymentReference);
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');

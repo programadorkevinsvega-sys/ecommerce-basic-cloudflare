@@ -5,6 +5,9 @@ export interface StoreSettingsProps {
   taxRatePercent: number;
   supportEmail: string;
   supportPhone?: string;
+  companyNit?: string;
+  companyLegalName?: string;
+  companyAddress?: string;
   requireCodVerification: boolean;
   updatedAt: string;
 }
@@ -26,37 +29,17 @@ export class StoreSettings {
     return new StoreSettings(props);
   }
 
-  public get id(): string {
-    return this.props.id;
-  }
-
-  public get storeName(): string {
-    return this.props.storeName;
-  }
-
-  public get currency(): string {
-    return this.props.currency;
-  }
-
-  public get taxRatePercent(): number {
-    return this.props.taxRatePercent;
-  }
-
-  public get supportEmail(): string {
-    return this.props.supportEmail;
-  }
-
-  public get supportPhone(): string | undefined {
-    return this.props.supportPhone;
-  }
-
-  public get requireCodVerification(): boolean {
-    return this.props.requireCodVerification;
-  }
-
-  public get updatedAt(): string {
-    return this.props.updatedAt;
-  }
+  public get id(): string { return this.props.id; }
+  public get storeName(): string { return this.props.storeName; }
+  public get currency(): string { return this.props.currency; }
+  public get taxRatePercent(): number { return this.props.taxRatePercent; }
+  public get supportEmail(): string { return this.props.supportEmail; }
+  public get supportPhone(): string | undefined { return this.props.supportPhone; }
+  public get companyNit(): string | undefined { return this.props.companyNit; }
+  public get companyLegalName(): string | undefined { return this.props.companyLegalName; }
+  public get companyAddress(): string | undefined { return this.props.companyAddress; }
+  public get requireCodVerification(): boolean { return this.props.requireCodVerification; }
+  public get updatedAt(): string { return this.props.updatedAt; }
 
   public update(params: Partial<Omit<StoreSettingsProps, 'id' | 'updatedAt'>>): void {
     if (params.storeName !== undefined) {
@@ -79,6 +62,15 @@ export class StoreSettings {
     }
     if (params.supportPhone !== undefined) {
       this.props.supportPhone = params.supportPhone.trim();
+    }
+    if (params.companyNit !== undefined) {
+      this.props.companyNit = params.companyNit.trim();
+    }
+    if (params.companyLegalName !== undefined) {
+      this.props.companyLegalName = params.companyLegalName.trim();
+    }
+    if (params.companyAddress !== undefined) {
+      this.props.companyAddress = params.companyAddress.trim();
     }
     if (params.requireCodVerification !== undefined) {
       this.props.requireCodVerification = params.requireCodVerification;

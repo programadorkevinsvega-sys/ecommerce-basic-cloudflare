@@ -92,12 +92,13 @@ export function getCheckoutScript(
         const name  = document.getElementById('cust-name').value.trim();
         const phone = document.getElementById('cust-phone').value.trim();
         const email = document.getElementById('cust-email').value.trim();
+        const taxId = document.getElementById('cust-tax-id')?.value.trim() || '';
         const dept  = document.getElementById('addr-dept').value.trim();
         const city  = document.getElementById('addr-city').value.trim();
         const line  = document.getElementById('addr-line').value.trim();
 
-        if (!name || !phone || !email || !dept || !city || !line) {
-          alert('Por favor completa todos los campos requeridos');
+        if (!name || !phone || !email || !taxId || !dept || !city || !line) {
+          alert('Por favor completa todos los campos requeridos, incluyendo tu identificación fiscal (Cédula o NIT)');
           return;
         }
 
@@ -116,6 +117,7 @@ export function getCheckoutScript(
               customerName: name,
               customerEmail: email,
               customerPhone: phone,
+              customerTaxId: taxId,
               shippingZoneId: zoneSel.value,
               shippingCostCents: shippingCostCents,
               subtotalCents: subtotalCents,

@@ -131,11 +131,14 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
         <h2>Configuración de la Tienda</h2>
         <form id="settingsForm">
           <div class="form-grid">
-            <div><label>Nombre</label><input type="text" id="sName" value="${escapeHtml(props.settings.storeName)}" required /></div>
+            <div><label>Nombre Comercial</label><input type="text" id="sName" value="${escapeHtml(props.settings.storeName)}" required /></div>
             <div><label>Moneda</label><input type="text" id="sCurrency" value="${escapeHtml(props.settings.currency)}" readonly style="opacity:0.6;" /></div>
+            <div><label>NIT / Cédula Fiscal</label><input type="text" id="sNit" placeholder="Ej: 900.123.456-7" value="${escapeHtml(props.settings.companyNit || '')}" /></div>
+            <div><label>Razón Social / Propietario</label><input type="text" id="sLegal" placeholder="Ej: JNM Tortas S.A.S." value="${escapeHtml(props.settings.companyLegalName || '')}" /></div>
+            <div><label>Dirección / Ciudad</label><input type="text" id="sAddress" placeholder="Ej: Calle 123, Medellín, Colombia" value="${escapeHtml(props.settings.companyAddress || '')}" /></div>
             <div><label>IVA (%)</label><input type="number" id="sTax" value="${props.settings.taxRatePercent}" required /></div>
-            <div><label>Email</label><input type="email" id="sEmail" value="${escapeHtml(props.settings.supportEmail || '')}" /></div>
-            <div><label>Teléfono</label><input type="text" id="sPhone" value="${escapeHtml(props.settings.supportPhone || '')}" /></div>
+            <div><label>Email de Soporte</label><input type="email" id="sEmail" value="${escapeHtml(props.settings.supportEmail || '')}" /></div>
+            <div><label>Teléfono / WhatsApp</label><input type="text" id="sPhone" value="${escapeHtml(props.settings.supportPhone || '')}" /></div>
           </div>
           <button type="submit" class="btn-primary">Guardar Configuración</button>
           <div id="sMsg" class="msg"></div>

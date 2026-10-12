@@ -5,6 +5,9 @@ export interface StoreSettingsResponse {
   taxRatePercent: number;
   supportEmail: string;
   supportPhone?: string;
+  companyNit?: string;
+  companyLegalName?: string;
+  companyAddress?: string;
   requireCodVerification: boolean;
   updatedAt: string;
 }
@@ -15,6 +18,9 @@ export interface UpdateStoreSettingsRequest {
   taxRatePercent?: number;
   supportEmail?: string;
   supportPhone?: string;
+  companyNit?: string;
+  companyLegalName?: string;
+  companyAddress?: string;
   requireCodVerification?: boolean;
 }
 

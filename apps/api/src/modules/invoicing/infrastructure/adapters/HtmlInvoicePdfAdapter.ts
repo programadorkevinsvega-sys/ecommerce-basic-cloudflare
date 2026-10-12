@@ -32,9 +32,9 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
 <body>
   <div class="header">
     <div>
-      <h1 class="title">VEGA STORE</h1>
-      <p style="margin: 0.3rem 0; color: #64748b;">NIT: 900.123.456-7 · Régimen Común</p>
-      <p style="margin: 0; color: #64748b;">Medellín, Colombia · soporte@vegastore.com</p>
+      <h1 class="title">${snap?.company?.storeName || snap?.company?.legalName || 'VEGA STORE'}</h1>
+      <p style="margin: 0.3rem 0; color: #64748b;">NIT: ${snap?.company?.nit || 'No registrado'} · Régimen Simplificado / Común</p>
+      <p style="margin: 0; color: #64748b;">${snap?.company?.address || 'Colombia'} · ${snap?.company?.email || 'soporte@tienda.com'}</p>
     </div>
     <div style="text-align: right;">
       <h2 style="margin: 0; font-size: 1.4rem;">FACTURA DE VENTA</h2>

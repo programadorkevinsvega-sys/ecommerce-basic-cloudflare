@@ -69,6 +69,9 @@ export function renderStorefrontFormsScript(): string {
       const msg = document.getElementById('sMsg');
       const payload = {
         storeName: document.getElementById('sName').value,
+        companyNit: document.getElementById('sNit')?.value || undefined,
+        companyLegalName: document.getElementById('sLegal')?.value || undefined,
+        companyAddress: document.getElementById('sAddress')?.value || undefined,
         taxRatePercent: Number(document.getElementById('sTax').value),
         supportEmail: document.getElementById('sEmail').value || undefined,
         supportPhone: document.getElementById('sPhone').value || undefined

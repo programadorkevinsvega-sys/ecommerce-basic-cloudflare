@@ -8,6 +8,9 @@ const updateSettingsSchema = z.object({
   taxRatePercent: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
   supportPhone: z.string().max(20).optional(),
+  companyNit: z.string().max(50).optional(),
+  companyLegalName: z.string().max(100).optional(),
+  companyAddress: z.string().max(200).optional(),
   requireCodVerification: z.boolean().optional(),
 }).strict();
 
