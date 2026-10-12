@@ -136,7 +136,11 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const invoicingContainer = new InvoicingModuleContainer({ db: env.DB, bucket: env.MEDIA_BUCKET });
   const invoicingGateway = new InProcessInvoicingGateway(new InvoicingPublicApi(invoicingContainer));
 
-  const notificationsContainer = new NotificationsModuleContainer({ db: env.DB, resendApiKey: env.RESEND_API_KEY });
+  const notificationsContainer = new NotificationsModuleContainer({
+    db: env.DB,
+    resendApiKey: env.RESEND_API_KEY,
+    fromEmail: env.RESEND_FROM_EMAIL,
+  });
   const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
 
   const auditContainer = new AuditModuleContainer({ db: env.DB });

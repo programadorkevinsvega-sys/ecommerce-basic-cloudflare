@@ -543,22 +543,52 @@ Las migraciones viven en cada módulo (`infrastructure/persistence/d1/migrations
 
 ---
 
-## 12. Bindings de Cloudflare (`apps/api/wrangler.jsonc`)
+## 12. Bindings, Variables de Entorno y Secretos de Cloudflare (`apps/api/wrangler.jsonc`)
 
-| Binding | Tipo | Uso |
-|---|---|---|
-| `DB` | D1 | Base de datos única |
-| `MEDIA_BUCKET` | R2 | Medios e imágenes |
-| `CACHE` | KV | Caché y configuración |
-| `EVENTS_QUEUE` / `EVENTS_DLQ` | Queues | Eventos de integración y mensajes fallidos |
-| `ANALYTICS` | Analytics Engine | Métricas |
-| `RATE_LIMITER` | Rate Limiting | Límites en auth y formularios |
-| `STOCK_RESERVATION` | Durable Object (opcional) | Reservas con consistencia fuerte |
-| `REALTIME_HUB` | Durable Object (WebSockets) | Hub de notificaciones en vivo: salas `admin:payments` y `customer:{id}` |
-| Secrets | Secrets | Claves JWT, Wompi (llave pública/privada, secreto de integridad, secreto de eventos), Resend (API key y secreto de webhook), Turnstile |
-| Cron | Triggers | Outbox relay, publicación programada, limpieza de carritos/reservas |
+### 12.1 Bindings de Infraestructura Cloudflare
 
-Entornos: `dev` (Miniflare local), `staging` y `production`, cada uno con su D1, R2, KV y Queues.
+| Binding | Tipo | Nombre del Recurso en Cloudflare | Uso en la Plataforma |
+|---|---|---|---|
+| `DB` | Cloudflare D1 | `ecommerce-vega-production` | Base de datos SQLite distribuida única (tablas prefijadas `<modulo>_*`) |
+| `MEDIA_BUCKET` | Cloudflare R2 | `ecommerce-vega-production` | Almacenamiento de imágenes de productos, banners, adjuntos de medios |
+| `CACHE` | Workers KV | `ecommerce-vega-cache-production` | Almacenamiento clave-valor de alta velocidad, caché de catálogo y settings |
+| `EVENTS_QUEUE` | Cloudflare Queues | `ecommerce-vega-events-production` | Bus de eventos asíncronos y transaccionales (outbox, emails, auditoría) |
+| `EVENTS_DLQ` | Cloudflare Queues | `ecommerce-vega-events-dlq-production` | Dead Letter Queue para reintentos y tolerancia a fallos |
+| `ANALYTICS` | Analytics Engine | `ecommerce_vega_analytics_production` | Métricas y telemetría de eventos en tiempo real |
+| `crons` | Cron Triggers | `["*/5 * * * *"]` | Tarea programada cada 5 minutos para outbox relay y tareas de mantenimiento |
+
+### 12.2 Variables de Entorno Públicas / Configurables (`vars` en `wrangler.jsonc`)
+
+Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wrangler.jsonc` o directamente en el panel de Cloudflare (Workers & Pages > Settings > Variables and Secrets):
+
+| Variable | Tipo | Valor / Ejemplo | Propósito |
+|---|---|---|---|
+| `ENVIRONMENT` | String | `production` \| `staging` \| `development` | Identifica el entorno de ejecución activo. |
+| `RESEND_FROM_EMAIL` | String | `Vega Store <envio@tudominio.com>` | Remitente verificado en Resend para todos los correos transaccionales (confirmación de compra, notificaciones al admin, cambios de estado del pedido). En pruebas se puede usar `Vega Store <onboarding@resend.dev>`. |
+| `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` \| `pub_test_...` | Llave pública de Wompi Colombia para inicializar el widget de checkout en frontend y validaciones. |
+
+### 12.3 Secretos Encriptados (`wrangler secret put` o Dashboard de Cloudflare)
+
+> [!CAUTION]
+> **NUNCA** subas estas claves al repositorio ni las incluyas en texto plano en archivos `json` o `ts`. Se configuran exclusivamente con `wrangler secret put <NOMBRE>` o en el panel de Cloudflare en la sección de secretos encriptados.
+
+| Secreto | Proveedor / Servicio | Cómo obtenerlo | Propósito |
+|---|---|---|---|
+| `RESEND_API_KEY` | [Resend](https://resend.com) | Panel de Resend > API Keys (`re_...`) | Autenticación en la API de Resend para el envío de correos transaccionales con plantillas HTML. |
+| `RESEND_WEBHOOK_SECRET` | [Resend](https://resend.com) | Panel de Resend > Webhooks (opcional) | Validación de firmas de eventos de entrega/rebote de correo. |
+| `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
+| `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
+| `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación de la firma HMAC de los webhooks (`x-event-checksum`) enviados por Wompi al Worker. |
+
+#### Comandos para configurar los secretos en producción:
+```bash
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put WOMPI_PRIVATE_KEY
+npx wrangler secret put WOMPI_INTEGRITY_SECRET
+npx wrangler secret put WOMPI_EVENTS_SECRET
+# Opcional si usas webhook de Resend:
+npx wrangler secret put RESEND_WEBHOOK_SECRET
+```
 
 ---
 

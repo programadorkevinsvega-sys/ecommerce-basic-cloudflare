@@ -10,7 +10,9 @@ import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { notifyCodOrderPlaced } from './notifyCodOrderPlaced.js';
+import { notifyOrderStatusChanged } from './notifyOrderStatusChanged.js';
 import { normalizeShippingAddress } from './normalizeShippingAddress.js';
+import { extractAdminToken } from './extractAdminToken.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -153,18 +155,9 @@ export class OrdersController {
       return c.json({ success: true, order: order.toJSON() });
     });
 
-    // Helper: extrae token de Bearer header o cookie __Host-admin-session
-    const getAdminToken = (c: any): string | null => {
-      const auth = c.req.header('Authorization');
-      if (auth?.startsWith('Bearer ')) return auth.slice(7);
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-      return match ? match[1] : null;
-    };
-
     // GET /api/v1/admin/orders
     app.get('/api/v1/admin/orders', async (c) => {
-      const token = getAdminToken(c);
+      const token = extractAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
       if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -175,7 +168,7 @@ export class OrdersController {
 
     // PATCH /api/v1/admin/orders/:orderId/status
     app.patch('/api/v1/admin/orders/:orderId/status', async (c) => {
-      const token = getAdminToken(c);
+      const token = extractAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
       if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -188,6 +181,8 @@ export class OrdersController {
         note: body.note,
         actor: res.actorId,
       });
+
+      await notifyOrderStatusChanged(updated, body.status, body.note, notificationsGateway).catch(() => {});
 
       return c.json({ success: true, order: updated.toJSON() });
     });

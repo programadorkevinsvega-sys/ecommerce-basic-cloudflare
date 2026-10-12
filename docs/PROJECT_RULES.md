@@ -50,3 +50,26 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 - **Moneda oficial:** COP (pesos colombianos). Todos los importes en base de datos y APIs viajan en **enteros** (centavos de COP).
 - **Inmutabilidad:** Las tablas `orders_lines` e `invoicing_invoices` guardan *snapshots* inmutables que nunca dependen de cambios futuros en `catalog`.
 - **Integridad de Pagos:** Confirmación de Wompi estrictamente por webhook con checksum y reconciliación de API, nunca por redirección del navegador.
+
+---
+
+## 4. Variables de Entorno Públicas (`vars` en `wrangler.jsonc`)
+
+| Variable | Tipo | Valor Predeterminado / Ejemplo | Descripción |
+|---|---|---|---|
+| `ENVIRONMENT` | String | `production` | Entorno de despliegue activo (`production`, `staging`, `development`). |
+| `RESEND_FROM_EMAIL` | String | `Vega Store <onboarding@resend.dev>` | Dirección de correo del remitente configurada en Resend para todos los envíos transaccionales. |
+| `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` / `pub_test_...` | Llave pública de comercio para checkout cliente y validación de contexto. |
+
+---
+
+## 5. Secretos Requeridos en Producción (`wrangler secret put`)
+
+| Nombre del Secreto | Servicio / Proveedor | Propósito |
+|---|---|---|
+| `RESEND_API_KEY` | Resend | Token API para el despacho de correos electrónicos transaccionales y facturas. |
+| `RESEND_WEBHOOK_SECRET` | Resend | (Opcional) Validación de firma de webhooks entrantes de Resend. |
+| `WOMPI_PRIVATE_KEY` | Wompi Colombia | Llave privada para reconciliación de pagos contra la API de Wompi. |
+| `WOMPI_INTEGRITY_SECRET` | Wompi Colombia | Secreto para calcular y verificar el hash SHA-256 de integridad de pagos. |
+| `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
+

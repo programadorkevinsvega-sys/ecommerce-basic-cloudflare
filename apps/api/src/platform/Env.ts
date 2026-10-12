@@ -10,5 +10,6 @@ export interface Env {
   WOMPI_INTEGRITY_SECRET?: string;
   WOMPI_EVENTS_SECRET?: string;
   RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
   RESEND_WEBHOOK_SECRET?: string;
 }

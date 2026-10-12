@@ -49,5 +49,9 @@
   ],
   "triggers": {
     "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "RESEND_FROM_EMAIL": "Vega Store <onboarding@resend.dev>"
   }
 }
