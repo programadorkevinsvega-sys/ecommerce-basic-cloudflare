@@ -85,8 +85,8 @@ export const storefrontComponentStyles = String.raw`
     }
     .card:hover { transform: none; border-color: #cbd2c5; box-shadow: 0 10px 28px rgba(23,36,29,.07); }
     .product-media {
-      position: relative; aspect-ratio: 1 / 1; padding: 1.15rem; background: #f7f7f4;
-      border-bottom: 1px solid #f0f0eb;
+      position: relative; aspect-ratio: 4 / 4.5; padding: .6rem; background: #f5f6f2;
+      border-bottom: 1px solid #ecefe8;
     }
     .product-media img { object-fit: contain; mix-blend-mode: multiply; transition: transform .25s ease; }
     .card:hover .product-media img { transform: scale(1.025); }
@@ -98,7 +98,13 @@ export const storefrontComponentStyles = String.raw`
     .tag-local { background: #f3f1e8; color: #75602b; }
     .tag-cod, .tag-scope { background: #edf3e8; color: #4a6240; }
     .card-body { gap: .48rem; padding: 1rem 1rem 1.05rem; }
-    .product-meta { display: flex; flex-wrap: wrap; gap: .35rem; min-height: 1.25rem; }
+    .product-meta { display: flex; flex-wrap: wrap; gap: .35rem; min-height: 1.5rem; }
+    .product-availability { display: inline-flex; align-items: center; gap: .4rem; font-size: .73rem; font-weight: 750; }
+    .product-availability > span { font-size: .58rem; }
+    .product-availability.is-available { color: #287448; }
+    .product-availability.is-unavailable { color: #9a453e; }
+    .product-card-footer { display: flex; flex-direction: column; gap: .7rem; margin-top: auto; }
+    .product-shipping-note { color: #727a70; font-size: .72rem; line-height: 1.4; }
     .card-title { margin: .1rem 0 0; font-size: 1rem; line-height: 1.35; letter-spacing: -.02em; }
     .card-desc { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; min-height: 2.7em; color: #747a71; font-size: .83rem; line-height: 1.45; }
     .card-price { margin: .25rem 0 .35rem; font-size: 1.28rem; font-weight: 780; letter-spacing: -.04em; }
@@ -116,6 +122,8 @@ export const storefrontComponentStyles = String.raw`
       .product-media { padding: .65rem; }
       .card-body { gap: .4rem; padding: .8rem; }
       .product-meta { gap: .25rem; }
+      .product-card-footer { gap: .55rem; }
+      .product-shipping-note { font-size: .68rem; }
       .tag { font-size: .57rem; padding: .2rem .35rem; }
       .card-desc { font-size: .78rem; }
       .product-promo { top: .45rem; left: .45rem; }
