@@ -42,7 +42,16 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway));
-  app.route('/', OrdersController.createRoutes(cRoot.ordersGateway, cRoot.identityGateway, cRoot.shippingGateway, cRoot.catalogGateway, cRoot.realtimeGateway, cRoot.inventoryGateway));
+  app.route('/', OrdersController.createRoutes(
+    cRoot.ordersGateway,
+    cRoot.identityGateway,
+    cRoot.shippingGateway,
+    cRoot.catalogGateway,
+    cRoot.realtimeGateway,
+    cRoot.inventoryGateway,
+    cRoot.notificationsGateway,
+    cRoot.settingsGateway
+  ));
   app.route('/', PaymentsController.createRoutes(
     cRoot.paymentsGateway,
     cRoot.ordersGateway,
@@ -51,7 +60,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.inventoryGateway,
     cRoot.invoicingGateway,
     cRoot.notificationsGateway,
-    cRoot.auditGateway
+    cRoot.auditGateway,
+    cRoot.settingsGateway
   ));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway));
   app.route('/', InvoicingController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway));

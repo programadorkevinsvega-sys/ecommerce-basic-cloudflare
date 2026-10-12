@@ -4,6 +4,8 @@ import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { OrderEmailTemplates } from './OrderEmailTemplates.js';
 
 export interface ProcessPaymentSuccessParams {
   orderId: string;
@@ -16,6 +18,7 @@ export interface ProcessPaymentSuccessParams {
   notificationsGateway: NotificationsGateway;
   auditGateway: AuditGateway;
   realtimeGateway: RealtimeGateway;
+  settingsGateway: SettingsGateway;
 }
 
 export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessParams): Promise<void> {
@@ -30,6 +33,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
     notificationsGateway,
     auditGateway,
     realtimeGateway,
+    settingsGateway,
   } = params;
 
   const order = await ordersGateway.getOrder(orderId);
@@ -95,28 +99,30 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
     console.error('[processPaymentSuccess:invoice] Error:', err);
   }
 
-  // 3. Enviar email transaccional con Resend
+  // 3. Enviar emails transaccionales con Resend (Al Cliente Y a la Empresa)
   try {
-    const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
+    // 3.1 Al Cliente
+    const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference);
     await notificationsGateway.sendEmail({
       recipientEmail: order.customerEmail,
-      templateName: 'order_confirmed',
+      templateName: 'order_confirmed_customer',
       subject: `¡Pago Confirmado! Pedido #${order.id} ${invoiceNumber ? '- Factura ' + invoiceNumber : ''}`,
-      idempotencyKey: `email_confirmed_${order.id}`,
-      html: `
-        <div style="font-family:sans-serif; max-width:600px; margin:auto; padding:2rem; border:1px solid #e2e8f0; border-radius:8px;">
-          <h2 style="color:#0284c7;">¡Tu pago ha sido confirmado!</h2>
-          <p>Hola <strong>${order.customerName}</strong>, hemos registrado tu pago con éxito.</p>
-          <div style="background:#f8fafc; padding:1rem; border-radius:6px; margin:1.5rem 0;">
-            <div><strong>Pedido:</strong> #${order.id}</div>
-            ${invoiceNumber ? `<div><strong>Factura de Venta:</strong> #${invoiceNumber}</div>` : ''}
-            <div><strong>Total Pagado:</strong> $${totalFormatted} COP</div>
-            <div><strong>Método de Pago:</strong> ${paymentMethod === 'wompi' ? 'Wompi en línea' : 'Contra entrega'}</div>
-          </div>
-          <p>Prepararemos tu envío hacia <strong>${order.shippingAddress?.addressLine}, ${order.shippingAddress?.municipality}</strong>.</p>
-          <p style="color:#64748b; font-size:0.85rem; margin-top:2rem;">Gracias por confiar en Vega Store.</p>
-        </div>
-      `,
+      idempotencyKey: `email_cust_${order.id}`,
+      html: customerHtml,
+    });
+
+    // 3.2 A la Empresa / Administrador
+    const storeSettings = await settingsGateway.getSettings().catch(() => null);
+    const adminEmail = storeSettings?.supportEmail || 'contacto@tienda.com';
+    const adminHtml = OrderEmailTemplates.renderAdminPaidAlertEmail(order, invoiceNumber, paymentReference);
+    const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
+
+    await notificationsGateway.sendEmail({
+      recipientEmail: adminEmail,
+      templateName: 'order_confirmed_admin',
+      subject: `🚨 [NUEVA VENTA] Pedido #${order.id} — Factura #${invoiceNumber} ($${totalFormatted} COP)`,
+      idempotencyKey: `email_admin_${order.id}`,
+      html: adminHtml,
     });
   } catch (err) {
     console.error('[processPaymentSuccess:email] Error:', err);

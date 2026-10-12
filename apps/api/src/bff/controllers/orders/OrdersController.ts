@@ -7,6 +7,10 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { notifyCodOrderPlaced } from './notifyCodOrderPlaced.js';
+import { normalizeShippingAddress } from './normalizeShippingAddress.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -15,7 +19,9 @@ export class OrdersController {
     shippingGateway: ShippingGateway,
     catalogGateway: CatalogGateway,
     realtimeGateway: RealtimeGateway,
-    inventoryGateway: InventoryGateway
+    inventoryGateway: InventoryGateway,
+    notificationsGateway: NotificationsGateway,
+    settingsGateway: SettingsGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -77,14 +83,7 @@ export class OrdersController {
       }
 
       // Normalizar shippingAddress al esquema del dominio
-      const raw = body.shippingAddress || {};
-      const shippingAddress = {
-        department:   raw.department  || raw.dept   || '',
-        municipality: raw.municipality || raw.city   || raw.department || '',
-        daneCode:     raw.daneCode    || raw.dane    || '000000',
-        addressLine:  raw.addressLine || raw.address || '',
-        notes:        raw.notes,
-      };
+      const shippingAddress = normalizeShippingAddress(body.shippingAddress);
 
       const auth = c.req.header('Authorization');
       const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'vega_customer_token');
@@ -119,6 +118,11 @@ export class OrdersController {
           await inventoryGateway.reserveStock(order.id, stockItems, 30).catch(e =>
             console.error('[orders/create] Error reserveStock:', e.message)
           );
+        }
+
+        // Si es pago contra entrega, notificar al cliente y a la empresa por email
+        if (order.paymentMethod === 'cash_on_delivery') {
+          await notifyCodOrderPlaced(order, notificationsGateway, settingsGateway).catch(() => {});
         }
 
         await realtimeGateway.publishNotification({

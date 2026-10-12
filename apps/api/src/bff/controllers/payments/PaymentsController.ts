@@ -8,6 +8,7 @@ import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { verifyWompiSignature } from './verifyWompiSignature.js';
 import { buildWompiCheckoutUrl } from './buildWompiCheckoutUrl.js';
 import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
@@ -21,7 +22,8 @@ export class PaymentsController {
     inventoryGateway: InventoryGateway,
     invoicingGateway: InvoicingGateway,
     notificationsGateway: NotificationsGateway,
-    auditGateway: AuditGateway
+    auditGateway: AuditGateway,
+    settingsGateway: SettingsGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -100,6 +102,7 @@ export class PaymentsController {
           notificationsGateway,
           auditGateway,
           realtimeGateway,
+          settingsGateway,
         });
       } else if (res.orderId && ['DECLINED', 'VOIDED', 'ERROR'].includes(wompiStatus)) {
         await ordersGateway.updateOrderStatus({
@@ -167,6 +170,7 @@ export class PaymentsController {
         notificationsGateway,
         auditGateway,
         realtimeGateway,
+        settingsGateway,
       });
 
       return c.json({ success: true, collection: cod.toJSON() });
