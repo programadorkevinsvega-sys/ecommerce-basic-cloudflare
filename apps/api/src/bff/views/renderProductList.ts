@@ -69,9 +69,9 @@ export function renderProductList(
       ? '<span class="tag tag-cod">Contra Entrega Sí</span>'
       : '<span class="tag tag-payment">Pago anticipado</span>';
 
-    const scopeTag = product.salePolicy.shippingScope === 'national'
-      ? '<span class="tag tag-scope">Envío Nacional</span>'
-      : '<span class="tag tag-local">Envío local</span>';
+    const availabilityTag = product.stockQuantity > 0
+      ? '<span class="product-availability is-available"><span aria-hidden="true">●</span> Disponible</span>'
+      : '<span class="product-availability is-unavailable"><span aria-hidden="true">●</span> Agotado</span>';
 
     const imageHtml = product.mediaIds?.[0]
       ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />`
@@ -103,13 +103,16 @@ export function renderProductList(
           ${promoBadge ? `<span class="product-promo">${promoBadge}</span>` : ''}
         </a>
         <div class="card-body">
-          <div class="product-meta">${codTag} ${scopeTag}</div>
+          <div class="product-meta">${availabilityTag}</div>
           <h2 class="card-title">
             <a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a>
           </h2>
           <p class="card-desc">${escapeHtml(product.description)}</p>
           ${priceHtml}
-          <a class="product-action" href="/productos/${escapeHtml(product.slug)}">Ver detalles <span aria-hidden="true">→</span></a>
+          <div class="product-card-footer">
+            <span class="product-shipping-note">${product.salePolicy.shippingScope === 'national' ? 'Envíos nacionales' : 'Envío local'} · ${product.salePolicy.allowsCashOnDelivery ? 'Contra entrega disponible' : 'Pago anticipado'}</span>
+            <a class="product-action" href="/productos/${escapeHtml(product.slug)}"${product.stockQuantity <= 0 ? ' aria-label="' + escapeHtml(product.name) + ', agotado. Ver detalles"' : ''}>${product.stockQuantity > 0 ? 'Comprar' : 'Ver producto'} <span aria-hidden="true">→</span></a>
+          </div>
         </div>
       </article>
     `;
