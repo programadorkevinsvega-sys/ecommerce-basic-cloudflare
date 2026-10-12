@@ -42,6 +42,7 @@ export function renderProductFormsScript(): string {
           : [],
         saleMode: document.getElementById('pSaleMode').value,
         description: document.getElementById('pDesc').value,
+        mediaIds: document.getElementById('pMediaId')?.value ? [document.getElementById('pMediaId').value] : [],
         status: 'published'
       };
 
@@ -72,75 +73,6 @@ export function renderProductFormsScript(): string {
       }
     });
 
-
-    document.getElementById('newCategoryForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('catMsg');
-      const payload = {
-        name: document.getElementById('catName').value,
-        slug: document.getElementById('catSlug').value || undefined,
-        description: document.getElementById('catDesc').value || undefined
-      };
-      const res = await fetch('/api/v1/admin/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Categoría creada';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
-    document.getElementById('newBrandForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('brandMsg');
-      const payload = {
-        name: document.getElementById('brandName').value,
-        slug: document.getElementById('brandSlug').value || undefined,
-        websiteUrl: document.getElementById('brandWeb').value || undefined
-      };
-      const res = await fetch('/api/v1/admin/brands', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Marca / Proveedor guardado';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
-    document.getElementById('newAttributeForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('attrMsg');
-      const options = document.getElementById('attrOptions').value
-        .split(',')
-        .map(o => o.trim())
-        .filter(Boolean);
-      const payload = {
-        name: document.getElementById('attrName').value,
-        code: document.getElementById('attrCode').value,
-        type: document.getElementById('attrType').value,
-        options
-      };
-      const res = await fetch('/api/v1/admin/attributes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Atributo configurado';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      }
-    });
-
     function onProductScopeChange() {
       const scope = document.getElementById('pScope')?.value;
       const wrap = document.getElementById('pLocalZonesWrapper');
@@ -148,6 +80,60 @@ export function renderProductFormsScript(): string {
         wrap.style.display = scope === 'local' ? 'block' : 'none';
       }
     }
+
+    async function handleProductImageSelected(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const statusSpan = document.getElementById('pImageUploadStatus');
+      const previewImg = document.getElementById('pImagePreview');
+      const placeholder = document.getElementById('pImagePlaceholder');
+      const mediaIdInput = document.getElementById('pMediaId');
+      const altText = document.getElementById('pName')?.value || file.name.replace(/\\.[^/.]+$/, '');
+
+      if (statusSpan) {
+        statusSpan.textContent = '⏳ Subiendo imagen a R2...';
+        statusSpan.style.color = '#38bdf8';
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('altText', altText);
+      formData.append('isPrivate', 'false');
+
+      try {
+        const headers = window.adminHeaders ? window.adminHeaders(false) : {};
+        const res = await fetch('/media/upload', {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+        const json = await res.json();
+        if (res.ok && json.data?.id) {
+          mediaIdInput.value = json.data.id;
+          if (previewImg && placeholder) {
+            previewImg.src = '/media/' + json.data.id;
+            previewImg.style.display = 'block';
+            placeholder.style.display = 'none';
+          }
+          if (statusSpan) {
+            statusSpan.textContent = '✅ Imagen subida y lista';
+            statusSpan.style.color = '#34d399';
+          }
+        } else {
+          if (statusSpan) {
+            statusSpan.textContent = '❌ ' + (json.error || 'Error al subir');
+            statusSpan.style.color = '#f87171';
+          }
+        }
+      } catch (err) {
+        if (statusSpan) {
+          statusSpan.textContent = '❌ Error de conexión al subir';
+          statusSpan.style.color = '#f87171';
+        }
+      }
+    }
+
     window.onProductScopeChange = onProductScopeChange;
+    window.handleProductImageSelected = handleProductImageSelected;
   `;
 }

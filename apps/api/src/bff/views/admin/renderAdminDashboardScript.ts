@@ -75,9 +75,16 @@ export function renderAdminDashboardScript(): string {
       else alert('Error al eliminar producto');
     }
 
-    function editProduct(productJson) {
+    function editProduct(productIdOrJson) {
       try {
-        const p = typeof productJson === 'string' ? JSON.parse(productJson) : productJson;
+        let p = productIdOrJson;
+        if (typeof productIdOrJson === 'string') {
+          if (window.__catalogProducts && window.__catalogProducts[productIdOrJson]) {
+            p = window.__catalogProducts[productIdOrJson];
+          } else {
+            p = JSON.parse(productIdOrJson);
+          }
+        }
         document.getElementById('pEditId').value = p.id;
         document.getElementById('pName').value = p.name || '';
         document.getElementById('pSlug').value = p.slug || '';
@@ -109,6 +116,21 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSeoDesc').value = p.seoDescription || '';
         document.getElementById('pNoindex').checked = Boolean(p.noindex);
 
+        // Soporte de imagen asociada
+        const mediaId = p.mediaIds && p.mediaIds.length > 0 ? p.mediaIds[0] : '';
+        document.getElementById('pMediaId').value = mediaId;
+        const previewImg = document.getElementById('pImagePreview');
+        const placeholder = document.getElementById('pImagePlaceholder');
+        if (mediaId && previewImg && placeholder) {
+          previewImg.src = '/media/' + mediaId;
+          previewImg.style.display = 'block';
+          placeholder.style.display = 'none';
+        } else if (previewImg && placeholder) {
+          previewImg.src = '';
+          previewImg.style.display = 'none';
+          placeholder.style.display = 'block';
+        }
+
         document.getElementById('pFormTitle').textContent = 'Editar Producto: ' + p.name;
         document.getElementById('pSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('pCancelBtn').style.display = 'inline-block';
@@ -124,6 +146,13 @@ export function renderAdminDashboardScript(): string {
       document.getElementById('newProductForm').reset();
       const wrap = document.getElementById('pLocalZonesWrapper');
       if (wrap) wrap.style.display = 'none';
+      document.getElementById('pMediaId').value = '';
+      const previewImg = document.getElementById('pImagePreview');
+      const placeholder = document.getElementById('pImagePlaceholder');
+      if (previewImg) { previewImg.src = ''; previewImg.style.display = 'none'; }
+      if (placeholder) { placeholder.style.display = 'block'; }
+      const statusSpan = document.getElementById('pImageUploadStatus');
+      if (statusSpan) statusSpan.textContent = '';
       document.getElementById('pFormTitle').textContent = 'Crear Nuevo Producto';
       document.getElementById('pSubmitBtn').textContent = 'Guardar Producto';
       document.getElementById('pCancelBtn').style.display = 'none';
