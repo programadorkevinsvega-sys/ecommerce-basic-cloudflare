@@ -6,6 +6,7 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
+import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -13,7 +14,8 @@ export class OrdersController {
     identityGateway: IdentityGateway,
     shippingGateway: ShippingGateway,
     catalogGateway: CatalogGateway,
-    realtimeGateway: RealtimeGateway
+    realtimeGateway: RealtimeGateway,
+    inventoryGateway: InventoryGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -110,6 +112,14 @@ export class OrdersController {
           paymentMethod:    body.paymentMethod,
           lines:            body.lines,
         });
+
+        // Reservar stock para cada línea — reduce availableQuantity al instante
+        if (order.lines?.length) {
+          const stockItems = order.lines.map(l => ({ productId: l.productId, quantity: l.quantity }));
+          await inventoryGateway.reserveStock(order.id, stockItems, 30).catch(e =>
+            console.error('[orders/create] Error reserveStock:', e.message)
+          );
+        }
 
         await realtimeGateway.publishNotification({
           channel: 'admin',

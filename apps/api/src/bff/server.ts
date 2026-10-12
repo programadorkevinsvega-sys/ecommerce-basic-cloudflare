@@ -39,8 +39,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   // Cart, Inventory, Orders, Payments, Realtime BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway));
-  app.route('/', OrdersController.createRoutes(cRoot.ordersGateway, cRoot.identityGateway, cRoot.shippingGateway, cRoot.catalogGateway, cRoot.realtimeGateway));
-  app.route('/', PaymentsController.createRoutes(cRoot.paymentsGateway, cRoot.ordersGateway, cRoot.identityGateway, cRoot.realtimeGateway));
+  app.route('/', OrdersController.createRoutes(cRoot.ordersGateway, cRoot.identityGateway, cRoot.shippingGateway, cRoot.catalogGateway, cRoot.realtimeGateway, cRoot.inventoryGateway));
+  app.route('/', PaymentsController.createRoutes(cRoot.paymentsGateway, cRoot.ordersGateway, cRoot.identityGateway, cRoot.realtimeGateway, cRoot.inventoryGateway));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway));
 
   // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado)
