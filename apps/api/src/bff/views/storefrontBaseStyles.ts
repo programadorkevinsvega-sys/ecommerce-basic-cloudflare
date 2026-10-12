@@ -174,4 +174,10 @@ export const storefrontBaseStyles = String.raw`    :root {
     .site-footer a { color: #edf7dc; text-decoration: none; }
     .site-footer a:hover { text-decoration: underline; }
     .footer-links { display: flex; justify-content: center; gap: .75rem 1.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .footer-legal-links {
+      display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: .65rem 1.4rem;
+      width: min(100%, 760px); margin: 0 auto 1.25rem; padding-top: 1.1rem;
+      border-top: 1px solid rgba(237,247,220,.2);
+    }
+    .footer-legal-links a { color: #bfcdbd; font-size: .8rem; }
     .site-footer p { margin: 0; color: #aebbb0; }`;
