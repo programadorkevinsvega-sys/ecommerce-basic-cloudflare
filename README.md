@@ -184,8 +184,8 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 | `media` | Biblioteca de archivos en R2, carpetas, metadatos y alt text | `media_assets`, `media_folders` |
 | `inventory` | Stock, movimientos, reservas | `inventory_stock`, `inventory_movements`, `inventory_reservations` |
 | `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items` |
-| `orders` | Pedidos, estados, historial | `orders_orders`, `orders_items`, `orders_status_history` |
-| `payments` | Pagos con Wompi y contra entrega, webhooks idempotentes, reembolsos | `payments_payments`, `payments_webhook_events`, `payments_cod_collections` |
+| `orders` | Pedidos, estados, historial | `orders_orders`, `orders_lines`, `orders_history`, `orders_outbox_events` |
+| `payments` | Pagos con Wompi y contra entrega, webhooks idempotentes, recaudos | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_outbox_events` |
 | `shipping` | Zonas de cobertura (nacional, ciudad, municipio), tarifas, reglas de contra entrega por zona | `shipping_zones`, `shipping_coverage`, `shipping_rates` |
 | `credit` | Venta a crédito: planes, cuentas, cuotas y abonos *(alcance por confirmar, ADR-0009)* | `credit_plans`, `credit_accounts`, `credit_installments`, `credit_payments` |
 | `invoicing` | Facturas: numeración, emisión, líneas, impuestos, notas crédito, PDF y snapshot inmutable | `invoicing_invoices`, `invoicing_invoice_lines`, `invoicing_invoice_taxes`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |

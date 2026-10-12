@@ -48,5 +48,5 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 ## 3. Reglas de Inmutabilidad y Moneda
 
 - **Moneda oficial:** COP (pesos colombianos). Todos los importes en base de datos y APIs viajan en **enteros** (centavos de COP).
-- **Inmutabilidad:** Las tablas `orders_items` e `invoicing_invoices` guardan *snapshots* inmutables que nunca dependen de cambios futuros en `catalog`.
+- **Inmutabilidad:** Las tablas `orders_lines` e `invoicing_invoices` guardan *snapshots* inmutables que nunca dependen de cambios futuros en `catalog`.
 - **Integridad de Pagos:** Confirmación de Wompi estrictamente por webhook con checksum y reconciliación de API, nunca por redirección del navegador.

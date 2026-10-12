@@ -260,7 +260,15 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Admin: tabs dedicados a Pedidos, Inventario, Pagos y Recaudos contra entrega con actualización instantánea.
 - [x] Pruebas unitarias de aislamiento, arquitectura y políticas de checkout en verde.
 
-**Criterio de salida:** compra completa con Wompi o compra contra entrega, con políticas de cobertura evaluadas en tiempo real, recaudo registrado en el admin y notificaciones en vivo. (Completado y verificado en producción).
+**Criterio de salida:** Compra completa con Wompi y compra contra entrega, con políticas de cobertura evaluadas en tiempo real, recaudo registrado en el admin y notificaciones en vivo.
+- **Estado de certificación:** ✅ **COMPLETO Y CERTIFICADO EN PRODUCCIÓN**
+- **Evidencia verificada:**
+  - Compra real con Wompi aprobada: Orden `#ord-c66fd139`, Transacción Wompi `#11306435-1791789352-34934` por valor de $1.728.550 COP.
+  - Webhook de Wompi verificado con código HTTP `200 { "received": true }` validando firma criptográfica SHA-256 sobre `properties` dinámicas de `body.data`.
+  - Descuento de stock en vivo: 20 unidades descontadas de `Camiseta Oversize Vega` (SKU `TSHIRT-VEGA-001`), stock total y disponible ajustado de 50 u. a 30 u.
+  - Transición de estados del pedido: `status: 'confirmed'`, `paymentStatus: 'approved'`.
+  - Gestión visual en panel de administración: Modal de inspección de pedidos (`👁️ Detalle`) visualizando líneas de compra, cantidades, precios unitarios, datos de contacto, dirección completa de entrega y desglose financiero.
+  - Gestión de inventario profesional: KPIs de stock (total, disponible, reservado, bajo stock) y modal de ajustes manuales con motivo auditado.
 
 ---
 

@@ -123,6 +123,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `payments__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `payments__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+| `payments__0002_expand_columns.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-12 | 1a555ba | ✅ Aplicada con éxito (expand-only: transactions, outbox, webhooks) |
 
 ---
 
@@ -132,5 +133,6 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `realtime__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `realtime__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+| `realtime__0002_expand_columns.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-12 | 576d038 | ✅ Aplicada con éxito (expand-only: body, data_json, read, recipient_id) |
 
 
