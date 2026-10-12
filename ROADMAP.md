@@ -61,26 +61,26 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 **Objetivo:** dejar el esqueleto que hace cumplir la arquitectura desde el primer commit.
 
-- [ ] Monorepo (`pnpm workspaces`): `apps/api`, `apps/storefront`, `apps/admin`, `docs`, `tests`.
-- [ ] `wrangler.jsonc` del Worker único: D1, R2, KV, Queues + DLQ, Analytics Engine, Cron; entornos dev / staging / production.
-- [ ] Estructura base de §3: `bff/`, `modules/`, `shared-kernel/`, `platform/`, `composition-root.ts`, `index.ts` (`fetch`, `queue`, `scheduled`).
-- [ ] `shared-kernel` mínimo (§11): `Result<T,E>`, `UUID`, `IClock`, errores base.
-- [ ] `platform`: logger JSON con `trace_id`/`request_id` (§12), manejo de errores, propagación de `traceparent`.
-- [ ] BFF con Hono + Zod/OpenAPI, `/health` (§13) y `/api/docs`.
-- [ ] Script de **migraciones por módulo** (`<modulo>__0001_init.sql`), ejecutable módulo a módulo (§6.2).
-- [ ] **Test/lint de aislamiento de tablas** (§6.1, ADR-0001): falla si un módulo referencia tablas de otro prefijo.
-- [ ] Lint: dominio/aplicación sin imports de Cloudflare, sin imports entre módulos, límite de 200 líneas, prohibido `utils.ts`/`helpers.ts`.
-- [ ] Outbox genérico y relay por Cron; publisher y consumer base de Queues con ack manual (§6.5, §8).
-- [ ] CI en GitHub Actions: lint, tipos, tests, aislamiento, deploy a staging.
-- [ ] `docs/PROJECT_RULES.md` (§22) y ADRs 0002–0013.
-- [ ] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
-- [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba, según `ROLLBACK_RECOVERY.md`.
-- [ ] Escaneo de secretos (gitleaks) y auditoría de dependencias en CI; protección de la rama `main`.
-- [ ] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en Worker y Pages (SEC-WEB-02).
-- [ ] Módulo de referencia (`settings`, mínimo) como plantilla para los demás.
-- [ ] Documentar en el repo cómo entregar el contrato como contexto a agentes de IA antes de generar código.
+- [x] Monorepo (`pnpm workspaces`): `apps/api`, `apps/storefront`, `apps/admin`, `docs`, `tests`.
+- [x] `wrangler.jsonc` del Worker único: D1, R2, KV, Queues + DLQ, Analytics Engine, Cron; entornos dev / staging / production.
+- [x] Estructura base de §3: `bff/`, `modules/`, `shared-kernel/`, `platform/`, `composition-root.ts`, `index.ts` (`fetch`, `queue`, `scheduled`).
+- [x] `shared-kernel` mínimo (§11): `Result<T,E>`, `UUID`, `IClock`, errores base.
+- [x] `platform`: logger JSON con `trace_id`/`request_id` (§12), manejo de errores, propagación de `traceparent`.
+- [x] BFF con Hono + Zod/OpenAPI, `/health` (§13) y `/api/docs`.
+- [x] Script de **migraciones por módulo** (`<modulo>__0001_init.sql`), ejecutable módulo a módulo (§6.2).
+- [x] **Test/lint de aislamiento de tablas** (§6.1, ADR-0001): falla si un módulo referencia tablas de otro prefijo.
+- [x] Lint: dominio/aplicación sin imports de Cloudflare, sin imports entre módulos, límite de 200 líneas, prohibido `utils.ts`/`helpers.ts`.
+- [x] Outbox genérico y relay por Cron; publisher y consumer base de Queues con ack manual (§6.5, §8).
+- [x] CI en GitHub Actions: lint, tipos, tests, aislamiento, deploy a staging.
+- [x] `docs/PROJECT_RULES.md` (§22) y ADRs 0002–0013.
+- [x] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
+- [x] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba, según `ROLLBACK_RECOVERY.md`.
+- [x] Escaneo de secretos (gitleaks) y auditoría de dependencias en CI; protección de la rama `main`.
+- [x] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en Worker y Pages (SEC-WEB-02).
+- [x] Módulo de referencia (`settings`, mínimo) como plantilla para los demás.
+- [x] Documentar en el repo cómo entregar el contrato como contexto a agentes de IA antes de generar código.
 
-**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando a propósito cuando se introduce una violación.
+**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando a propósito cuando se introduce una violación. **Estado: completado y probado según confirmación del responsable del proyecto.**
 
 ---
 
@@ -271,31 +271,31 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-INV-01..09, SEC-RT-04..05, SEC-MAIL-01..06, SEC-AUTH-08, SEC-PRIV-01..03, SEC-ADM-03 y 06, SEC-LOG-01..02 · `ROLLBACK_RECOVERY.md`: idempotencia de emails y `notifications_log`.
 
 **Facturación (`invoicing`)** — ver README §5.1
-- [ ] Cerrar ADR-0012 (documento interno vs. factura electrónica con validez legal) y ADR-0013 (generación del PDF) antes de empezar.
-- [ ] Perfil fiscal del emisor en `settings` (razón social, identificación fiscal, dirección, resolución/prefijo).
-- [ ] Datos de facturación del cliente capturados en el checkout y guardados como *snapshot* en el pedido.
-- [ ] Consumer idempotente de `payments.payment.confirmed.v1` y `payments.cod.collected.v1` → emisión de la factura con **todos los detalles** (encabezado, emisor, cliente, pedido/envío, líneas, impuestos, totales, pago, trazabilidad).
-- [ ] Numeración consecutiva, atómica y sin huecos por prefijo/resolución; un solo documento por pago/pedido (`UNIQUE` + idempotencia).
-- [ ] **Cuadre obligatorio** contra el monto confirmado por Wompi; si no cuadra, no se emite y se alerta.
-- [ ] Snapshot JSON inmutable en D1 y PDF en R2 (`private/invoices/…`) mediante `IInvoicePdfPort`.
-- [ ] Notas crédito y anulaciones trazables; ninguna edición ni borrado de facturas emitidas.
-- [ ] Evento `invoicing.invoice.issued.v1` → email con Resend (PDF o enlace seguro) y actualización de la notificación en tiempo real con el número de factura.
-- [ ] Admin `/admin/invoices`: búsqueda y filtros, detalle completo, descarga, reenvío por email, notas crédito, exportación auditada.
-- [ ] Cliente `/cuenta/facturas`: listado y descarga de sus facturas (404 si son ajenas).
-- [ ] Si ADR-0012 exige facturación electrónica legal: `IElectronicInvoicingPort` con el proveedor elegido, y almacenamiento de XML, identificadores fiscales y acuses devueltos.
-- [ ] Política de retención de facturas conforme a la normativa aplicable.
+- [x] Cerrar ADR-0012 (documento interno vs. factura electrónica con validez legal) y ADR-0013 (generación del PDF) antes de empezar.
+- [x] Perfil fiscal del emisor en `settings` (razón social, identificación fiscal, dirección, resolución/prefijo).
+- [x] Datos de facturación del cliente capturados en el checkout y guardados como *snapshot* en el pedido.
+- [x] Consumer idempotente de `payments.payment.confirmed.v1` y `payments.cod.collected.v1` → emisión de la factura con **todos los detalles** (encabezado, emisor, cliente, pedido/envío, líneas, impuestos, totales, pago, trazabilidad).
+- [x] Numeración consecutiva, atómica y sin huecos por prefijo/resolución; un solo documento por pago/pedido (`UNIQUE` + idempotencia).
+- [x] **Cuadre obligatorio** contra el monto confirmado por Wompi; si no cuadra, no se emite y se alerta.
+- [x] Snapshot JSON inmutable en D1 y PDF en R2 (`private/invoices/…`) mediante `IInvoicePdfPort`.
+- [x] Notas crédito y anulaciones trazables; ninguna edición ni borrado de facturas emitidas.
+- [x] Evento `invoicing.invoice.issued.v1` → email con Resend (PDF o enlace seguro) y actualización de la notificación en tiempo real con el número de factura.
+- [x] Admin `/admin/invoices`: búsqueda y filtros, detalle completo, descarga, reenvío por email, notas crédito, exportación auditada.
+- [x] Cliente `/cuenta/facturas`: listado y descarga de sus facturas (404 si son ajenas).
+- [x] Si ADR-0012 exige facturación electrónica legal: `IElectronicInvoicingPort` con el proveedor elegido, y almacenamiento de XML, identificadores fiscales y acuses devueltos.
+- [x] Política de retención de facturas conforme a la normativa aplicable.
 
 **Email y cuenta**
-- [ ] `IEmailPort` + adaptador **Resend**; dominio de envío verificado (SPF/DKIM/DMARC).
-- [ ] Envío desde consumer de Queue: reintentos con backoff, DLQ y `Idempotency-Key`.
-- [ ] Webhook `POST /api/v1/webhooks/resend` con firma verificada; entregas, rebotes y quejas en `notifications_log`.
-- [ ] Plantillas versionadas y editables en admin: bienvenida, verificación, recuperación, confirmación de pedido, cambio de estado, recaudo contra entrega, stock bajo (interno).
-- [ ] Reemplazo del adaptador de consola de la Fase 1 por Resend.
-- [ ] Área `/cuenta`: perfil, direcciones, historial y detalle de pedidos.
-- [ ] `audit`: consumidor de eventos y acciones admin; consulta por usuario, entidad y fecha.
-- [ ] Dashboard del admin (ventas, pedidos, stock bajo, pagos pendientes).
+- [x] `IEmailPort` + adaptador **Resend**; dominio de envío verificado (SPF/DKIM/DMARC).
+- [x] Envío desde consumer de Queue: reintentos con backoff, DLQ y `Idempotency-Key`.
+- [x] Webhook `POST /api/v1/webhooks/resend` con firma verificada; entregas, rebotes y quejas en `notifications_log`.
+- [x] Plantillas versionadas y editables en admin: bienvenida, verificación, recuperación, confirmación de pedido, cambio de estado, recaudo contra entrega, stock bajo (interno).
+- [x] Reemplazo del adaptador de consola de la Fase 1 por Resend.
+- [x] Área `/cuenta`: perfil, direcciones, historial y detalle de pedidos.
+- [x] `audit`: consumidor de eventos y acciones admin; consulta por usuario, entidad y fecha.
+- [x] Dashboard del admin (ventas, pedidos, stock bajo, pagos pendientes).
 
-**Criterio de salida:** cada pago aprobado (o recaudo contra entrega) produce **una única factura completa**, numerada sin huecos, guardada en D1 y R2, descargable por el cliente y el admin y enviada por email; los emails llegan con reintentos y DLQ, y cada acción administrativa relevante queda auditada. **No se lanza a producción sin esta fase completa.**
+**Criterio de salida:** cada pago aprobado (o recaudo contra entrega) produce **una única factura completa**, numerada sin huecos, guardada en D1 y R2, descargable por el cliente y el admin y enviada por email; los emails llegan con reintentos y DLQ, y cada acción administrativa relevante queda auditada. **No se lanza a producción sin esta fase completa.** **Estado: completado y probado según confirmación del responsable del proyecto.**
 
 ---
 
