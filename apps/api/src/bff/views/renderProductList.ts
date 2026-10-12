@@ -5,6 +5,8 @@ export interface BannerItem {
   id: string;
   title: string;
   description?: string;
+  bannerType?: 'informative' | 'promotional';
+  buttonText?: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;
@@ -19,16 +21,23 @@ export function renderProductList(
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
 
   const banners = (Array.isArray(banner) ? banner : banner ? [banner] : []).filter(Boolean);
-  const renderBanner = (item: BannerItem, index: number): string => `
+  const renderBanner = (item: BannerItem, index: number): string => {
+    const isInformative = item.bannerType === 'informative';
+    const ctaHtml = isInformative
+      ? ''
+      : `<a class="campaign-action" href="${escapeHtml(item.linkUrl)}">${escapeHtml(item.buttonText || 'Explorar colección')} <span aria-hidden="true">↗</span></a>`;
+
+    return `
     <article class="campaign-banner">
       <div class="campaign-copy">
-        <span class="eyebrow">Selección de la tienda</span>
+        <span class="eyebrow">${isInformative ? 'Comunicado' : 'Selección de la tienda'}</span>
         <h2>${escapeHtml(item.title)}</h2>
-        <p>${escapeHtml(item.description || 'Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.')}</p>
-        <a class="campaign-action" href="${escapeHtml(item.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
+        <p>${escapeHtml(item.description || (isInformative ? '' : 'Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.'))}</p>
+        ${ctaHtml}
       </div>
       ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.remove();this.parentElement.classList.add(\'campaign-image-missing\')" /></div>` : ''}
     </article>`;
+  };
   const bannerHtml = banners.length > 1
     ? `<section class="campaign-carousel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section>`
     : banners.length === 1 && banners[0]

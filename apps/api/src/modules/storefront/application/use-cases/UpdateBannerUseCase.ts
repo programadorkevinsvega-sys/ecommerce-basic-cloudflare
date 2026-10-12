@@ -6,6 +6,8 @@ export interface UpdateBannerInput {
   id: string;
   title?: string;
   description?: string;
+  bannerType?: 'informative' | 'promotional';
+  buttonText?: string;
   placement?: 'home' | 'category' | 'product' | 'checkout';
   imageUrl?: string;
   linkUrl?: string;

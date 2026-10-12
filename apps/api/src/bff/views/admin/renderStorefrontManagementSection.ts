@@ -4,84 +4,109 @@ export function renderStorefrontManagementSection(
   banners: BannerItemDto[],
   announcements: AnnouncementItemDto[]
 ): string {
-  const bannerRows = banners.map((b) => {
-    const toggleAction = b.isActive
-      ? `<button class="btn-action btn-action-hide" onclick="setBannerStatus('${b.id}', false)">Ocultar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="setBannerStatus('${b.id}', true)">Publicar</button>`;
+  const promoBanners = banners.filter((b) => b.bannerType !== 'informative');
+  const infoBanners = banners.filter((b) => b.bannerType === 'informative');
 
-    return `
-      <tr>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
-          ${escapeHtml(b.title)}
-          <div style="font-size:0.75rem; color:#94a3b8;">${escapeHtml(b.linkUrl)} | Alt: "${escapeHtml(b.altText)}"</div>
-          ${b.description ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;"><em>"${escapeHtml(b.description)}"</em></div>` : ''}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(b.placement)}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">
-          ${b.isActive ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          <a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>
-          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}')">Editar</button>
-          ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const renderRows = (items: BannerItemDto[], isPromo: boolean): string => {
+    if (items.length === 0) {
+      return '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay banners en esta sección</td></tr>';
+    }
+    return items.map((b) => {
+      const toggle = b.isActive
+        ? `<button class="btn-action btn-action-hide" onclick="setBannerStatus('${b.id}', false)">Ocultar</button>`
+        : `<button class="btn-action btn-action-publish" onclick="setBannerStatus('${b.id}', true)">Publicar</button>`;
 
-  const announcementRows = announcements.map((a) => {
-    const toggleAction = a.isActive
-      ? `<button class="btn-action btn-action-hide" onclick="setAnnouncementStatus('${a.id}', false)">Ocultar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="setAnnouncementStatus('${a.id}', true)">Publicar</button>`;
+      const ctaMeta = isPromo
+        ? `<div style="font-size:0.75rem; color:#6ee7b7;">Botón: "${escapeHtml(b.buttonText || 'Explorar colección')}" → ${escapeHtml(b.linkUrl)}</div>`
+        : `<div style="font-size:0.75rem; color:#94a3b8;">Informativo (Sin botón de acción)</div>`;
 
-    return `
-      <tr>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
-          ${escapeHtml(a.message)}
-          ${a.linkUrl ? `<div style="font-size:0.75rem; color:#94a3b8;">${escapeHtml(a.linkUrl)}</div>` : ''}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(a.placement)}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">
-          ${a.isActive ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
-        </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          ${a.linkUrl ? `<a class="btn-action btn-action-view" href="${escapeHtml(a.linkUrl)}" target="_blank">Ver</a>` : ''}
-          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editAnnouncement('${a.id}', '${escapeJs(a.message)}', '${escapeJs(a.linkUrl || '')}', '${a.placement}')">Editar</button>
-          ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteAnnouncement('${a.id}')">Eliminar</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr>
+          <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
+            ${escapeHtml(b.title)}
+            ${ctaMeta}
+            ${b.description ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;"><em>"${escapeHtml(b.description)}"</em></div>` : ''}
+          </td>
+          <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(b.placement)}</td>
+          <td style="padding:0.6rem; border-bottom:1px solid #334155;">
+            ${b.isActive ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
+          </td>
+          <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
+            ${isPromo ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
+            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}')">Editar</button>
+            ${toggle}
+            <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
 
   return `
+    <!-- SECCIÓN 1: BANNERS HERO PROMOCIONALES CON BOTÓN -->
     <div class="card">
-      <h2>Banners Hero & Promocionales (${banners.length})</h2>
-      <form id="newBannerForm" style="margin-bottom: 1.5rem;">
-        <input type="hidden" id="bEditId" value="" />
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <h2 style="margin:0;">🎯 Banners Hero Promocionales (${promoBanners.length})</h2>
+          <small style="color:#94a3b8;">Banners de campañas comerciales con botón de acción (CTA) y enlace directo a colección.</small>
+        </div>
+      </div>
+      <form id="newPromoBannerForm" onsubmit="handleBannerSubmit(event, 'promotional')" style="margin-bottom: 1.5rem;">
+        <input type="hidden" id="pbEditId" value="" />
         <div class="form-grid">
-          <div><label>Título del Banner</label><input type="text" id="bTitle" required placeholder="Ej. Gran Venta de Verano" /></div>
-          <div><label>Descripción / Subtítulo</label><input type="text" id="bDesc" placeholder="Breve frase descriptiva para el banner..." /></div>
-          <div><label>URL de Destino</label><input type="text" id="bLink" required value="/productos" /></div>
-          <div><label>URL de Imagen</label><input type="text" id="bImg" value="/media/banner-default.webp" /></div>
-          <div><label>Texto Alternativo (Alt)</label><input type="text" id="bAlt" required placeholder="Colección destacada..." /></div>
+          <div><label>Título Promocional</label><input type="text" id="pbTitle" required placeholder="Ej. Colección Verano 2026" /></div>
+          <div><label>Descripción / Subtítulo</label><input type="text" id="pbDesc" placeholder="Ej. Aprovecha hasta 30% de descuento..." /></div>
+          <div><label>Texto del Botón (CTA)</label><input type="text" id="pbBtnText" required value="Explorar colección" placeholder="Ej. Comprar Ahora, Ver Ofertas" /></div>
+          <div><label>URL de Destino</label><input type="text" id="pbLink" required value="/productos" /></div>
+          <div><label>URL de Imagen</label><input type="text" id="pbImg" value="/media/banner-default.webp" /></div>
+          <div><label>Texto Alternativo (Alt)</label><input type="text" id="pbAlt" required placeholder="Colección destacada..." /></div>
           <div>
             <label>Ubicación</label>
-            <select id="bPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
+            <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
           </div>
         </div>
-        <button type="submit" class="btn-primary" id="bSubmitBtn">Publicar Banner</button>
-        <button type="button" class="btn-action" id="bCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetBannerForm()">Cancelar</button>
-        <div id="bMsg" class="msg"></div>
+        <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button>
+        <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
+        <div id="pbMsg" class="msg"></div>
       </form>
       <table>
-        <thead><tr><th>Título y Destino</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${bannerRows || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay banners registrados</td></tr>'}</tbody>
+        <thead><tr><th>Título y Botón CTA</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
+        <tbody>${renderRows(promoBanners, true)}</tbody>
       </table>
     </div>
 
-    <div class="card">
+    <!-- SECCIÓN 2: BANNERS HERO INFORMATIVOS SIN BOTÓN -->
+    <div class="card" style="margin-top:2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <h2 style="margin:0;">📢 Banners Hero Informativos (${infoBanners.length})</h2>
+          <small style="color:#94a3b8;">Banners de imagen y texto editorial de marca sin botón de acción comercial.</small>
+        </div>
+      </div>
+      <form id="newInfoBannerForm" onsubmit="handleBannerSubmit(event, 'informative')" style="margin-bottom: 1.5rem;">
+        <input type="hidden" id="ibEditId" value="" />
+        <div class="form-grid">
+          <div><label>Título Informativo</label><input type="text" id="ibTitle" required placeholder="Ej. Envíos Nacionales Seguros" /></div>
+          <div><label>Descripción / Mensaje</label><input type="text" id="ibDesc" placeholder="Ej. Calidad garantizada en todas nuestras entregas..." /></div>
+          <div><label>URL de Imagen</label><input type="text" id="ibImg" value="/media/banner-default.webp" /></div>
+          <div><label>Texto Alternativo (Alt)</label><input type="text" id="ibAlt" required placeholder="Comunicado de la tienda..." /></div>
+          <div>
+            <label>Ubicación</label>
+            <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button>
+        <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
+        <div id="ibMsg" class="msg"></div>
+      </form>
+      <table>
+        <thead><tr><th>Título y Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
+        <tbody>${renderRows(infoBanners, false)}</tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN 3: ANUNCIOS Y BARRA SUPERIOR -->
+    <div class="card" style="margin-top:2rem;">
       <h2>Anuncios & Barra Superior (${announcements.length})</h2>
       <form id="newAnnouncementForm" style="margin-bottom: 1.5rem;">
         <input type="hidden" id="aEditId" value="" />
@@ -99,7 +124,24 @@ export function renderStorefrontManagementSection(
       </form>
       <table>
         <thead><tr><th>Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${announcementRows || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay anuncios registrados</td></tr>'}</tbody>
+        <tbody>${announcements.map((a) => `
+          <tr>
+            <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
+              ${escapeHtml(a.message)}
+              ${a.linkUrl ? `<div style="font-size:0.75rem; color:#94a3b8;">${escapeHtml(a.linkUrl)}</div>` : ''}
+            </td>
+            <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(a.placement)}</td>
+            <td style="padding:0.6rem; border-bottom:1px solid #334155;">
+              ${a.isActive ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
+            </td>
+            <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
+              ${a.linkUrl ? `<a class="btn-action btn-action-view" href="${escapeHtml(a.linkUrl)}" target="_blank">Ver</a>` : ''}
+              <button class="btn-action" style="background:#475569; color:#fff;" onclick="editAnnouncement('${a.id}', '${escapeJs(a.message)}', '${escapeJs(a.linkUrl || '')}', '${a.placement}')">Editar</button>
+              ${a.isActive ? `<button class="btn-action btn-action-hide" onclick="setAnnouncementStatus('${a.id}', false)">Ocultar</button>` : `<button class="btn-action btn-action-publish" onclick="setAnnouncementStatus('${a.id}', true)">Publicar</button>`}
+              <button class="btn-action btn-action-delete" onclick="deleteAnnouncement('${a.id}')">Eliminar</button>
+            </td>
+          </tr>
+        `).join('') || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay anuncios registrados</td></tr>'}</tbody>
       </table>
     </div>
   `;

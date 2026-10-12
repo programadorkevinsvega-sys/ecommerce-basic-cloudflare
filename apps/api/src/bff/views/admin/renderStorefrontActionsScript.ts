@@ -19,25 +19,45 @@ export function renderStorefrontActionsScript(): string {
       else alert('Error al eliminar banner');
     }
 
-    function editBanner(id, title, link, alt, img, placement, desc) {
-      document.getElementById('bEditId').value = id;
-      document.getElementById('bTitle').value = title;
-      document.getElementById('bDesc').value = desc || '';
-      document.getElementById('bLink').value = link;
-      document.getElementById('bAlt').value = alt;
-      document.getElementById('bImg').value = img;
-      document.getElementById('bPlacement').value = placement;
-      document.getElementById('bSubmitBtn').textContent = 'Guardar Cambios';
-      document.getElementById('bCancelBtn').style.display = 'inline-block';
-      document.getElementById('newBannerForm').scrollIntoView({ behavior: 'smooth' });
+    function editBanner(id, title, link, alt, img, placement, desc, bannerType, btnText) {
+      const isPromo = bannerType !== 'informative';
+      if (isPromo) {
+        document.getElementById('pbEditId').value = id;
+        document.getElementById('pbTitle').value = title;
+        document.getElementById('pbDesc').value = desc || '';
+        document.getElementById('pbBtnText').value = btnText || 'Explorar colección';
+        document.getElementById('pbLink').value = link;
+        document.getElementById('pbAlt').value = alt;
+        document.getElementById('pbImg').value = img;
+        document.getElementById('pbPlacement').value = placement;
+        document.getElementById('pbSubmitBtn').textContent = 'Guardar Cambios';
+        document.getElementById('pbCancelBtn').style.display = 'inline-block';
+        document.getElementById('newPromoBannerForm').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        document.getElementById('ibEditId').value = id;
+        document.getElementById('ibTitle').value = title;
+        document.getElementById('ibDesc').value = desc || '';
+        document.getElementById('ibAlt').value = alt;
+        document.getElementById('ibImg').value = img;
+        document.getElementById('ibPlacement').value = placement;
+        document.getElementById('ibSubmitBtn').textContent = 'Guardar Cambios';
+        document.getElementById('ibCancelBtn').style.display = 'inline-block';
+        document.getElementById('newInfoBannerForm').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
-    function resetBannerForm() {
-      document.getElementById('bEditId').value = '';
-      document.getElementById('newBannerForm').reset();
-      if (document.getElementById('bDesc')) document.getElementById('bDesc').value = '';
-      document.getElementById('bSubmitBtn').textContent = 'Publicar Banner';
-      document.getElementById('bCancelBtn').style.display = 'none';
+    function resetPromoBannerForm() {
+      document.getElementById('pbEditId').value = '';
+      document.getElementById('newPromoBannerForm').reset();
+      document.getElementById('pbSubmitBtn').textContent = 'Publicar Banner Promocional';
+      document.getElementById('pbCancelBtn').style.display = 'none';
+    }
+
+    function resetInfoBannerForm() {
+      document.getElementById('ibEditId').value = '';
+      document.getElementById('newInfoBannerForm').reset();
+      document.getElementById('ibSubmitBtn').textContent = 'Publicar Banner Informativo';
+      document.getElementById('ibCancelBtn').style.display = 'none';
     }
 
     async function setAnnouncementStatus(id, isActive) {
@@ -79,7 +99,8 @@ export function renderStorefrontActionsScript(): string {
     window.setBannerStatus = setBannerStatus;
     window.deleteBanner = deleteBanner;
     window.editBanner = editBanner;
-    window.resetBannerForm = resetBannerForm;
+    window.resetPromoBannerForm = resetPromoBannerForm;
+    window.resetInfoBannerForm = resetInfoBannerForm;
     window.setAnnouncementStatus = setAnnouncementStatus;
     window.deleteAnnouncement = deleteAnnouncement;
     window.editAnnouncement = editAnnouncement;

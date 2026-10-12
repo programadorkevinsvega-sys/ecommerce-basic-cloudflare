@@ -6,6 +6,8 @@ interface BannerRow {
   id: string;
   title: string;
   description?: string;
+  banner_type?: 'informative' | 'promotional';
+  button_text?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   image_url: string;
   link_url: string;
@@ -65,12 +67,14 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
     await this.db
       .prepare(
         `INSERT INTO storefront_banners (
-          id, title, description, placement, image_url, link_url, alt_text, is_active,
+          id, title, description, banner_type, button_text, placement, image_url, link_url, alt_text, is_active,
           starts_at, ends_at, sort_order, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           title = excluded.title,
           description = excluded.description,
+          banner_type = excluded.banner_type,
+          button_text = excluded.button_text,
           image_url = excluded.image_url,
           link_url = excluded.link_url,
           alt_text = excluded.alt_text,
@@ -78,7 +82,8 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
           updated_at = excluded.updated_at`
       )
       .bind(
-        p.id, p.title, p.description ?? null, p.placement, p.imageUrl, p.linkUrl, p.altText,
+        p.id, p.title, p.description ?? null, p.bannerType, p.buttonText ?? null,
+        p.placement, p.imageUrl, p.linkUrl, p.altText,
         p.isActive ? 1 : 0, p.startsAt ?? null, p.endsAt ?? null,
         p.sortOrder, p.createdAt, p.updatedAt
       )
@@ -143,6 +148,8 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
       id: r.id,
       title: r.title,
       description: r.description || undefined,
+      bannerType: r.banner_type || 'promotional',
+      buttonText: r.button_text || undefined,
       placement: r.placement,
       imageUrl: r.image_url,
       linkUrl: r.link_url,

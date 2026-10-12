@@ -23,6 +23,8 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
         id: b.id,
         title: b.title,
         description: b.description,
+        bannerType: b.bannerType,
+        buttonText: b.buttonText,
         imageUrl: b.imageUrl,
         linkUrl: b.linkUrl,
         altText: b.altText,

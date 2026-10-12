@@ -2,6 +2,8 @@ export interface BannerProps {
   id: string;
   title: string;
   description?: string;
+  bannerType?: 'informative' | 'promotional';
+  buttonText?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   imageUrl: string;
   linkUrl: string;
@@ -24,12 +26,18 @@ export class Banner {
     if (!props.altText || props.altText.trim().length === 0) {
       throw new Error('El texto alternativo es obligatorio (SEC-R2-04)');
     }
-    this.props = props;
+    this.props = {
+      ...props,
+      bannerType: props.bannerType || 'promotional',
+      buttonText: props.buttonText || (props.bannerType === 'informative' ? undefined : 'Explorar colección'),
+    };
   }
 
   public get id(): string { return this.props.id; }
   public get title(): string { return this.props.title; }
   public get description(): string | undefined { return this.props.description; }
+  public get bannerType(): 'informative' | 'promotional' { return this.props.bannerType || 'promotional'; }
+  public get buttonText(): string | undefined { return this.props.buttonText; }
   public get placement(): string { return this.props.placement; }
   public get imageUrl(): string { return this.props.imageUrl; }
   public get linkUrl(): string { return this.props.linkUrl; }
@@ -57,6 +65,12 @@ export class Banner {
     if (updates.description !== undefined) {
       this.props.description = updates.description?.trim() || undefined;
     }
+    if (updates.bannerType !== undefined) {
+      this.props.bannerType = updates.bannerType;
+    }
+    if (updates.buttonText !== undefined) {
+      this.props.buttonText = updates.buttonText?.trim() || undefined;
+    }
     if (updates.altText !== undefined) {
       if (!updates.altText.trim()) throw new Error('El texto alternativo es obligatorio (SEC-R2-04)');
       this.props.altText = updates.altText.trim();
@@ -77,7 +91,7 @@ export class Banner {
   }
 
   public toPrimitives(): BannerProps {
-    return { ...this.props };
+    return { ...this.props, bannerType: this.props.bannerType || 'promotional' };
   }
 }
 

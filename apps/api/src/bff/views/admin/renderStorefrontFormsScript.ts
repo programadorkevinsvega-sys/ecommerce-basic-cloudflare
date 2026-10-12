@@ -1,38 +1,55 @@
 export function renderStorefrontFormsScript(): string {
   return `
-    document.getElementById('newBannerForm')?.addEventListener('submit', async (e) => {
+    async function handleBannerSubmit(e, bannerType) {
       e.preventDefault();
-      const msg = document.getElementById('bMsg');
-      const editId = document.getElementById('bEditId')?.value;
+      const isPromo = bannerType === 'promotional';
+      const prefix = isPromo ? 'pb' : 'ib';
+      const msg = document.getElementById(prefix + 'Msg');
+      const editId = document.getElementById(prefix + 'EditId')?.value;
+      const title = document.getElementById(prefix + 'Title').value;
+      const desc = document.getElementById(prefix + 'Desc')?.value?.trim() || undefined;
+      const img = document.getElementById(prefix + 'Img').value || '/media/banner-default.webp';
+      const alt = document.getElementById(prefix + 'Alt').value;
+      const placement = document.getElementById(prefix + 'Placement').value;
+
       const payload = {
-        title: document.getElementById('bTitle').value,
-        description: document.getElementById('bDesc')?.value?.trim() || undefined,
-        linkUrl: document.getElementById('bLink').value,
-        altText: document.getElementById('bAlt').value,
-        imageUrl: document.getElementById('bImg').value || '/media/banner-default.webp',
-        placement: document.getElementById('bPlacement').value
+        title,
+        description: desc,
+        bannerType,
+        imageUrl: img,
+        altText: alt,
+        placement,
+        linkUrl: isPromo ? (document.getElementById('pbLink')?.value || '/productos') : '#',
+        buttonText: isPromo ? (document.getElementById('pbBtnText')?.value || 'Explorar colección') : undefined
       };
 
       const url = editId ? '/api/v1/admin/storefront/banners/' + editId : '/api/v1/admin/storefront/banners';
       const method = editId ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = editId ? '✅ Banner actualizado con éxito' : '✅ Banner publicado con éxito';
-        msg.style.background = '#065f46';
-        msg.style.display = 'block';
-        setTimeout(() => window.location.reload(), 800);
-      } else {
-        const data = await res.json();
-        msg.textContent = '❌ ' + (data.error || 'Error al guardar banner');
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          msg.textContent = editId ? '✅ Banner actualizado con éxito' : '✅ Banner publicado con éxito';
+          msg.style.background = '#065f46';
+          msg.style.display = 'block';
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          const data = await res.json();
+          msg.textContent = '❌ ' + (data.error || 'Error al guardar banner');
+          msg.style.background = '#7f1d1d';
+          msg.style.display = 'block';
+        }
+      } catch (err) {
+        msg.textContent = '❌ Error de conexión';
         msg.style.background = '#7f1d1d';
         msg.style.display = 'block';
       }
-    });
+    }
+    window.handleBannerSubmit = handleBannerSubmit;
 
     document.getElementById('newAnnouncementForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
