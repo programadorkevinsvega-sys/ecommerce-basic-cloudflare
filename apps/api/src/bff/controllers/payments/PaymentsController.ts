@@ -35,7 +35,16 @@ export class PaymentsController {
         redirectUrl: `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`,
       });
 
-      return c.json({ success: true, checkout: checkoutData });
+      // URL del widget de pago de Wompi (hosted checkout)
+      const wompiCheckoutUrl = new URL('https://checkout.wompi.co/p/');
+      wompiCheckoutUrl.searchParams.set('public-key', publicKey);
+      wompiCheckoutUrl.searchParams.set('currency', 'COP');
+      wompiCheckoutUrl.searchParams.set('amount-in-cents', String(order.totalCents));
+      wompiCheckoutUrl.searchParams.set('reference', checkoutData.reference);
+      wompiCheckoutUrl.searchParams.set('signature:integrity', checkoutData.signature);
+      wompiCheckoutUrl.searchParams.set('redirect-url', `${new URL(c.req.url).origin}/checkout/resultado?orderId=${order.id}`);
+
+      return c.json({ success: true, checkout: { ...checkoutData, wompiCheckoutUrl: wompiCheckoutUrl.toString() } });
     });
 
     // POST /api/v1/webhooks/wompi

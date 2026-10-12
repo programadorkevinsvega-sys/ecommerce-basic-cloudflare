@@ -40,6 +40,7 @@ export interface AdminDashboardProps {
   divipolaLocations: DivipolaLocationDto[];
   settings: SettingsDto;
   adminEmail: string;
+  adminToken?: string;  // raw token inyectado server-side para evitar depender de localStorage
 }
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
@@ -130,6 +131,25 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
       </div>
     </div>
   </main>
+  <script>
+    // Token inyectado server-side — siempre disponible, sin depender de localStorage
+    window.__ADMIN_TOKEN = '${props.adminToken || ''}';
+    if (window.__ADMIN_TOKEN) {
+      localStorage.setItem('vega_admin_token', window.__ADMIN_TOKEN);
+    }
+    // Helper de auth: cookie se envía automáticamente cuando no hay token
+    window.adminHeaders = function(isJson) {
+      const t = localStorage.getItem('vega_admin_token') || window.__ADMIN_TOKEN || '';
+      const h = {};
+      if (t) h['Authorization'] = 'Bearer ' + t;
+      if (isJson) h['Content-Type'] = 'application/json';
+      return h;
+    };
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+    window.escapeHtml = escapeHtml;
+  </script>
   <script>${renderAdminDashboardScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>

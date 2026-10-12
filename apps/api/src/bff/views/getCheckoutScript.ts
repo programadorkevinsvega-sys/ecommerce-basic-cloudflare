@@ -154,7 +154,14 @@ export function getCheckoutScript(
               body: JSON.stringify({ orderId })
             });
             const payData = await payRes.json();
-            window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=wompi_pending&ref=' + (payData.checkout?.reference || '');
+            // Redirigir al widget real de Wompi
+            const wompiUrl = payData.checkout?.wompiCheckoutUrl;
+            if (wompiUrl) {
+              window.location.href = wompiUrl;
+            } else {
+              // Fallback si no hay URL de Wompi configurada
+              window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=wompi_pending&ref=' + (payData.checkout?.reference || '');
+            }
           } else {
             window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=cod_placed';
           }

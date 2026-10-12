@@ -83,7 +83,8 @@ export class AdminUiController {
           shippingZones,
           divipolaLocations,
           settings,
-          adminEmail: 'admin@vega.com',
+          adminEmail: session.actorId || 'admin@vega.com',
+          adminToken: token,
         });
 
         return c.html(html);
