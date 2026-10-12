@@ -6,6 +6,7 @@ export function renderStorefrontFormsScript(): string {
       const editId = document.getElementById('bEditId')?.value;
       const payload = {
         title: document.getElementById('bTitle').value,
+        description: document.getElementById('bDesc')?.value?.trim() || undefined,
         linkUrl: document.getElementById('bLink').value,
         altText: document.getElementById('bAlt').value,
         imageUrl: document.getElementById('bImg').value || '/media/banner-default.webp',

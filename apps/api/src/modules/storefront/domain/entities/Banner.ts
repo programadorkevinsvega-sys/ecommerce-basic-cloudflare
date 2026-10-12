@@ -1,6 +1,7 @@
 export interface BannerProps {
   id: string;
   title: string;
+  description?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   imageUrl: string;
   linkUrl: string;
@@ -28,6 +29,7 @@ export class Banner {
 
   public get id(): string { return this.props.id; }
   public get title(): string { return this.props.title; }
+  public get description(): string | undefined { return this.props.description; }
   public get placement(): string { return this.props.placement; }
   public get imageUrl(): string { return this.props.imageUrl; }
   public get linkUrl(): string { return this.props.linkUrl; }
@@ -51,6 +53,9 @@ export class Banner {
     if (updates.title !== undefined) {
       if (!updates.title.trim()) throw new Error('El título del banner es obligatorio');
       this.props.title = updates.title.trim();
+    }
+    if (updates.description !== undefined) {
+      this.props.description = updates.description?.trim() || undefined;
     }
     if (updates.altText !== undefined) {
       if (!updates.altText.trim()) throw new Error('El texto alternativo es obligatorio (SEC-R2-04)');

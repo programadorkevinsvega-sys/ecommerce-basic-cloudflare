@@ -19,9 +19,10 @@ export function renderStorefrontActionsScript(): string {
       else alert('Error al eliminar banner');
     }
 
-    function editBanner(id, title, link, alt, img, placement) {
+    function editBanner(id, title, link, alt, img, placement, desc) {
       document.getElementById('bEditId').value = id;
       document.getElementById('bTitle').value = title;
+      document.getElementById('bDesc').value = desc || '';
       document.getElementById('bLink').value = link;
       document.getElementById('bAlt').value = alt;
       document.getElementById('bImg').value = img;
@@ -34,6 +35,7 @@ export function renderStorefrontActionsScript(): string {
     function resetBannerForm() {
       document.getElementById('bEditId').value = '';
       document.getElementById('newBannerForm').reset();
+      if (document.getElementById('bDesc')) document.getElementById('bDesc').value = '';
       document.getElementById('bSubmitBtn').textContent = 'Publicar Banner';
       document.getElementById('bCancelBtn').style.display = 'none';
     }

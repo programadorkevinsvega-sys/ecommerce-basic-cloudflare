@@ -22,6 +22,7 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
       banners: res.banners.map((b) => ({
         id: b.id,
         title: b.title,
+        description: b.description,
         imageUrl: b.imageUrl,
         linkUrl: b.linkUrl,
         altText: b.altText,

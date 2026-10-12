@@ -4,6 +4,7 @@ import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js'
 export interface BannerItem {
   id: string;
   title: string;
+  description?: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;
@@ -23,14 +24,14 @@ export function renderProductList(
       <div class="campaign-copy">
         <span class="eyebrow">Selección de la tienda</span>
         <h2>${escapeHtml(item.title)}</h2>
-        <p>Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.</p>
+        <p>${escapeHtml(item.description || 'Descubre productos elegidos para acompañarte todos los días, con una experiencia de compra sencilla y segura.')}</p>
         <a class="campaign-action" href="${escapeHtml(item.linkUrl)}">Explorar colección <span aria-hidden="true">↗</span></a>
       </div>
       ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.remove();this.parentElement.classList.add(\'campaign-image-missing\')" /></div>` : ''}
     </article>`;
   const bannerHtml = banners.length > 1
     ? `<section class="campaign-carousel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section>`
-    : banners.length === 1
+    : banners.length === 1 && banners[0]
       ? renderBanner(banners[0], 0).replace('<article class="campaign-banner">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
       : '';
 
@@ -69,10 +70,6 @@ export function renderProductList(
       currency: 'COP',
       maximumFractionDigits: 0,
     });
-
-    const codTag = product.salePolicy.allowsCashOnDelivery
-      ? '<span class="tag tag-cod">Contra Entrega Sí</span>'
-      : '<span class="tag tag-payment">Pago anticipado</span>';
 
     const availabilityTag = product.stockQuantity > 0
       ? '<span class="product-availability is-available"><span aria-hidden="true">●</span> Disponible</span>'

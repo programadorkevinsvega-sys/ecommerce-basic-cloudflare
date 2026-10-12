@@ -4,6 +4,7 @@ import { IStorefrontContentRepository } from '../../domain/ports/IStorefrontCont
 
 export interface CreateBannerInput {
   title: string;
+  description?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   imageUrl: string;
   linkUrl: string;
@@ -27,6 +28,7 @@ export class CreateBannerUseCase {
       const banner = new Banner({
         id: crypto.randomUUID(),
         title: input.title,
+        description: input.description,
         placement: input.placement,
         imageUrl: input.imageUrl,
         linkUrl: input.linkUrl,

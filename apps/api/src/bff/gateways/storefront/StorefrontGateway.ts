@@ -2,6 +2,7 @@ export interface StorefrontHomeData {
   banners: Array<{
     id: string;
     title: string;
+    description?: string;
     imageUrl: string;
     linkUrl: string;
     altText: string;
@@ -17,6 +18,7 @@ export interface StorefrontHomeData {
 export interface BannerItemDto {
   id: string;
   title: string;
+  description?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   imageUrl: string;
   linkUrl: string;
@@ -30,6 +32,7 @@ export interface BannerItemDto {
 export interface UpdateBannerGatewayRequest {
   id: string;
   title?: string;
+  description?: string;
   placement?: 'home' | 'category' | 'product' | 'checkout';
   imageUrl?: string;
   linkUrl?: string;
@@ -60,6 +63,7 @@ export interface UpdateAnnouncementGatewayRequest {
 
 export interface CreateBannerGatewayRequest {
   title: string;
+  description?: string;
   placement: 'home' | 'category' | 'product' | 'checkout';
   imageUrl: string;
   linkUrl: string;

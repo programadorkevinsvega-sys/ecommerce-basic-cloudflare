@@ -5,6 +5,7 @@ import { IStorefrontContentRepository } from '../../domain/ports/IStorefrontCont
 export interface UpdateBannerInput {
   id: string;
   title?: string;
+  description?: string;
   placement?: 'home' | 'category' | 'product' | 'checkout';
   imageUrl?: string;
   linkUrl?: string;

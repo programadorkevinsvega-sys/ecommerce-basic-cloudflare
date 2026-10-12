@@ -14,6 +14,7 @@ export function renderStorefrontManagementSection(
         <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
           ${escapeHtml(b.title)}
           <div style="font-size:0.75rem; color:#94a3b8;">${escapeHtml(b.linkUrl)} | Alt: "${escapeHtml(b.altText)}"</div>
+          ${b.description ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;"><em>"${escapeHtml(b.description)}"</em></div>` : ''}
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(b.placement)}</td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155;">
@@ -21,7 +22,7 @@ export function renderStorefrontManagementSection(
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
           <a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>
-          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}')">Editar</button>
+          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}')">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
         </td>
@@ -61,6 +62,7 @@ export function renderStorefrontManagementSection(
         <input type="hidden" id="bEditId" value="" />
         <div class="form-grid">
           <div><label>Título del Banner</label><input type="text" id="bTitle" required placeholder="Ej. Gran Venta de Verano" /></div>
+          <div><label>Descripción / Subtítulo</label><input type="text" id="bDesc" placeholder="Breve frase descriptiva para el banner..." /></div>
           <div><label>URL de Destino</label><input type="text" id="bLink" required value="/productos" /></div>
           <div><label>URL de Imagen</label><input type="text" id="bImg" value="/media/banner-default.webp" /></div>
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="bAlt" required placeholder="Colección destacada..." /></div>

@@ -52,6 +52,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `storefront__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | d60a32e | ✅ Aplicada con éxito |
 | `storefront__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | d60a32e | ✅ Compilada y verificada |
+| `storefront__0002_banner_description.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (expand-only: description) |
+| `storefront__0002_banner_description.sql` | v2 | Local (Miniflare) | 2026-10-12 | HEAD | ✅ Verificada y retrocompatible |
 
 ---
 
