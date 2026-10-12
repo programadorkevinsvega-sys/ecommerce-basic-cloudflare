@@ -42,11 +42,16 @@ export function renderBaseLayout(props: LayoutProps): string {
     ? props.headerMenuItems.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')
     : `<a href="/">Inicio</a><a href="/productos">Catálogo</a>`;
 
-  const footerLinksHtml = (props.footerMenuItems && props.footerMenuItems.length > 0)
-    ? `<div class="footer-links">
-        ${props.footerMenuItems.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}" >${escapeHtml(item.title)}</a>`).join('')}
-       </div>`
-    : '';
+  const footerItems = props.footerMenuItems || [];
+  const isLegalLink = (item: LayoutMenuItem): boolean =>
+    /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
+  const footerNavigation = footerItems.filter((item) => !isLegalLink(item));
+  const footerLegal = footerItems.filter(isLegalLink);
+  const renderFooterLinks = (items: LayoutMenuItem[], className: string, label: string): string =>
+    items.length
+      ? `<nav class="${className}" aria-label="${label}">${items.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')}</nav>`
+      : '';
+  const footerLinksHtml = `${renderFooterLinks(footerNavigation, 'footer-links', 'Navegación del pie de página')}${renderFooterLinks(footerLegal, 'footer-legal-links', 'Información legal')}`;
 
   return `<!DOCTYPE html>
 <html lang="es">
