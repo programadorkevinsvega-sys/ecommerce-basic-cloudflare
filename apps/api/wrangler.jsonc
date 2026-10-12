@@ -52,6 +52,6 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
-    "RESEND_FROM_EMAIL": "Vega Store <onboarding@resend.dev>"
+    "RESEND_FROM_EMAIL": "Vega Store <no-reply@jnmtortas.com>"
   }
 }
