@@ -98,6 +98,7 @@ export function renderProductList(
 
     html += `
       <article class="card">
+        <a class="product-media" href="/productos/${escapeHtml(product.slug)}" tabindex="-1" aria-hidden="true">${imageHtml}</a>
         <div class="card-body">
           <div style="margin-bottom: 0.5rem;">${promoBadge} ${codTag} ${scopeTag}</div>
           <h2 class="card-title">
