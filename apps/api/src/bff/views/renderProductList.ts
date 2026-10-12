@@ -67,11 +67,11 @@ export function renderProductList(
 
     const codTag = product.salePolicy.allowsCashOnDelivery
       ? '<span class="tag tag-cod">Contra Entrega Sí</span>'
-      : '<span class="tag" style="background:#fee2e2; color:#b91c1c;">Pago Anticipado</span>';
+      : '<span class="tag tag-payment">Pago anticipado</span>';
 
     const scopeTag = product.salePolicy.shippingScope === 'national'
       ? '<span class="tag tag-scope">Envío Nacional</span>'
-      : '<span class="tag tag-scope" style="background:#fef3c7; color:#b45309;">Envío Local</span>';
+      : '<span class="tag tag-local">Envío local</span>';
 
     const imageHtml = product.mediaIds?.[0]
       ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />`
@@ -88,25 +88,28 @@ export function renderProductList(
         maximumFractionDigits: 0,
       });
       priceHtml = `
-        <div style="display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.75rem;">
-          <span style="font-size:1.3rem; font-weight:700; color:#dc2626;">${finalFormatted}</span>
-          <span style="font-size:0.95rem; text-decoration:line-through; color:var(--muted);">${formattedPrice}</span>
+        <div class="card-price-group">
+          <span class="card-price card-price-sale">${finalFormatted}</span>
+          <span class="card-price-old">${formattedPrice}</span>
         </div>
       `;
-      promoBadge = `<span class="tag" style="background:#fee2e2; color:#b91c1c; font-weight:700;">-${discountInfo.discountPercentage}% OFF</span>`;
+      promoBadge = `<span class="tag tag-promo">-${discountInfo.discountPercentage}%</span>`;
     }
 
     html += `
       <article class="card">
-        <a class="product-media" href="/productos/${escapeHtml(product.slug)}" tabindex="-1" aria-hidden="true">${imageHtml}</a>
+        <a class="product-media" href="/productos/${escapeHtml(product.slug)}" tabindex="-1" aria-hidden="true">
+          ${imageHtml}
+          ${promoBadge ? `<span class="product-promo">${promoBadge}</span>` : ''}
+        </a>
         <div class="card-body">
-          <div style="margin-bottom: 0.5rem;">${promoBadge} ${codTag} ${scopeTag}</div>
+          <div class="product-meta">${codTag} ${scopeTag}</div>
           <h2 class="card-title">
             <a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a>
           </h2>
           <p class="card-desc">${escapeHtml(product.description)}</p>
           ${priceHtml}
-          <a class="product-action" href="/productos/${escapeHtml(product.slug)}">Ver producto <span aria-hidden="true">↗</span></a>
+          <a class="product-action" href="/productos/${escapeHtml(product.slug)}">Ver detalles <span aria-hidden="true">→</span></a>
         </div>
       </article>
     `;
