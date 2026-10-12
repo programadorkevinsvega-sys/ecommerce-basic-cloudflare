@@ -49,15 +49,38 @@ export class PaymentsController {
 
     // POST /api/v1/webhooks/wompi
     app.post('/api/v1/webhooks/wompi', async (c) => {
-      const body = await c.req.json();
-      const eventId = body?.event?.id ?? body?.id ?? crypto.randomUUID();
+      let body: any;
+      try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid body' }, 400); }
+
+      // ── Verificar firma de Wompi (SEC-PAY-01) ──────────────────────────────
+      const eventsSecret = c.env.WOMPI_EVENTS_SECRET;
+      if (eventsSecret) {
+        const checksum   = body?.signature?.checksum as string | undefined;
+        const timestamp  = body?.timestamp as number | undefined;
+        const properties = body?.signature?.properties as string[] | undefined;
+
+        if (!checksum || !timestamp || !Array.isArray(properties)) {
+          return c.json({ error: 'Firma de Wompi ausente o malformada' }, 401);
+        }
+
+        // Wompi: concatenar valores de los campos listados en properties + timestamp + secret
+        const txData    = body?.data?.transaction ?? {};
+        const propValues = properties.map((p: string) => String(txData[p] ?? '')).join('');
+        const raw       = `${propValues}${timestamp}${eventsSecret}`;
+        const encoder   = new TextEncoder();
+        const hashBuf   = await crypto.subtle.digest('SHA-256', encoder.encode(raw));
+        const calculated = Array.from(new Uint8Array(hashBuf))
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+
+        if (calculated.toLowerCase() !== checksum.toLowerCase()) {
+          return c.json({ error: 'Firma inválida' }, 401);
+        }
+      }
+
+      const eventId   = body?.event?.id ?? body?.id ?? crypto.randomUUID();
       const eventType = body?.event?.type ?? body?.event ?? 'transaction.updated';
 
-      const res = await paymentsGateway.processWompiWebhook({
-        eventId,
-        eventType,
-        payload: body,
-      });
+      const res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: body });
 
       if (res.orderId && res.status === 'approved') {
         await ordersGateway.updateOrderStatus({
