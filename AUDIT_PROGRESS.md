@@ -90,14 +90,14 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 
 ## Git
 
-Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f` y `2fd4a93` están publicados en `origin/main`. Nunca se ejecutó `wrangler deploy` manualmente; no se incluyeron `.dev.vars`, credenciales ni temporales.
+Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f`, `2fd4a93`, `c3d85b7`, `19f48be`, `735141d` y `3fbab07` están publicados en `origin/main`. El workflow de GitHub no contiene deploy; las correcciones MFA se desplegaron con Wrangler con la autorización del usuario. No se incluyeron `.dev.vars`, contraseñas ni secretos TOTP en Git.
 
 ### 2026-10-13 — Corrección de reautenticación al enrolar MFA
 
 - Hallazgo: el login podía validar la contraseña `ADMIN_PASSWORD` del entorno y sincronizar su hash en D1, pero el endpoint de enrolamiento validaba exclusivamente contra el hash D1. Una divergencia entre la credencial configurada y el hash persistido producía el error genérico de inicio de enrolamiento.
 - Cambio: `BeginAdminMfaEnrollmentUseCase` valida con `ADMIN_EMAIL` + `ADMIN_PASSWORD` cuando ambas variables existen, restringiendo esa vía a la cuenta Superadmin configurada; conserva la verificación PBKDF2 de D1 como compatibilidad cuando no existe el par configurado.
 - Prueba añadida: enrolamiento con credencial Cloudflare correcta y hash D1 anterior distinto; contraseña anterior rechazada.
-- Estado: probado localmente; sin cambios en D1 ni secretos de producción. Despliegue pendiente del push integrado.
+- Estado: probado localmente; sin cambios en D1. Se desplegó primero en la versión `2bbfe964-6e71-48f2-b594-cbc2a0514932`; el hardening posterior quedó incluido en la versión `9cf3dcec-039e-48c3-850d-52f703aeb1f2`.
 - Hallazgo operativo confirmado: `ADMIN_PASSWORD` existe como secret remoto, pero `ADMIN_EMAIL` no estaba en el Worker. Wrangler borraba por defecto variables añadidas solo en Dashboard al desplegar. Se configuró `ADMIN_EMAIL` como variable remota (sin guardarla en Git), se publicó la versión `2bbfe964-6e71-48f2-b594-cbc2a0514932` y se estableció `keep_vars: true` en ambas configuraciones Wrangler para conservar variables de Dashboard en futuros despliegues. `/health` remoto devolvió `healthy` con D1/KV/Queue/R2 en `ok`. Para el enrolamiento, la sesión actual se acepta si pertenece al único Superadmin activo y la contraseña coincide con el secret; no se leyó ni cambió el valor de `ADMIN_PASSWORD`.
 - Endurecimiento adicional: el enrolamiento verifica el ID de la sesión contra `findSoleActiveSuperadmin`, además del rol y el secret configurado. Esto permite una sesión existente aunque el correo almacenado aún sea el anterior y rechaza a cualquier otro administrador. Se añadió una prueba cruzada de ese rechazo.
 
@@ -105,5 +105,5 @@ Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f` y `2fd4a93` están
 
 - Se añadió generación de QR SVG en el Worker con `qrcode-svg`; el URI y el secreto no se envían a un servicio externo. El endpoint de enrolamiento mantiene `Cache-Control: no-store`.
 - La página presenta el QR, una alternativa manual plegable y aclara que escanearlo desde otro dispositivo funciona mejor. La etiqueta TOTP usa `ADMIN_EMAIL` configurado, no el correo D1 previo.
-- Volver a generar reemplaza el secreto pendiente que se compartió en la conversación. Pruebas: UI accesible, QR SVG/no-store, reautenticación, typecheck, lint y Wrangler dry-run.
-- Despliegue pendiente.
+- Volver a generar reemplaza el secreto pendiente que se compartió en la conversación. Pruebas: UI accesible, QR SVG/no-store, reautenticación, typecheck, lint, suite API (29 archivos, 68 pruebas) y Wrangler dry-run.
+- Desplegado en producción; la versión activa verificada fue `6226057b-d4fc-4daa-8cd1-8dbd90a51e08`; `/health` responde `healthy` (D1/KV/Queue/R2 en `ok`).
