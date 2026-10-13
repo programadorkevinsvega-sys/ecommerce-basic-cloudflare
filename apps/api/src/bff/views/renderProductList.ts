@@ -40,20 +40,25 @@ export function renderProductList(
     ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" aria-live="polite" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" role="group" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
     : banners.length === 1 && banners[0]
       ? renderBanner(banners[0], 0).replace('<article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="1 de 1">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
-      : '';
+      : products.length
+        ? `<section class="campaign-banner fallback-banner" aria-label="Bienvenido a Vega Store"><div class="campaign-copy"><span class="eyebrow">Selección de la tienda</span><h2>Encuentra algo para tu día</h2><p>Explora productos disponibles y descubre cada detalle antes de elegir.</p><a class="campaign-action" href="/productos">Explorar catálogo <span aria-hidden="true">↗</span></a></div>${products[0]?.mediaIds?.[0] ? `<div class="campaign-image"><img src="/media/${escapeHtml(products[0].mediaIds[0])}" alt="${escapeHtml(products[0].name)}" fetchpriority="high" /></div>` : '<div class="campaign-image campaign-image-empty" aria-hidden="true"></div>'}</section>`
+        : '';
 
-  let html = `
-    ${bannerHtml}
-    <form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
+  const brands = [...new Set(products.map((product) => product.brand?.trim()).filter((brand): brand is string => Boolean(brand)))].slice(0, 4);
+  const brandSection = brands.length ? `<section class="brand-section" aria-labelledby="brand-title"><div class="section-heading"><div><span class="eyebrow">Encuentra lo que buscas</span><h2 id="brand-title">Compra por línea</h2></div><a href="/productos">Ver catálogo <span aria-hidden="true">↗</span></a></div><div class="brand-grid">${brands.map((brand) => `<a class="brand-tile" href="/productos?q=${encodeURIComponent(brand)}"><span aria-hidden="true">✳</span><strong>${escapeHtml(brand)}</strong><span>Ver productos <span aria-hidden="true">→</span></span></a>`).join('')}</div></section>` : '';
+  const searchForm = searchQuery ? `<form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
       <label class="search-label" for="store-search">Buscar</label>
       <input id="store-search" type="search" name="q" placeholder="¿Qué estás buscando hoy?" value="${queryVal}" required />
       <button type="submit">Buscar <span aria-hidden="true">↗</span></button>
-      ${searchQuery ? '<a href="/productos" class="clear-search">Limpiar</a>' : ''}
-    </form>`;
+      <a href="/productos" class="clear-search">Limpiar</a>
+    </form>` : '';
+  let html = `${bannerHtml}${searchForm}${brandSection}
+    <section class="products-section" aria-labelledby="products-title">
+      <div class="section-heading"><div><span class="eyebrow">Selección de Vega Store</span><h1 id="products-title">${searchQuery ? `Resultados para “${queryVal}”` : 'Descubre nuestros productos'}</h1><p>Encuentra opciones para tu día a día, con información clara antes de comprar.</p></div><a href="/productos">Ver catálogo <span aria-hidden="true">↗</span></a></div>`;
 
   if (products.length === 0) {
     html += `<div style="background: #fff; padding: 3rem; text-align: center; border-radius: 8px; border: 1px solid var(--border);"><h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No se encontraron productos</h3><p style="color: var(--muted);">Intenta buscando con otro término.</p></div>`;
-    return html;
+    return `${html}</section>`;
   }
 
   html += '<div class="grid">';
@@ -89,7 +94,8 @@ export function renderProductList(
         </div>
       </article>`;
   }
-  html += `</div>
+  html += `</div></section>
+  <section class="benefits-strip" aria-label="Información de compra"><article><span aria-hidden="true">↗</span><div><strong>Envíos locales y nacionales</strong><p>La cobertura se indica en cada producto.</p></div></article><article><span aria-hidden="true">⌂</span><div><strong>Opciones de pago</strong><p>Consulta las alternativas disponibles al comprar.</p></div></article><article><span aria-hidden="true">✓</span><div><strong>Compra con confianza</strong><p>Revisa los detalles y políticas de cada producto.</p></div></article></section>
   <script>
     document.querySelectorAll('.campaign-carousel-controls button[data-carousel-direction]').forEach((button) => {
       button.addEventListener('click', () => {

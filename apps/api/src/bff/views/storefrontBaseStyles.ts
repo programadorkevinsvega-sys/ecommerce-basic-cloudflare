@@ -1,20 +1,20 @@
 export const storefrontBaseStyles = String.raw`    :root {
       color-scheme: light;
-      --primary: #17241d;
-      --accent: #c8f169;
-      --accent-strong: #a6d842;
-      --bg: #f6f7f2;
+      --primary: #1f4d3a;
+      --accent: #dce9ca;
+      --accent-strong: #8cae83;
+      --bg: #f3f4ef;
       --card: #ffffff;
-      --text: #17241d;
-      --muted: #66736a;
-      --border: #e3e8df;
+      --text: #16201b;
+      --muted: #65716a;
+      --border: #e1e5de;
       --surface: #ffffff;
       --success: #18794e;
       --radius-sm: 10px;
       --radius-md: 18px;
       --radius-lg: 28px;
       --shadow-soft: 0 12px 35px rgba(23, 36, 29, .06);
-      --content-width: 1240px;
+      --content-width: 1200px;
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -22,7 +22,7 @@ export const storefrontBaseStyles = String.raw`    :root {
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Avenir Next", Avenir, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 16px;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;

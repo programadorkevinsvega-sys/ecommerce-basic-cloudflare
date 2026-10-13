@@ -2,7 +2,7 @@ export const storefrontProductStyles = String.raw`
     /* Product cards: quiet, image-first and commerce-focused */
     .grid { align-items: stretch; gap: 1.5rem; }
     .product-card-v2 {
-      position: relative; border: 1px solid #e2e8df; border-radius: 16px; background: #fff;
+      position: relative; border: 1px solid #e2e5df; border-radius: 16px; background: #fff;
       display: flex; flex-direction: column; overflow: hidden;
       transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1), border-color .22s ease;
     }
@@ -11,7 +11,7 @@ export const storefrontProductStyles = String.raw`
       box-shadow: 0 16px 36px -12px rgba(23,36,29,.09), 0 4px 12px -2px rgba(23,36,29,.04);
     }
     .product-card-v2 .product-media {
-      position: relative; aspect-ratio: 1 / 1.05; padding: 1.25rem; background: #fbfcf9;
+      position: relative; aspect-ratio: 1 / 1; padding: 1.25rem; background: #f8f9f6;
       display: grid; place-items: center; border-bottom: 1px solid #edf1eb; text-decoration: none;
     }
     .product-card-v2 .product-media img {
@@ -66,6 +66,16 @@ export const storefrontProductStyles = String.raw`
       background: #f7f9f5; color: #354739; font-size: .82rem; font-weight: 650; text-decoration: none;
     }
     .btn-action-view:hover { background: #edf2ea; }
+    .product-card-v2 .card-body { padding: 1rem; }
+    .product-card-v2 .card-title { min-height: 2.7em; font-size: .98rem; }
+    .card-brand { color: #718078; font-size: .67rem; }
+    .product-card-v2 .product-card-footer { border-top: 0; }
+    .card-actions-group { grid-template-columns: 1fr; }
+    .btn-action-cart { border-radius: 999px; background: #1f4d3a; }
+    .btn-action-cart:hover { background: #2b624b; }
+    .btn-action-view { display: none; }
+    .card-discount-badge { border-radius: 999px; background: #e6eee0; color: #305b3e; box-shadow: none; }
+    .card-stock-indicator { color: #65716a; }
 
     /* DETAIL VIEW 2-COLUMN STARTUP LAYOUT & GALLERY */
     .detail-breadcrumb {
