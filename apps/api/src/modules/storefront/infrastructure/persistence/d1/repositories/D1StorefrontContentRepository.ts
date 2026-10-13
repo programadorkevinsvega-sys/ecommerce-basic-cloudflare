@@ -40,9 +40,10 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
   }
 
   public async findActiveBanners(placement: string): Promise<Banner[]> {
+    const now = new Date().toISOString();
     const { results } = await this.db
-      .prepare('SELECT * FROM storefront_banners WHERE placement = ? AND is_active = 1 ORDER BY sort_order ASC')
-      .bind(placement)
+      .prepare('SELECT * FROM storefront_banners WHERE placement = ? AND is_active = 1 AND (starts_at IS NULL OR starts_at <= ?) AND (ends_at IS NULL OR ends_at >= ?) ORDER BY sort_order ASC, created_at DESC')
+      .bind(placement, now, now)
       .all<BannerRow>();
     return (results || []).map((r) => this.hydrateBanner(r));
   }
@@ -75,10 +76,14 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
           description = excluded.description,
           banner_type = excluded.banner_type,
           button_text = excluded.button_text,
+          placement = excluded.placement,
           image_url = excluded.image_url,
           link_url = excluded.link_url,
           alt_text = excluded.alt_text,
           is_active = excluded.is_active,
+          starts_at = excluded.starts_at,
+          ends_at = excluded.ends_at,
+          sort_order = excluded.sort_order,
           updated_at = excluded.updated_at`
       )
       .bind(
@@ -95,9 +100,10 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
   }
 
   public async findActiveAnnouncements(placement: string): Promise<Announcement[]> {
+    const now = new Date().toISOString();
     const { results } = await this.db
-      .prepare('SELECT * FROM storefront_announcements WHERE placement = ? AND is_active = 1 ORDER BY created_at DESC')
-      .bind(placement)
+      .prepare('SELECT * FROM storefront_announcements WHERE placement = ? AND is_active = 1 AND (starts_at IS NULL OR starts_at <= ?) AND (ends_at IS NULL OR ends_at >= ?) ORDER BY created_at DESC')
+      .bind(placement, now, now)
       .all<AnnouncementRow>();
     return (results || []).map((r) => this.hydrateAnnouncement(r));
   }
@@ -127,8 +133,11 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           message = excluded.message,
+          placement = excluded.placement,
           link_url = excluded.link_url,
           is_active = excluded.is_active,
+          starts_at = excluded.starts_at,
+          ends_at = excluded.ends_at,
           updated_at = excluded.updated_at`
       )
       .bind(

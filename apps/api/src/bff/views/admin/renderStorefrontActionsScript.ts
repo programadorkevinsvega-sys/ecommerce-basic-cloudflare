@@ -19,7 +19,7 @@ export function renderStorefrontActionsScript(): string {
       else alert('Error al eliminar banner');
     }
 
-    function editBanner(id, title, link, alt, img, placement, desc, bannerType, btnText) {
+    function editBanner(id, title, link, alt, img, placement, desc, bannerType, btnText, startsAt, endsAt, sortOrder) {
       const isPromo = bannerType !== 'informative';
       if (isPromo) {
         document.getElementById('pbEditId').value = id;
@@ -32,6 +32,9 @@ export function renderStorefrontActionsScript(): string {
         const pImgPreview = document.getElementById('pbImgPreview');
         if (pImgPreview) pImgPreview.src = img;
         document.getElementById('pbPlacement').value = placement;
+        document.getElementById('pbStartsAt').value = startsAt ? startsAt.slice(0, 16) : '';
+        document.getElementById('pbEndsAt').value = endsAt ? endsAt.slice(0, 16) : '';
+        document.getElementById('pbSortOrder').value = sortOrder || 0;
         document.getElementById('pbSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('pbCancelBtn').style.display = 'inline-block';
         document.getElementById('newPromoBannerForm').scrollIntoView({ behavior: 'smooth' });
@@ -44,6 +47,9 @@ export function renderStorefrontActionsScript(): string {
         const iImgPreview = document.getElementById('ibImgPreview');
         if (iImgPreview) iImgPreview.src = img;
         document.getElementById('ibPlacement').value = placement;
+        document.getElementById('ibStartsAt').value = startsAt ? startsAt.slice(0, 16) : '';
+        document.getElementById('ibEndsAt').value = endsAt ? endsAt.slice(0, 16) : '';
+        document.getElementById('ibSortOrder').value = sortOrder || 0;
         document.getElementById('ibSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('ibCancelBtn').style.display = 'inline-block';
         document.getElementById('newInfoBannerForm').scrollIntoView({ behavior: 'smooth' });

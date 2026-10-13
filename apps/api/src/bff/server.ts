@@ -33,11 +33,11 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.use('*', SecurityHeadersMiddleware);
 
   // Storefront Admin API
-  app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway));
+  app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
-  app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway));
+  app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
@@ -50,7 +50,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.realtimeGateway,
     cRoot.inventoryGateway,
     cRoot.notificationsGateway,
-    cRoot.settingsGateway
+    cRoot.settingsGateway,
+    cRoot.promotionsGateway
   ));
   app.route('/', PaymentsController.createRoutes(
     cRoot.paymentsGateway,
@@ -63,7 +64,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.auditGateway,
     cRoot.settingsGateway
   ));
-  app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway));
+  app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway, cRoot.identityGateway));
   app.route('/', InvoicingController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/', AuditController.createRoutes(cRoot.auditGateway, cRoot.identityGateway));
 
@@ -96,7 +97,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/health', HealthController.createRoutes());
   app.route('/api/v1/auth', CustomerAuthController.createRoutes(cRoot.identityGateway));
   app.route('/api/v1/admin/auth', AdminAuthController.createRoutes(cRoot.identityGateway));
-  app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway));
+  app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway, cRoot.identityGateway));
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
 

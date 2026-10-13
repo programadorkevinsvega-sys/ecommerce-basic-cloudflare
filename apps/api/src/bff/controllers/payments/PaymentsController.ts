@@ -33,9 +33,22 @@ export class PaymentsController {
         const body = await c.req.json();
         const order = await ordersGateway.getOrder(body.orderId);
         if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
+        if (order.customerId) {
+          const authorization = c.req.header('authorization');
+          const cookie = c.req.header('cookie') || '';
+          const token = authorization?.startsWith('Bearer ')
+            ? authorization.slice(7).trim()
+            : cookie.match(/(?:^|;\s*)__Host-session=([^;]+)/)?.[1];
+          if (!token) return c.json({ error: 'Pedido no encontrado' }, 404);
+          try {
+            const session = await identityGateway.validateSession(token);
+            if (session.actorType !== 'customer' || session.actorId !== order.customerId) return c.json({ error: 'Pedido no encontrado' }, 404);
+          } catch { return c.json({ error: 'Pedido no encontrado' }, 404); }
+        }
 
-        const publicKey = c.env.WOMPI_PUBLIC_KEY || 'pub_prod_mock_vega';
-        const integritySecret = c.env.WOMPI_INTEGRITY_SECRET || 'mock_secret';
+        const publicKey = c.env.WOMPI_PUBLIC_KEY;
+        const integritySecret = c.env.WOMPI_INTEGRITY_SECRET;
+        if (!publicKey || !integritySecret) return c.json({ error: 'Pagos temporalmente no disponibles' }, 503);
         const origin = new URL(c.req.url).origin;
 
         const checkoutData = await paymentsGateway.createWompiTransaction({
@@ -68,12 +81,12 @@ export class PaymentsController {
       try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid body' }, 400); }
 
       const eventsSecret = c.env.WOMPI_EVENTS_SECRET;
-      if (eventsSecret) {
-        const valid = await verifyWompiSignature(body, eventsSecret);
-        if (!valid) return c.json({ error: 'Firma inválida' }, 401);
-      }
+      if (!eventsSecret) return c.json({ error: 'Webhook no configurado' }, 503);
+      const valid = await verifyWompiSignature(body, eventsSecret);
+      if (!valid) return c.json({ error: 'Firma inválida' }, 401);
 
-      const eventId = body?.event?.id ?? body?.id ?? crypto.randomUUID();
+      const eventId = body?.event?.id ?? body?.id;
+      if (typeof eventId !== 'string' || !eventId) return c.json({ error: 'Evento inválido' }, 400);
       const eventType = body?.event?.type ?? body?.event ?? 'transaction.updated';
       const txData = body?.data?.transaction ?? {};
 
@@ -137,15 +150,18 @@ export class PaymentsController {
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (!adminRes.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:collect')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const body = await c.req.json();
-      if (!body.orderId || !body.amountInCents) {
+      const order = typeof body.orderId === 'string' ? await ordersGateway.getOrder(body.orderId) : null;
+      const amountInCents = Number(body.amountInCents);
+      if (!order || order.paymentMethod !== 'cash_on_delivery' || order.paymentStatus === 'collected' || !Number.isSafeInteger(amountInCents) || amountInCents !== order.totalCents) {
         return c.json({ error: 'orderId y amountInCents son requeridos' }, 400);
       }
 
       const cod = await paymentsGateway.recordCodCollection({
         orderId: body.orderId,
-        amountInCents: Number(body.amountInCents),
+        amountInCents,
         collectedBy: adminRes.actorId,
         receiptNumber: body.receiptNumber,
         notes: body.notes,
@@ -182,6 +198,7 @@ export class PaymentsController {
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (!adminRes.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const transactions = await paymentsGateway.listTransactions(50);
       const collections = await paymentsGateway.listCodCollections(50);

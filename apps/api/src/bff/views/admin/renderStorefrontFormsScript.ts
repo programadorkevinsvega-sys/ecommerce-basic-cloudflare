@@ -56,6 +56,9 @@ export function renderStorefrontFormsScript(): string {
       const img = document.getElementById(prefix + 'Img').value || '/media/banner-default.webp';
       const alt = document.getElementById(prefix + 'Alt').value;
       const placement = document.getElementById(prefix + 'Placement').value;
+      const startsAt = document.getElementById(prefix + 'StartsAt').value;
+      const endsAt = document.getElementById(prefix + 'EndsAt').value;
+      const sortOrder = Number(document.getElementById(prefix + 'SortOrder').value || 0);
 
       const payload = {
         title,
@@ -65,7 +68,10 @@ export function renderStorefrontFormsScript(): string {
         altText: alt,
         placement,
         linkUrl: isPromo ? (document.getElementById('pbLink')?.value || '/productos') : '#',
-        buttonText: isPromo ? (document.getElementById('pbBtnText')?.value || 'Explorar colección') : undefined
+        buttonText: isPromo ? (document.getElementById('pbBtnText')?.value || 'Explorar colección') : undefined,
+        startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
+        endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
+        sortOrder
       };
 
       const url = editId ? '/api/v1/admin/storefront/banners/' + editId : '/api/v1/admin/storefront/banners';

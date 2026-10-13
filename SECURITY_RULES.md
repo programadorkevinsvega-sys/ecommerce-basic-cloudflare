@@ -272,3 +272,15 @@ Los controles de módulos que aún no existen (por ejemplo, `credit` antes de su
 Para cada punto certificado, registrar la prueba o comando, el resultado, el commit revisado y, en verificaciones productivas, la fecha y el entorno. No incluir tokens, datos privados ni secretos en la evidencia. Los fallos permanecen como pendientes hasta corregirlos y volver a ejecutar las pruebas.
 
 La certificación global solo se declara completa cuando todos los controles aplicables han pasado, las excepciones están justificadas y las pruebas se ejecutaron contra el commit que se va a desplegar.
+
+## Hallazgos de auditoría (2026-10-12)
+
+Se añadieron comprobaciones server-side a las rutas CRUD de storefront, mutación de settings y creación de redirecciones SEO. `AuthMiddleware` y `Role.hasPermission` interpretan `recurso:*` como permisos del recurso, además de conservar `*` global y la denegación por defecto. La consulta de pedidos aplica ownership de sesión o permiso de lectura de pedidos. Las rutas de notificaciones limitan canal/recipiente al actor autenticado y restringen el marcado de lectura a notificaciones que ya puede consultar.
+
+El catálogo público fuerza el estado `published`; el estado enviado por query ya no habilita borradores. Las rutas públicas de estado de pedido no muestran datos de contacto o dirección. La inicialización de Wompi falla cerrada si faltan llaves y el webhook exige secreto y event ID. El recaudo COD requiere permiso, método COD, estado no recaudado y monto entero igual al total.
+
+Pendiente de certificación: reconciliación de transacciones con API de Wompi, idempotencia integral de pagos/pedidos, CSRF y rate limiting. Las pruebas actuales no certifican estos controles de extremo a extremo ni el entorno desplegado.
+
+
+### Auditoría de checkout (2026-10-12)
+El endpoint de creación de pedidos calcula importes en servidor con catálogo publicado, promociones/cupones, zona de envío activa e impuesto configurado; no utiliza precios ni totales recibidos del navegador. Se rechazan cantidades fuera de rango, productos no publicados y stock insuficiente. La reserva fallida cancela el pedido. La cobertura automatizada de cálculo se ejecuta con `node_modules/.bin/vitest run` desde `apps/api`.

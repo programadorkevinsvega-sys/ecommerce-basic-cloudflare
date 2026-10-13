@@ -18,17 +18,17 @@ export class CatalogController {
     router.get('/products', async (c) => {
       const limit = Number(c.req.query('limit')) || 20;
       const offset = Number(c.req.query('offset')) || 0;
-      const status = c.req.query('status');
       const searchQuery = c.req.query('q');
 
-      const products = await catalogGateway.listProducts({ limit, offset, status, searchQuery });
-      return c.json({ data: products });
+      const products = await catalogGateway.listProducts({ limit, offset, status: 'published', searchQuery });
+      return c.json({ data: products.filter((product) => product.status === 'published') });
     });
 
     router.get('/products/:slug', async (c) => {
       const slug = c.req.param('slug');
       try {
         const product = await catalogGateway.getProductBySlug(slug);
+        if (product.status !== 'published') return c.json({ error: 'Producto no encontrado' }, 404);
         return c.json({ data: product });
       } catch {
         return c.json({ error: 'Producto no encontrado' }, 404);

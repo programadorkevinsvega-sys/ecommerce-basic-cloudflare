@@ -9,10 +9,14 @@ import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { notifyCodOrderPlaced } from './notifyCodOrderPlaced.js';
 import { notifyOrderStatusChanged } from './notifyOrderStatusChanged.js';
 import { normalizeShippingAddress } from './normalizeShippingAddress.js';
 import { extractAdminToken } from './extractAdminToken.js';
+import { calculateOrderPricing } from './calculateOrderPricing.js';
+import { getCustomerId } from './getCustomerId.js';
+import { validateOrderPolicy } from './validateOrderPolicy.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -23,7 +27,8 @@ export class OrdersController {
     realtimeGateway: RealtimeGateway,
     inventoryGateway: InventoryGateway,
     notificationsGateway: NotificationsGateway,
-    settingsGateway: SettingsGateway
+    settingsGateway: SettingsGateway,
+    promotionsGateway: PromotionsGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -80,22 +85,25 @@ export class OrdersController {
       if (!body.paymentMethod || !['wompi', 'cash_on_delivery'].includes(body.paymentMethod)) {
         return c.json({ error: 'paymentMethod debe ser wompi o cash_on_delivery' }, 400);
       }
-      if (!Array.isArray(body.lines) || body.lines.length === 0) {
+      if (!Array.isArray(body.lines) || body.lines.length === 0 || body.lines.length > 50) {
         return c.json({ error: 'Se requiere al menos una línea de pedido' }, 400);
       }
 
+      const auth = c.req.header('Authorization');
+      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
+      const customerId = await getCustomerId(token, identityGateway);
+
+      const zone = await shippingGateway.getZone(String(body.shippingZoneId || ''));
+      if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
+      const shippingCostCents = zone.priceInCents;
+      let pricing;
+      try { pricing = await calculateOrderPricing(catalogGateway, promotionsGateway, settingsGateway, body.lines, body.couponCode, customerId, shippingCostCents); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : 'No fue posible calcular el pedido' }, 400); }
+
       // Normalizar shippingAddress al esquema del dominio
       const shippingAddress = normalizeShippingAddress(body.shippingAddress);
-
-      const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'vega_customer_token');
-      let customerId: string | null = null;
-      if (token) {
-        try {
-          const ver = await identityGateway.validateSession(token);
-          if (ver?.actorType === 'customer') customerId = ver.actorId;
-        } catch {}
-      }
+      const policyError = await validateOrderPolicy(ordersGateway, zone, pricing, body.paymentMethod, shippingAddress.daneCode, shippingGateway);
+      if (policyError) return c.json({ error: policyError }, 400);
 
       try {
         const order = await ordersGateway.createOrder({
@@ -105,22 +113,31 @@ export class OrdersController {
           customerPhone:    body.customerPhone,
           customerTaxId:    body.customerTaxId || null,
           shippingAddress,
-          shippingZoneId:   body.shippingZoneId   || 'unknown',
-          shippingCostCents: Number(body.shippingCostCents)  || 0,
-          subtotalCents:    Number(body.subtotalCents)  || 0,
-          discountCents:    Number(body.discountCents)  || 0,
-          couponCode:       body.couponCode || null,
-          totalCents:       Number(body.totalCents),
+          shippingZoneId: zone.id,
+          shippingCostCents,
+          subtotalCents: pricing.subtotalCents,
+          discountCents: pricing.discountCents,
+          couponCode: pricing.couponCode,
+          totalCents: pricing.totalCents,
           paymentMethod:    body.paymentMethod,
-          lines:            body.lines,
+          lines: pricing.lines,
         });
 
         // Reservar stock para cada línea — reduce availableQuantity al instante
         if (order.lines?.length) {
           const stockItems = order.lines.map(l => ({ productId: l.productId, quantity: l.quantity }));
-          await inventoryGateway.reserveStock(order.id, stockItems, 30).catch(e =>
-            console.error('[orders/create] Error reserveStock:', e.message)
-          );
+          try {
+            const reservation = await inventoryGateway.reserveStock(order.id, stockItems, 30);
+            if (!reservation.success) throw new Error('reservation_failed');
+          } catch {
+            await ordersGateway.updateOrderStatus({
+              orderId: order.id,
+              status: 'cancelled',
+              note: 'Reserva de inventario no disponible',
+              actor: 'system',
+            });
+            return c.json({ error: 'No fue posible reservar el inventario. Intenta nuevamente.' }, 409);
+          }
         }
 
         // Si es pago contra entrega, notificar al cliente y a la empresa por email
@@ -151,8 +168,21 @@ export class OrdersController {
     // GET /api/v1/orders/:orderId
     app.get('/api/v1/orders/:orderId', async (c) => {
       const orderId = c.req.param('orderId');
+      const authHeader = c.req.header('Authorization');
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : getCookie(c, '__Host-session');
+      if (!token) return c.json({ error: 'Pedido no encontrado' }, 404);
+      let session;
+      try { session = await identityGateway.validateSession(token); }
+      catch { return c.json({ error: 'Pedido no encontrado' }, 404); }
       const order = await ordersGateway.getOrder(orderId);
       if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
+      if (session.actorType === 'admin') {
+        if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) {
+          return c.json({ error: 'Pedido no encontrado' }, 404);
+        }
+      } else if (session.actorType !== 'customer' || order.customerId !== session.actorId) {
+        return c.json({ error: 'Pedido no encontrado' }, 404);
+      }
       return c.json({ success: true, order: order.toJSON() });
     });
 
@@ -161,7 +191,8 @@ export class OrdersController {
       const token = extractAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
-      if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (res?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
+      if (!res.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const orders = await ordersGateway.listOrders({ limit: 100 });
       return c.json({ success: true, orders: orders.map((o) => o.toJSON()) });
@@ -172,7 +203,8 @@ export class OrdersController {
       const token = extractAdminToken(c);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const res = await identityGateway.validateSession(token);
-      if (res?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (res?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
+      if (!res.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:edit')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const orderId = c.req.param('orderId');
       const body = await c.req.json();

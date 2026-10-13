@@ -2,6 +2,8 @@
 
 Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio de esquema debe reflejarse en este archivo conforme al contrato de arquitectura y reglas de recuperación (ROLLBACK_RECOVERY.md).
 
+> Las filas históricas de abajo son afirmaciones heredadas de este manifiesto; no representan evidencia individual de que Wrangler las aplicara. La sección final registra la consulta y reconciliación remota realizada durante esta auditoría.
+
 ---
 
 ## Módulo: `settings`
@@ -164,5 +166,26 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
 | `audit__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (auditoría inmutable de acciones admin) |
+
+---
+
+## Migraciones correctivas de auditoría
+
+| Archivo | Versión | Entorno | Estado | Motivo / compatibilidad |
+|---|---|---|---|---|
+| `payments__0003_cod_collection_receipts.sql` | v3 | `ecommerce-vega-production` | Aplicada con Wrangler; verificada | Añade `receipt_number`, `created_at`, backfill desde `collected_at` e índice; esquema consultado después de aplicar. |
+| `realtime__0003_preserve_read_state.sql` | v3 | `ecommerce-vega-production` | SQL aplicado y ledger reconciliado | Copia `is_read` a `read`; consulta posterior confirmó 0 discrepancias. |
+
+## Reconciliación remota de auditoría (2026-10-12)
+
+Base consultada: `ecommerce-vega-production` (`9b69f19a-cad8-4e53-b0d1-0bd2adb11945`). Wrangler mostraba 16 archivos como pendientes, aunque el esquema ya contenía la mayoría de sus tablas y columnas. Se inspeccionó `sqlite_master`, índices, datos semilla y `d1_migrations`; no se recrearon tablas ni se borraron datos.
+
+Se ejecutó DDL base idempotente (`IF NOT EXISTS` / `INSERT OR IGNORE`) para asegurar índices y semillas ausentes, se sincronizó el campo `read`, y se registraron en `d1_migrations` las 15 migraciones históricas cuyo esquema ya estaba presente. Wrangler aplicó después `payments__0003_cod_collection_receipts.sql`. El ledger quedó con 27 entradas. La consulta posterior confirmó `receipt_number` y `created_at`, y cero filas con `read != is_read`. No se insertaron pedidos, pagos ni datos de prueba en la base remota.
+
+Time-travel bookmark antes: `000001d3-00000000-00005103-de470059e507085a4470e642050b3f9b`. Después del DDL idempotente: `000001d3-0000000a-00005103-671f1eee9f16534d6381bdb95291ba9e`. Después de sincronizar el ledger y lectura: `000001d3-00000012-00005103-c4868733b8f504b0b2f67ae94990981b`. Guardar estos bookmarks para recuperación operativa. No se desplegó el Worker.
+
+La fuente canónica es `apps/api/src/modules/<módulo>/infrastructure/persistence/d1/migrations/`. `node scripts/build-migrations.js` genera copias para ambos directorios de Wrangler (`migrations/` raíz y `apps/api/migrations/`); no elimina archivos. Ejecutar cada script desde la raíz o desde `apps/api/` produce las mismas salidas. Para futuras aplicaciones, confirmar el estado de D1, crear respaldo conforme a `ROLLBACK_RECOVERY.md`, revisar el diff y registrar commit/fecha/evidencia aquí. Wrangler 3 no ordena adecuadamente estos nombres prefijados por módulo en una base vacía; la aplicación local inicial falló al intentar `settings__0002` antes de `settings__0001`. La prueba automatizada usa SQLite; la reconciliación remota está documentada arriba.
+
+El inventario estático de tablas, columnas, restricciones, índices y referencias TypeScript está en [schema-audit.md](./schema-audit.md). La lista de fuentes y copias se conserva en esos dos directorios; la auditoría no eliminó históricos.
 
 

@@ -50,7 +50,7 @@ describe('Seguridad de Identidad y Criptografía (SEC-AUTH / SEC-SES / SEC-ISO)'
       createdAt: new Date().toISOString(),
     });
 
-    expect(editorRole.hasPermission('catalog:write')).toBe(false);
+    expect(editorRole.hasPermission('catalog:write')).toBe(true);
     expect(editorRole.hasPermission('catalog:*')).toBe(true);
     expect(editorRole.hasPermission('settings:update')).toBe(false); // Denegado por defecto
   });

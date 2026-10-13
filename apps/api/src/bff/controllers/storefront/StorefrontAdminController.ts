@@ -1,17 +1,19 @@
 import { Hono } from 'hono';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
 export class StorefrontAdminController {
-  public static createRoutes(storefrontGateway: StorefrontGateway): Hono {
+  public static createRoutes(storefrontGateway: StorefrontGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
     // Banners CRUD
-    router.get('/api/v1/admin/storefront/banners', async (c) => {
+    router.get('/api/v1/admin/storefront/banners', createAuthMiddleware(identityGateway, 'admin', 'storefront:read'), async (c) => {
       const banners = await storefrontGateway.listBanners();
       return c.json({ data: banners });
     });
 
-    router.post('/api/v1/admin/storefront/banners', async (c) => {
+    router.post('/api/v1/admin/storefront/banners', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const banner = await storefrontGateway.createBanner(body);
@@ -21,7 +23,7 @@ export class StorefrontAdminController {
       }
     });
 
-    router.put('/api/v1/admin/storefront/banners/:id', async (c) => {
+    router.put('/api/v1/admin/storefront/banners/:id', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const banner = await storefrontGateway.updateBanner({ id: c.req.param('id'), ...body });
@@ -31,7 +33,7 @@ export class StorefrontAdminController {
       }
     });
 
-    router.delete('/api/v1/admin/storefront/banners/:id', async (c) => {
+    router.delete('/api/v1/admin/storefront/banners/:id', createAuthMiddleware(identityGateway, 'admin', 'storefront:delete'), async (c) => {
       try {
         await storefrontGateway.deleteBanner(c.req.param('id'));
         return c.json({ success: true });
@@ -41,12 +43,12 @@ export class StorefrontAdminController {
     });
 
     // Anuncios CRUD
-    router.get('/api/v1/admin/storefront/announcements', async (c) => {
+    router.get('/api/v1/admin/storefront/announcements', createAuthMiddleware(identityGateway, 'admin', 'storefront:read'), async (c) => {
       const announcements = await storefrontGateway.listAnnouncements();
       return c.json({ data: announcements });
     });
 
-    router.post('/api/v1/admin/storefront/announcements', async (c) => {
+    router.post('/api/v1/admin/storefront/announcements', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const announcement = await storefrontGateway.createAnnouncement(body);
@@ -56,7 +58,7 @@ export class StorefrontAdminController {
       }
     });
 
-    router.put('/api/v1/admin/storefront/announcements/:id', async (c) => {
+    router.put('/api/v1/admin/storefront/announcements/:id', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const announcement = await storefrontGateway.updateAnnouncement({ id: c.req.param('id'), ...body });
@@ -66,7 +68,7 @@ export class StorefrontAdminController {
       }
     });
 
-    router.delete('/api/v1/admin/storefront/announcements/:id', async (c) => {
+    router.delete('/api/v1/admin/storefront/announcements/:id', createAuthMiddleware(identityGateway, 'admin', 'storefront:delete'), async (c) => {
       try {
         await storefrontGateway.deleteAnnouncement(c.req.param('id'));
         return c.json({ success: true });

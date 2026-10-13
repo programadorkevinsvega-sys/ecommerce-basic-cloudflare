@@ -39,8 +39,10 @@ export function createAuthMiddleware(
       }
 
       if (requiredPermission) {
-        const hasPermission =
-          session.permissions.includes('*') || session.permissions.includes(requiredPermission);
+        const hasPermission = session.permissions.some((permission) => {
+          if (permission === '*' || permission === requiredPermission) return true;
+          return permission.endsWith(':*') && requiredPermission.startsWith(permission.slice(0, -1));
+        });
         if (!hasPermission) {
           return c.json({ error: `Permiso insuficiente: requiere ${requiredPermission}` }, 403);
         }

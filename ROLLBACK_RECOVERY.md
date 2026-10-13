@@ -227,3 +227,9 @@ La foundation de rollback solo puede declararse **COMPLETE** cuando:
 - la evidencia se conserva.
 
 Los controles no aplicables todavía (por ejemplo, `credit` o Durable Objects antes de incorporarlos) deben quedar explícitamente identificados como tales.
+
+## Auditoría de migraciones correctivas (2026-10-12)
+
+Se añadieron `payments__0003_cod_collection_receipts.sql` y `realtime__0003_preserve_read_state.sql` como migraciones expand-only. La primera agrega columnas nullable y rellena `created_at` desde `collected_at`; la segunda sincroniza `read` con `is_read`. Ambas se probaron en SQLite temporal desde una base nueva y con filas de fixture del esquema anterior. Con autorización del usuario, pagos v3 se aplicó con Wrangler al D1 remoto; realtime se ejecutó durante reconciliación del ledger. No se desplegó el Worker.
+
+Para recuperar: conservar las columnas añadidas y filas, y corregir hacia delante. Los bookmarks previos y posteriores a la reconciliación constan en `docs/migrations/manifest.md`. No hay reversión automática probada. No eliminar columnas ni restaurar un snapshot sin evaluar escrituras posteriores.

@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import { CatalogGateway, CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
+import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
 export class SeoController {
-  public static createRoutes(seoGateway: SeoGateway, catalogGateway: CatalogGateway): Hono {
+  public static createRoutes(seoGateway: SeoGateway, catalogGateway: CatalogGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
     // robots.txt
@@ -94,7 +96,7 @@ export class SeoController {
     });
 
     // Endpoint de gestión de redirecciones (Admin)
-    router.post('/api/v1/admin/seo/redirects', async (c) => {
+    router.post('/api/v1/admin/seo/redirects', createAuthMiddleware(identityGateway, 'admin', 'seo:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const redirect = await seoGateway.createRedirect(body);

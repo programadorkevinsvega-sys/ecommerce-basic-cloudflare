@@ -38,7 +38,7 @@ export class CreateOrderUseCase {
   }
 
   public async execute(cmd: CreateOrderCommand): Promise<Order> {
-    const orderId = `ord-${crypto.randomUUID().slice(0, 8)}`;
+    const orderId = `ord-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const lines = cmd.lines.map((l) => new OrderLine({

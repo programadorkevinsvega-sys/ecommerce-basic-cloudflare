@@ -35,9 +35,10 @@ export class Role {
   }
 
   public hasPermission(requiredPermission: string): boolean {
-    // Si tiene comodín total o el permiso específico
-    if (this.props.permissions.includes('*')) return true;
-    return this.props.permissions.includes(requiredPermission);
+    return this.props.permissions.some((permission) => {
+      if (permission === '*' || permission === requiredPermission) return true;
+      return permission.endsWith(':*') && requiredPermission.startsWith(permission.slice(0, -1));
+    });
   }
 
   public toSnapshot(): RoleProps {

@@ -40,7 +40,7 @@ export function renderStorefrontManagementSection(
           </td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
             ${isPromo ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
-            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}')">Editar</button>
+            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
             ${toggle}
             <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
           </td>
@@ -70,6 +70,9 @@ export function renderStorefrontManagementSection(
             <label>Ubicación</label>
             <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
           </div>
+          <div><label>Inicio (opcional)</label><input type="datetime-local" id="pbStartsAt" /></div>
+          <div><label>Finalización (opcional)</label><input type="datetime-local" id="pbEndsAt" /></div>
+          <div><label>Prioridad / orden</label><input type="number" id="pbSortOrder" value="0" /></div>
         </div>
 
         <div style="border: 1px dashed #475569; border-radius: 8px; padding: 0.9rem; margin: 0.85rem 0; background: #0f172a;">
@@ -114,6 +117,9 @@ export function renderStorefrontManagementSection(
             <label>Ubicación</label>
             <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
           </div>
+          <div><label>Inicio (opcional)</label><input type="datetime-local" id="ibStartsAt" /></div>
+          <div><label>Finalización (opcional)</label><input type="datetime-local" id="ibEndsAt" /></div>
+          <div><label>Prioridad / orden</label><input type="number" id="ibSortOrder" value="0" /></div>
         </div>
 
         <div style="border: 1px dashed #475569; border-radius: 8px; padding: 0.9rem; margin: 0.85rem 0; background: #0f172a;">

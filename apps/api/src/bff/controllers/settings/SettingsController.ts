@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
 const updateSettingsSchema = z.object({
   storeName: z.string().min(1).max(100).optional(),
@@ -15,7 +17,7 @@ const updateSettingsSchema = z.object({
 }).strict();
 
 export class SettingsController {
-  public static createRoutes(gateway: SettingsGateway): Hono {
+  public static createRoutes(gateway: SettingsGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
     router.get('/', async (c) => {
@@ -27,7 +29,7 @@ export class SettingsController {
       }
     });
 
-    router.patch('/', async (c) => {
+    router.patch('/', createAuthMiddleware(identityGateway, 'admin', 'settings:edit'), async (c) => {
       try {
         const body = await c.req.json();
         const parsed = updateSettingsSchema.safeParse(body);
