@@ -53,3 +53,4 @@ Controladores BFF de catálogo, pedidos, pagos, realtime, SEO, settings y storef
 - No se hicieron pruebas de integración con runtime Workers/Miniflare. pnpm no pudo ejecutar por `ERR_PNPM_LOCKFILE_WRITE_FILE`; se invocaron binarios instalados directamente.
 - No se ejecutó `lint` mediante pnpm por ese bloqueo. La comprobación de arquitectura equivalente sí pasó.
 - No se desplegó el Worker. La migración D1 y el push remoto de Git sí fueron autorizados por el usuario.
+- Git: commit `c48622f` en `main`, publicado a `origin/main`; árbol de trabajo limpio al terminar.

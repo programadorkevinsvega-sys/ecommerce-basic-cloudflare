@@ -180,6 +180,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 
 Base consultada: `ecommerce-vega-production` (`9b69f19a-cad8-4e53-b0d1-0bd2adb11945`). Wrangler mostraba 16 archivos como pendientes, aunque el esquema ya contenía la mayoría de sus tablas y columnas. Se inspeccionó `sqlite_master`, índices, datos semilla y `d1_migrations`; no se recrearon tablas ni se borraron datos.
 
+Cambios de código, fuentes canónicas y evidencia publicados en `c48622f` (`fix(security): audit commerce, migrations, and checkout`).
+
 Se ejecutó DDL base idempotente (`IF NOT EXISTS` / `INSERT OR IGNORE`) para asegurar índices y semillas ausentes, se sincronizó el campo `read`, y se registraron en `d1_migrations` las 15 migraciones históricas cuyo esquema ya estaba presente. Wrangler aplicó después `payments__0003_cod_collection_receipts.sql`. El ledger quedó con 27 entradas. La consulta posterior confirmó `receipt_number` y `created_at`, y cero filas con `read != is_read`. No se insertaron pedidos, pagos ni datos de prueba en la base remota.
 
 Time-travel bookmark antes: `000001d3-00000000-00005103-de470059e507085a4470e642050b3f9b`. Después del DDL idempotente: `000001d3-0000000a-00005103-671f1eee9f16534d6381bdb95291ba9e`. Después de sincronizar el ledger y lectura: `000001d3-00000012-00005103-c4868733b8f504b0b2f67ae94990981b`. Guardar estos bookmarks para recuperación operativa. No se desplegó el Worker.
