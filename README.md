@@ -120,7 +120,7 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 | Frontend admin | **Cloudflare Pages** SPA (propuesta: React + Vite + TanStack Query) |
 | Cliente de API | Generado desde OpenAPI (los frontends no comparten código con el backend) |
 | Tests | Vitest, `@cloudflare/vitest-pool-workers` (Miniflare), k6 |
-| Despliegue | Wrangler + GitHub Actions |
+| Despliegue | Cloudflare Workers Builds (push a `main` despliega automáticamente); GitHub Actions ejecuta CI |
 
 | Pasarela de pago | **Wompi** (adaptador de `IPaymentPort`) |
 | Email transaccional | **Resend** (adaptador de `IEmailPort`) |

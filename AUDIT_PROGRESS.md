@@ -1,18 +1,18 @@
 # Progreso de auditoría integral
 
-Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas autorizadas; no se desplegó el Worker.
+Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas y el push activó el despliegue integrado de Cloudflare; `/health` devolvió 200 con D1/KV/Queue/R2 saludables. Este registro se ajustará al verificar el despliegue del arreglo de compatibilidad histórica.
 
 ## Fases
 
 | Fase | Estado | Evidencia / alcance |
 |---|---|---|
 | Diagnóstico SQL y arquitectura | Completada en los archivos revisados | Inventario actualizado a 87 SQL (29 fuentes y 58 copias) y matriz en `docs/migrations/schema-audit.md`; aislamiento y arquitectura pasan. |
-| Seguridad y operaciones | Correcciones adicionales implementadas | Sesiones HttpOnly sin exposición a JSON/localStorage, permisos también en datos SSR del panel y `GET /api/v1/settings`, ownership de invitados por cookie hasheada, CSRF/rate-limit, errores/logs redactados. No certifica todos los módulos ni entorno desplegado. |
+| Seguridad y operaciones | Correcciones adicionales implementadas y desplegadas | Sesiones HttpOnly sin exposición a JSON/localStorage, permisos también en datos SSR del panel y `GET /api/v1/settings`, ownership de invitados por cookie hasheada, CSRF/rate-limit, errores/logs redactados. No certifica todos los módulos. |
 | Migraciones | Runner y reproducción local/remota completados | Runner ordena módulo/versión. D1 vacía: 29 migraciones, segunda pasada idempotente, settings v1 antes de v2. `orders__0002` e `inventory__0002` se aplicaron y verificaron en producción con Wrangler 4. |
-| Wompi / pagos | Implementación y pruebas locales completadas | Checksum conforme al formato de evento, tolerancia de timestamp, consulta autenticada a API Wompi y comparación de id/referencia/importe/moneda. Worker prueba una aprobación realista, reconciliación HTTP simulada y replay; errores de inventario/factura hacen fallar el webhook para reintento. Sin credenciales ni evento sandbox real. |
+| Wompi / pagos | Implementación desplegada; pendiente reconciliación operativa | Están configurados los secretos `WOMPI_*` en Cloudflare (Wrangler solo revela nombres, nunca valores). Worker prueba local usa API simulada. No se reenvió un evento real: hay transacciones antiguas aprobadas y eso repetiría efectos comerciales. Se encontraron 4 intentos pendientes en 2 órdenes sin ID externo; la API de seguimiento documentada por Wompi consulta por ID de transacción. |
 | Media / R2 | Validación y prueba local de binding implementadas | Tamaño, firma, extensión permitida, nombre, alt, tamaño escrito en R2 y compensación ante fallo D1. Worker local prueba upload y lectura vía D1/R2; no hay decodificación completa de imagen, prueba R2 remota ni GC seguro de huérfanos. |
 | Banners | Administración y presentación implementadas | Filtros aislados por búsqueda/estado/tipo/ubicación, duplicación inactiva, vista previa, validación URL, home/categoría/producto/checkout. Carrusel con controles de teclado y movimiento reducido; sin autoplay. Pendiente verificación visual/desplegada. |
-| Reserva / Workers | Pruebas locales completadas | Worker real local con D1 para concurrencia/idempotencia de consumo, reserva ausente, fallo de reserva desde OrdersController y webhook Wompi con llamada HTTP simulada. |
+| Reserva / Workers | Pruebas locales completadas | Worker real local con D1 para concurrencia/idempotencia de consumo, reserva ausente, compatibilidad de ventas históricas, fallo de reserva desde OrdersController y webhook Wompi con llamada HTTP simulada. |
 | Documentación / CI | Actualizada | README, seguridad, recuperación, manifiesto, workflow y este registro. |
 
 ## Cambios destacados de esta pasada
@@ -32,6 +32,7 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 - Inventario registrado: 29 migraciones fuente y 58 copias generadas bajo `migrations/` y `apps/api/migrations/`.
 - `orders__0002_guest_cart_capability.sql` agrega una columna nullable, solo dentro del prefijo de orders; no se modifican migraciones históricas.
 - `inventory__0002_idempotent_order_consumption.sql` agrega la tabla con PK `(order_id, product_id)` y un índice; no modifica existencias existentes y los errores de reserva no crean consumos. Aplicada remotamente; tabla verificada vacía al aplicar.
+- Reconciliación de ventas antiguas: el código reconoce reservas confirmadas junto con movimientos `sale` coincidentes y crea una marca de idempotencia sin modificar existencias; replay local cubierto por prueba Worker.
 - Upgrade SQLite: esquema completo y fixture legado pasan, incluyendo COD, realtime, storefront y pedido invitado previo preservado con capability NULL.
 - Wrangler 4 temporal aplicó 29 archivos desde vacío y la segunda pasada fue idempotente. Producción: las migraciones de orders v2 e inventory v2 se aplicaron con el runner y se confirmaron en el ledger. La consulta posterior confirmó `guest_cart_id_hash`, la tabla de consumos vacía y las 8 órdenes guest pendientes sin cambios.
 
@@ -39,7 +40,7 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 
 - `node_modules/.bin/tsc --noEmit -p apps/api/tsconfig.json` — pasó.
 - `./node_modules/.bin/vitest run --config vitest.config.ts` desde `apps/api/` — 17 archivos, 40 pruebas pasaron.
-- `./node_modules/.bin/vitest run --config vitest.workers.config.ts` desde `apps/api/` — 3 archivos, 11 pruebas pasaron con D1/Worker local, incluyendo webhook aprobado reejecutado, consumo único, rechazo por falta de reserva y persistencia/lectura de medios con el binding R2 local. Requirió ejecución fuera del sandbox porque Miniflare abre localhost.
+- `./node_modules/.bin/vitest run --config vitest.workers.config.ts` desde `apps/api/` — 3 archivos, 12 pruebas pasaron con D1/Worker local, incluyendo webhook aprobado reejecutado, consumo único, rechazo por falta de reserva, venta legacy y persistencia/lectura de medios con el binding R2 local. Requirió ejecución fuera del sandbox porque Miniflare abre localhost.
 - `node apps/api/scripts/check-architecture.js` — pasó, máximo 200 líneas y capas/imports.
 - `node apps/api/scripts/check-table-isolation.js` — pasó.
 - `node scripts/check-migration-consistency.js` — copias coinciden.
@@ -51,8 +52,10 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 
 ## Pendientes que impiden certificar producción
 
-- Antes de desplegar el código nuevo, conciliar los 3 pedidos Wompi pendientes y decidir tratamiento de las 8 órdenes guest sin capability. El Worker no se desplegó; la columna aditiva ya existe en D1.
-- Ejecutar evento de sandbox Wompi con credenciales de prueba y confirmar reconciliación contra API real; las pruebas locales usan un stub HTTP sin secretos.
+- La última consulta remota encontró 4 transacciones Wompi pendientes para 2 órdenes (varios intentos por orden), sin `external_transaction_id`; no se deben confirmar por referencia adivinada ni reintentar cargos. Investigar esos pedidos desde el dashboard Wompi y completar la reconciliación operativa antes de permitir nuevos despliegues de lógica financiera.
+- Aunque los secretos `WOMPI_*` existen en Cloudflare, sus valores no son recuperables por Wrangler. No se ejecutó un evento sandbox real ni se reenviaron webhooks históricos aprobados; Miniflare usa stub. Un test real requiere una transacción sandbox con ID conocido y webhook correspondiente.
+- El despliegue se activó automáticamente con el push a `main` (Cloudflare); GitHub Actions en este repositorio ejecuta verificaciones, no contiene un paso `wrangler deploy`. Revisar la versión y salud tras cada push.
+- Decidir tratamiento de las 8 órdenes invitadas sin capability, incluidas las legacy cuyo acceso quedó limitado por la nueva protección de propiedad.
 - Confirmar en la cuenta Cloudflare destino que los IDs de los bindings de Rate Limiting sean únicos; la configuración pasa el dry-run, pero esa unicidad depende de la cuenta.
 - Validación de imagen por decodificador completo/dimensiones y prueba R2 remota; la integración de binding se hizo solo local. Referencias compartidas impiden borrar automáticamente objetos y no se implementó GC.
 - Confirmar evento Wompi de sandbox contra endpoint real con credenciales de prueba; integración Worker local usa API HTTP simulada. Reconciliación y retries permanecen dependientes de la disponibilidad y reintentos reales del proveedor.
@@ -63,4 +66,4 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 
 ## Git
 
-Commits `3c33f1c`, `ea4ecd5` y `fdb87f7` están publicados en `origin/main`. La implementación inventory/Wompi/R2 está en `4a25cae`; este registro de evidencia se publica en el commit documental que lo contiene. No se incluyeron `.dev.vars`, credenciales ni temporales.
+Commits `4a25cae` y `e4e15bd` se publicaron en `origin/main`; el push activó el despliegue de Cloudflare. Esta pasada añade compatibilidad con consumo de inventario histórico para evitar fallar o descontar de nuevo ante un replay de webhook. No se incluyeron `.dev.vars`, credenciales ni temporales.

@@ -28,4 +28,24 @@ describe('D1 stock consumption', () => {
     expect(stock).toMatchObject({ quantity: 4, reservedQuantity: 0 });
     expect(claim).toBeNull();
   });
+
+  it('recognizes a legacy sale movement and records it without deducting stock again', async () => {
+    const orderId = 'legacy-confirmed-order';
+    const productId = 'legacy-consumed-product';
+    const now = new Date().toISOString();
+    await env.DB.prepare('INSERT INTO inventory_stocks (product_id, quantity, reserved_quantity, updated_at) VALUES (?, ?, ?, ?)')
+      .bind(productId, 3, 0, now).run();
+    await env.DB.prepare('INSERT INTO inventory_reservations (id, order_id, product_id, quantity, status, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind('legacy-confirmed-reservation', orderId, productId, 1, 'confirmed', now, now).run();
+    await env.DB.prepare('INSERT INTO inventory_movements (id, product_id, type, quantity, reason, reference_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind('legacy-sale-movement', productId, 'sale', 1, 'Legacy sale', orderId, now).run();
+
+    await createInventoryModule(env).consumeStockUseCase.execute({ orderId, items: [{ productId, quantity: 1 }] });
+
+    const stock = await new D1InventoryRepository(env.DB).getStock(productId);
+    const claim = await env.DB.prepare('SELECT quantity, status FROM inventory_order_consumptions WHERE order_id = ? AND product_id = ?')
+      .bind(orderId, productId).first<{ quantity: number; status: string }>();
+    expect(stock).toMatchObject({ quantity: 3, reservedQuantity: 0 });
+    expect(claim).toEqual({ quantity: 1, status: 'completed' });
+  });
 });
