@@ -60,4 +60,4 @@ Actualizado: 2026-10-12 (hora Bogotá). Rama `main`. No se desplegó el Worker n
 
 ## Git
 
-Commit y push de esta continuación pendientes; push autorizado por el usuario. No incluir `.dev.vars`, credenciales ni archivos temporales.
+Commit `3c33f1c` (`Harden ecommerce security and guest order ownership`) publicado en `origin/main`. Este registro queda en un commit de seguimiento. Árbol sin archivos ajenos; no se incluyeron `.dev.vars`, credenciales ni temporales.
