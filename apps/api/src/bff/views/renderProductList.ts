@@ -44,14 +44,6 @@ export function renderProductList(
 
   let html = `
     ${bannerHtml}
-    <section class="collection-hero">
-      <div class="collection-copy">
-        <span class="eyebrow">${searchQuery ? 'Resultados de búsqueda' : 'Diseñado para tu día a día'}</span>
-        <h1>${searchQuery ? 'Encuentra lo que buscas.' : 'Menos ruido.\nMejores elecciones.'}</h1>
-        <p>${searchQuery ? 'Explora los resultados y encuentra justo lo que necesitas.' : 'Una selección cuidada de productos útiles, con precios claros y compra directa.'}</p>
-      </div>
-      <div class="collection-note" aria-hidden="true"><span class="note-mark">V.</span><span>Compra con intención<br /><strong>Vive mejor lo cotidiano.</strong></span></div>
-    </section>
     <form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
       <label class="search-label" for="store-search">Buscar</label>
       <input id="store-search" type="search" name="q" placeholder="¿Qué estás buscando hoy?" value="${queryVal}" required />

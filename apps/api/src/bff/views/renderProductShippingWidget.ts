@@ -3,6 +3,7 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 export function renderProductShippingWidget(product: CatalogProductDto): string {
   const scope = product.salePolicy.shippingScope;
   const localZones = (product.salePolicy.localCoverageZones || []).join(',');
+  const productCod = product.salePolicy.allowsCashOnDelivery;
 
   return `
     <div class="shipping-coverage-widget" style="margin-top: 1.5rem; padding: 1.25rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
@@ -47,7 +48,7 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
         </datalist>
         <button
           type="button"
-          onclick="checkProductShippingCoverage('${escapeHtml(scope)}', '${escapeHtml(localZones)}')"
+          onclick="checkProductShippingCoverage('${escapeHtml(scope)}', '${escapeHtml(localZones)}', ${productCod ? 'true' : 'false'})"
           style="padding: 0.6rem 1.2rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
         >
           Verificar
@@ -77,7 +78,7 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
         }, 300);
       }
 
-      async function checkProductShippingCoverage(scope, localZones) {
+      async function checkProductShippingCoverage(scope, localZones, allowsCod) {
         const inputVal = document.getElementById('shipLocationInput').value.trim();
         const resultDiv = document.getElementById('shipCoverageResult');
         if (!inputVal) {
@@ -118,20 +119,26 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
           const cov = json.data;
           if (cov.isCovered) {
             const priceFmt = (cov.priceInCents / 100).toLocaleString('es-CO', {
-              style: 'currency',
-              currency: 'COP',
-              maximumFractionDigits: 0
+              style: 'currency', currency: 'COP', maximumFractionDigits: 0
             });
-            const codText = cov.allowsCashOnDelivery
-              ? '✅ Admite pago contra entrega'
-              : 'ℹ️ Requiere pago en línea con Wompi';
+            const isLocal = cov.zoneType === 'city' || cov.zoneType === 'region';
+            let shippingNote = '';
+            if (isLocal) {
+              shippingNote = allowsCod
+                ? '🛵 <strong>Domicilio local de la tienda:</strong> El envío se cobra incluido o contra entrega al recibir el pedido.'
+                : '🛵 <strong>Domicilio local de la tienda:</strong> Entregas en tu ciudad con nuestra propia flota.';
+            } else {
+              shippingNote = allowsCod
+                ? '📦 <strong>Envío nacional por transportadora:</strong> Flete cancelado a la transportadora en contra entrega, o liquidado en tu compra con tarjeta.'
+                : '📦 <strong>Envío nacional por transportadora:</strong> Cobertura a todo el país vía transportadora certificada.';
+            }
 
             resultDiv.style.background = '#064e3b';
             resultDiv.style.color = '#a7f3d0';
             resultDiv.innerHTML = [
               '<div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">✓ ¡Envío disponible a ' + (cov.locationName || daneCode) + '!</div>',
               '<div><strong>Tarifa estimada:</strong> ' + priceFmt + ' | <strong>Tiempo:</strong> ' + cov.minEstimatedDays + ' a ' + cov.maxEstimatedDays + ' días hábiles</div>',
-              '<div style="margin-top:0.2rem; font-size:0.85rem;">' + codText + ' (Zona: ' + cov.zoneName + ')</div>'
+              '<div style="margin-top:0.35rem; font-size:0.83rem; line-height:1.45; border-top:1px dashed rgba(255,255,255,0.2); padding-top:0.35rem;">' + shippingNote + '</div>'
             ].join('');
           } else {
             resultDiv.style.background = '#7f1d1d';
@@ -152,10 +159,5 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
 }
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
