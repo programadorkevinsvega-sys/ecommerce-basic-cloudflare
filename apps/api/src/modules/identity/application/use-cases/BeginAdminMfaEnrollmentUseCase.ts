@@ -29,8 +29,9 @@ export class BeginAdminMfaEnrollmentUseCase {
     const email = this.configuredCredentials?.email?.trim().toLowerCase();
     const configuredPassword = this.configuredCredentials?.password;
     if (email && configuredPassword) {
+      const superadmin = await this.admins.findSoleActiveSuperadmin();
       return admin.roleId === 'role_superadmin'
-        && admin.email === email
+        && superadmin?.id === admin.id
         && ConfiguredSecretComparator.matches(password, configuredPassword);
     }
     return PasswordHasher.verify(password, admin.passwordHash);

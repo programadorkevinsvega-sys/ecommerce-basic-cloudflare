@@ -30,11 +30,13 @@ describe('admin MFA enrollment', () => {
 
   it('reauthenticates with the configured Cloudflare secret even when the old D1 hash differs', async () => {
     const admin = AdminUser.create({
-      id: 'admin-configured', email: 'owner@example.test', passwordHash: await PasswordHasher.hash('old-d1-password'),
+      id: 'admin-configured', email: 'legacy-admin@example.test', passwordHash: await PasswordHasher.hash('old-d1-password'),
       fullName: 'Owner', roleId: 'role_superadmin', mfaEnabled: false, failedLoginAttempts: 0,
       isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     });
-    const repository = { findById: async () => admin, save: async () => undefined };
+    const repository = {
+      findById: async () => admin, findSoleActiveSuperadmin: async () => admin, save: async () => undefined,
+    };
     const begin = new BeginAdminMfaEnrollmentUseCase(repository as never, {
       email: 'owner@example.test', password: 'cloudflare-secret-password',
     });
@@ -43,5 +45,24 @@ describe('admin MFA enrollment', () => {
     const result = await begin.execute(admin.id, 'cloudflare-secret-password');
 
     expect(result.isOk()).toBe(true);
+  });
+
+  it('does not let another administrator enroll with the configured Superadmin secret', async () => {
+    const admin = AdminUser.create({
+      id: 'editor-1', email: 'editor@example.test', passwordHash: await PasswordHasher.hash('old-d1-password'),
+      fullName: 'Editor', roleId: 'role_editor', mfaEnabled: false, failedLoginAttempts: 0,
+      isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    const superadmin = AdminUser.create({
+      id: 'superadmin-1', email: 'owner@example.test', passwordHash: await PasswordHasher.hash('another-password'),
+      fullName: 'Owner', roleId: 'role_superadmin', mfaEnabled: false, failedLoginAttempts: 0,
+      isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    const repository = { findById: async () => admin, findSoleActiveSuperadmin: async () => superadmin };
+    const begin = new BeginAdminMfaEnrollmentUseCase(repository as never, {
+      email: 'owner@example.test', password: 'cloudflare-secret-password',
+    });
+
+    expect((await begin.execute(admin.id, 'cloudflare-secret-password')).isFail()).toBe(true);
   });
 });
