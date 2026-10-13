@@ -63,4 +63,4 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 
 ## Git
 
-Commits `3c33f1c`, `ea4ecd5` y `fdb87f7` están publicados en `origin/main`. La implementación inventory/Wompi/R2 y su registro se publicarán en un commit de seguimiento de esta pasada. No se incluyeron `.dev.vars`, credenciales ni temporales.
+Commits `3c33f1c`, `ea4ecd5` y `fdb87f7` están publicados en `origin/main`. La implementación inventory/Wompi/R2 está en `4a25cae`; este registro de evidencia se publica en el commit documental que lo contiene. No se incluyeron `.dev.vars`, credenciales ni temporales.
