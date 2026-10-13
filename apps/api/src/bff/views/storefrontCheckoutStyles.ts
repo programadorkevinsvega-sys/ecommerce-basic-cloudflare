@@ -32,6 +32,10 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-field input, .checkout-field select { width: 100%; min-height: 48px; padding: .65rem .85rem; border: 1px solid #c7ccbe; border-radius: 10px; background: white; color: #16201b; font: inherit; }
     .checkout-field input:focus, .checkout-field select:focus { border-color: #1f4d3a; box-shadow: 0 0 0 3px #cfe0d5; outline: none; }
     .checkout-field small { color: #5b675f; font-size: .75rem; }
+    .checkout-location-suggestions { display: grid; max-height: 13rem; overflow-y: auto; border: 1px solid #c7ccbe; border-radius: 10px; background: #fff; }
+    .checkout-location-option { padding: .7rem .85rem; border: 0; border-bottom: 1px solid #edf0e9; background: #fff; color: #16201b; text-align: left; font: inherit; cursor: pointer; }
+    .checkout-location-option:last-child { border-bottom: 0; }
+    .checkout-location-option:hover, .checkout-location-option:focus-visible { background: #edf2e8; outline: 2px solid #1f4d3a; outline-offset: -2px; }
     .checkout-policy { display: flex; min-height: 56px; align-items: flex-start; gap: .7rem; margin-top: 1rem; padding: .8rem 1rem; border: 1px solid #e1e4da; border-radius: 12px; background: #f3f4ef; color: #424e47; font-size: .86rem; }
     .checkout-policy[data-state='success'] { border-color: #cfe0d5; background: #e4eee8; }
     .checkout-policy[data-state='error'] { border-color: #efc8c8; background: #fff0f0; color: #8b2525; }

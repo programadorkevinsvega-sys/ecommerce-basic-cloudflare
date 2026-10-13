@@ -154,8 +154,9 @@ describe('storefront presentation', () => {
     expect(html).toContain('id="cust-tax-id"');
     expect(html).toContain('id="dest-zone"');
     expect(html).toContain('Medellín ·');
-    expect(html).toContain('data-locations="[&quot;05001&quot;]"');
     expect(html).toContain('id="addr-city-suggestions"');
+    expect(html).toContain('class="checkout-location-suggestions" role="listbox"');
+    expect(html).toContain("option.className = 'checkout-location-option'");
     expect(html).toContain("/api/v1/shipping/locations?q=");
     expect(html).toContain('daneCode: daneCode');
     expect(html).toContain('data-min-days="1"');
