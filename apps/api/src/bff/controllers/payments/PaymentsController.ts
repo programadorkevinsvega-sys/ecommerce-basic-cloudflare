@@ -106,9 +106,12 @@ export class PaymentsController {
       const reconciledBody = { ...body, data: { ...body.data, transaction: canonical } };
       const res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: reconciledBody });
       if (res.ignored && !res.orderId) return c.json({ received: true, ignored: true });
-      if (res.ignored && res.orderId) {
+      if (res.orderId) {
         const currentOrder = await ordersGateway.getOrder(res.orderId);
         const status = String(canonical.status).toUpperCase();
+        if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved' && await invoicingGateway.getInvoice({ orderId: res.orderId })) {
+          return c.json({ received: true, ignored: true });
+        }
         if (['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });
       }
 
