@@ -1,5 +1,6 @@
 import { storefrontBaseStyles } from './storefrontBaseStyles.js';
 import { storefrontComponentStyles } from './storefrontComponentStyles.js';
+import { storefrontProductStyles } from './storefrontProductStyles.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -74,7 +75,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}</style>
 </head>
 <body>
   ${topBarHtml}

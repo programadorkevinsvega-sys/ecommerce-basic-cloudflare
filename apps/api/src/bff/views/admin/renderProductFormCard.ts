@@ -45,7 +45,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = []): st
         <div id="pLocalZonesWrapper" style="display:none; margin-top:0.75rem; margin-bottom:1rem;">
           <label>Zonas Locales con Cobertura para este Producto</label>
           <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:0.25rem;">
-            Selecciona las zonas que cubren este producto (mantén presionado Ctrl / Cmd para seleccionar varias):
+            Selecciona las zonas que cubren este producto:
           </div>
           <select id="pLocalZones" multiple size="3" style="height:auto; min-height:80px;">
             ${zoneOptions || '<option value="" disabled>No hay zonas locales registradas</option>'}
@@ -63,20 +63,15 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = []): st
 
         <div style="border: 1px dashed #475569; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #0f172a;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <label style="margin:0; font-weight:700; color:#e2e8f0;">🖼️ Imagen del Producto</label>
+            <label style="margin:0; font-weight:700; color:#e2e8f0;">🖼️ Imágenes del Producto (Máximo 5)</label>
             <span id="pImageUploadStatus" style="font-size:0.8rem; color:#94a3b8;"></span>
           </div>
-          <div style="display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap;">
-            <div id="pImagePreviewWrapper" style="width:90px; height:90px; border-radius:6px; border:1px solid #334155; background:#1e293b; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-              <span id="pImagePlaceholder" style="font-size:0.75rem; color:#64748b; text-align:center;">Sin Imagen</span>
-              <img id="pImagePreview" src="" alt="Vista previa" style="display:none; width:100%; height:100%; object-fit:cover;" />
-            </div>
-            <div style="flex:1; min-width:240px;">
-              <input type="file" id="pMediaFileInput" accept="image/png,image/jpeg,image/webp,image/avif" style="margin-bottom:0.5rem;" onchange="handleProductImageSelected(this)" />
-              <input type="hidden" id="pMediaId" value="" />
-              <div style="font-size:0.75rem; color:#94a3b8;">
-                Soporta PNG, JPEG, WEBP y AVIF (máx. 10 MB). Al subirla se almacena automáticamente en Cloudflare R2 y se asocia al producto.
-              </div>
+          <div id="pMediaGrid" style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem;"></div>
+          <div>
+            <input type="file" id="pMediaFileInput" accept="image/png,image/jpeg,image/webp,image/avif" multiple style="margin-bottom:0.35rem;" onchange="handleProductImageSelected(this)" />
+            <input type="hidden" id="pMediaIdsJson" value="[]" />
+            <div style="font-size:0.75rem; color:#94a3b8;">
+              Puedes subir hasta 5 imágenes (la primera será la principal). Se guardan directamente en Cloudflare R2.
             </div>
           </div>
         </div>
@@ -119,10 +114,5 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = []): st
 }
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }

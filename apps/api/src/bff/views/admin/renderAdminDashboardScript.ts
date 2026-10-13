@@ -35,11 +35,7 @@ export function renderAdminDashboardScript(): string {
       const slugInput = document.getElementById('pSlug');
       if (!slugInput.dataset.manual) {
         slugInput.value = document.getElementById('pName').value
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
+          .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       }
       updateSerpPreview();
       const canon = document.getElementById('pCanonical');
@@ -57,9 +53,7 @@ export function renderAdminDashboardScript(): string {
       }
     });
 
-    document.getElementById('pCanonical')?.addEventListener('input', (e) => {
-      e.target.dataset.manual = 'true';
-    });
+    document.getElementById('pCanonical')?.addEventListener('input', (e) => { e.target.dataset.manual = 'true'; });
     document.getElementById('pSeoTitle')?.addEventListener('input', updateSerpPreview);
     document.getElementById('pDesc')?.addEventListener('input', updateSerpPreview);
     document.getElementById('pSeoDesc')?.addEventListener('input', updateSerpPreview);
@@ -72,9 +66,7 @@ export function renderAdminDashboardScript(): string {
     async function setProductStatus(id, status) {
       if (!confirm('¿Deseas cambiar el estado del producto?')) return;
       const res = await fetch('/api/v1/admin/products/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
       });
       if (res.ok) window.location.reload();
       else alert('Error al actualizar estado');
@@ -91,11 +83,7 @@ export function renderAdminDashboardScript(): string {
       try {
         let p = productIdOrJson;
         if (typeof productIdOrJson === 'string') {
-          if (window.__catalogProducts && window.__catalogProducts[productIdOrJson]) {
-            p = window.__catalogProducts[productIdOrJson];
-          } else {
-            p = JSON.parse(productIdOrJson);
-          }
+          p = (window.__catalogProducts && window.__catalogProducts[productIdOrJson]) ? window.__catalogProducts[productIdOrJson] : JSON.parse(productIdOrJson);
         }
         document.getElementById('pEditId').value = p.id;
         document.getElementById('pName').value = p.name || '';
@@ -128,19 +116,14 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSeoDesc').value = p.seoDescription || '';
         document.getElementById('pNoindex').checked = Boolean(p.noindex);
 
-        // Soporte de imagen asociada
-        const mediaId = p.mediaIds && p.mediaIds.length > 0 ? p.mediaIds[0] : '';
-        document.getElementById('pMediaId').value = mediaId;
-        const previewImg = document.getElementById('pImagePreview');
-        const placeholder = document.getElementById('pImagePlaceholder');
-        if (mediaId && previewImg && placeholder) {
-          previewImg.src = '/media/' + mediaId;
-          previewImg.style.display = 'block';
-          placeholder.style.display = 'none';
-        } else if (previewImg && placeholder) {
-          previewImg.src = '';
-          previewImg.style.display = 'none';
-          placeholder.style.display = 'block';
+        // Soporte de hasta 5 imágenes en edición
+        if (Array.isArray(p.mediaIds)) {
+          window.currentProductMediaIds = [...p.mediaIds];
+        } else {
+          window.currentProductMediaIds = [];
+        }
+        if (typeof window.updateProductMediaGrid === 'function') {
+          window.updateProductMediaGrid();
         }
 
         document.getElementById('pFormTitle').textContent = 'Editar Producto: ' + p.name;
@@ -158,11 +141,10 @@ export function renderAdminDashboardScript(): string {
       document.getElementById('newProductForm').reset();
       const wrap = document.getElementById('pLocalZonesWrapper');
       if (wrap) wrap.style.display = 'none';
-      document.getElementById('pMediaId').value = '';
-      const previewImg = document.getElementById('pImagePreview');
-      const placeholder = document.getElementById('pImagePlaceholder');
-      if (previewImg) { previewImg.src = ''; previewImg.style.display = 'none'; }
-      if (placeholder) { placeholder.style.display = 'block'; }
+      window.currentProductMediaIds = [];
+      if (typeof window.updateProductMediaGrid === 'function') {
+        window.updateProductMediaGrid();
+      }
       const statusSpan = document.getElementById('pImageUploadStatus');
       if (statusSpan) statusSpan.textContent = '';
       document.getElementById('pFormTitle').textContent = 'Crear Nuevo Producto';

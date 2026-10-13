@@ -1,5 +1,32 @@
 export function renderProductFormsScript(): string {
   return `
+    let currentProductMediaIds = [];
+
+    function updateProductMediaGrid() {
+      const grid = document.getElementById('pMediaGrid');
+      const hiddenInput = document.getElementById('pMediaIdsJson');
+      if (hiddenInput) hiddenInput.value = JSON.stringify(currentProductMediaIds);
+      if (!grid) return;
+      grid.innerHTML = '';
+      if (currentProductMediaIds.length === 0) {
+        grid.innerHTML = '<div style="font-size:0.8rem; color:#64748b; padding:0.5rem 0;">No hay imágenes cargadas aún.</div>';
+        return;
+      }
+      currentProductMediaIds.forEach((mId, index) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:2px solid ' + (index === 0 ? '#38bdf8' : '#334155') + '; background:#1e293b;';
+        item.innerHTML = '<img src="/media/' + mId + '" style="width:100%; height:100%; object-fit:cover;" />' +
+          (index === 0 ? '<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(14,165,233,0.9); color:#fff; font-size:0.6rem; text-align:center; font-weight:bold; padding:2px 0;">Principal</span>' : '') +
+          '<button type="button" onclick="removeProductMedia(' + index + ')" style="position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); color:#fff; border:none; cursor:pointer; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>';
+        grid.appendChild(item);
+      });
+    }
+
+    function removeProductMedia(index) {
+      currentProductMediaIds.splice(index, 1);
+      updateProductMediaGrid();
+    }
+
     document.getElementById('newProductForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('pMsg');
@@ -14,11 +41,7 @@ export function renderProductFormsScript(): string {
         return;
       }
 
-      const tags = document.getElementById('pTags').value
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-
+      const tags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(Boolean);
       const payload = {
         name: document.getElementById('pName').value,
         slug: document.getElementById('pSlug').value,
@@ -42,7 +65,7 @@ export function renderProductFormsScript(): string {
           : [],
         saleMode: document.getElementById('pSaleMode').value,
         description: document.getElementById('pDesc').value,
-        mediaIds: document.getElementById('pMediaId')?.value ? [document.getElementById('pMediaId').value] : [],
+        mediaIds: currentProductMediaIds.slice(0, 5),
         status: 'published'
       };
 
@@ -76,63 +99,49 @@ export function renderProductFormsScript(): string {
     function onProductScopeChange() {
       const scope = document.getElementById('pScope')?.value;
       const wrap = document.getElementById('pLocalZonesWrapper');
-      if (wrap) {
-        wrap.style.display = scope === 'local' ? 'block' : 'none';
-      }
+      if (wrap) wrap.style.display = scope === 'local' ? 'block' : 'none';
     }
 
     async function handleProductImageSelected(input) {
       if (!input.files || input.files.length === 0) return;
-      const file = input.files[0];
+      const files = Array.from(input.files);
+      const remainingSlots = 5 - currentProductMediaIds.length;
+      if (remainingSlots <= 0) {
+        alert('Ya has alcanzado el máximo de 5 imágenes permitidas para este producto.');
+        input.value = '';
+        return;
+      }
+      const filesToUpload = files.slice(0, remainingSlots);
       const statusSpan = document.getElementById('pImageUploadStatus');
-      const previewImg = document.getElementById('pImagePreview');
-      const placeholder = document.getElementById('pImagePlaceholder');
-      const mediaIdInput = document.getElementById('pMediaId');
-      const altText = document.getElementById('pName')?.value || file.name.replace(/\\.[^/.]+$/, '');
-
       if (statusSpan) {
-        statusSpan.textContent = '⏳ Subiendo imagen a R2...';
+        statusSpan.textContent = '⏳ Subiendo ' + filesToUpload.length + ' imagen(es) a R2...';
         statusSpan.style.color = '#38bdf8';
       }
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('altText', altText);
-      formData.append('isPrivate', 'false');
-
-      try {
-        const headers = window.adminHeaders ? window.adminHeaders(false) : {};
-        const res = await fetch('/media/upload', {
-          method: 'POST',
-          headers,
-          body: formData
-        });
-        const json = await res.json();
-        if (res.ok && json.data?.id) {
-          mediaIdInput.value = json.data.id;
-          if (previewImg && placeholder) {
-            previewImg.src = '/media/' + json.data.id;
-            previewImg.style.display = 'block';
-            placeholder.style.display = 'none';
+      for (const file of filesToUpload) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('altText', document.getElementById('pName')?.value || file.name.replace(/\\.[^/.]+$/, ''));
+        formData.append('isPrivate', 'false');
+        try {
+          const headers = window.adminHeaders ? window.adminHeaders(false) : {};
+          const res = await fetch('/media/upload', { method: 'POST', headers, body: formData });
+          const json = await res.json();
+          if (res.ok && json.data?.id) {
+            currentProductMediaIds.push(json.data.id);
+            updateProductMediaGrid();
           }
-          if (statusSpan) {
-            statusSpan.textContent = '✅ Imagen subida y lista';
-            statusSpan.style.color = '#34d399';
-          }
-        } else {
-          if (statusSpan) {
-            statusSpan.textContent = '❌ ' + (json.error || 'Error al subir');
-            statusSpan.style.color = '#f87171';
-          }
-        }
-      } catch (err) {
-        if (statusSpan) {
-          statusSpan.textContent = '❌ Error de conexión al subir';
-          statusSpan.style.color = '#f87171';
-        }
+        } catch {}
+      }
+      input.value = '';
+      if (statusSpan) {
+        statusSpan.textContent = '✅ Imágenes listas (' + currentProductMediaIds.length + '/5)';
+        statusSpan.style.color = '#34d399';
       }
     }
 
+    window.currentProductMediaIds = currentProductMediaIds;
+    window.updateProductMediaGrid = updateProductMediaGrid;
+    window.removeProductMedia = removeProductMedia;
     window.onProductScopeChange = onProductScopeChange;
     window.handleProductImageSelected = handleProductImageSelected;
   `;
