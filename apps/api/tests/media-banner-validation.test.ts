@@ -107,7 +107,7 @@ describe('media and banner input validation', () => {
     expect(() => new Banner({ ...base, placement: 'unknown' as any })).toThrow();
   });
 
-  it('renders functioning filter controls, accessible public carousel navigation, and no auto-rotation', () => {
+  it('renders functioning filters and an accessible auto-rotating public carousel', () => {
     const adminMarkup = renderStorefrontManagementSection([], []);
     expect(adminMarkup.match(/class="form-grid banner-filters"/g)).toHaveLength(2);
     expect(adminMarkup).toContain('Filtrar tipo');
@@ -121,7 +121,10 @@ describe('media and banner input validation', () => {
     expect(publicMarkup).toContain('aria-label="1 de 2"');
     expect(publicMarkup).toContain('aria-controls="storefrontBannerCarousel"');
     expect(publicMarkup).toContain('prefers-reduced-motion: reduce');
-    expect(publicMarkup).not.toContain('setInterval');
+    expect(publicMarkup).toContain('window.setInterval(() => move(1), 6000)');
+    expect(publicMarkup).toContain('data-carousel-pause');
+    expect(publicMarkup).toContain("event.key !== 'ArrowRight'");
+    expect(publicMarkup).toContain("shell.addEventListener('mouseenter'");
   });
 });
 

@@ -17,8 +17,8 @@ export const storefrontComponentStyles = String.raw`
     .campaign-carousel-wrap { margin-bottom: 2rem; }
     .campaign-banner-single { margin-bottom: 2rem; }
     .campaign-carousel {
-      display: flex; gap: 1rem; overflow-x: auto; overscroll-behavior-inline: contain;
-      scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; padding: .25rem .25rem .85rem;
+      display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain;
+      scroll-snap-type: x mandatory; scroll-padding-inline: 0; padding: 0 0 .85rem;
       scrollbar-width: thin; scrollbar-color: #b9c4b2 transparent;
       scroll-behavior: smooth;
     }
@@ -46,7 +46,7 @@ export const storefrontComponentStyles = String.raw`
     .site-nav .customer-email { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .container { padding-top: 1.5rem; }
     .campaign-carousel-wrap { margin-bottom: 2.6rem; }
-    .campaign-carousel { gap: 0; padding: 0; overflow: visible; }
+    .campaign-carousel { gap: 0; padding: 0; overflow-x: auto; overflow-y: hidden; }
     .campaign-carousel > .campaign-banner { flex-basis: 100%; }
     .campaign-banner { height: 380px; min-height: 380px; max-height: 380px; grid-template-columns: minmax(0, 1fr) minmax(320px, .85fr); margin: 0; border-radius: 20px; background: #1f4d3a; box-shadow: none; }
     .campaign-banner:not(:has(.campaign-image)) { grid-template-columns: 1fr; background-image: radial-gradient(ellipse at 90% 20%, rgba(220,233,202,.12), transparent 40%); }
@@ -59,7 +59,7 @@ export const storefrontComponentStyles = String.raw`
     .campaign-image { min-height: 380px; background: #315d49; }
     .campaign-image img { object-fit: cover; }
     .campaign-carousel-controls { margin-top: .8rem; }
-    .campaign-carousel-controls button { min-height: 2.5rem; border-color: #cbd4cb; border-radius: 999px; }
+    .campaign-carousel-controls button { min-height: 2.5rem; border-color: #cbd4cb; border-radius: 999px; background: transparent; color: #424e47; font-size: .82rem; font-weight: 600; }
     .brand-section, .products-section { margin: 2.8rem 0; }
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.35rem; }
     .section-heading h1, .section-heading h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: -.045em; }
@@ -119,7 +119,7 @@ export const storefrontComponentStyles = String.raw`
       .collection-hero { min-height: 0; flex-direction: column; align-items: flex-start; gap: 1.5rem; }
       .collection-note { width: 100%; }
       .campaign-banner { height: auto; min-height: 0; max-height: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 220px; }
-      .campaign-carousel > .campaign-banner { flex-basis: 94%; }
+      .campaign-carousel > .campaign-banner { flex-basis: 100%; }
       .campaign-image { height: 220px; min-height: 220px; max-height: 220px; }
       .campaign-image img { height: 100%; max-height: none; }
       .site-header { padding: .9rem 1rem; }

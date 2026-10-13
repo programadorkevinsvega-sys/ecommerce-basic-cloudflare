@@ -47,6 +47,25 @@ describe('storefront presentation', () => {
     expect(html).toContain('src="/media/banner-wide"');
   });
 
+  it('renders multiple public banners as a single-slide autoplay carousel with accessible controls', () => {
+    const banner = {
+      id: 'banner-1', title: 'Campaña', description: 'Una campaña', imageUrl: '/media/banner-wide',
+      linkUrl: '/productos', altText: 'Banner de campaña', bannerType: 'promotional' as const, buttonText: 'Ver',
+    };
+    const html = renderStorefrontBanners([banner, { ...banner, id: 'banner-2', title: 'Otra campaña' }], 'Contenido destacado');
+    expect(html).toContain('aria-live="off"');
+    expect(html).toContain('data-carousel-pause');
+    expect(html).toContain('Anterior');
+    expect(html).toContain('Siguiente');
+    expect(html).toContain('window.setInterval(() => move(1), 6000)');
+    expect(html).toContain('carousel.scrollTo({ left: nextIndex * carousel.clientWidth');
+    expect(html).toContain('(currentIndex + direction + slides.length) % slides.length');
+    const layout = renderBaseLayout({ title: 'Banners', description: 'Campañas', bodyHtml: html });
+    expect(layout).toContain('overflow-x: auto; overflow-y: hidden');
+    expect(layout).toContain('.campaign-carousel > .campaign-banner { flex-basis: 100%; }');
+    expect(layout).not.toContain('overflow: visible;');
+  });
+
   it('includes accessible search, navigation and responsive presentation styles', () => {
     const html = renderBaseLayout({ title: 'Inicio', description: 'Tienda', bodyHtml: '<h1>Inicio</h1>' });
     expect(html).toContain('aria-label="Buscar productos"');

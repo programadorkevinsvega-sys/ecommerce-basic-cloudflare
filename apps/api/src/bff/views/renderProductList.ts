@@ -2,6 +2,7 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
 import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
+import { renderStorefrontCarouselScript } from './renderStorefrontCarouselScript.js';
 
 export interface BannerItem {
   id: string;
@@ -39,7 +40,7 @@ export function renderProductList(
   };
 
   const bannerHtml = banners.length > 1
-    ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" aria-live="polite" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" role="group" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
+    ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" aria-live="off" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" role="group" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-pause aria-controls="heroCarousel" aria-label="Pausar carrusel automático" aria-pressed="false">Pausar</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
     : banners.length === 1 && banners[0]
       ? renderBanner(banners[0], 0).replace('<article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="1 de 1">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
       : products.length
@@ -67,28 +68,7 @@ export function renderProductList(
   for (const product of products) html += renderStorefrontProductCard(product, discountMap?.get(product.id));
   html += `</div></section>
   <section class="benefits-strip" aria-label="Información de compra"><article><span aria-hidden="true">↗</span><div><strong>Envíos locales y nacionales</strong><p>La cobertura se indica en cada producto.</p></div></article><article><span aria-hidden="true">⌂</span><div><strong>Opciones de pago</strong><p>Consulta las alternativas disponibles al comprar.</p></div></article><article><span aria-hidden="true">✓</span><div><strong>Compra con confianza</strong><p>Revisa los detalles y políticas de cada producto.</p></div></article></section>
-  <script>
-    document.querySelectorAll('.campaign-carousel-controls button[data-carousel-direction]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const carousel = document.getElementById(button.getAttribute('aria-controls'));
-        if (!carousel) return;
-        const slide = carousel.querySelector('.campaign-banner');
-        const distance = slide ? slide.getBoundingClientRect().width + 16 : carousel.clientWidth;
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        carousel.scrollBy({ left: Number(button.dataset.carouselDirection) * distance, behavior: reduceMotion ? 'instant' : 'smooth' });
-      });
-    });
-    const heroCarousel = document.getElementById('heroCarousel');
-    heroCarousel?.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      const slide = heroCarousel.querySelector('.campaign-banner');
-      const distance = slide ? slide.getBoundingClientRect().width + 16 : heroCarousel.clientWidth;
-      const direction = event.key === 'ArrowLeft' ? -1 : 1;
-      heroCarousel.scrollBy({ left: direction * distance, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-    });
-
-  </script>${renderProductCardActionsScript}`;
+  ${banners.length > 1 ? renderStorefrontCarouselScript('heroCarousel') : ''}${renderProductCardActionsScript}`;
   return html;
 }
 
