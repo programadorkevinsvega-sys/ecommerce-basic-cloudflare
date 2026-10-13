@@ -11,7 +11,7 @@ export interface IStorefrontPublicApi {
   getHomeContent(): Promise<StorefrontHomeContentOutput>;
   createBanner(input: CreateBannerInput): Promise<Banner>;
   updateBanner(input: UpdateBannerInput): Promise<Banner>;
-  listBanners(): Promise<Banner[]>;
+  listBanners(placement?: string): Promise<Banner[]>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement>;
   updateAnnouncement(input: UpdateAnnouncementInput): Promise<Announcement>;
@@ -44,8 +44,8 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
     return res.value;
   }
 
-  public async listBanners(): Promise<Banner[]> {
-    const res = await this.container.listBannersUseCase.execute();
+  public async listBanners(placement?: string): Promise<Banner[]> {
+    const res = await this.container.listBannersUseCase.execute(placement);
     if (res.isFail()) throw res.error;
     return res.value;
   }

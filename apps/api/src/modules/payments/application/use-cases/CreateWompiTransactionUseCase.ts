@@ -30,8 +30,16 @@ export class CreateWompiTransactionUseCase {
   ) {}
 
   public async execute(cmd: CreateWompiTransactionCommand): Promise<WompiTransactionResult> {
+    const reference = `ORDER-${cmd.orderId}`;
+    const existing = await this.paymentRepo.findTransactionByReference(reference);
+    if (existing) {
+      if (existing.paymentMethod !== 'wompi' || existing.amountInCents !== cmd.amountInCents || existing.currency !== cmd.currency) {
+        throw new Error('El pedido ya tiene un intento de pago incompatible');
+      }
+      if (existing.status !== 'pending' || !existing.signature) throw new Error('El intento de pago ya fue finalizado');
+      return { transaction: existing, publicKey: cmd.publicKey, currency: existing.currency, amountInCents: existing.amountInCents, reference, signature: existing.signature, redirectUrl: cmd.redirectUrl };
+    }
     const txId = crypto.randomUUID();
-    const reference = `ORDER-${cmd.orderId.slice(0, 8)}-${Date.now()}`;
     const now = new Date().toISOString();
 
     const signature = await this.wompiAdapter.generateIntegritySignature({
@@ -54,9 +62,17 @@ export class CreateWompiTransactionUseCase {
       updatedAt: now,
     });
 
-    await this.paymentRepo.saveTransaction(tx);
+    try {
+      await this.paymentRepo.saveTransaction(tx);
+    } catch (error) {
+      const concurrent = await this.paymentRepo.findTransactionByReference(reference);
+      if (concurrent?.status === 'pending' && concurrent.amountInCents === cmd.amountInCents && concurrent.signature) {
+        return { transaction: concurrent, publicKey: cmd.publicKey, currency: concurrent.currency, amountInCents: concurrent.amountInCents, reference, signature: concurrent.signature, redirectUrl: cmd.redirectUrl };
+      }
+      throw error;
+    }
     await this.outboxRepo.save({
-      id: crypto.randomUUID(),
+      id: `payments_tx_created_${tx.id}`,
       eventType: 'payments.transaction_created',
       payload: JSON.stringify(tx.toJSON()),
       createdAt: now,

@@ -7,6 +7,7 @@ import { ReleaseStockUseCase } from './application/use-cases/ReleaseStockUseCase
 import { AdjustStockUseCase } from './application/use-cases/AdjustStockUseCase.js';
 import { ListStockUseCase } from './application/use-cases/ListStockUseCase.js';
 import { ConsumeStockUseCase } from './application/use-cases/ConsumeStockUseCase.js';
+import { CheckActiveReservationUseCase } from './application/use-cases/CheckActiveReservationUseCase.js';
 
 export interface InventoryModuleContainer {
   getProductStockUseCase: GetProductStockUseCase;
@@ -15,6 +16,7 @@ export interface InventoryModuleContainer {
   adjustStockUseCase: AdjustStockUseCase;
   listStockUseCase: ListStockUseCase;
   consumeStockUseCase: ConsumeStockUseCase;
+  checkActiveReservationUseCase: CheckActiveReservationUseCase;
 }
 
 export function createInventoryModule(env: Env): InventoryModuleContainer {
@@ -28,5 +30,6 @@ export function createInventoryModule(env: Env): InventoryModuleContainer {
     adjustStockUseCase: new AdjustStockUseCase(repo, outbox),
     listStockUseCase: new ListStockUseCase(repo),
     consumeStockUseCase: new ConsumeStockUseCase(repo, outbox),
+    checkActiveReservationUseCase: new CheckActiveReservationUseCase(repo),
   };
 }

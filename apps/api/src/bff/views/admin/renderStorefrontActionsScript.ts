@@ -19,6 +19,36 @@ export function renderStorefrontActionsScript(): string {
       else alert('Error al eliminar banner');
     }
 
+    async function duplicateBanner(id) {
+      const response = await fetch('/api/v1/admin/storefront/banners/' + id + '/duplicate', { method: 'POST' });
+      if (response.ok) window.location.reload();
+      else alert('No se pudo duplicar el banner');
+    }
+
+    function filterBanners(card) {
+      const [search, placement, state] = card.querySelectorAll('.form-grid input, .form-grid select');
+      card.querySelectorAll('[data-banner-row="1"]').forEach((row) => {
+        const matches = row.dataset.title.includes(search.value.toLowerCase()) &&
+          (!placement.value || row.dataset.placement === placement.value) && (!state.value || row.dataset.active === state.value);
+        row.hidden = !matches;
+      });
+    }
+
+    function previewBanner(prefix, bannerType) {
+      const title = document.getElementById(prefix + 'Title').value;
+      const description = document.getElementById(prefix + 'Desc').value;
+      const image = document.getElementById(prefix + 'Img').value;
+      const alt = document.getElementById(prefix + 'Alt').value;
+      const dialog = document.getElementById('banner-preview-dialog');
+      dialog.querySelector('h2').textContent = title || 'Vista previa';
+      dialog.querySelector('p').textContent = description;
+      const picture = dialog.querySelector('img'); picture.src = image; picture.alt = alt;
+      const action = dialog.querySelector('a');
+      action.hidden = bannerType === 'informative';
+      action.textContent = document.getElementById('pbBtnText')?.value || 'Explorar colección';
+      if (!dialog.open) dialog.showModal();
+    }
+
     function editBanner(id, title, link, alt, img, placement, desc, bannerType, btnText, startsAt, endsAt, sortOrder) {
       const isPromo = bannerType !== 'informative';
       if (isPromo) {
@@ -115,6 +145,8 @@ export function renderStorefrontActionsScript(): string {
     }
 
     window.setBannerStatus = setBannerStatus;
+    window.duplicateBanner = duplicateBanner;
+    window.filterBanners = filterBanners;
     window.deleteBanner = deleteBanner;
     window.editBanner = editBanner;
     window.resetPromoBannerForm = resetPromoBannerForm;

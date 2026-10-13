@@ -40,6 +40,8 @@ export class MediaController {
       createAuthMiddleware(identityGateway, 'admin', 'media:create'),
       async (c) => {
         try {
+          const contentLength = Number(c.req.header('content-length') || 0);
+          if (contentLength > 11 * 1024 * 1024) return c.json({ error: 'La solicitud supera el límite de 11 MB' }, 413);
           const body = await c.req.parseBody();
           const file = body['file'];
           const altText = body['altText'];
@@ -49,6 +51,7 @@ export class MediaController {
           if (!file || !(file instanceof File)) {
             return c.json({ error: 'Archivo no proporcionado o inválido' }, 400);
           }
+          if (file.size < 12 || file.size > 10 * 1024 * 1024) return c.json({ error: 'La imagen debe pesar entre 12 bytes y 10 MB' }, 413);
 
           if (typeof altText !== 'string' || altText.trim().length === 0) {
             return c.json({ error: 'El texto alternativo (altText) es obligatorio' }, 400);

@@ -23,6 +23,19 @@ export class StorefrontAdminController {
       }
     });
 
+    router.post('/api/v1/admin/storefront/banners/:id/duplicate', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
+      try {
+        const source = (await storefrontGateway.listBanners()).find((banner) => banner.id === c.req.param('id'));
+        if (!source) return c.json({ error: 'Banner no encontrado' }, 404);
+        const copy = await storefrontGateway.createBanner({
+          title: `${source.title} (copia)`, description: source.description, bannerType: source.bannerType,
+          buttonText: source.buttonText, placement: source.placement, imageUrl: source.imageUrl,
+          linkUrl: source.linkUrl, altText: source.altText, isActive: false, sortOrder: source.sortOrder,
+        });
+        return c.json({ data: copy }, 201);
+      } catch { return c.json({ error: 'No se pudo duplicar el banner' }, 400); }
+    });
+
     router.put('/api/v1/admin/storefront/banners/:id', createAuthMiddleware(identityGateway, 'admin', 'storefront:edit'), async (c) => {
       try {
         const body = await c.req.json();

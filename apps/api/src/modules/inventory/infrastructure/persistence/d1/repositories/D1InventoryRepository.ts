@@ -77,6 +77,33 @@ export class D1InventoryRepository implements IInventoryRepository {
     ).bind(orderId).run();
   }
 
+  public async hasActiveReservation(orderId: string, items: Array<{ productId: string; quantity: number }>): Promise<boolean> {
+    if (!items.length) return false;
+    const now = new Date().toISOString();
+    const { results } = await this.db.prepare(
+      `SELECT product_id, SUM(quantity) AS quantity FROM inventory_reservations
+       WHERE order_id = ? AND status = 'pending' AND expires_at > ? GROUP BY product_id`
+    ).bind(orderId, now).all<{ product_id: string; quantity: number }>();
+    const reserved = new Map((results || []).map((row) => [row.product_id, row.quantity]));
+    const required = new Map<string, number>();
+    for (const item of items) required.set(item.productId, (required.get(item.productId) || 0) + item.quantity);
+    return [...required].every(([productId, quantity]) => reserved.get(productId) === quantity);
+  }
+
+  public async tryReserveStock(productId: string, quantity: number): Promise<boolean> {
+    const result = await this.db.prepare(
+      `UPDATE inventory_stocks SET reserved_quantity = reserved_quantity + ?, updated_at = ?
+       WHERE product_id = ? AND quantity - reserved_quantity >= ?`
+    ).bind(quantity, new Date().toISOString(), productId, quantity).run();
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
+  public async releaseStockQuantity(productId: string, quantity: number): Promise<void> {
+    await this.db.prepare(
+      `UPDATE inventory_stocks SET reserved_quantity = MAX(0, reserved_quantity - ?), updated_at = ? WHERE product_id = ?`
+    ).bind(quantity, new Date().toISOString(), productId).run();
+  }
+
   public async listStocks(): Promise<InventoryStock[]> {
     const { results } = await this.db
       .prepare('SELECT * FROM inventory_stocks ORDER BY quantity ASC')

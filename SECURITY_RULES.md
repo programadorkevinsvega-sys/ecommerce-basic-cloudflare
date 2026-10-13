@@ -73,7 +73,7 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 
 - **SEC-PAY-01** Los datos de tarjeta **nunca** tocan nuestro Worker ni nuestros logs: el pago se hace en el checkout/widget de Wompi. Prohibido almacenar o registrar PAN, CVV o equivalentes.
 - **SEC-PAY-02** Monto, moneda y referencia se generan **en el servidor** a partir del pedido; la firma de integridad se calcula en el servidor con el secreto de integridad.
-- **SEC-PAY-03** Webhook `POST /api/v1/webhooks/wompi`: verificar el checksum del evento con el secreto de eventos (comparación en tiempo constante), validar la marca de tiempo con tolerancia, descartar eventos con referencia desconocida y procesar de forma **idempotente** por `eventId`.
+- **SEC-PAY-03** Webhook `POST /api/v1/webhooks/wompi`: verificar el SHA-256 checksum según las propiedades firmadas, timestamp y secreto Wompi (comparación en tiempo constante); validar tiempo, consultar la transacción autenticadamente en la API Wompi y comparar id, referencia, monto y moneda. Como Wompi no garantiza un id de evento estable, deduplicar por checksum y hacer idempotentes también el estado/outbox financiero.
 - **SEC-PAY-04** Antes de una transición financiera (pedido pagado), **reconciliar con la API de Wompi** y verificar que estado, monto en centavos, moneda y referencia coinciden con el pedido. Si no coinciden, no se transiciona y se marca para revisión.
 - **SEC-PAY-05** Nunca se confirma un pago por la redirección del navegador; la página de retorno solo muestra el estado leído del servidor.
 - **SEC-PAY-06** Credenciales de **sandbox y producción separadas**; secretos solo en Cloudflare Secrets; rotación periódica.
@@ -277,9 +277,9 @@ La certificación global solo se declara completa cuando todos los controles apl
 
 Se añadieron comprobaciones server-side a las rutas CRUD de storefront, mutación de settings y creación de redirecciones SEO. `AuthMiddleware` y `Role.hasPermission` interpretan `recurso:*` como permisos del recurso, además de conservar `*` global y la denegación por defecto. La consulta de pedidos aplica ownership de sesión o permiso de lectura de pedidos. Las rutas de notificaciones limitan canal/recipiente al actor autenticado y restringen el marcado de lectura a notificaciones que ya puede consultar.
 
-El catálogo público fuerza el estado `published`; el estado enviado por query ya no habilita borradores. Las rutas públicas de estado de pedido no muestran datos de contacto o dirección. La inicialización de Wompi falla cerrada si faltan llaves y el webhook exige secreto y event ID. El recaudo COD requiere permiso, método COD, estado no recaudado y monto entero igual al total.
+El catálogo público fuerza el estado `published`; el estado enviado por query ya no habilita borradores. Las rutas públicas de estado de pedido no muestran datos de contacto o dirección. La inicialización de Wompi falla cerrada si faltan llaves; el webhook comprueba el checksum y reconcilia contra la API Wompi antes de aplicar el estado. El recaudo COD requiere permiso, método COD, estado no recaudado y monto entero igual al total. La ruta de factura ahora requiere sesión y ownership o permiso administrativo; inventario, auditoría y notas crédito aplican permisos en el servidor.
 
-Pendiente de certificación: reconciliación de transacciones con API de Wompi, idempotencia integral de pagos/pedidos, CSRF y rate limiting. Las pruebas actuales no certifican estos controles de extremo a extremo ni el entorno desplegado.
+Se implementó CSRF por Origin/Sec-Fetch-Site en mutaciones con sesión y rate limits por IP para autenticación, inicio de pago/checkout y otras escrituras. El limiter es defensa contra abuso aproximada; faltan límites por actor/pedido, Turnstile donde aplique y prueba de carga/despliegue. Las pruebas verifican el webhook con firma estándar y API simulada dentro del Worker local, pero no reemplazan el evento real de sandbox de Wompi. MFA/reautenticación, auditoría completa de toda mutación y validación de bindings contra la cuenta de producción siguen pendientes de certificación.
 
 
 ### Auditoría de checkout (2026-10-12)

@@ -53,6 +53,11 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
     return banners.map((b) => b.toPrimitives());
   }
 
+  public async getPublicBanners(placement: 'category' | 'product' | 'checkout'): Promise<BannerItemDto[]> {
+    const banners = await this.publicApi.listBanners(placement);
+    return banners.map((banner) => banner.toPrimitives());
+  }
+
   public async deleteBanner(id: string): Promise<void> {
     await this.publicApi.deleteBanner(id);
   }

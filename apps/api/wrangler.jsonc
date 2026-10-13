@@ -47,6 +47,11 @@
       "dataset": "ecommerce_vega_analytics_production"
     }
   ],
+  "ratelimits": [
+    { "name": "AUTH_LIMITER", "namespace_id": "9174301", "simple": { "limit": 20, "period": 60 } },
+    { "name": "CHECKOUT_LIMITER", "namespace_id": "9174302", "simple": { "limit": 12, "period": 60 } },
+    { "name": "API_WRITE_LIMITER", "namespace_id": "9174303", "simple": { "limit": 90, "period": 60 } }
+  ],
   "triggers": {
     "crons": ["*/5 * * * *"]
   },

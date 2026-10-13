@@ -25,12 +25,16 @@ import { InvoicingController } from './controllers/invoicing/InvoicingController
 import { CustomerAccountController } from './controllers/account/CustomerAccountController.js';
 import { AuditController } from './controllers/audit/AuditController.js';
 import { AppCompositionRoot } from '../composition-root.js';
+import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
+import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+  app.use('/api/*', RateLimitMiddleware);
+  app.use('/api/*', CsrfProtectionMiddleware);
 
   // Storefront Admin API
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
@@ -69,7 +73,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', AuditController.createRoutes(cRoot.auditGateway, cRoot.identityGateway));
 
   // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado) y Cuenta del cliente (/cuenta)
-  app.route('/', StorefrontCheckoutController.createRoutes(cRoot.cartGateway, cRoot.catalogGateway, cRoot.shippingGateway, cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
+  app.route('/', StorefrontCheckoutController.createRoutes(cRoot.cartGateway, cRoot.catalogGateway, cRoot.shippingGateway, cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CustomerAccountController.createRoutes(cRoot.identityGateway, cRoot.ordersGateway, cRoot.invoicingGateway));
 
   // Panel Visual Administrativo

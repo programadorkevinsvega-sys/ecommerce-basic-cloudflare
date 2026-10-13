@@ -85,32 +85,15 @@ export class D1PaymentRepository implements IPaymentRepository {
   }
 
   public async saveWebhookEvent(record: WebhookEventRecord): Promise<boolean> {
-    const existing = await this.db.prepare(
-      `SELECT id FROM payments_webhook_events WHERE event_id = ?`
-    ).bind(record.eventId).first<{ id: string }>();
-
-    if (existing) {
-      return false; // already recorded (idempotente)
-    }
-
-    // Escribe en nuevas columnas + originales NOT NULL (payload, processed_at)
-    await this.db.prepare(
-      `INSERT INTO payments_webhook_events
+    const result = await this.db.prepare(
+      `INSERT OR IGNORE INTO payments_webhook_events
         (id, provider, event_id, event_type, payload_json, processed, received_at, payload, processed_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
-      record.id,
-      record.provider,
-      record.eventId,
-      record.eventType,
-      record.payload,
-      record.processed ? 1 : 0,
-      record.receivedAt,
-      record.payload,                // payload (original NOT NULL)
-      record.receivedAt              // processed_at (original NOT NULL)
+      record.id, record.provider, record.eventId, record.eventType, record.payload,
+      record.processed ? 1 : 0, record.receivedAt, record.payload, record.receivedAt
     ).run();
-
-    return true;
+    return (result.meta?.changes ?? 0) > 0;
   }
 
   public async saveCodCollection(cod: CodCollection): Promise<void> {

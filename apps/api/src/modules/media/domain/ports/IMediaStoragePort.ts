@@ -5,7 +5,7 @@ export interface StoredMediaObject {
 }
 
 export interface IMediaStoragePort {
-  put(key: string, data: Uint8Array | ReadableStream, mimeType: string): Promise<void>;
+  put(key: string, data: Uint8Array | ReadableStream, mimeType: string): Promise<number>;
   get(key: string): Promise<StoredMediaObject | null>;
   delete(key: string): Promise<void>;
 }

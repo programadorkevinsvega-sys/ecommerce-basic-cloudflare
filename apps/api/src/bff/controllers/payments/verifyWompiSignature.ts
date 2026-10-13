@@ -19,9 +19,13 @@ export async function verifyWompiSignature(
   const timestamp = body?.timestamp as number | undefined;
   const properties = body?.signature?.properties as string[] | undefined;
 
-  if (!checksum || !timestamp || !Array.isArray(properties)) {
+  if (typeof checksum !== 'string' || !/^[a-f0-9]{64}$/i.test(checksum) ||
+      !Number.isSafeInteger(timestamp) || !Array.isArray(properties) || properties.length === 0 ||
+      properties.some((p) => typeof p !== 'string' || p.length > 128)) {
     return false;
   }
+  const age = Math.floor(Date.now() / 1000) - timestamp!;
+  if (age < -300 || age > 25 * 60 * 60) return false;
 
   const dataObj = (body?.data ?? {}) as Record<string, unknown>;
   const propValues = properties
@@ -34,5 +38,9 @@ export async function verifyWompiSignature(
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return calculated.toLowerCase() === checksum.toLowerCase();
+  const expected = new TextEncoder().encode(calculated.toLowerCase());
+  const supplied = new TextEncoder().encode(checksum.toLowerCase());
+  let mismatch = expected.length ^ supplied.length;
+  for (let i = 0; i < expected.length; i++) mismatch |= (expected[i] ?? 0) ^ (supplied[i] ?? 0);
+  return mismatch === 0;
 }

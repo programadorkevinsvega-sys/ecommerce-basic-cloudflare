@@ -7,12 +7,13 @@ export class R2MediaStorageAdapter implements IMediaStoragePort {
     this.bucket = bucket;
   }
 
-  public async put(key: string, data: Uint8Array | ReadableStream, mimeType: string): Promise<void> {
-    await this.bucket.put(key, data, {
+  public async put(key: string, data: Uint8Array | ReadableStream, mimeType: string): Promise<number> {
+    const object = await this.bucket.put(key, data, {
       httpMetadata: {
         contentType: mimeType,
       },
     });
+    return object.size;
   }
 
   public async get(key: string): Promise<StoredMediaObject | null> {

@@ -19,6 +19,8 @@
     "db:migrate:local": "pnpm --filter @ecommerce/api db:migrate:local",
     "db:migrate:remote": "pnpm --filter @ecommerce/api db:migrate:remote",
     "test": "pnpm --filter @ecommerce/api test",
+    "test:workers": "pnpm --filter @ecommerce/api test:workers",
+    "db:test-wrangler-migrations": "pnpm --filter @ecommerce/api db:test-wrangler-migrations",
     "test:isolation": "pnpm --filter @ecommerce/api test:isolation",
     "test:architecture": "pnpm --filter @ecommerce/api test:architecture",
     "lint": "pnpm --filter @ecommerce/api lint",
@@ -30,8 +32,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250224.0",
+    "@cloudflare/workers-types": "^5.20261006.1",
     "typescript": "^5.7.3",
-    "wrangler": "^3.111.0"
+    "wrangler": "^4.36.0"
   }
 }

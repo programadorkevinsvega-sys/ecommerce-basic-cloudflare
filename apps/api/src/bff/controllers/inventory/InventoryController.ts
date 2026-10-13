@@ -20,7 +20,7 @@ export class InventoryController {
     });
 
     // Admin Auth Middleware — acepta Bearer header O cookie __Host-admin-session
-    const requireAdmin = async (c: any, next: () => Promise<void>) => {
+    const requireAdmin = (permission: 'inventory:read' | 'inventory:adjust') => async (c: any, next: () => Promise<void>) => {
       const auth = c.req.header('Authorization');
       let token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
       if (!token) {
@@ -32,6 +32,7 @@ export class InventoryController {
       try {
         const session = await identityGateway.validateSession(token);
         if (session.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 403);
+        if (!session.permissions.some((value) => value === '*' || value === 'inventory:*' || value === permission)) return c.json({ error: 'Permiso insuficiente' }, 403);
         c.set('adminId', session.actorId);
         await next();
       } catch {
@@ -40,7 +41,7 @@ export class InventoryController {
     };
 
     // GET /api/v1/admin/inventory (Admin: listar todo el stock sincronizado con catálogo)
-    app.get('/api/v1/admin/inventory', requireAdmin, async (c) => {
+    app.get('/api/v1/admin/inventory', requireAdmin('inventory:read'), async (c) => {
       let stocks = await inventoryGateway.listStocks();
 
       // Sincronización automática con productos de catálogo
@@ -69,15 +70,15 @@ export class InventoryController {
     });
 
     // POST /api/v1/admin/inventory/adjust (Admin: ajustar stock manualmente)
-    app.post('/api/v1/admin/inventory/adjust', requireAdmin, async (c) => {
+    app.post('/api/v1/admin/inventory/adjust', requireAdmin('inventory:adjust'), async (c) => {
       const body = await c.req.json();
-      if (!body.productId || typeof body.deltaQuantity !== 'number') {
+      if (typeof body.productId !== 'string' || !body.productId || !Number.isSafeInteger(body.deltaQuantity) || Math.abs(body.deltaQuantity) > 100000) {
         return c.json({ error: 'productId y deltaQuantity son requeridos' }, 400);
       }
       const updated = await inventoryGateway.adjustStock(
         body.productId,
         body.deltaQuantity,
-        body.reason ?? 'manual_adjustment'
+        typeof body.reason === 'string' ? body.reason.slice(0, 200) : 'manual_adjustment'
       );
       return c.json({ success: true, stock: updated });
     });

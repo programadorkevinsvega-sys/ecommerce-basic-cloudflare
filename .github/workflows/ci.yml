@@ -37,6 +37,9 @@ jobs:
       - name: Aplicación SQL desde cero y actualización compatible
         run: pnpm db:test-migrations
 
+      - name: Orden real de Wrangler en una D1 local vacía e idempotencia
+        run: pnpm db:test-wrangler-migrations
+
       - name: Lint de reglas de arquitectura (200 líneas, capas, imports)
         run: pnpm lint
 
@@ -45,6 +48,9 @@ jobs:
 
       - name: Ejecución de pruebas unitarias
         run: pnpm test
+
+      - name: Pruebas del Worker en Miniflare (D1, CSRF, límites y webhook)
+        run: pnpm test:workers
 
   security-scan:
     name: Escaneo de Secretos (Gitleaks)

@@ -12,6 +12,9 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { verifyWompiSignature } from './verifyWompiSignature.js';
 import { buildWompiCheckoutUrl } from './buildWompiCheckoutUrl.js';
 import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
+import { reconcileWompiEvent } from './reconcileWompiEvent.js';
+import { registerAdminPaymentRoutes } from './registerAdminPaymentRoutes.js';
+import { hasReservedStock } from './hasReservedStock.js';
 
 export class PaymentsController {
   public static createRoutes(
@@ -33,6 +36,7 @@ export class PaymentsController {
         const body = await c.req.json();
         const order = await ordersGateway.getOrder(body.orderId);
         if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
+        if (order.status !== 'placed' || order.paymentStatus !== 'pending' || !await hasReservedStock(inventoryGateway, order)) return c.json({ error: 'El pedido ya no está disponible para pago' }, 409);
         if (order.customerId) {
           const authorization = c.req.header('authorization');
           const cookie = c.req.header('cookie') || '';
@@ -85,29 +89,41 @@ export class PaymentsController {
       const valid = await verifyWompiSignature(body, eventsSecret);
       if (!valid) return c.json({ error: 'Firma inválida' }, 401);
 
-      const eventId = body?.event?.id ?? body?.id;
-      if (typeof eventId !== 'string' || !eventId) return c.json({ error: 'Evento inválido' }, 400);
-      const eventType = body?.event?.type ?? body?.event ?? 'transaction.updated';
-      const txData = body?.data?.transaction ?? {};
+      let canonical: any;
+      try {
+        const reconciled = await reconcileWompiEvent(body, c.env);
+        if (!reconciled) return c.json({ error: 'La transacción no coincide con el evento firmado' }, 409);
+        canonical = reconciled.transaction;
+      } catch (error) {
+        return c.json({ error: error instanceof Error && error.message === 'WOMPI_NOT_CONFIGURED' ? 'Reconciliación de pagos no configurada' : 'No fue posible reconciliar el pago' }, 503);
+      }
+      const eventId = body.signature.checksum;
+      const eventType = typeof body.event === 'string' ? body.event : 'transaction.updated';
 
-      const res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: body });
-      if (res.ignored) return c.json({ received: true, ignored: true });
+      const reconciledBody = { ...body, data: { ...body.data, transaction: canonical } };
+      const res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: reconciledBody });
+      if (res.ignored && !res.orderId) return c.json({ received: true, ignored: true });
+      if (res.ignored && res.orderId) {
+        const currentOrder = await ordersGateway.getOrder(res.orderId);
+        const status = String(canonical.status).toUpperCase();
+        if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved' || ['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });
+      }
 
-      const wompiStatus = String(txData.status ?? '').toUpperCase();
+      const wompiStatus = String(canonical.status ?? '').toUpperCase();
 
       if (res.orderId && wompiStatus === 'APPROVED') {
         await ordersGateway.updateOrderStatus({
           orderId: res.orderId,
           status: 'confirmed',
           paymentStatus: 'approved',
-          note: `Pago Wompi aprobado (tx: ${txData.id})`,
+          note: 'Pago Wompi aprobado y reconciliado',
           actor: 'wompi-webhook',
         });
 
         await processOrderPaymentSuccess({
           orderId: res.orderId,
           paymentMethod: 'wompi',
-          paymentReference: String(txData.id || ''),
+          paymentReference: String(canonical.id || ''),
           actor: 'wompi-webhook',
           ordersGateway,
           inventoryGateway,
@@ -136,79 +152,7 @@ export class PaymentsController {
       return c.json({ received: true });
     });
 
-    const getAdminToken = (c: any): string | null => {
-      const auth = c.req.header('Authorization');
-      if (auth?.startsWith('Bearer ')) return auth.slice(7);
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-      return match ? match[1] : null;
-    };
-
-    // POST /api/v1/admin/payments/cod/collect
-    app.post('/api/v1/admin/payments/cod/collect', async (c) => {
-      const token = getAdminToken(c);
-      if (!token) return c.json({ error: 'No autorizado' }, 401);
-      const adminRes = await identityGateway.validateSession(token);
-      if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
-      if (!adminRes.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:collect')) return c.json({ error: 'Permiso insuficiente' }, 403);
-
-      const body = await c.req.json();
-      const order = typeof body.orderId === 'string' ? await ordersGateway.getOrder(body.orderId) : null;
-      const amountInCents = Number(body.amountInCents);
-      if (!order || order.paymentMethod !== 'cash_on_delivery' || order.paymentStatus === 'collected' || !Number.isSafeInteger(amountInCents) || amountInCents !== order.totalCents) {
-        return c.json({ error: 'orderId y amountInCents son requeridos' }, 400);
-      }
-
-      const cod = await paymentsGateway.recordCodCollection({
-        orderId: body.orderId,
-        amountInCents,
-        collectedBy: adminRes.actorId,
-        receiptNumber: body.receiptNumber,
-        notes: body.notes,
-      });
-
-      await ordersGateway.updateOrderStatus({
-        orderId: body.orderId,
-        status: 'delivered',
-        paymentStatus: 'collected',
-        note: `Recaudo contra entrega registrado por ${adminRes.actorId}`,
-        actor: adminRes.actorId,
-      });
-
-      await processOrderPaymentSuccess({
-        orderId: body.orderId,
-        paymentMethod: 'cash_on_delivery',
-        paymentReference: body.receiptNumber || 'COD-REC',
-        actor: adminRes.actorId,
-        ordersGateway,
-        inventoryGateway,
-        invoicingGateway,
-        notificationsGateway,
-        auditGateway,
-        realtimeGateway,
-        settingsGateway,
-      });
-
-      return c.json({ success: true, collection: cod.toJSON() });
-    });
-
-    // GET /api/v1/admin/payments
-    app.get('/api/v1/admin/payments', async (c) => {
-      const token = getAdminToken(c);
-      if (!token) return c.json({ error: 'No autorizado' }, 401);
-      const adminRes = await identityGateway.validateSession(token);
-      if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
-      if (!adminRes.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-
-      const transactions = await paymentsGateway.listTransactions(50);
-      const collections = await paymentsGateway.listCodCollections(50);
-
-      return c.json({
-        success: true,
-        transactions: transactions.map((t) => t.toJSON()),
-        collections: collections.map((col) => col.toJSON()),
-      });
-    });
+    registerAdminPaymentRoutes(app, { paymentsGateway, ordersGateway, identityGateway, realtimeGateway, inventoryGateway, invoicingGateway, notificationsGateway, auditGateway, settingsGateway });
 
     return app;
   }

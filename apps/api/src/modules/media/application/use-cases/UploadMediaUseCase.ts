@@ -45,6 +45,14 @@ export class UploadMediaUseCase {
     if (!validation.isValid || !validation.detectedMimeType) {
       return Result.fail(new Error(validation.error || 'Formato de imagen inválido'));
     }
+    if (input.altText.trim().length > 500 || input.originalFileName.length > 255 || /[\u0000-\u001f]/.test(input.originalFileName)) {
+      return Result.fail(new Error('Metadatos del archivo inválidos'));
+    }
+    const extensionMime: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif' };
+    const extension = input.originalFileName.split('.').pop()?.toLowerCase();
+    if (extension && extensionMime[extension] && extensionMime[extension] !== validation.detectedMimeType) {
+      return Result.fail(new Error('La extensión del archivo no coincide con su contenido'));
+    }
 
     const assetId = crypto.randomUUID();
     const isPrivate = Boolean(input.isPrivate);
@@ -53,7 +61,11 @@ export class UploadMediaUseCase {
       ? `private/admin/${input.uploadedByAdminId}/${assetId}`
       : `media/${assetId}`;
 
-    await this.storagePort.put(storageKey, input.data, validation.detectedMimeType);
+    const storedSize = await this.storagePort.put(storageKey, input.data, validation.detectedMimeType);
+    if (storedSize !== input.data.length) {
+      await this.storagePort.delete(storageKey);
+      return Result.fail(new Error('El objeto almacenado no coincide con el archivo validado'));
+    }
 
     const now = new Date().toISOString();
     const asset = new MediaAsset({
@@ -70,7 +82,13 @@ export class UploadMediaUseCase {
       updatedAt: now,
     });
 
-    await this.assetRepo.save(asset);
+    try {
+      await this.assetRepo.save(asset);
+    } catch {
+      // La clave es nueva y no se publicó la referencia en D1.
+      await this.storagePort.delete(storageKey).catch(() => undefined);
+      throw new Error('No se pudo registrar el archivo');
+    }
 
     return Result.ok({
       id: asset.id,

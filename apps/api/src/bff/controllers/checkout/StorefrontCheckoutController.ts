@@ -12,6 +12,8 @@ import { renderCartPage } from '../../views/renderCartPage.js';
 import { renderCheckoutPage } from '../../views/renderCheckoutPage.js';
 import { renderCheckoutResultPage } from '../../views/renderCheckoutResultPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { renderStorefrontBanners } from '../../views/renderStorefrontBanners.js';
 
 export class StorefrontCheckoutController {
   public static createRoutes(
@@ -21,7 +23,8 @@ export class StorefrontCheckoutController {
     ordersGateway: OrdersGateway,
     cmsGateway: CmsGateway,
     identityGateway: IdentityGateway,
-    settingsGateway: SettingsGateway
+    settingsGateway: SettingsGateway,
+    storefrontGateway: StorefrontGateway
   ): Hono {
     const router = new Hono();
 
@@ -86,7 +89,8 @@ export class StorefrontCheckoutController {
       allProducts.forEach((p) => productsMap.set(p.id, p));
 
       const taxRate = settings?.taxRatePercent ?? 19;
-      const bodyHtml = renderCheckoutPage(cart, productsMap, zones, taxRate);
+      const banners = await storefrontGateway.getPublicBanners('checkout');
+      const bodyHtml = `${renderStorefrontBanners(banners, 'Información para tu compra')}${renderCheckoutPage(cart, productsMap, zones, taxRate)}`;
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',

@@ -21,7 +21,7 @@ export function renderStorefrontManagementSection(
         : `<div style="font-size:0.75rem; color:#94a3b8;">Informativo (Sin botón de acción)</div>`;
 
       return `
-        <tr>
+        <tr data-banner-row="1" data-title="${escapeHtml(b.title.toLowerCase())}" data-type="${b.bannerType || 'promotional'}" data-placement="${b.placement}" data-active="${b.isActive ? 'active' : 'inactive'}">
           <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
             <div style="display:flex; align-items:center; gap:0.6rem;">
               <div style="width:40px; height:40px; border-radius:6px; background:#1e293b; overflow:hidden; flex-shrink:0; display:grid; place-items:center;">
@@ -41,6 +41,7 @@ export function renderStorefrontManagementSection(
           <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
             ${isPromo ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
             <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
+            <button class="btn-action" onclick="duplicateBanner('${b.id}')">Duplicar</button>
             ${toggle}
             <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
           </td>
@@ -50,6 +51,7 @@ export function renderStorefrontManagementSection(
   };
 
   return `
+    <dialog id="banner-preview-dialog" aria-labelledby="banner-preview-title" style="max-width:900px; border:0; border-radius:12px; padding:1.5rem;"><h2 id="banner-preview-title"></h2><p></p><img alt="" style="display:block; max-width:100%; max-height:55vh; object-fit:contain;" /><a hidden></a><form method="dialog"><button class="btn-primary">Cerrar vista previa</button></form></dialog>
     <!-- SECCIÓN 1: BANNERS HERO PROMOCIONALES CON BOTÓN -->
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -68,7 +70,7 @@ export function renderStorefrontManagementSection(
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="pbAlt" required placeholder="Colección destacada..." /></div>
           <div>
             <label>Ubicación</label>
-            <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
+            <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option><option value="checkout">Checkout</option></select>
           </div>
           <div><label>Inicio (opcional)</label><input type="datetime-local" id="pbStartsAt" /></div>
           <div><label>Finalización (opcional)</label><input type="datetime-local" id="pbEndsAt" /></div>
@@ -89,10 +91,11 @@ export function renderStorefrontManagementSection(
           </div>
         </div>
 
-        <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button>
+        <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button><button type="button" class="btn-action" onclick="previewBanner('pb', 'promotional')">Vista previa</button>
         <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
         <div id="pbMsg" class="msg"></div>
       </form>
+      <div class="form-grid" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option><option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option></select><select onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
       <table>
         <thead><tr><th>Título y Botón CTA</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody>${renderRows(promoBanners, true)}</tbody>
@@ -115,7 +118,7 @@ export function renderStorefrontManagementSection(
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="ibAlt" required placeholder="Comunicado de la tienda..." /></div>
           <div>
             <label>Ubicación</label>
-            <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
+            <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option><option value="checkout">Checkout</option></select>
           </div>
           <div><label>Inicio (opcional)</label><input type="datetime-local" id="ibStartsAt" /></div>
           <div><label>Finalización (opcional)</label><input type="datetime-local" id="ibEndsAt" /></div>
@@ -136,10 +139,11 @@ export function renderStorefrontManagementSection(
           </div>
         </div>
 
-        <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button>
+        <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button><button type="button" class="btn-action" onclick="previewBanner('ib', 'informative')">Vista previa</button>
         <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
         <div id="ibMsg" class="msg"></div>
       </form>
+      <div class="form-grid" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option><option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option></select><select onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
       <table>
         <thead><tr><th>Título y Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody>${renderRows(infoBanners, false)}</tbody>

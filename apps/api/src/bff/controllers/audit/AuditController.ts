@@ -24,6 +24,7 @@ export class AuditController {
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (!adminRes.permissions.some((permission) => permission === '*' || permission === 'audit:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const logs = await auditGateway.list({ limit: 100 });
       return c.json({ success: true, logs: logs.map((l) => l.toJSON()) });

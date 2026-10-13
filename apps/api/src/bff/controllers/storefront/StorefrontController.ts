@@ -73,13 +73,15 @@ export class StorefrontController {
     router.get('/productos', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const query = c.req.query('q');
-      const [products, nav] = await Promise.all([
+      const placement = c.req.query('category') ? 'category' as const : null;
+      const [products, nav, banners] = await Promise.all([
         catalogGateway.listProducts({ limit: 24, status: 'published', searchQuery: query }),
         getStorefrontNavMenus(cmsGateway),
+        placement ? storefrontGateway.getPublicBanners(placement) : Promise.resolve([]),
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const bodyHtml = renderProductList(products, query, undefined, discountMap);
+      const bodyHtml = renderProductList(products, query, banners, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
@@ -112,7 +114,8 @@ export class StorefrontController {
           priceInCents: product.priceInCents,
         }).catch(() => undefined);
 
-        const bodyHtml = renderProductDetail(product, discount);
+        const banners = await storefrontGateway.getPublicBanners('product');
+        const bodyHtml = `${renderProductList([], undefined, banners)}${renderProductDetail(product, discount)}`;
         const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 

@@ -38,6 +38,12 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 
 ## Estrategia de release
 
+### Orden de migraciones D1 con Wrangler
+
+Wrangler 3 puede ordenar mal archivos con nombres prefijados `<módulo>__NNNN` al arrancar una base vacía (por ejemplo `settings__0002` antes de `settings__0001`). Aplicar migraciones locales/remotas usando el runner `apps/api/scripts/apply-migrations.js`, que ordena módulo y versión numérica y registra los mismos nombres en `d1_migrations`; no invoque `wrangler d1 migrations apply` con Wrangler 3 sobre una base vacía. El modo remoto exige `ALLOW_REMOTE_D1_MIGRATIONS=1` explícito. Antes de un cambio remoto, respaldar/inspeccionar D1 y usar el procedimiento de release de abajo. Para una ejecución local reproducible: `pnpm db:test-wrangler-migrations`; hace una primera aplicación y una segunda pasada sobre una D1 temporal. No crea ni borra una D1 remota.
+
+No hay rollback automático de DDL. Las nuevas migraciones deben ser aditivas y compatibles hacia atrás; recuperar una aplicación defectuosa implica detener el release, volver el Worker a la versión compatible y preparar una migración correctiva expand/contract tras respaldar. No borrar datos ni objetos R2 como rollback genérico.
+
 ```text
 Release candidate
       ↓

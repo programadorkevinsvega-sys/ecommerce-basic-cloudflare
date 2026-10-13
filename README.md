@@ -578,7 +578,7 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | `RESEND_WEBHOOK_SECRET` | [Resend](https://resend.com) | Panel de Resend > Webhooks (opcional) | Validación de firmas de eventos de entrega/rebote de correo. |
 | `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
-| `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación de la firma HMAC de los webhooks (`x-event-checksum`) enviados por Wompi al Worker. |
+| `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación SHA-256 del checksum Wompi (`properties` + `timestamp` + secreto), no HMAC. |
 
 #### Comandos para configurar los secretos en producción:
 ```bash
@@ -597,16 +597,18 @@ npx wrangler secret put RESEND_WEBHOOK_SECRET
 ```bash
 pnpm install
 pnpm db:migrate:local          # copia migraciones por módulo y aplica a D1 local
-pnpm db:migrate --module=catalog
 pnpm dev:api                   # wrangler dev (Worker + bindings locales)
 pnpm dev:storefront
 pnpm dev:admin
-pnpm test                      # unit + integración (vitest-pool-workers)
+pnpm test                      # pruebas unitarias
+pnpm test:workers              # integración Worker + D1 local/Miniflare
+pnpm db:test-wrangler-migrations # migración desde D1 Wrangler vacía + segunda pasada
+pnpm db:migrate:remote         # requiere ALLOW_REMOTE_D1_MIGRATIONS=1; revisar antes de aplicar
 pnpm test:isolation            # aislamiento de tablas entre módulos
-pnpm test:load                 # k6
 pnpm lint && pnpm typecheck
-pnpm deploy:staging
 ```
+
+Los límites de abuso se configuran con los bindings `AUTH_LIMITER`, `CHECKOUT_LIMITER` y `WRITE_LIMITER` en `apps/api/wrangler.jsonc`. Rate Limiting de Workers es aproximado y regional, no debe usarse como control contable. Antes de desplegar, confirme que los identificadores de namespace de esos bindings sean únicos en la cuenta Cloudflare destino.
 
 ---
 

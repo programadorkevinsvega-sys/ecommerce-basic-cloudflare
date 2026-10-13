@@ -25,6 +25,10 @@ export class InProcessInventoryGateway implements InventoryGateway {
     return this.publicApi.consumeStock({ orderId, items });
   }
 
+  public async hasActiveReservation(orderId: string, items: Array<{ productId: string; quantity: number }>): Promise<boolean> {
+    return this.publicApi.hasActiveReservation(orderId, items);
+  }
+
   public async adjustStock(productId: string, quantity: number, reason: string): Promise<InventoryStockDto> {
     const stock = await this.publicApi.adjustStock({ productId, quantity, reason });
     return stock.toJSON();

@@ -87,6 +87,7 @@ export interface StorefrontGateway {
   createBanner(request: CreateBannerGatewayRequest): Promise<{ id: string; title: string }>;
   updateBanner(request: UpdateBannerGatewayRequest): Promise<BannerItemDto>;
   listBanners(): Promise<BannerItemDto[]>;
+  getPublicBanners(placement: 'category' | 'product' | 'checkout'): Promise<BannerItemDto[]>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(request: { message: string; placement: 'top_bar' | 'home' | 'products'; linkUrl?: string }): Promise<{ id: string; message: string }>;
   updateAnnouncement(request: UpdateAnnouncementGatewayRequest): Promise<AnnouncementItemDto>;

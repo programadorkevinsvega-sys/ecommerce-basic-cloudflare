@@ -35,4 +35,8 @@ export class InventoryPublicApi {
   public async consumeStock(cmd: ConsumeStockCommand): Promise<void> {
     return this.container.consumeStockUseCase.execute(cmd);
   }
+
+  public async hasActiveReservation(orderId: string, items: Array<{ productId: string; quantity: number }>): Promise<boolean> {
+    return this.container.checkActiveReservationUseCase.execute(orderId, items);
+  }
 }

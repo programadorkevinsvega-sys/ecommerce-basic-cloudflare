@@ -1,4 +1,7 @@
 export interface Env {
+  AUTH_LIMITER: RateLimit;
+  CHECKOUT_LIMITER: RateLimit;
+  API_WRITE_LIMITER: RateLimit;
   DB: D1Database;
   MEDIA_BUCKET: R2Bucket;
   CACHE: KVNamespace;
@@ -7,6 +10,7 @@ export interface Env {
   ENVIRONMENT?: string;
   WOMPI_PUBLIC_KEY?: string;
   WOMPI_PRIVATE_KEY?: string;
+  WOMPI_ENVIRONMENT?: 'sandbox' | 'production';
   WOMPI_INTEGRITY_SECRET?: string;
   WOMPI_EVENTS_SECRET?: string;
   RESEND_API_KEY?: string;

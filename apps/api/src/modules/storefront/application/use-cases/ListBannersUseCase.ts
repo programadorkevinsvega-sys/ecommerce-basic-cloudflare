@@ -9,8 +9,9 @@ export class ListBannersUseCase {
     this.repo = repo;
   }
 
-  public async execute(): Promise<Result<Banner[], Error>> {
-    const banners = await this.repo.findAllBanners();
-    return Result.ok(banners);
+  public async execute(placement?: string): Promise<Result<Banner[], Error>> {
+    const banners = placement ? await this.repo.findActiveBanners(placement) : await this.repo.findAllBanners();
+    const visible = placement ? banners.filter((banner) => banner.isCurrentlyVisible()) : banners;
+    return Result.ok(visible);
   }
 }

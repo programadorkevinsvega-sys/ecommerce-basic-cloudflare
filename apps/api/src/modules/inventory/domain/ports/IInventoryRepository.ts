@@ -17,5 +17,8 @@ export interface IInventoryRepository {
   createReservation(orderId: string, productId: string, quantity: number, expiresAt: string): Promise<void>;
   releaseReservation(orderId: string): Promise<void>;
   confirmReservation(orderId: string): Promise<void>;
+  hasActiveReservation(orderId: string, items: Array<{ productId: string; quantity: number }>): Promise<boolean>;
+  tryReserveStock(productId: string, quantity: number): Promise<boolean>;
+  releaseStockQuantity(productId: string, quantity: number): Promise<void>;
   listStocks(): Promise<InventoryStock[]>;
 }
