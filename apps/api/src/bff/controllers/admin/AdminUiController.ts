@@ -101,7 +101,7 @@ export class AdminUiController {
           shippingZones,
           divipolaLocations,
           settings,
-          adminEmail: session.actorId || 'admin@vega.com',
+          adminEmail: session.actorId || 'Administrador',
         });
 
         return c.html(html);

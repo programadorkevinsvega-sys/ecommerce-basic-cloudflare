@@ -11,6 +11,7 @@ import { LogoutUseCase } from './application/use-cases/LogoutUseCase.js';
 import { GetCustomerProfileUseCase } from './application/use-cases/GetCustomerProfileUseCase.js';
 import { BeginAdminMfaEnrollmentUseCase } from './application/use-cases/BeginAdminMfaEnrollmentUseCase.js';
 import { ConfirmAdminMfaEnrollmentUseCase } from './application/use-cases/ConfirmAdminMfaEnrollmentUseCase.js';
+import { IConfiguredAdminCredentialAuditPort } from './application/ports/IConfiguredAdminCredentialAuditPort.js';
 
 export interface IdentityModuleContainer {
   registerCustomerUseCase: RegisterCustomerUseCase;
@@ -23,7 +24,7 @@ export interface IdentityModuleContainer {
   confirmAdminMfaEnrollmentUseCase: ConfirmAdminMfaEnrollmentUseCase;
 }
 
-export function createIdentityModule(env: Env): IdentityModuleContainer {
+export function createIdentityModule(env: Env, credentialAudit?: IConfiguredAdminCredentialAuditPort): IdentityModuleContainer {
   const customerRepo = new D1CustomerRepository(env.DB);
   const adminRepo = new D1AdminUserRepository(env.DB);
   const sessionRepo = new D1SessionRepository(env.DB);
@@ -35,7 +36,7 @@ export function createIdentityModule(env: Env): IdentityModuleContainer {
     loginAdminUseCase: new LoginAdminUseCase(adminRepo, sessionRepo, {
       email: env.ADMIN_EMAIL,
       password: env.ADMIN_PASSWORD,
-    }),
+    }, credentialAudit),
     validateSessionUseCase: new ValidateSessionUseCase(sessionRepo, adminRepo, roleRepo),
     logoutUseCase: new LogoutUseCase(sessionRepo),
     getCustomerProfileUseCase: new GetCustomerProfileUseCase(customerRepo),

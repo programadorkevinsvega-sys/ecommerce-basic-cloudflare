@@ -5,6 +5,7 @@ import { TotpService } from '../../domain/services/TotpService.js';
 import { SessionTokenGenerator } from '../../domain/services/SessionTokenGenerator.js';
 import { Session } from '../../domain/entities/Session.js';
 import { ConfiguredSecretComparator } from '../../domain/services/ConfiguredSecretComparator.js';
+import { IConfiguredAdminCredentialAuditPort } from '../ports/IConfiguredAdminCredentialAuditPort.js';
 import { Result } from '../../../../shared-kernel/Result.js';
 
 export interface LoginAdminInput {
@@ -32,16 +33,19 @@ export class LoginAdminUseCase {
   private readonly sessionRepo: ISessionRepository;
   private readonly configuredEmail?: string;
   private readonly configuredPassword?: string;
+  private readonly credentialAudit?: IConfiguredAdminCredentialAuditPort;
 
   public constructor(
     adminRepo: IAdminUserRepository,
     sessionRepo: ISessionRepository,
     credentials?: { email?: string; password?: string },
+    credentialAudit?: IConfiguredAdminCredentialAuditPort,
   ) {
     this.adminRepo = adminRepo;
     this.sessionRepo = sessionRepo;
     this.configuredEmail = credentials?.email?.trim().toLowerCase() || undefined;
     this.configuredPassword = credentials?.password || undefined;
+    this.credentialAudit = credentialAudit;
   }
 
   public async execute(input: LoginAdminInput): Promise<Result<LoginAdminOutput, Error>> {
@@ -84,12 +88,15 @@ export class LoginAdminUseCase {
     }
 
     if (configuredCredentials) {
+      if (!this.credentialAudit) return Result.fail(new Error('Auditoría de credenciales no configurada'));
+      await this.credentialAudit.recordCredentialSync(admin.id, 'before');
       const passwordHash = await PasswordHasher.hash(this.configuredPassword as string);
       admin.synchronizeConfiguredCredentials(this.configuredEmail as string, passwordHash);
     }
 
     admin.resetFailedAttempts();
     await this.adminRepo.save(admin);
+    if (configuredCredentials) await this.credentialAudit?.recordCredentialSync(admin.id, 'after');
 
     const rawToken = SessionTokenGenerator.generateRawToken();
     const tokenHash = await SessionTokenGenerator.hashToken(rawToken);

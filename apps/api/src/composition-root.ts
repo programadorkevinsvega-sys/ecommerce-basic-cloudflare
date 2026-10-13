@@ -92,10 +92,24 @@ export interface AppCompositionRoot {
 }
 
 export function buildCompositionRoot(env: Env): AppCompositionRoot {
+  const auditContainer = new AuditModuleContainer({ db: env.DB });
+  const auditGateway = new InProcessAuditGateway(new AuditPublicApi(auditContainer));
+
   const settingsContainer = createSettingsModule(env);
   const settingsGateway = new InProcessSettingsGateway(new SettingsPublicApi(settingsContainer));
 
-  const identityContainer = createIdentityModule(env);
+  const identityContainer = createIdentityModule(env, {
+    recordCredentialSync: async (adminId, stage) => {
+      await auditGateway.record({
+        actorId: adminId,
+        actorType: 'admin',
+        action: 'identity.admin_configured_credentials.synchronized',
+        entityType: 'identity_admin',
+        entityId: adminId,
+        changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash'] },
+      });
+    },
+  });
   const identityGateway = new InProcessIdentityGateway(new IdentityPublicApi(identityContainer));
 
   const mediaContainer = createMediaModule(env);
@@ -143,9 +157,6 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     fromEmail: env.RESEND_FROM_EMAIL,
   });
   const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
-
-  const auditContainer = new AuditModuleContainer({ db: env.DB });
-  const auditGateway = new InProcessAuditGateway(new AuditPublicApi(auditContainer));
 
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
 
