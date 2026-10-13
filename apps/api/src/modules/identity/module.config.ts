@@ -40,7 +40,10 @@ export function createIdentityModule(env: Env, credentialAudit?: IConfiguredAdmi
     validateSessionUseCase: new ValidateSessionUseCase(sessionRepo, adminRepo, roleRepo),
     logoutUseCase: new LogoutUseCase(sessionRepo),
     getCustomerProfileUseCase: new GetCustomerProfileUseCase(customerRepo),
-    beginAdminMfaEnrollmentUseCase: new BeginAdminMfaEnrollmentUseCase(adminRepo),
+    beginAdminMfaEnrollmentUseCase: new BeginAdminMfaEnrollmentUseCase(adminRepo, {
+      email: env.ADMIN_EMAIL,
+      password: env.ADMIN_PASSWORD,
+    }),
     confirmAdminMfaEnrollmentUseCase: new ConfirmAdminMfaEnrollmentUseCase(adminRepo),
   };
 }

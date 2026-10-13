@@ -92,7 +92,7 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-ADM-04** Acciones críticas con **re-autenticación**: reembolsos, cambio de roles, cambio de credenciales de pago o de plantillas de email, borrados masivos, exportaciones de clientes.
 - **SEC-ADM-05** El panel puede protegerse con **Cloudflare Access** como capa adicional; no sustituye los controles de la aplicación.
 - **SEC-ADM-06** Las exportaciones (CSV de clientes/pedidos) requieren permiso específico, se auditan y no incluyen más PII de la necesaria.
-- **SEC-ADM-07** Las credenciales configuradas para la cuenta Superadmin usan `ADMIN_EMAIL` como variable y `ADMIN_PASSWORD` solo como secret de Cloudflare. El login sincroniza el correo y el hash PBKDF2 con la única cuenta Superadmin activa; no expone el secret, no lo registra y no activa MFA sin confirmar un TOTP generado por la app del titular.
+- **SEC-ADM-07** Las credenciales configuradas para la cuenta Superadmin usan `ADMIN_EMAIL` como variable y `ADMIN_PASSWORD` solo como secret de Cloudflare. El login sincroniza el correo y el hash PBKDF2 con la única cuenta Superadmin activa; la reautenticación de enrolamiento acepta ese secret configurado y verifica que el actor sea esa cuenta Superadmin. No expone el secret, no lo registra y no activa MFA sin confirmar un TOTP generado por la app del titular.
 
 ## 8. Contenido, CMS y SEO (CMS)
 

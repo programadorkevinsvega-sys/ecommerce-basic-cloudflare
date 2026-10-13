@@ -91,3 +91,10 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 ## Git
 
 Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f` y `2fd4a93` están publicados en `origin/main`. Nunca se ejecutó `wrangler deploy` manualmente; no se incluyeron `.dev.vars`, credenciales ni temporales.
+
+### 2026-10-13 — Corrección de reautenticación al enrolar MFA
+
+- Hallazgo: el login podía validar la contraseña `ADMIN_PASSWORD` del entorno y sincronizar su hash en D1, pero el endpoint de enrolamiento validaba exclusivamente contra el hash D1. Una divergencia entre la credencial configurada y el hash persistido producía el error genérico de inicio de enrolamiento.
+- Cambio: `BeginAdminMfaEnrollmentUseCase` valida con `ADMIN_EMAIL` + `ADMIN_PASSWORD` cuando ambas variables existen, restringiendo esa vía a la cuenta Superadmin configurada; conserva la verificación PBKDF2 de D1 como compatibilidad cuando no existe el par configurado.
+- Prueba añadida: enrolamiento con credencial Cloudflare correcta y hash D1 anterior distinto; contraseña anterior rechazada.
+- Estado: probado localmente; sin cambios en D1 ni secretos de producción. Despliegue pendiente del push integrado.
