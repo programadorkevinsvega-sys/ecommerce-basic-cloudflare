@@ -57,6 +57,8 @@ describe('storefront presentation', () => {
     expect(html).toContain('height: 380px; min-height: 380px; max-height: 380px');
     expect(html).toContain('grid-template-rows: auto 220px');
     expect(html).toContain('object-fit: cover');
+    expect(html).toContain('clear: both; width: 100%; min-width: 0; flex-direction: column');
+    expect(html).toContain('.checkout-payment-option { display: flex; width: 100%; min-width: 0;');
   });
 
   it('renders product details from actual catalog, discount, stock and shipping data', () => {

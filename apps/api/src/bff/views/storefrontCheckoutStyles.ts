@@ -22,7 +22,7 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-form { display: flex; min-width: 0; flex: 2 1 560px; flex-direction: column; gap: 1.25rem; }
     .checkout-required-note { margin: 0; color: #5b675f; font-size: .82rem; }
     .checkout-card, .checkout-summary { min-width: 0; border: 1px solid #e1e4da; border-radius: 16px; background: #fff; }
-    .checkout-card { margin: 0; padding: 1.5rem; }
+    .checkout-card { width: 100%; margin: 0; padding: 1.5rem; }
     .checkout-card legend { float: left; width: 100%; margin-bottom: 1rem; font-size: 1.12rem; font-weight: 650; }
     .checkout-card legend span { margin-right: .35rem; color: #5b675f; font-weight: 500; }
     .checkout-fields { display: grid; clear: both; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 1rem 1.25rem; }
@@ -35,11 +35,11 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-policy { display: flex; min-height: 56px; align-items: flex-start; gap: .7rem; margin-top: 1rem; padding: .8rem 1rem; border: 1px solid #e1e4da; border-radius: 12px; background: #f3f4ef; color: #424e47; font-size: .86rem; }
     .checkout-policy[data-state='success'] { border-color: #cfe0d5; background: #e4eee8; }
     .checkout-policy[data-state='error'] { border-color: #efc8c8; background: #fff0f0; color: #8b2525; }
-    .checkout-payment-options { display: flex; flex-direction: column; gap: .75rem; }
-    .checkout-payment-option { display: flex; align-items: flex-start; gap: .85rem; padding: 1rem; border: 2px solid #e1e4da; border-radius: 12px; background: #fff; cursor: pointer; }
+    .checkout-payment-options { display: flex; clear: both; width: 100%; min-width: 0; flex-direction: column; gap: .75rem; }
+    .checkout-payment-option { display: flex; width: 100%; min-width: 0; box-sizing: border-box; align-items: flex-start; gap: .85rem; padding: 1rem; border: 2px solid #e1e4da; border-radius: 12px; background: #fff; cursor: pointer; }
     .checkout-payment-option:has(input:checked) { border-color: #16201b; background: #f3f4ef; }
     .checkout-payment-option input { width: 20px; height: 20px; flex: 0 0 20px; margin: .15rem 0 0; accent-color: #1f4d3a; }
-    .checkout-payment-option span { display: flex; flex-direction: column; gap: .15rem; }
+    .checkout-payment-option span { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: .15rem; }
     .checkout-payment-option small { color: #424e47; font-size: .86rem; }
     .checkout-payment-option em { color: #1f4d3a; font-size: .8rem; font-style: normal; font-weight: 650; }
     .checkout-payment-option:has(input:disabled) { cursor: not-allowed; opacity: .55; }
