@@ -448,6 +448,7 @@ El detalle normativo (IDs `SEC-*`, modelo de amenaza, checklist de PR y matriz d
 - **RBAC:** permisos por recurso y acción (`products:write`, `promotions:publish`…), verificados en el BFF vía `IdentityGateway`; la autorización de negocio vive en el módulo.
 - **Protección:** rate limiting por IP/usuario, Turnstile en formularios públicos, validación Zod en toda entrada, CSP estricta, cabeceras de seguridad, verificación de firma en webhooks, idempotencia en pagos y eventos.
 - **Datos:** secretos solo en Cloudflare Secrets, PII fuera de logs, subidas a R2 con validación de tipo/tamaño y URLs firmadas para operaciones privadas.
+- **Carga de imágenes:** 10 MiB máximo, 16.384 px por lado y 40 MP; formatos JPEG, PNG, WebP y AVIF. El Worker valida firmas, estructura disponible, dimensiones, CRC de chunks PNG y tamaño remoto con `R2.head()` antes de persistir D1. La decodificación completa de píxeles y la eliminación EXIF/GPS siguen pendientes.
 - **Admin:** opcionalmente detrás de **Cloudflare Access** como capa adicional.
 
 ---

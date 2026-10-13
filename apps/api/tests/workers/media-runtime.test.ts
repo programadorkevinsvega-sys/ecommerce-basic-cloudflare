@@ -13,7 +13,7 @@ describe('Media D1 and R2 integration', () => {
 
   it('validates upload metadata and resolves the saved D1 reference from the R2 binding', async () => {
     const media = createMediaModule(env);
-    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+    const bytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));
     const invalid = await media.uploadMediaUseCase.execute({
       originalFileName: 'not-an-image.png', data: new TextEncoder().encode('not an image'),
       altText: 'invalid', uploadedByAdminId: 'integration-test',
@@ -26,12 +26,18 @@ describe('Media D1 and R2 integration', () => {
     expect(uploaded.isOk()).toBe(true);
     if (uploaded.isFail()) throw uploaded.error;
 
-    const served = await media.getMediaAssetUseCase.execute(uploaded.value.id);
-    expect(served.isOk()).toBe(true);
-    if (served.isFail()) throw served.error;
-    expect(served.value.mimeType).toBe('image/png');
-    expect(served.value.sizeBytes).toBe(bytes.length);
-    expect(new Uint8Array(await new Response(served.value.stream).arrayBuffer())).toEqual(bytes);
-    await env.MEDIA_BUCKET.delete(uploaded.value.storageKey);
+    try {
+      const served = await media.getMediaAssetUseCase.execute(uploaded.value.id);
+      expect(served.isOk()).toBe(true);
+      if (served.isFail()) throw served.error;
+      expect(served.value.mimeType).toBe('image/png');
+      expect(served.value.sizeBytes).toBe(bytes.length);
+      expect(new Uint8Array(await new Response(served.value.stream).arrayBuffer())).toEqual(bytes);
+      const row = await env.DB.prepare('SELECT width, height FROM media_assets WHERE id = ?').bind(uploaded.value.id).first<{ width: number; height: number }>();
+      expect(row).toEqual({ width: 1, height: 1 });
+    } finally {
+      await env.MEDIA_BUCKET.delete(uploaded.value.storageKey);
+      await env.DB.prepare('DELETE FROM media_assets WHERE id = ?').bind(uploaded.value.id).run();
+    }
   });
 });

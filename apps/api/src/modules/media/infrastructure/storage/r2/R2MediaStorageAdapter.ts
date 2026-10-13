@@ -29,6 +29,11 @@ export class R2MediaStorageAdapter implements IMediaStoragePort {
     };
   }
 
+  public async head(key: string): Promise<{ sizeBytes: number } | null> {
+    const object = await this.bucket.head(key);
+    return object ? { sizeBytes: object.size } : null;
+  }
+
   public async delete(key: string): Promise<void> {
     await this.bucket.delete(key);
   }

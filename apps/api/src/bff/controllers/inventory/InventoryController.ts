@@ -3,14 +3,16 @@ import { Env } from '../../../platform/Env.js';
 import { InventoryGateway, InventoryStockDto } from '../../gateways/inventory/InventoryGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 
 export class InventoryController {
   public static createRoutes(
     inventoryGateway: InventoryGateway,
     identityGateway: IdentityGateway,
-    catalogGateway?: CatalogGateway
-  ): Hono<{ Bindings: Env }> {
-    const app = new Hono<{ Bindings: Env }>();
+    catalogGateway: CatalogGateway,
+    auditGateway: AuditGateway
+  ): Hono<{ Bindings: Env; Variables: { adminId: string } }> {
+    const app = new Hono<{ Bindings: Env; Variables: { adminId: string } }>();
 
     // GET /api/v1/inventory/:productId (Público: disponibilidad de stock)
     app.get('/api/v1/inventory/:productId', async (c) => {
@@ -42,31 +44,36 @@ export class InventoryController {
 
     // GET /api/v1/admin/inventory (Admin: listar todo el stock sincronizado con catálogo)
     app.get('/api/v1/admin/inventory', requireAdmin('inventory:read'), async (c) => {
+      const stocks = await inventoryGateway.listStocks();
+      return c.json({ success: true, items: stocks });
+    });
+
+    // POST /api/v1/admin/inventory/sync — acción de escritura auditada
+    app.post('/api/v1/admin/inventory/sync', requireAdmin('inventory:adjust'), async (c) => {
       let stocks = await inventoryGateway.listStocks();
+      let createdCount = 0;
+      const products = await catalogGateway.listProducts({ limit: 500 });
+      const stockMap = new Map<string, InventoryStockDto>();
+      for (const stock of stocks) stockMap.set(stock.productId, stock);
 
-      // Sincronización automática con productos de catálogo
-      if (catalogGateway) {
-        try {
-          const products = await catalogGateway.listProducts({ limit: 500 });
-          const stockMap = new Map<string, InventoryStockDto>();
-          for (const s of stocks) stockMap.set(s.productId, s);
-
-          for (const p of products) {
-            if (!stockMap.has(p.id)) {
-              const created = await inventoryGateway.adjustStock(
-                p.id,
-                p.stockQuantity ?? 0,
-                'catalog_sync'
-              );
-              stocks.push(created);
-            }
-          }
-        } catch {
-          // Si falla la consulta de catálogo, continuar con los stocks existentes
+      for (const product of products) {
+        if (!stockMap.has(product.id)) {
+          const quantity = product.stockQuantity ?? 0;
+          const created = await inventoryGateway.adjustStock(product.id, quantity, 'catalog_sync');
+          stocks.push(created);
+          stockMap.set(product.id, created);
+          createdCount++;
+          await auditGateway.record({
+            actorId: c.get('adminId'),
+            actorType: 'admin',
+            action: 'inventory.catalog_stock_initialized',
+            entityType: 'inventory_stock',
+            entityId: product.id,
+            changes: { quantity },
+          });
         }
       }
-
-      return c.json({ success: true, items: stocks });
+      return c.json({ success: true, createdCount, items: stocks });
     });
 
     // POST /api/v1/admin/inventory/adjust (Admin: ajustar stock manualmente)

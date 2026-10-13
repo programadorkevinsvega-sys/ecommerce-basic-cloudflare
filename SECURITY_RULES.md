@@ -107,11 +107,13 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-R2-01** Bucket **privado**: sin dominio público ni `r2.dev` habilitado. Los medios de producto se sirven **a través del Worker** (ruta `/media/*`, cacheada), no por acceso directo a R2.
 - **SEC-R2-02** Permisos mínimos del binding limitados a este bucket; solo `infrastructure/storage/r2` del módulo `media` lo usa. Rotación de credenciales si se usan tokens S3.
 - **SEC-R2-03** Las claves las genera el servidor (`media/{uuid}`; `private/u/{customerId}/{uuid}` para documentos privados). El nombre original del archivo vive en D1, **nunca** en la clave.
-- **SEC-R2-04** Solo administradores con permiso suben medios. Validar por **firma real del archivo** (magic bytes), tipo permitido (JPEG, PNG, WebP, AVIF), tamaño máximo y dimensiones. **SVG excluido** salvo sanitización explícita. Eliminar metadatos EXIF/GPS.
+- **SEC-R2-04** Solo administradores con permiso suben medios. Validar por **firma real del archivo** (magic bytes), tipo permitido (JPEG, PNG, WebP, AVIF), tamaño máximo y dimensiones. El límite configurado es 10 MiB, 16.384 px por lado y 40 MP; el cuerpo multipart se limita a 11 MiB incluso en streaming. **SVG excluido** salvo sanitización explícita. Eliminar metadatos EXIF/GPS.
 - **SEC-R2-05** Prefijos privados (documentos de clientes, p. ej. para crédito) **nunca** se sirven por la ruta pública; cada acceso verifica propiedad en D1 y responde con `Content-Disposition: attachment`.
 - **SEC-R2-06** Respuestas de archivos con `X-Content-Type-Options: nosniff`; sin listado de objetos; sin CORS hacia el navegador.
 - **SEC-R2-07** Verificar el tamaño real con `HEAD` tras subir; si excede el límite, borrar y rechazar. Limpieza por Cron de subidas huérfanas.
 - **SEC-R2-08** Verificar consistencia entre metadatos D1 y objetos R2 antes de reanudar operaciones críticas tras un incidente.
+
+Estado de implementación: el Worker verifica estructura de contenedores/cabeceras y CRC de chunks PNG, además de extraer dimensiones; no ejecuta decodificación completa de píxeles ni elimina EXIF/GPS todavía. Esos dos controles permanecen pendientes de certificación y no deben marcarse como cumplidos.
 
 ## 10. Frontend (FE)
 

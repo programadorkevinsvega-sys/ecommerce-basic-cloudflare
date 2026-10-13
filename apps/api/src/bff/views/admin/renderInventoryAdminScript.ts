@@ -14,6 +14,8 @@ export function renderInventoryAdminScript(): string {
       if (!tbody) return;
       tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem; text-align:center; color:var(--muted);">Cargando…</td></tr>';
       try {
+        // La inicialización de existencias es una escritura: el endpoint la autoriza y audita.
+        await fetch('/api/v1/admin/inventory/sync', { method: 'POST', headers: adminHeaders(true), body: '{}' });
         const [invRes, prodRes] = await Promise.all([
           fetch('/api/v1/admin/inventory', { headers: adminHeaders() }),
           fetch('/api/v1/products?limit=200')

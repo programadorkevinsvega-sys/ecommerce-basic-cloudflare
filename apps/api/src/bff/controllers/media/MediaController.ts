@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { MediaGateway } from '../../gateways/media/MediaGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { bodyLimit } from 'hono/body-limit';
 
 type MediaVariables = {
   Variables: {
@@ -38,6 +39,7 @@ export class MediaController {
     router.post(
       '/upload',
       createAuthMiddleware(identityGateway, 'admin', 'media:create'),
+      bodyLimit({ maxSize: 11 * 1024 * 1024, onError: (c) => c.json({ error: 'La solicitud supera el límite de 11 MB' }, 413) }),
       async (c) => {
         try {
           const contentLength = Number(c.req.header('content-length') || 0);

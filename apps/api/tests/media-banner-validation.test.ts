@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ImageValidator } from '../src/modules/media/domain/services/ImageValidator.js';
 import { isSafeImageUrl, isSafeStoreLink } from '../src/modules/storefront/domain/services/ValidateStorefrontUrl.js';
 import { Banner } from '../src/modules/storefront/domain/entities/Banner.js';
@@ -8,12 +8,23 @@ import { renderStorefrontBanners } from '../src/bff/views/renderStorefrontBanner
 import { UploadMediaUseCase } from '../src/modules/media/application/use-cases/UploadMediaUseCase.js';
 import { IMediaStoragePort } from '../src/modules/media/domain/ports/IMediaStoragePort.js';
 import { IMediaAssetRepository } from '../src/modules/media/domain/ports/IMediaAssetRepository.js';
+import { MediaController } from '../src/bff/controllers/media/MediaController.js';
 
 describe('media and banner input validation', () => {
-  it('detects allowed image signatures from bytes and rejects declared-type-only files', () => {
-    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
-    expect(ImageValidator.validateMagicBytes(png)).toMatchObject({ isValid: true, detectedMimeType: 'image/png' });
+  const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));
+
+  it('validates image container structure and dimensions instead of trusting a signature alone', () => {
+    expect(ImageValidator.validateMagicBytes(png)).toMatchObject({ isValid: true, detectedMimeType: 'image/png', width: 1, height: 1 });
+    expect(ImageValidator.validateMagicBytes(png.slice(0, 24)).isValid).toBe(false);
     expect(ImageValidator.validateMagicBytes(new TextEncoder().encode('<svg></svg>')).isValid).toBe(false);
+  });
+
+  it('extracts bounded dimensions from JPEG, WebP and AVIF headers', () => {
+    expect(ImageValidator.validateMagicBytes(jpegHeader())).toMatchObject({ isValid: true, detectedMimeType: 'image/jpeg', width: 1, height: 1 });
+    expect(ImageValidator.validateMagicBytes(webpHeader())).toMatchObject({ isValid: true, detectedMimeType: 'image/webp', width: 1, height: 1 });
+    expect(ImageValidator.validateMagicBytes(avifHeader(1, 1))).toMatchObject({ isValid: true, detectedMimeType: 'image/avif', width: 1, height: 1 });
+    expect(ImageValidator.validateMagicBytes(avifHeader(10_000, 5_000)).isValid).toBe(false);
+    expect(ImageValidator.validateMagicBytes(jpegHeader().slice(0, 8)).isValid).toBe(false);
   });
 
   it('allows HTTPS image references and internal destinations but rejects active schemes and external redirects', () => {
@@ -37,14 +48,55 @@ describe('media and banner input validation', () => {
   });
 
   it('rejects unsupported filename extensions before writing to R2', async () => {
-    const storage = { put: async () => 12, get: async () => null, delete: async () => undefined } as IMediaStoragePort;
+    const storage = { put: async () => 12, head: async () => ({ sizeBytes: 12 }), get: async () => null, delete: async () => undefined } as IMediaStoragePort;
     const repository = { save: async () => undefined } as unknown as IMediaAssetRepository;
     const useCase = new UploadMediaUseCase(storage, repository);
-    const pngHeader = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
-    const result = await useCase.execute({ originalFileName: 'image.svg', data: pngHeader, altText: 'Image', uploadedByAdminId: 'admin' });
+    const result = await useCase.execute({ originalFileName: 'image.svg', data: png, altText: 'Image', uploadedByAdminId: 'admin' });
 
     expect(result.isFail()).toBe(true);
     expect(result.error.message).toContain('extensión');
+  });
+
+  it('verifies the remote object size before saving D1 metadata and persists dimensions', async () => {
+    const head = vi.fn(async () => ({ sizeBytes: png.length }));
+    const put = vi.fn(async () => png.length);
+    const saved: Array<{ width?: number; height?: number }> = [];
+    const storage = { put, head, get: async () => null, delete: vi.fn(async () => undefined) } as unknown as IMediaStoragePort;
+    const repository = { save: async (asset: { toPrimitives(): { width?: number; height?: number } }) => { saved.push(asset.toPrimitives()); } } as unknown as IMediaAssetRepository;
+    const result = await new UploadMediaUseCase(storage, repository).execute({
+      originalFileName: 'one-pixel.png', data: png, altText: 'Imagen', uploadedByAdminId: 'admin',
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(head).toHaveBeenCalledOnce();
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({ width: 1, height: 1 });
+  });
+
+  it('removes the newly uploaded object and does not save metadata when remote size verification fails', async () => {
+    const deletion = vi.fn(async () => undefined);
+    const save = vi.fn(async () => undefined);
+    const storage = { put: vi.fn(async () => png.length), head: vi.fn(async () => null), get: async () => null, delete: deletion } as unknown as IMediaStoragePort;
+    const result = await new UploadMediaUseCase(storage, { save } as unknown as IMediaAssetRepository).execute({
+      originalFileName: 'one-pixel.png', data: png, altText: 'Imagen', uploadedByAdminId: 'admin',
+    });
+
+    expect(result.isFail()).toBe(true);
+    expect(deletion).toHaveBeenCalledOnce();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('bounds streamed media upload requests when Content-Length is absent', async () => {
+    const identity = { validateSession: async () => ({ actorId: 'admin', actorType: 'admin', permissions: ['media:create'] }) };
+    const app = MediaController.createRoutes({} as any, identity as any);
+    const body = new ReadableStream<Uint8Array>({ start(controller) {
+      controller.enqueue(new Uint8Array(12 * 1024 * 1024));
+      controller.close();
+    } });
+    const request = new Request('http://localhost/upload', { method: 'POST', headers: { cookie: '__Host-admin-session=test' }, body, duplex: 'half' } as RequestInit);
+
+    const response = await app.fetch(request);
+    expect(response.status).toBe(413);
   });
 
   it('rejects invalid placement, unsafe image URLs and inverted validity periods', () => {
@@ -72,3 +124,25 @@ describe('media and banner input validation', () => {
     expect(publicMarkup).not.toContain('setInterval');
   });
 });
+
+function jpegHeader(): Uint8Array {
+  return new Uint8Array([0xff, 0xd8, 0xff, 0xc0, 0, 11, 8, 0, 1, 0, 1, 1, 1, 0x11, 0,
+    0xff, 0xda, 0, 8, 1, 1, 0, 0, 0x3f, 0, 0, 0xff, 0xd9]);
+}
+
+function webpHeader(): Uint8Array {
+  const bytes = new Uint8Array(30);
+  bytes.set(new TextEncoder().encode('RIFF'), 0); bytes.set(new TextEncoder().encode('WEBP'), 8);
+  new DataView(bytes.buffer).setUint32(4, 22, true);
+  bytes.set(new TextEncoder().encode('VP8X'), 12); new DataView(bytes.buffer).setUint32(16, 10, true);
+  return bytes;
+}
+
+function avifHeader(width: number, height: number): Uint8Array {
+  const bytes = new Uint8Array(36);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, 16); bytes.set(new TextEncoder().encode('ftypavif'), 4);
+  view.setUint32(16, 20); bytes.set(new TextEncoder().encode('ispe'), 20);
+  view.setUint32(28, width); view.setUint32(32, height);
+  return bytes;
+}

@@ -61,10 +61,13 @@ export class UploadMediaUseCase {
       ? `private/admin/${input.uploadedByAdminId}/${assetId}`
       : `media/${assetId}`;
 
-    const storedSize = await this.storagePort.put(storageKey, input.data, validation.detectedMimeType);
-    if (storedSize !== input.data.length) {
-      await this.storagePort.delete(storageKey);
-      return Result.fail(new Error('El objeto almacenado no coincide con el archivo validado'));
+    try {
+      await this.storagePort.put(storageKey, input.data, validation.detectedMimeType);
+      const stored = await this.storagePort.head(storageKey);
+      if (!stored || stored.sizeBytes !== input.data.length) throw new Error('stored_size_mismatch');
+    } catch {
+      await this.storagePort.delete(storageKey).catch(() => undefined);
+      return Result.fail(new Error('No se pudo verificar el objeto almacenado'));
     }
 
     const now = new Date().toISOString();
@@ -74,6 +77,8 @@ export class UploadMediaUseCase {
       originalFileName: input.originalFileName,
       mimeType: validation.detectedMimeType,
       fileSizeBytes: input.data.length,
+      width: validation.width,
+      height: validation.height,
       altText: input.altText.trim(),
       folderId: input.folderId,
       isPrivate,
