@@ -55,4 +55,4 @@ Actualizado: 2026-10-12. Rama `main`. No se desplegó el Worker ni se ejecutaron
 
 ## Git
 
-Pendiente al actualizar este registro: revisar árbol completo, crear commit y publicar en `origin/main` según autorización del usuario. No se debe incluir `.dev.vars`, credenciales ni archivos temporales.
+Commit `8fc3cc8` (`Harden payments, migrations, media and storefront`) publicado a `origin/main`. Rama `main`; árbol de trabajo limpio tras publicar. No se incluyeron `.dev.vars`, credenciales ni archivos temporales.
