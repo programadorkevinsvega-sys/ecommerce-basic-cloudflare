@@ -4,6 +4,7 @@ import { storefrontProductStyles } from './storefrontProductStyles.js';
 import { storefrontDetailStyles } from './storefrontDetailStyles.js';
 import { storefrontCartStyles } from './storefrontCartStyles.js';
 import { storefrontCatalogStyles } from './storefrontCatalogStyles.js';
+import { storefrontCheckoutStyles } from './storefrontCheckoutStyles.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -25,6 +26,7 @@ export interface LayoutProps {
   announcementLink?: string;
   headerMenuItems?: LayoutMenuItem[];
   footerMenuItems?: LayoutMenuItem[];
+  checkoutMode?: boolean;
 }
 
 export function renderBaseLayout(props: LayoutProps): string {
@@ -49,6 +51,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
   const footerNavigation = footerItems.filter((item) => !isLegalLink(item));
   const footerLegal = footerItems.filter(isLegalLink);
+  const checkoutHeader = `<header class="checkout-header"><div class="checkout-header-inner"><a href="/" class="checkout-brand" aria-label="Vega Store, inicio">VEGA <span>STORE</span></a><p class="checkout-secure"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z"/></svg> Compra segura</p><a class="checkout-back" href="/carrito"><span aria-hidden="true">←</span> Volver al carrito</a></div></header>`;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -71,11 +74,12 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}</style>
 </head>
-<body>
-  ${topBarHtml}
+<body class="${props.checkoutMode ? 'checkout-mode' : ''}">
+  ${props.checkoutMode ? '' : topBarHtml}
   <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  ${props.checkoutMode ? checkoutHeader : ''}
   <header class="site-header">
     <a href="/" class="brand-link" aria-label="Vega Store, ir al inicio"><span>VEGA <span>STORE</span></span></a>
     <form class="header-search" action="/productos" method="GET" role="search" aria-label="Buscar productos">
@@ -89,7 +93,7 @@ export function renderBaseLayout(props: LayoutProps): string {
       <a href="/carrito" class="cart-link"><span aria-hidden="true">▢</span> Carrito</a>
     </nav>
   </header>
-  <main id="main-content" class="container">
+  <main id="main-content" class="container${props.checkoutMode ? ' checkout-container' : ''}">
     ${props.bodyHtml}
   </main>
   <footer class="site-footer">

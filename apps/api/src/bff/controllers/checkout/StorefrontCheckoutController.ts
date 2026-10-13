@@ -99,6 +99,7 @@ export class StorefrontCheckoutController {
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        checkoutMode: true,
       });
 
       return c.html(html);

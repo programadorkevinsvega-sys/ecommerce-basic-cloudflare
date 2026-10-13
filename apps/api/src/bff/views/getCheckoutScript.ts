@@ -12,27 +12,40 @@ export function getCheckoutScript(
       const subtotalCents = ${safeSubtotalCents};
       const TAX_RATE = ${safeTaxRatePercent} / 100;
       let shippingCostCents = 0;
-
+      const checkoutStatus = document.getElementById('policy-alert');
+      const checkoutError = document.getElementById('checkout-error');
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
-
+      function updateCheckoutCta() {
+        const total = subtotalCents + calcTax(subtotalCents) + shippingCostCents;
+        const format = value => '$' + (value / 100).toLocaleString('es-CO');
+        const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
+        document.getElementById('checkout-cta-label').textContent = online ? 'Pagar ' + format(total) : 'Confirmar pedido';
+        document.getElementById('checkout-submit-note').textContent = online
+          ? 'Te llevaremos a Wompi para completar el pago.'
+          : 'Pagarás en efectivo cuando recibas tu pedido.';
+      }
+      function setCheckoutStatus(message, state) {
+        checkoutStatus.dataset.state = state;
+        checkoutStatus.querySelector('span:last-child').textContent = message;
+      }
       async function handleZoneChange() {
         const sel = document.getElementById('dest-zone');
         const opt = sel.options[sel.selectedIndex];
         const zoneId = sel.value;
-        const alertBox = document.getElementById('policy-alert');
         const codRadio = document.getElementById('radio-cod');
-        const codLabel = document.getElementById('cod-label');
         const btn = document.getElementById('btn-submit-order');
-
         if (!zoneId) {
           shippingCostCents = 0;
+          btn.disabled = true;
+          codRadio.disabled = true;
+          setCheckoutStatus('Selecciona tu zona para consultar cobertura, costo y tiempo estimado de entrega.', 'idle');
           updateTotals();
           return;
         }
-
         shippingCostCents = parseInt(opt.getAttribute('data-rate'), 10) || 0;
+        btn.disabled = true;
+        setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle');
         updateTotals();
-
         try {
           const res = await fetch('/api/v1/orders/checkout/evaluate', {
             method: 'POST',
@@ -43,37 +56,35 @@ export function getCheckoutScript(
             })
           });
           const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.error || 'No fue posible validar la cobertura.');
           if (data.success) {
             const p = data.policy;
             if (!p.canProceed) {
-              alertBox.style.display = 'block';
-              alertBox.style.background = '#fee2e2';
-              alertBox.style.color = '#991b1b';
-              alertBox.textContent = 'Aviso de Cobertura: ' + p.blockingReasons.join(' · ');
+              setCheckoutStatus('No hay cobertura para este pedido: ' + p.blockingReasons.join(' · '), 'error');
               btn.disabled = true;
             } else {
               btn.disabled = false;
+              const minDays = Number(opt.dataset.minDays || 0);
+              const maxDays = Number(opt.dataset.maxDays || minDays);
+              const delivery = minDays ? ' Entrega estimada: ' + minDays + (maxDays !== minDays ? ' a ' + maxDays : '') + ' días hábiles.' : '';
               if (!p.allowsCashOnDelivery) {
-                alertBox.style.display = 'block';
-                alertBox.style.background = '#fef3c7';
-                alertBox.style.color = '#92400e';
-                alertBox.textContent = 'Contra Entrega Restringido: ' + p.codBlockingReasons.join(' · ');
+                setCheckoutStatus('Cobertura disponible. El pago contra entrega no aplica a este pedido.' + delivery, 'success');
                 codRadio.disabled = true;
                 codRadio.checked = false;
                 document.querySelector('input[value="wompi"]').checked = true;
-                codLabel.style.opacity = '0.5';
               } else {
-                alertBox.style.display = 'none';
+                setCheckoutStatus('Cobertura disponible.' + delivery, 'success');
                 codRadio.disabled = false;
-                codLabel.style.opacity = '1';
               }
+              updateCheckoutCta();
             }
           }
-        } catch {
-          console.error('No fue posible validar la opción de pago');
+        } catch (error) {
+          btn.disabled = true;
+          codRadio.disabled = true;
+          setCheckoutStatus(error.message || 'No fue posible validar la cobertura. Intenta de nuevo.', 'error');
         }
       }
-
       function updateTotals() {
         const taxCents = calcTax(subtotalCents);
         const total = subtotalCents + taxCents + shippingCostCents;
@@ -82,16 +93,16 @@ export function getCheckoutScript(
         document.getElementById('txt-tax').innerText      = fmt(taxCents);
         document.getElementById('txt-shipping').innerText = fmt(shippingCostCents);
         document.getElementById('txt-total').innerText    = fmt(total);
+        updateCheckoutCta();
       }
-
       async function submitOrder() {
         const btn = document.getElementById('btn-submit-order');
         const zoneSel = document.getElementById('dest-zone');
-        if (!zoneSel.value) {
-          alert('Por favor selecciona una zona de cobertura');
+        checkoutError.hidden = true;
+        if (!document.getElementById('checkout-form').checkValidity()) {
+          document.getElementById('checkout-form').reportValidity();
           return;
         }
-
         const name  = document.getElementById('cust-name').value.trim();
         const phone = document.getElementById('cust-phone').value.trim();
         const email = document.getElementById('cust-email').value.trim();
@@ -99,19 +110,16 @@ export function getCheckoutScript(
         const dept  = document.getElementById('addr-dept').value.trim();
         const city  = document.getElementById('addr-city').value.trim();
         const line  = document.getElementById('addr-line').value.trim();
-
         if (!name || !phone || !email || !taxId || !dept || !city || !line) {
-          alert('Por favor completa todos los campos requeridos, incluyendo tu identificación fiscal (Cédula o NIT)');
+          checkoutError.hidden = false;
+          checkoutError.textContent = 'Completa los campos obligatorios, incluida tu cédula o NIT.';
           return;
         }
-
         const method     = document.querySelector('input[name="payment-method"]:checked').value;
         const taxCents   = calcTax(subtotalCents);
         const totalCents = subtotalCents + taxCents + shippingCostCents;
-
         btn.disabled = true;
-        btn.innerText = 'Procesando pedido...';
-
+        document.getElementById('checkout-cta-label').textContent = 'Procesando pedido…';
         try {
           const res = await fetch('/api/v1/orders', {
             method: 'POST',
@@ -144,15 +152,12 @@ export function getCheckoutScript(
               }))
             })
           });
-
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Error al crear pedido');
-
           const orderId = data.order.id;
           await fetch('/api/v1/cart/clear', { method: 'POST' });
-
           if (method === 'wompi') {
-            btn.innerText = 'Redirigiendo a Wompi...';
+            document.getElementById('checkout-cta-label').textContent = 'Redirigiendo a Wompi…';
             const payRes = await fetch('/api/v1/payments/wompi/init', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -171,12 +176,14 @@ export function getCheckoutScript(
             window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=cod_placed';
           }
         } catch (e) {
-          alert(e.message);
+          checkoutError.hidden = false;
+          checkoutError.textContent = e.message || 'No se pudo procesar el pedido. Intenta de nuevo.';
           btn.disabled = false;
-          btn.innerText = 'Confirmar y Proceder al Pago \u2192';
+          updateCheckoutCta();
         }
       }
-
+      document.getElementById('dest-zone').addEventListener('change', handleZoneChange);
+      document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', updateCheckoutCta));
       // Inicializar totales al cargar
       updateTotals();
     </script>

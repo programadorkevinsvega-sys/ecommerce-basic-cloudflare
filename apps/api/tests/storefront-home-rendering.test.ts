@@ -3,6 +3,7 @@ import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 import { renderProductList } from '../src/bff/views/renderProductList.js';
 import { renderProductDetail } from '../src/bff/views/renderProductDetail.js';
 import { renderCatalogPage } from '../src/bff/views/renderCatalogPage.js';
+import { renderCheckoutPage } from '../src/bff/views/renderCheckoutPage.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 
 const product: CatalogProductDto = {
@@ -97,5 +98,38 @@ describe('storefront presentation', () => {
     expect(html).toContain('applyCatalogFilters');
     expect(html).toContain('catalogGrid.append(...ordered)');
     expect(html).toContain('window.location.href = \'/productos\'');
+  });
+
+  it('renders checkout information from the current cart and active shipping zones', () => {
+    const cart = {
+      id: 'cart-1', customerId: null, status: 'active' as const,
+      items: [{ id: 'item-1', cartId: 'cart-1', productId: product.id, quantity: 2, unitPriceCents: 12000000, subtotalCents: 24000000, createdAt: '2026-01-01', updatedAt: '2026-01-01' }],
+      totalQuantity: 2, subtotalCents: 24000000, createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    };
+    const zone = {
+      id: 'zone-medellin', name: 'Medellín', type: 'city' as const, priceInCents: 900000,
+      minEstimatedDays: 1, maxEstimatedDays: 2, allowsCashOnDelivery: true, isActive: true,
+      locations: ['Medellín'], createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    };
+    const html = renderCheckoutPage(cart, new Map([[product.id, product]]), [zone], 19);
+    expect(html).toContain('checkout-steps');
+    expect(html).toContain('id="cust-name"');
+    expect(html).toContain('id="cust-tax-id"');
+    expect(html).toContain('id="dest-zone"');
+    expect(html).toContain('Medellín ·');
+    expect(html).toContain('data-min-days="1"');
+    expect(html).toContain('Lámpara de lectura');
+    expect(html).toContain('240.000');
+    expect(html).toContain('45.600');
+    expect(html).not.toContain('Gafas de Sol Polarizadas');
+    expect(html).toContain("fetch('/api/v1/orders'");
+    expect(html).toContain("fetch('/api/v1/payments/wompi/init'");
+    expect(html).toContain("setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle')");
+    expect(html).toContain("document.getElementById('checkout-cta-label').textContent");
+    const fullPage = renderBaseLayout({ title: 'Checkout', description: 'Compra segura', bodyHtml: html, checkoutMode: true });
+    expect(fullPage).toContain('<body class="checkout-mode">');
+    expect(fullPage).toContain('class="checkout-header"');
+    expect(fullPage).toContain('checkout-back');
+    expect(fullPage).toContain('.checkout-mode > .site-header');
   });
 });
