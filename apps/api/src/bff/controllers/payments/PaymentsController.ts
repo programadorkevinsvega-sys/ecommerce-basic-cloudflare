@@ -102,15 +102,26 @@ export class PaymentsController {
       }
       const eventId = body.signature.checksum;
       const eventType = typeof body.event === 'string' ? body.event : 'transaction.updated';
+      const webhookTraceId = (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown';
+      const reportWebhookFailure = (stage: string, error: unknown) => console.error(JSON.stringify({
+        event: 'payments.webhook_stage_failed', stage, trace_id: webhookTraceId,
+        error_name: error instanceof Error ? error.name : 'UnknownError',
+      }));
 
       const reconciledBody = { ...body, data: { ...body.data, transaction: canonical } };
-      const res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: reconciledBody });
+      let res;
+      try { res = await paymentsGateway.processWompiWebhook({ eventId, eventType, payload: reconciledBody }); }
+      catch (error) { reportWebhookFailure('record_event', error); throw error; }
       if (res.ignored && !res.orderId) return c.json({ received: true, ignored: true });
       if (res.orderId) {
-        const currentOrder = await ordersGateway.getOrder(res.orderId);
+        let currentOrder;
+        try { currentOrder = await ordersGateway.getOrder(res.orderId); }
+        catch (error) { reportWebhookFailure('load_order', error); throw error; }
         const status = String(canonical.status).toUpperCase();
-        if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved' && await invoicingGateway.getInvoice({ orderId: res.orderId })) {
-          return c.json({ received: true, ignored: true });
+        if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved') {
+          try {
+            if (await invoicingGateway.getInvoice({ orderId: res.orderId })) return c.json({ received: true, ignored: true });
+          } catch (error) { reportWebhookFailure('lookup_invoice', error); throw error; }
         }
         if (['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });
       }
