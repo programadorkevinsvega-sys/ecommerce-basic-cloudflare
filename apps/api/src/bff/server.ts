@@ -41,7 +41,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
-  app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway));
+  app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway, cRoot.catalogGateway));
   app.route('/', OrdersController.createRoutes(
     cRoot.ordersGateway,
     cRoot.identityGateway,

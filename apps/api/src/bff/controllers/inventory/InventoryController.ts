@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
 import { Env } from '../../../platform/Env.js';
-import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { InventoryGateway, InventoryStockDto } from '../../gateways/inventory/InventoryGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 
 export class InventoryController {
   public static createRoutes(
     inventoryGateway: InventoryGateway,
-    identityGateway: IdentityGateway
+    identityGateway: IdentityGateway,
+    catalogGateway?: CatalogGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -37,9 +39,32 @@ export class InventoryController {
       }
     };
 
-    // GET /api/v1/admin/inventory (Admin: listar todo el stock)
+    // GET /api/v1/admin/inventory (Admin: listar todo el stock sincronizado con catálogo)
     app.get('/api/v1/admin/inventory', requireAdmin, async (c) => {
-      const stocks = await inventoryGateway.listStocks();
+      let stocks = await inventoryGateway.listStocks();
+
+      // Sincronización automática con productos de catálogo
+      if (catalogGateway) {
+        try {
+          const products = await catalogGateway.listProducts({ limit: 500 });
+          const stockMap = new Map<string, InventoryStockDto>();
+          for (const s of stocks) stockMap.set(s.productId, s);
+
+          for (const p of products) {
+            if (!stockMap.has(p.id)) {
+              const created = await inventoryGateway.adjustStock(
+                p.id,
+                p.stockQuantity ?? 0,
+                'catalog_sync'
+              );
+              stocks.push(created);
+            }
+          }
+        } catch {
+          // Si falla la consulta de catálogo, continuar con los stocks existentes
+        }
+      }
+
       return c.json({ success: true, items: stocks });
     });
 
