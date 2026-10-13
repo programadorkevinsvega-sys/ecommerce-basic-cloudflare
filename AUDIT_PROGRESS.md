@@ -100,3 +100,10 @@ Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f` y `2fd4a93` están
 - Estado: probado localmente; sin cambios en D1 ni secretos de producción. Despliegue pendiente del push integrado.
 - Hallazgo operativo confirmado: `ADMIN_PASSWORD` existe como secret remoto, pero `ADMIN_EMAIL` no estaba en el Worker. Wrangler borraba por defecto variables añadidas solo en Dashboard al desplegar. Se configuró `ADMIN_EMAIL` como variable remota (sin guardarla en Git), se publicó la versión `2bbfe964-6e71-48f2-b594-cbc2a0514932` y se estableció `keep_vars: true` en ambas configuraciones Wrangler para conservar variables de Dashboard en futuros despliegues. `/health` remoto devolvió `healthy` con D1/KV/Queue/R2 en `ok`. Para el enrolamiento, la sesión actual se acepta si pertenece al único Superadmin activo y la contraseña coincide con el secret; no se leyó ni cambió el valor de `ADMIN_PASSWORD`.
 - Endurecimiento adicional: el enrolamiento verifica el ID de la sesión contra `findSoleActiveSuperadmin`, además del rol y el secret configurado. Esto permite una sesión existente aunque el correo almacenado aún sea el anterior y rechaza a cualquier otro administrador. Se añadió una prueba cruzada de ese rechazo.
+
+### 2026-10-13 — QR local para enrolamiento TOTP
+
+- Se añadió generación de QR SVG en el Worker con `qrcode-svg`; el URI y el secreto no se envían a un servicio externo. El endpoint de enrolamiento mantiene `Cache-Control: no-store`.
+- La página presenta el QR, una alternativa manual plegable y aclara que escanearlo desde otro dispositivo funciona mejor. La etiqueta TOTP usa `ADMIN_EMAIL` configurado, no el correo D1 previo.
+- Volver a generar reemplaza el secreto pendiente que se compartió en la conversación. Pruebas: UI accesible, QR SVG/no-store, reautenticación, typecheck, lint y Wrangler dry-run.
+- Despliegue pendiente.

@@ -19,7 +19,8 @@ export class BeginAdminMfaEnrollmentUseCase {
     const secret = TotpService.generateSecret();
     admin.stageMfaSecret(secret);
     await this.admins.save(admin);
-    const label = encodeURIComponent(`Vega Store:${admin.email}`);
+    const accountEmail = this.configuredCredentials?.email?.trim() || admin.email;
+    const label = encodeURIComponent(`Vega Store:${accountEmail}`);
     const issuer = encodeURIComponent('Vega Store');
     const otpauthUri = `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
     return Result.ok({ secret, otpauthUri });

@@ -45,6 +45,7 @@ describe('admin MFA enrollment', () => {
     const result = await begin.execute(admin.id, 'cloudflare-secret-password');
 
     expect(result.isOk()).toBe(true);
+    if (result.isOk()) expect(result.value.otpauthUri).toContain('owner%40example.test');
   });
 
   it('does not let another administrator enroll with the configured Superadmin secret', async () => {

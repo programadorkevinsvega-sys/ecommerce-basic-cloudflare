@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import QRCode from 'qrcode-svg';
 
 const adminLoginSchema = z.object({
   email: z.string().email(),
@@ -50,7 +51,16 @@ export class AdminAuthController {
       try {
         const enrollment = await gateway.beginAdminMfaEnrollment(actor.actorId, parsed.data.password);
         c.header('cache-control', 'no-store');
-        return c.json(enrollment);
+        const qrSvg = new QRCode({
+          content: enrollment.otpauthUri,
+          width: 256,
+          height: 256,
+          padding: 4,
+          ecl: 'M',
+          join: true,
+          container: 'svg-viewbox',
+        }).svg();
+        return c.json({ ...enrollment, qrSvg });
       } catch {
         return c.json({ error: 'No se pudo iniciar el enrolamiento MFA' }, 403);
       }
