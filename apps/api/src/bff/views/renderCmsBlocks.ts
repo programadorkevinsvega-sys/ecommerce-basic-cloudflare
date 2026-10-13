@@ -5,8 +5,13 @@ export function renderCmsBlocks(blocks: CmsBlockDto[]): string {
 
   return sorted.map((b) => {
     switch (b.type) {
-      case 'rich_text':
+      case 'rich_text': {
+        const rawHtml = b.content['html'];
+        if (typeof rawHtml === 'string' && rawHtml.trim()) {
+          return `<div class="cms-block cms-rich-text" style="margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.7;">${rawHtml}</div>`;
+        }
         return `<div class="cms-block cms-rich-text" style="margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.7;">${escapeHtml(String(b.content['text'] || ''))}</div>`;
+      }
 
       case 'image':
         return `

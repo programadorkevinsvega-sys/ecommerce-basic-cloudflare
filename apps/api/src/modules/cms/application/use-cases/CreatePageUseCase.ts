@@ -1,6 +1,8 @@
 import { Result } from '../../../../shared-kernel/Result.js';
 import { Page, PageStatus, CmsBlock } from '../../domain/entities/Page.js';
 import { IPageRepository } from '../../domain/ports/IPageRepository.js';
+import { validateAndFormatSlug } from '../../domain/validateCmsSlug.js';
+import { sanitizeHtml } from '../../domain/sanitizeHtml.js';
 
 export interface CreatePageInput {
   title: string;
@@ -20,22 +22,34 @@ export class CreatePageUseCase {
   }
 
   public async execute(input: CreatePageInput): Promise<Result<Page, Error>> {
-    const existing = await this.pageRepo.findBySlug(input.slug);
-    if (existing) {
-      return Result.fail(new Error(`Ya existe una página con el slug '${input.slug}'`));
-    }
-
     try {
+      const validSlug = validateAndFormatSlug(input.slug || input.title);
+      const existing = await this.pageRepo.findBySlug(validSlug);
+      if (existing) {
+        return Result.fail(new Error(`Ya existe una página con el slug '${validSlug}'`));
+      }
+
+      const sanitizedBlocks: CmsBlock[] = (input.blocks || []).map((b) => {
+        const content = { ...b.content };
+        if (typeof content['html'] === 'string') {
+          content['html'] = sanitizeHtml(content['html']);
+        }
+        if (typeof content['text'] === 'string') {
+          content['text'] = sanitizeHtml(content['text']);
+        }
+        return { ...b, content };
+      });
+
       const now = new Date().toISOString();
       const page = new Page({
         id: crypto.randomUUID(),
-        title: input.title,
-        slug: input.slug,
+        title: input.title.trim(),
+        slug: validSlug,
         status: input.status || 'draft',
         currentVersion: 1,
-        blocks: input.blocks || [],
-        seoTitle: input.seoTitle,
-        seoDescription: input.seoDescription,
+        blocks: sanitizedBlocks,
+        seoTitle: input.seoTitle?.trim() || undefined,
+        seoDescription: input.seoDescription?.trim() || undefined,
         createdAt: now,
         updatedAt: now,
       });

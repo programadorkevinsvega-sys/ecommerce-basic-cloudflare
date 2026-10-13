@@ -13,6 +13,7 @@ import { renderCmsFormsScript } from './renderCmsFormsScript.js';
 import { renderPromotionsFormsScript } from './renderPromotionsFormsScript.js';
 import { renderPromotionsHandlersScript } from './renderPromotionsHandlersScript.js';
 import { renderShippingFormsScript } from './renderShippingFormsScript.js';
+import { renderCmsEditorToolbarScript } from './renderCmsEditorToolbarScript.js';
 import { renderShippingHandlersScript } from './renderShippingHandlersScript.js';
 import { renderTaxonomyFormsScript } from './renderTaxonomyFormsScript.js';
 import { renderPhase8AdminScript } from './renderPhase8AdminScript.js';
@@ -171,6 +172,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderProductFormsScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
+  <script>${renderCmsEditorToolbarScript()}</script>
   <script>${renderCmsFormsScript()}</script>
   <script>${renderPromotionsFormsScript()}</script>
   <script>${renderPromotionsHandlersScript()}</script>

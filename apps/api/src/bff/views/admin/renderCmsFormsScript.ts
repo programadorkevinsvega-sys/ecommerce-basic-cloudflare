@@ -1,14 +1,37 @@
+import { LEGAL_TEMPLATES } from './cmsTemplates.js';
+
 export function renderCmsFormsScript(): string {
+  const templatesJson = JSON.stringify(LEGAL_TEMPLATES);
+
   return `
+    window.__CMS_TEMPLATES = ${templatesJson};
+    let _cmsPendingDeleteId = null;
+
+    function updateCmsSeoCounters() {
+      const tInput = document.getElementById('cmsSeoTitle');
+      const dInput = document.getElementById('cmsSeoDesc');
+      const tCount = document.getElementById('cmsSeoTitleCount');
+      const dCount = document.getElementById('cmsSeoDescCount');
+      if (tInput && tCount) {
+        const len = tInput.value.length;
+        tCount.textContent = len + '/60';
+        tCount.style.color = len > 60 ? '#f87171' : '#94a3b8';
+      }
+      if (dInput && dCount) {
+        const len = dInput.value.length;
+        dCount.textContent = len + '/155';
+        dCount.style.color = len > 155 ? '#f87171' : '#94a3b8';
+      }
+    }
+    window.updateCmsSeoCounters = updateCmsSeoCounters;
+    document.getElementById('cmsSeoTitle')?.addEventListener('input', updateCmsSeoCounters);
+    document.getElementById('cmsSeoDesc')?.addEventListener('input', updateCmsSeoCounters);
+
     document.getElementById('cmsTitle')?.addEventListener('input', (e) => {
       const slugInput = document.getElementById('cmsSlug');
       if (slugInput && !slugInput.dataset.manual) {
-        slugInput.value = e.target.value
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
+        slugInput.value = e.target.value.toLowerCase().normalize('NFD')
+          .replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       }
     });
 
@@ -30,22 +53,11 @@ export function renderCmsFormsScript(): string {
       const status = document.getElementById('cmsStatus').value;
       const seoTitle = document.getElementById('cmsSeoTitle').value.trim() || undefined;
       const seoDescription = document.getElementById('cmsSeoDesc').value.trim() || undefined;
-      const bodyText = document.getElementById('cmsBody').value.trim();
+      const editorHtml = document.getElementById('cmsEditor').innerHTML.trim();
 
       const payload = {
-        title,
-        slug,
-        status,
-        seoTitle,
-        seoDescription,
-        blocks: [
-          {
-            id: 'block-' + Date.now(),
-            type: 'rich_text',
-            content: { html: '<p>' + bodyText.replace(/\\n/g, '<br/>') + '</p>' },
-            sortOrder: 0
-          }
-        ]
+        title, slug, status, seoTitle, seoDescription,
+        blocks: [{ id: 'block-' + Date.now(), type: 'rich_text', content: { html: editorHtml }, sortOrder: 0 }]
       };
 
       const url = editId ? '/api/v1/admin/cms/pages/' + editId : '/api/v1/admin/cms/pages';
@@ -54,20 +66,20 @@ export function renderCmsFormsScript(): string {
       try {
         const res = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders(true),
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok) {
-          msg.textContent = editId ? '¡Página CMS actualizada con éxito!' : '¡Página CMS publicada con éxito!';
+          msg.textContent = editId ? '¡Página actualizada con éxito!' : '¡Página publicada con éxito!';
           msg.className = 'msg success';
           setTimeout(() => window.location.reload(), 1000);
         } else {
-          msg.textContent = data.error || 'Error al guardar la página';
+          msg.textContent = data.error || 'Error al guardar';
           msg.className = 'msg error';
           submitBtn.disabled = false;
         }
-      } catch (err) {
+      } catch {
         msg.textContent = 'Error de conexión';
         msg.className = 'msg error';
         submitBtn.disabled = false;
@@ -83,8 +95,8 @@ export function renderCmsFormsScript(): string {
       document.getElementById('cmsStatus').value = status;
       document.getElementById('cmsSeoTitle').value = seoTitle;
       document.getElementById('cmsSeoDesc').value = seoDesc;
-      document.getElementById('cmsBody').value = bodyText;
-
+      document.getElementById('cmsEditor').innerHTML = bodyText;
+      updateCmsSeoCounters();
       document.getElementById('cmsSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('cmsCancelBtn').style.display = 'inline-block';
       document.getElementById('newCmsPageForm').scrollIntoView({ behavior: 'smooth' });
@@ -93,10 +105,12 @@ export function renderCmsFormsScript(): string {
     function resetCmsForm() {
       document.getElementById('cmsEditId').value = '';
       document.getElementById('newCmsPageForm').reset();
+      document.getElementById('cmsEditor').innerHTML = '';
       const slugInput = document.getElementById('cmsSlug');
       if (slugInput) delete slugInput.dataset.manual;
       document.getElementById('cmsSubmitBtn').textContent = 'Publicar Página CMS';
       document.getElementById('cmsCancelBtn').style.display = 'none';
+      updateCmsSeoCounters();
     }
 
     async function toggleCmsPageStatus(id, newStatus) {
@@ -105,38 +119,43 @@ export function renderCmsFormsScript(): string {
       try {
         const res = await fetch('/api/v1/admin/cms/pages/' + id, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders(true),
           body: JSON.stringify({ status: newStatus })
         });
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          const data = await res.json();
-          alert(data.error || 'Error al actualizar estado');
-        }
-      } catch {
-        alert('Error de conexión al actualizar estado');
-      }
+        if (res.ok) window.location.reload();
+        else { const d = await res.json(); alert(d.error || 'Error al actualizar estado'); }
+      } catch { alert('Error de conexión'); }
     }
 
-    async function deleteCmsPage(id) {
-      if (!confirm('¿Deseas eliminar permanentemente esta página CMS?')) return;
+    function deleteCmsPage(id) {
+      _cmsPendingDeleteId = id;
+      document.getElementById('cmsDeleteModal').style.display = 'flex';
+    }
+
+    function closeCmsDeleteModal() {
+      _cmsPendingDeleteId = null;
+      document.getElementById('cmsDeleteModal').style.display = 'none';
+    }
+
+    async function confirmCmsDelete() {
+      if (!_cmsPendingDeleteId) return;
+      const id = _cmsPendingDeleteId;
+      closeCmsDeleteModal();
       try {
-        const res = await fetch('/api/v1/admin/cms/pages/' + id, { method: 'DELETE' });
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          const data = await res.json();
-          alert(data.error || 'Error al eliminar página');
-        }
-      } catch {
-        alert('Error de conexión al eliminar');
-      }
+        const res = await fetch('/api/v1/admin/cms/pages/' + id, {
+          method: 'DELETE',
+          headers: adminHeaders()
+        });
+        if (res.ok) window.location.reload();
+        else { const d = await res.json(); alert(d.error || 'Error al eliminar'); }
+      } catch { alert('Error de conexión'); }
     }
 
     window.editCmsPage = editCmsPage;
     window.resetCmsForm = resetCmsForm;
     window.toggleCmsPageStatus = toggleCmsPageStatus;
     window.deleteCmsPage = deleteCmsPage;
+    window.closeCmsDeleteModal = closeCmsDeleteModal;
+    window.confirmCmsDelete = confirmCmsDelete;
   `;
 }
