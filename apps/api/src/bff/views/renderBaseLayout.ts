@@ -3,6 +3,7 @@ import { storefrontComponentStyles } from './storefrontComponentStyles.js';
 import { storefrontProductStyles } from './storefrontProductStyles.js';
 import { storefrontDetailStyles } from './storefrontDetailStyles.js';
 import { storefrontCartStyles } from './storefrontCartStyles.js';
+import { storefrontCatalogStyles } from './storefrontCatalogStyles.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -70,7 +71,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}</style>
 </head>
 <body>
   ${topBarHtml}

@@ -1,5 +1,7 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
+import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
+import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
 
 export interface BannerItem {
   id: string;
@@ -61,39 +63,8 @@ export function renderProductList(
     return `${html}</section>`;
   }
 
-  html += '<div class="grid">';
-  for (const product of products) {
-    const formattedPrice = (product.priceInCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    const imageHtml = product.mediaIds?.[0] ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'product-media-placeholder',textContent:'Imagen no disponible'}))" />` : '<div class="product-media-placeholder" aria-hidden="true">Vega Store</div>';
-    const discountInfo = discountMap?.get(product.id);
-    let priceHtml = `<div class="card-price">${formattedPrice}</div>`;
-    let promoBadge = '';
-    if (discountInfo?.hasDiscount) {
-      const finalFormatted = (discountInfo.finalPriceCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-      priceHtml = `<div class="card-price-group"><span class="card-price-sale">${finalFormatted}</span><span class="card-price-old">${formattedPrice}</span></div>`;
-      promoBadge = `<span class="card-discount-badge">-${discountInfo.discountPercentage}%</span>`;
-    }
-    const effectivePrice = discountInfo?.hasDiscount ? discountInfo.finalPriceCents : product.priceInCents;
-
-    html += `
-      <article class="card product-card-v2">
-        <a class="product-media" href="/productos/${escapeHtml(product.slug)}" aria-label="${escapeHtml(product.name)}">
-          ${imageHtml}${promoBadge}
-        </a>
-        <div class="card-body">
-          <div class="card-eyebrow"><span class="card-brand">${escapeHtml(product.brand || 'Vega Store')}</span><span class="card-sku">${escapeHtml(product.sku)}</span></div>
-          <h2 class="card-title"><a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a></h2>
-          <div class="card-pricing-block">${priceHtml}<span class="card-stock-indicator ${product.stockQuantity <= 5 && product.stockQuantity > 0 ? 'stock-low' : ''}">${product.stockQuantity > 0 ? product.stockQuantity + ' disponibles' : 'Sin stock'}</span></div>
-          <div class="product-card-footer">
-            <div class="card-shipping-bullet"><span class="bullet-dot"></span><span>${product.salePolicy.shippingScope === 'national' ? 'Envío nacional' : 'Envío local'} · ${product.salePolicy.allowsCashOnDelivery ? 'Contra entrega' : 'Pago online'}</span></div>
-            <div class="card-actions-group">
-              ${product.stockQuantity > 0 ? `<button type="button" class="btn-action-cart" onclick="addToCartFromCard('${product.id}', ${effectivePrice}, this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Añadir</span></button>` : ''}
-              <a class="btn-action-view" href="/productos/${escapeHtml(product.slug)}">Detalles</a>
-            </div>
-          </div>
-        </div>
-      </article>`;
-  }
+  html += '<p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p><div class="grid">';
+  for (const product of products) html += renderStorefrontProductCard(product, discountMap?.get(product.id));
   html += `</div></section>
   <section class="benefits-strip" aria-label="Información de compra"><article><span aria-hidden="true">↗</span><div><strong>Envíos locales y nacionales</strong><p>La cobertura se indica en cada producto.</p></div></article><article><span aria-hidden="true">⌂</span><div><strong>Opciones de pago</strong><p>Consulta las alternativas disponibles al comprar.</p></div></article><article><span aria-hidden="true">✓</span><div><strong>Compra con confianza</strong><p>Revisa los detalles y políticas de cada producto.</p></div></article></section>
   <script>
@@ -117,29 +88,7 @@ export function renderProductList(
       heroCarousel.scrollBy({ left: direction * distance, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     });
 
-    async function addToCartFromCard(productId, priceCents, btn) {
-      const origText = btn.innerText;
-      btn.disabled = true; btn.innerText = 'Agregando...';
-      try {
-        const res = await fetch('/api/v1/cart/items', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId, quantity: 1, unitPriceCents: priceCents })
-        });
-        if (res.ok) {
-          btn.innerText = '¡Añadido! ✅';
-          setTimeout(() => { btn.disabled = false; btn.innerText = origText; }, 1800);
-        } else {
-          const err = await res.json();
-          alert(err.error || 'No se pudo agregar al carrito');
-          btn.disabled = false; btn.innerText = origText;
-        }
-      } catch {
-        alert('Error de conexión al agregar al carrito');
-        btn.disabled = false; btn.innerText = origText;
-      }
-    }
-  </script>`;
+  </script>${renderProductCardActionsScript}`;
   return html;
 }
 

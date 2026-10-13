@@ -7,6 +7,7 @@ import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
+import { renderCatalogPage } from '../../views/renderCatalogPage.js';
 import { renderProductDetail } from '../../views/renderProductDetail.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
@@ -81,7 +82,7 @@ export class StorefrontController {
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const bodyHtml = renderProductList(products, query, banners, discountMap);
+      const bodyHtml = renderCatalogPage(products, query, banners, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(

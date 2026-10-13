@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 import { renderProductList } from '../src/bff/views/renderProductList.js';
 import { renderProductDetail } from '../src/bff/views/renderProductDetail.js';
+import { renderCatalogPage } from '../src/bff/views/renderCatalogPage.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 
 const product: CatalogProductDto = {
@@ -58,5 +59,41 @@ describe('storefront presentation', () => {
     expect(html).toContain('Cobertura nacional');
     expect(html).toContain('aria-pressed="true"');
     expect(html).not.toContain('UV400 polarizado');
+  });
+
+  it('renders catalog filters only from loaded products and uses their real prices and purchase options', () => {
+    const html = renderCatalogPage([product]);
+    expect(html).toContain('<h1>Catálogo</h1>');
+    expect(html).toContain('value="Casa Verde"');
+    expect(html).toContain('data-cod-filter');
+    expect(html).toContain('data-price="1599000"');
+    expect(html).toContain('Menor precio');
+    expect(html).toContain('Pago contra entrega');
+    expect(html).toContain('Mostrando ');
+    expect(html).toContain('role="status"');
+    expect(html).not.toContain('Marca Ejemplo');
+  });
+
+  it('renders the discounted effective price and a useful empty state', () => {
+    const discounted = renderCatalogPage([product], undefined, [], new Map([['product-1', {
+      hasDiscount: true, originalPriceCents: 1599000, finalPriceCents: 1399000,
+      discountAppliedCents: 200000, discountPercentage: 13, promotionName: 'Oferta real',
+    }]]));
+    expect(discounted).toContain('data-price="1399000"');
+    expect(discounted).toContain('13.990');
+
+    const empty = renderCatalogPage([], 'inexistente');
+    expect(empty).toContain('No encontramos resultados');
+    expect(empty).toContain('inexistente');
+    expect(empty).toContain('Ver todo el catálogo');
+  });
+
+  it('keeps catalog search and filtering in presentation while sorting actual loaded cards', () => {
+    const html = renderCatalogPage([product], 'lámpara');
+    expect(html).toContain('Resultados para “lámpara”');
+    expect(html).toContain('catalogServerQuery');
+    expect(html).toContain('applyCatalogFilters');
+    expect(html).toContain('catalogGrid.append(...ordered)');
+    expect(html).toContain('window.location.href = \'/productos\'');
   });
 });
