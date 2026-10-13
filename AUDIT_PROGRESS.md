@@ -1,6 +1,6 @@
 # Progreso de auditoría integral
 
-Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas. El commit `4743bc1` está publicado y desplegado como versión `89aa891e-569b-4739-ba0b-b3961eb63160`, con D1/KV/Queue/R2 y los tres rate limiters ligados. `/health` devolvió 200; las rutas administrativas de inventario devolvieron 401 sin sesión.
+Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas en fases previas; esta pasada no agrega migraciones ni modifica D1 de producción. El commit `c5c1ace` está publicado y Wrangler muestra el rollout al 100% como versión `26f179da-7f49-42ca-bb66-f5a062130d17`. La lista de deployments confirma propagación; no revalidé `/health` para esta nueva versión.
 
 ## Fases
 
@@ -84,8 +84,8 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 - Carrusel: arreglado el markup de un único slide de Home; controles semánticos, flechas izquierda/derecha al enfocar el carrusel, `aria-live` para navegación manual y `prefers-reduced-motion`.
 - Pruebas ejecutadas en esta pasada: typecheck; suite API 25 archivos/58 pruebas; Workers 3 archivos/12 pruebas (incluye salida WebP y bytes de imagen corruptos en runtime local); lint de arquitectura; aislamiento; consistencia de copias/manifiesto; bindings; verificación Python de esquema fresco y upgrades legacy. No hay migración nueva.
 - Hallazgo aún abierto de cobertura: no existe decodificador nativo completo de formatos en el entorno de tests sin binding; la prueba Workers ejercita el binding simulado por Miniflare. Tampoco se hizo una transformación facturable contra Images remoto ni se ejecutó el GC remoto.
-- Despliegue: pendiente del commit/push de esta pasada (el build integrado desplegará); aún no se hizo consulta post-push ni enrolamiento TOTP real de la cuenta productiva.
+- Despliegue: commit `c5c1ace` publicado a `origin/main`; Wrangler informa versión `26f179da-7f49-42ca-bb66-f5a062130d17` con 100% de tráfico. No se ejecutó `wrangler deploy`, ninguna migración de producción ni GC remoto. Falta que el dueño de la cuenta complete el enrolamiento MFA productivo. El endpoint público de health no se volvió a consultar para esta versión.
 
 ## Git
 
-Commits `4a25cae` y `e4e15bd` se publicaron en `origin/main`; commits recientes incluyen `a96aaaf`, `013f784`, `75fa3f7` y `4743bc1`. Este último está desplegado como versión `89aa891e-569b-4739-ba0b-b3961eb63160`; el healthcheck está saludable. Nunca se ejecutó `wrangler deploy`. No se incluyeron `.dev.vars`, credenciales ni temporales.
+Commits previos `4a25cae` y `e4e15bd` y el commit `c5c1ace` se publicaron en `origin/main`. Wrangler reportó para `c5c1ace` la versión `26f179da-7f49-42ca-bb66-f5a062130d17` con 100% de tráfico. `git status` quedó limpio. Nunca se ejecutó `wrangler deploy`; no se incluyeron `.dev.vars`, credenciales ni temporales.
