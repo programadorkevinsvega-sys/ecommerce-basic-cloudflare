@@ -1,18 +1,19 @@
 export function renderProductFormsScript(): string {
   return `
-    let currentProductMediaIds = [];
+    window.currentProductMediaIds = [];
 
     function updateProductMediaGrid() {
       const grid = document.getElementById('pMediaGrid');
       const hiddenInput = document.getElementById('pMediaIdsJson');
-      if (hiddenInput) hiddenInput.value = JSON.stringify(currentProductMediaIds);
+      if (hiddenInput) hiddenInput.value = JSON.stringify(window.currentProductMediaIds || []);
       if (!grid) return;
       grid.innerHTML = '';
-      if (currentProductMediaIds.length === 0) {
+      const list = window.currentProductMediaIds || [];
+      if (list.length === 0) {
         grid.innerHTML = '<div style="font-size:0.8rem; color:#64748b; padding:0.5rem 0;">No hay imágenes cargadas aún.</div>';
         return;
       }
-      currentProductMediaIds.forEach((mId, index) => {
+      list.forEach((mId, index) => {
         const item = document.createElement('div');
         item.style.cssText = 'position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:2px solid ' + (index === 0 ? '#38bdf8' : '#334155') + '; background:#1e293b;';
         item.innerHTML = '<img src="/media/' + mId + '" style="width:100%; height:100%; object-fit:cover;" />' +
@@ -23,8 +24,10 @@ export function renderProductFormsScript(): string {
     }
 
     function removeProductMedia(index) {
-      currentProductMediaIds.splice(index, 1);
-      updateProductMediaGrid();
+      if (window.currentProductMediaIds) {
+        window.currentProductMediaIds.splice(index, 1);
+        updateProductMediaGrid();
+      }
     }
 
     document.getElementById('newProductForm')?.addEventListener('submit', async (e) => {
@@ -65,7 +68,7 @@ export function renderProductFormsScript(): string {
           : [],
         saleMode: document.getElementById('pSaleMode').value,
         description: document.getElementById('pDesc').value,
-        mediaIds: currentProductMediaIds.slice(0, 5),
+        mediaIds: (window.currentProductMediaIds || []).slice(0, 5),
         status: 'published'
       };
 
@@ -104,8 +107,9 @@ export function renderProductFormsScript(): string {
 
     async function handleProductImageSelected(input) {
       if (!input.files || input.files.length === 0) return;
+      if (!window.currentProductMediaIds) window.currentProductMediaIds = [];
       const files = Array.from(input.files);
-      const remainingSlots = 5 - currentProductMediaIds.length;
+      const remainingSlots = 5 - window.currentProductMediaIds.length;
       if (remainingSlots <= 0) {
         alert('Ya has alcanzado el máximo de 5 imágenes permitidas para este producto.');
         input.value = '';
@@ -127,19 +131,18 @@ export function renderProductFormsScript(): string {
           const res = await fetch('/media/upload', { method: 'POST', headers, body: formData });
           const json = await res.json();
           if (res.ok && json.data?.id) {
-            currentProductMediaIds.push(json.data.id);
+            window.currentProductMediaIds.push(json.data.id);
             updateProductMediaGrid();
           }
         } catch {}
       }
       input.value = '';
       if (statusSpan) {
-        statusSpan.textContent = '✅ Imágenes listas (' + currentProductMediaIds.length + '/5)';
+        statusSpan.textContent = '✅ Imágenes listas (' + window.currentProductMediaIds.length + '/5)';
         statusSpan.style.color = '#34d399';
       }
     }
 
-    window.currentProductMediaIds = currentProductMediaIds;
     window.updateProductMediaGrid = updateProductMediaGrid;
     window.removeProductMedia = removeProductMedia;
     window.onProductScopeChange = onProductScopeChange;

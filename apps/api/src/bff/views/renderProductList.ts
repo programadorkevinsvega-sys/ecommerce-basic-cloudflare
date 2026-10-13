@@ -67,25 +67,21 @@ export function renderProductList(
   html += '<div class="grid">';
   for (const product of products) {
     const formattedPrice = (product.priceInCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    const availabilityTag = product.stockQuantity > 0 ? '<span class="product-availability is-available"><span aria-hidden="true">●</span> Disponible</span>' : '<span class="product-availability is-unavailable"><span aria-hidden="true">●</span> Agotado</span>';
     const imageHtml = product.mediaIds?.[0] ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />` : '<div class="product-media-placeholder" aria-hidden="true">Vega Store</div>';
     const discountInfo = discountMap?.get(product.id);
     let priceHtml = `<div class="card-price">${formattedPrice}</div>`;
     let promoBadge = '';
     if (discountInfo?.hasDiscount) {
       const finalFormatted = (discountInfo.finalPriceCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-      priceHtml = `<div class="card-price-group"><span class="card-price card-price-sale">${finalFormatted}</span><span class="card-price-old">${formattedPrice}</span></div>`;
-      promoBadge = `<span class="tag tag-promo">-${discountInfo.discountPercentage}%</span>`;
+      priceHtml = `<div class="card-price-group"><span class="card-price-sale">${finalFormatted}</span><span class="card-price-old">${formattedPrice}</span></div>`;
+      promoBadge = `<span class="card-discount-badge">-${discountInfo.discountPercentage}%</span>`;
     }
-    const conditionBadge = product.condition !== 'new' ? `<span class="card-pill pill-secondary">${escapeHtml(product.condition)}</span>` : '';
-    const saleModeBadge = product.salePolicy.saleMode !== 'cash' ? `<span class="card-pill pill-accent">${product.salePolicy.saleMode === 'credit' ? 'Crédito' : 'Contado/Crédito'}</span>` : '';
     const effectivePrice = discountInfo?.hasDiscount ? discountInfo.finalPriceCents : product.priceInCents;
 
     html += `
       <article class="card product-card-v2">
         <a class="product-media" href="/productos/${escapeHtml(product.slug)}" aria-label="${escapeHtml(product.name)}">
-          ${imageHtml}${promoBadge ? `<span class="product-promo">${promoBadge}</span>` : ''}
-          <div class="card-media-chips">${availabilityTag}${saleModeBadge}${conditionBadge}</div>
+          ${imageHtml}${promoBadge}
         </a>
         <div class="card-body">
           <div class="card-eyebrow"><span class="card-brand">${escapeHtml(product.brand || 'Vega Store')}</span><span class="card-sku">${escapeHtml(product.sku)}</span></div>

@@ -19,15 +19,11 @@ export const storefrontProductStyles = String.raw`
       transition: transform .35s cubic-bezier(.16,1,.3,1);
     }
     .product-card-v2:hover .product-media img { transform: scale(1.05); }
-    .card-media-chips {
-      position: absolute; bottom: .65rem; left: .65rem; display: flex; flex-wrap: wrap; gap: .3rem; z-index: 2;
+    .card-discount-badge {
+      position: absolute; top: .75rem; right: .75rem; z-index: 3;
+      padding: .28rem .58rem; border-radius: 6px; background: #dc2626; color: #ffffff;
+      font-size: .72rem; font-weight: 800; letter-spacing: -.01em; box-shadow: 0 2px 6px rgba(220,38,38,.25);
     }
-    .card-pill {
-      font-size: .65rem; font-weight: 700; letter-spacing: .02em; padding: .2rem .5rem;
-      border-radius: 999px; backdrop-filter: blur(8px);
-    }
-    .pill-accent { background: rgba(23,36,29,.85); color: #c8f169; }
-    .pill-secondary { background: rgba(255,255,255,.92); color: #324734; border: 1px solid #dce4d6; }
     .product-card-v2 .card-body {
       display: flex; flex-direction: column; padding: 1.15rem; gap: .55rem; flex: 1;
     }
@@ -44,6 +40,9 @@ export const storefrontProductStyles = String.raw`
     .card-pricing-block {
       display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: .4rem;
     }
+    .card-price-group { display: flex; align-items: baseline; gap: .45rem; }
+    .card-price-sale { color: #dc2626; font-weight: 850; font-size: 1.22rem; }
+    .card-price-old { font-size: .88rem; color: #8c998e; text-decoration: line-through; }
     .card-stock-indicator { font-size: .72rem; font-weight: 600; color: #2c6e43; }
     .card-stock-indicator.stock-low { color: #b45309; }
     .product-card-v2 .product-card-footer {
