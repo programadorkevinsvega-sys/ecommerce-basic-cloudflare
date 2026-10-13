@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 import { renderProductList } from '../src/bff/views/renderProductList.js';
+import { renderProductDetail } from '../src/bff/views/renderProductDetail.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 
 const product: CatalogProductDto = {
@@ -40,5 +41,22 @@ describe('storefront presentation', () => {
     expect(html).toContain('VEGA');
     expect(html).toContain('prefers-reduced-motion');
     expect(html).toContain('max-width: 760px');
+  });
+
+  it('renders product details from actual catalog, discount, stock and shipping data', () => {
+    const html = renderProductDetail({ ...product, mediaIds: ['media-1', 'media-2'], specifications: { Material: 'Acero inoxidable' } }, {
+      hasDiscount: true, originalPriceCents: 1599000, finalPriceCents: 1399000,
+      discountAppliedCents: 200000, discountPercentage: 13, promotionName: 'Oferta real',
+    });
+    expect(html).toContain('Lámpara de lectura');
+    expect(html).toContain('src="/media/media-1"');
+    expect(html).toContain('data-image-src="/media/media-2"');
+    expect(html).toContain('Acero inoxidable');
+    expect(html).toContain('−13%');
+    expect(html).toContain('Oferta real');
+    expect(html).toContain('Pago contra entrega');
+    expect(html).toContain('Cobertura nacional');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).not.toContain('UV400 polarizado');
   });
 });
