@@ -1,5 +1,5 @@
 import { D1InvoiceRepository } from './infrastructure/persistence/d1/repositories/D1InvoiceRepository.js';
-import { HtmlInvoicePdfAdapter } from './infrastructure/adapters/HtmlInvoicePdfAdapter.js';
+import { PdfInvoiceAdapter } from './infrastructure/adapters/PdfInvoiceAdapter.js';
 import { MockElectronicInvoicingAdapter } from './infrastructure/adapters/MockElectronicInvoicingAdapter.js';
 import { IssueInvoiceUseCase } from './application/use-cases/IssueInvoiceUseCase.js';
 import { GetInvoiceUseCase } from './application/use-cases/GetInvoiceUseCase.js';
@@ -15,7 +15,7 @@ export interface InvoicingModuleDependencies {
 
 export class InvoicingModuleContainer {
   public readonly repo: D1InvoiceRepository;
-  public readonly pdfAdapter: HtmlInvoicePdfAdapter;
+  public readonly pdfAdapter: PdfInvoiceAdapter;
   public readonly electronicAdapter: MockElectronicInvoicingAdapter;
 
   public readonly issueInvoiceUseCase: IssueInvoiceUseCase;
@@ -26,8 +26,8 @@ export class InvoicingModuleContainer {
 
   constructor(deps: InvoicingModuleDependencies) {
     this.repo = new D1InvoiceRepository(deps.db);
-    this.pdfAdapter = new HtmlInvoicePdfAdapter(deps.bucket);
-    this.getInvoiceDocumentUseCase = new GetInvoiceDocumentUseCase(this.repo, new R2InvoiceDocumentStorageAdapter(deps.bucket));
+    this.pdfAdapter = new PdfInvoiceAdapter(deps.bucket);
+    this.getInvoiceDocumentUseCase = new GetInvoiceDocumentUseCase(this.repo, new R2InvoiceDocumentStorageAdapter(deps.bucket), this.pdfAdapter);
     this.electronicAdapter = new MockElectronicInvoicingAdapter();
 
     this.issueInvoiceUseCase = new IssueInvoiceUseCase(this.repo, this.pdfAdapter, this.electronicAdapter);

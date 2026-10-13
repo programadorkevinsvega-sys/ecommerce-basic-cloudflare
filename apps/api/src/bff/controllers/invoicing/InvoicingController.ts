@@ -11,7 +11,7 @@ export class InvoicingController {
   ): Hono {
     const app = new Hono();
 
-    // GET /api/v1/invoices/:id/document — Descarga o visualización directa del HTML/PDF de la factura
+    // GET /api/v1/invoices/:id/document — Descarga autenticada del PDF de la factura
     app.get('/api/v1/invoices/:id/document', async (c) => {
       const id = c.req.param('id');
       const invoice = await invoicingGateway.getInvoice({ id });
@@ -29,10 +29,12 @@ export class InvoicingController {
       if (!invoice.pdfR2Key) return c.json({ error: 'Documento no disponible' }, 404);
       const object = await invoicingGateway.getInvoiceDocument(invoice.id);
       if (!object) return c.json({ error: 'Archivo en almacenamiento no encontrado' }, 404);
+      const safeInvoiceNumber = invoice.invoiceNumber.replace(/[^a-zA-Z0-9_-]/g, '');
+      const filename = `factura-${safeInvoiceNumber}.pdf`;
       return new Response(object.stream, { headers: {
-        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Type': 'application/pdf',
         'Content-Length': String(object.sizeBytes),
-        'Content-Disposition': 'attachment; filename="factura.html"',
+        'Content-Disposition': `${c.req.query('view') === '1' ? 'inline' : 'attachment'}; filename="${filename}"`,
         'X-Content-Type-Options': 'nosniff',
         'Cache-Control': 'private, no-store',
         etag: object.etag,

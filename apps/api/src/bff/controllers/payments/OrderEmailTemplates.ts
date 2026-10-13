@@ -1,10 +1,11 @@
 import { Order } from '../../../modules/orders/domain/entities/Order.js';
+import { calculateOrderTaxCents } from './calculateOrderTaxCents.js';
 
 export class OrderEmailTemplates {
   public static renderCustomerPaidEmail(order: Order, invoiceNumber: string, txId?: string): string {
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
     const subtotalFormatted = (order.subtotalCents / 100).toLocaleString('es-CO');
-    const taxFormatted = (Math.round(order.subtotalCents * 0.19) / 100).toLocaleString('es-CO');
+    const taxFormatted = (calculateOrderTaxCents(order) / 100).toLocaleString('es-CO');
     const shippingFormatted = (order.shippingCostCents / 100).toLocaleString('es-CO');
     const addr = order.shippingAddress || {} as any;
 
@@ -15,6 +16,7 @@ export class OrderEmailTemplates {
           <p style="color:#64748b;margin:0.25rem 0 0 0;font-size:0.9rem;">¡Pago Aprobado y Confirmado con Éxito!</p>
         </div>
         <p>Hola <strong>${order.customerName}</strong>, hemos recibido la confirmación de tu pago a través de <strong>Wompi</strong>.</p>
+        <p>Adjuntamos el PDF de tu factura para que puedas guardarlo.</p>
         <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin:1.5rem 0;border:1px solid #e2e8f0;font-size:0.9rem;">
           <div><strong>Número de Pedido:</strong> #${order.id}</div>
           <div><strong>Factura Comercial:</strong> <span style="color:#0284c7;font-weight:700;">#${invoiceNumber}</span></div>
@@ -44,7 +46,8 @@ export class OrderEmailTemplates {
         </table>
         <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:0.9rem;line-height:1.6;">
           <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>$${subtotalFormatted}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span>IVA (19%):</span><span>$${taxFormatted}</span></div>
+          ${order.discountCents > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento:</span><span>-$${(order.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
+          <div style="display:flex;justify-content:space-between;"><span>IVA incluido:</span><span>$${taxFormatted}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Envío:</span><span>$${shippingFormatted}</span></div>
           <div style="display:flex;justify-content:space-between;border-top:2px solid #0284c7;font-size:1.1rem;font-weight:700;color:#0284c7;padding-top:0.5rem;margin-top:0.5rem;">
             <span>TOTAL PAGADO:</span><span>$${totalFormatted} COP</span>

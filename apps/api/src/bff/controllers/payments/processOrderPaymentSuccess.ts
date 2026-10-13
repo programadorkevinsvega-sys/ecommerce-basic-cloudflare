@@ -6,6 +6,8 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { RealtimeGateway } from '../../gateways/realtime/RealtimeGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { OrderEmailTemplates } from './OrderEmailTemplates.js';
+import { createInvoiceAttachment } from './createInvoiceAttachment.js';
+import { calculateOrderTaxCents } from './calculateOrderTaxCents.js';
 
 export interface ProcessPaymentSuccessParams {
   orderId: string;
@@ -49,9 +51,10 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
 
   // 2. Emitir factura inmutable
   let invoiceNumber = '';
+  let invoiceId = '';
   const storeSettings = await settingsGateway.getSettings().catch(() => null);
   try {
-    const taxCents = Math.round(order.subtotalCents * 0.19);
+    const taxCents = calculateOrderTaxCents(order);
     const invoice = await invoicingGateway.issueInvoice({
       orderId: order.id,
       customerId: order.customerId,
@@ -108,6 +111,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       },
     });
     invoiceNumber = invoice.invoiceNumber;
+    invoiceId = invoice.id;
   } catch (error) {
     console.error(JSON.stringify({ event: 'payments.invoice_issue_failed', order_id: order.id, trace_id: traceId }));
     throw error;
@@ -115,6 +119,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
 
   // 3. Enviar emails transaccionales con Resend (Al Cliente Y a la Empresa)
   try {
+    const invoiceAttachment = await createInvoiceAttachment(invoicingGateway, invoiceId, invoiceNumber);
+    if (!invoiceAttachment) throw new Error('No fue posible preparar el PDF de la factura');
     // 3.1 Al Cliente
     const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference);
     await notificationsGateway.sendEmail({
@@ -123,6 +129,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       subject: `¡Pago Confirmado! Pedido #${order.id} ${invoiceNumber ? '- Factura ' + invoiceNumber : ''}`,
       idempotencyKey: `email_cust_${order.id}`,
       html: customerHtml,
+      attachments: [invoiceAttachment],
     });
 
     // 3.2 A la Empresa / Administrador
@@ -136,6 +143,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       subject: `🚨 [NUEVA VENTA] Pedido #${order.id} — Factura #${invoiceNumber} ($${totalFormatted} COP)`,
       idempotencyKey: `email_admin_${order.id}`,
       html: adminHtml,
+      attachments: [invoiceAttachment],
     });
   } catch {
     console.error(JSON.stringify({ event: 'payments.confirmation_email_failed', order_id: order.id, trace_id: traceId }));

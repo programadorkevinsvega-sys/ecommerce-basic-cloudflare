@@ -112,6 +112,10 @@ export function renderOrdersManagementSection(): string {
               <span id="modal-discount" style="color:#ef4444;">-$0</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--muted, #94a3b8);">IVA incluido:</span>
+              <span id="modal-tax">$0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
               <span style="color:var(--muted, #94a3b8);">Envío:</span>
               <span id="modal-shipping-cost">$0</span>
             </div>

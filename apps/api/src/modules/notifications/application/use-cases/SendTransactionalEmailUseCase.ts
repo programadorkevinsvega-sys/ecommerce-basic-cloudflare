@@ -1,4 +1,4 @@
-import { IEmailPort, EmailSendResult } from '../../domain/ports/IEmailPort.js';
+import { IEmailPort, EmailAttachment, EmailSendResult } from '../../domain/ports/IEmailPort.js';
 import { INotificationLogRepository } from '../../domain/ports/INotificationLogRepository.js';
 
 export interface SendEmailCommand {
@@ -7,6 +7,7 @@ export interface SendEmailCommand {
   subject: string;
   html: string;
   idempotencyKey: string;
+  attachments?: EmailAttachment[];
 }
 
 export class SendTransactionalEmailUseCase {
@@ -44,6 +45,7 @@ export class SendTransactionalEmailUseCase {
       subject: cmd.subject,
       html: cmd.html,
       idempotencyKey: cmd.idempotencyKey,
+      attachments: cmd.attachments,
     });
 
     // 3. Actualizar bitácora

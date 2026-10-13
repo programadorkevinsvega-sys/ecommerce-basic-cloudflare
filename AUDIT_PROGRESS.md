@@ -107,3 +107,10 @@ Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f`, `2fd4a93`, `c3d85
 - La página presenta el QR, una alternativa manual plegable y aclara que escanearlo desde otro dispositivo funciona mejor. La etiqueta TOTP usa `ADMIN_EMAIL` configurado, no el correo D1 previo.
 - Volver a generar reemplaza el secreto pendiente que se compartió en la conversación. Pruebas: UI accesible, QR SVG/no-store, reautenticación, typecheck, lint, suite API (29 archivos, 68 pruebas) y Wrangler dry-run.
 - Desplegado en producción; la versión activa verificada fue `6226057b-d4fc-4daa-8cd1-8dbd90a51e08`; `/health` responde `healthy` (D1/KV/Queue/R2 en `ok`).
+### 2026-10-13 — Desglose de IVA y factura PDF
+
+- El panel de pedidos y el correo de pago ahora desglosan el IVA a partir del total autoritativo del pedido, restando subtotal, envío y sumando el descuento; el desglose reconcilia con el monto efectivamente cobrado.
+- Las facturas nuevas se generan como PDF real en R2 con `pdf-lib`, se pueden visualizar o descargar desde cuenta y panel, y se adjuntan al correo de confirmación de cliente y administración vía Resend. Las facturas históricas que apuntaban a HTML se convierten a PDF en el primer acceso, sin eliminar el original de R2.
+- Pruebas añadidas: validez del PDF, desglose de impuestos y payload de adjunto Resend.
+- Validación: typecheck, lint de arquitectura, suite API (33 archivos, 85 tests) y Wrangler dry-run pasaron. `test:workers` sigue fallando en el timeout fijo de 5 s del request real a `/health` (1 fallo; otros 11 tests pasan); no modifiqué el timeout ni oculté el fallo.
+- No se ejecutó envío de correo real, se aplicaron migraciones ni se usaron datos de producción durante las pruebas.

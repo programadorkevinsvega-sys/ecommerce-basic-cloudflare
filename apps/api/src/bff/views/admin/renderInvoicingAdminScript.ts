@@ -23,9 +23,13 @@ export function renderInvoicingAdminScript(): string {
             <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(inv.createdAt).toLocaleString('es-CO'))}</td>
             <td style="padding:0.75rem; text-align:center;">
               <div style="display:flex; gap:0.4rem; justify-content:center;">
-                <a href="/api/v1/invoices/\${encodeURIComponent(inv.id)}/document" target="_blank" rel="noopener noreferrer"
+                <a href="/api/v1/invoices/\${encodeURIComponent(inv.id)}/document?view=1" target="_blank" rel="noopener noreferrer"
                   style="display:inline-block; padding:0.35rem 0.65rem; background:#0284c7; color:#fff; border-radius:5px; text-decoration:none; font-size:0.8rem; font-weight:600;">
-                  👁️ Ver Doc
+                  👁️ Ver PDF
+                </a>
+                <a href="/api/v1/invoices/\${encodeURIComponent(inv.id)}/document"
+                  style="display:inline-block; padding:0.35rem 0.65rem; background:#475569; color:#fff; border-radius:5px; text-decoration:none; font-size:0.8rem; font-weight:600;">
+                  Descargar
                 </a>
                 \${inv.status === 'issued' ? \`
                   <button onclick="openCreditNoteModal(\${escapeHtml(JSON.stringify(String(inv.id)))}, \${escapeHtml(JSON.stringify(String(inv.invoiceNumber)))}, \${Number(inv.totalCents)})"

@@ -129,6 +129,8 @@ export function renderOrdersAdminScript(): string {
       } else {
         discRow.style.display = 'none';
       }
+      const taxCents = Number(order.totalCents) - Number(order.subtotalCents) - Number(order.shippingCostCents) + Number(disc);
+      document.getElementById('modal-tax').innerText = '$' + (taxCents / 100).toLocaleString('es-CO');
       document.getElementById('modal-shipping-cost').innerText = '$' + (order.shippingCostCents / 100).toLocaleString('es-CO');
       document.getElementById('modal-total').innerText = '$' + (order.totalCents / 100).toLocaleString('es-CO');
 

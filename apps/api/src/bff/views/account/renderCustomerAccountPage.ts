@@ -84,8 +84,11 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
                     <td><span class="tag" style="background:${o.paymentStatus === 'approved' ? '#14532d' : '#78350f'}; color:#fff;">${o.paymentStatus}</span></td>
                     <td>
                       ${inv ? `
-                        <a href="/api/v1/invoices/${inv.id}/document" target="_blank" class="btn btn-primary" style="font-size:0.8rem;">
-                          🧾 ${inv.invoiceNumber}
+                        <a href="/api/v1/invoices/${inv.id}/document?view=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size:0.8rem;">
+                          🧾 Ver PDF ${inv.invoiceNumber}
+                        </a>
+                        <a href="/api/v1/invoices/${inv.id}/document" class="btn btn-secondary" style="font-size:0.8rem;">
+                          Descargar
                         </a>
                       ` : `
                         <span style="color:var(--muted); font-size:0.8rem;">En proceso</span>

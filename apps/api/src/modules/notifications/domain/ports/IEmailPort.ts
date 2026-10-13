@@ -1,8 +1,14 @@
+export interface EmailAttachment {
+  filename: string;
+  content: string;
+}
+
 export interface EmailMessage {
   to: string;
   subject: string;
   html: string;
   idempotencyKey: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface EmailSendResult {
