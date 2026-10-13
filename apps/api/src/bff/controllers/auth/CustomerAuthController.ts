@@ -28,9 +28,8 @@ export class CustomerAuthController {
 
         const customer = await gateway.registerCustomer(parsed.data);
         return c.json({ data: customer }, 201);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Error al registrar cliente';
-        return c.json({ error: msg }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible completar el registro' }, 400);
       }
     });
 
@@ -57,7 +56,7 @@ export class CustomerAuthController {
           `__Host-session=${session.rawToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=${new Date(session.expiresAt).toUTCString()}`
         );
 
-        return c.json({ status: 'ok', token: session.rawToken });
+        return c.json({ status: 'ok' });
       } catch {
         return c.json({ error: 'Credenciales inválidas' }, 401);
       }

@@ -78,9 +78,8 @@ export class CmsController {
           const body = await c.req.json();
           const page = await cmsGateway.createPage(body);
           return c.json({ data: page }, 201);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al crear página';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear la página' }, 400);
         }
       }
     );
@@ -95,9 +94,8 @@ export class CmsController {
           const body = await c.req.json();
           const page = await cmsGateway.updatePageContent({ ...body, id });
           return c.json({ data: page });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al actualizar página';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar la página' }, 400);
         }
       }
     );
@@ -110,9 +108,8 @@ export class CmsController {
         try {
           const pages = await cmsGateway.listPages(50, 0);
           return c.json({ data: pages });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al listar páginas';
-          return c.json({ error: msg }, 500);
+        } catch {
+          return c.json({ error: 'No fue posible consultar las páginas' }, 500);
         }
       }
     );
@@ -126,9 +123,8 @@ export class CmsController {
           const id = c.req.param('id');
           await cmsGateway.deletePage(id);
           return c.json({ success: true, message: 'Página eliminada con éxito' });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al eliminar página';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible eliminar la página' }, 400);
         }
       }
     );

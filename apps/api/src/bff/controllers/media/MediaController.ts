@@ -69,9 +69,8 @@ export class MediaController {
           });
 
           return c.json({ data: result }, 201);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al procesar subida';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible procesar la imagen' }, 400);
         }
       }
     );

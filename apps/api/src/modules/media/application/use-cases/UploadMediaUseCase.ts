@@ -50,7 +50,7 @@ export class UploadMediaUseCase {
     }
     const extensionMime: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif' };
     const extension = input.originalFileName.split('.').pop()?.toLowerCase();
-    if (extension && extensionMime[extension] && extensionMime[extension] !== validation.detectedMimeType) {
+    if (!extension || extensionMime[extension] !== validation.detectedMimeType) {
       return Result.fail(new Error('La extensión del archivo no coincide con su contenido'));
     }
 

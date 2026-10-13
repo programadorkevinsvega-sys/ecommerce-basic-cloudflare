@@ -13,9 +13,8 @@ export class PromotionsController {
         const body = await c.req.json();
         const res = await promotionsGateway.validateCoupon(body);
         return c.json({ data: res });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al validar cupón';
-        return c.json({ error: msg }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible validar el cupón' }, 400);
       }
     });
 
@@ -25,9 +24,8 @@ export class PromotionsController {
         const body = await c.req.json();
         const res = await promotionsGateway.evaluateProductDiscount(body);
         return c.json({ data: res });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al evaluar producto';
-        return c.json({ error: msg }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible evaluar la promoción' }, 400);
       }
     });
 
@@ -49,9 +47,8 @@ export class PromotionsController {
           const body = await c.req.json();
           const rule = await promotionsGateway.createPromotionRule(body);
           return c.json({ data: rule }, 201);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al crear regla';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear la regla' }, 400);
         }
       }
     );
@@ -65,9 +62,8 @@ export class PromotionsController {
           const body = await c.req.json();
           const rule = await promotionsGateway.updatePromotionRule({ ...body, id });
           return c.json({ data: rule });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al actualizar regla';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar la regla' }, 400);
         }
       }
     );
@@ -111,9 +107,8 @@ export class PromotionsController {
           const body = await c.req.json();
           const coupon = await promotionsGateway.createCoupon(body);
           return c.json({ data: coupon }, 201);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al crear cupón';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear el cupón' }, 400);
         }
       }
     );
@@ -127,9 +122,8 @@ export class PromotionsController {
           const body = await c.req.json();
           const coupon = await promotionsGateway.updateCoupon({ ...body, id });
           return c.json({ data: coupon });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al actualizar cupón';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar el cupón' }, 400);
         }
       }
     );

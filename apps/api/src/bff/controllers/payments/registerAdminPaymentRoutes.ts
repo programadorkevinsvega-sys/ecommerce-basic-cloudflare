@@ -27,7 +27,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     if (!await hasReservedStock(d.inventoryGateway, order)) return c.json({ error: 'No hay una reserva de inventario vigente para este pedido' }, 409);
     const cod = await d.paymentsGateway.recordCodCollection({ orderId: order.id, amountInCents: body.amountInCents, collectedBy: admin.actorId, receiptNumber: body.receiptNumber, notes: body.notes });
     await d.ordersGateway.updateOrderStatus({ orderId: order.id, status: 'delivered', paymentStatus: 'collected', note: `Recaudo contra entrega registrado por ${admin.actorId}`, actor: admin.actorId });
-    await processOrderPaymentSuccess({ orderId: order.id, paymentMethod: 'cash_on_delivery', paymentReference: body.receiptNumber || 'COD-REC', actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
+    await processOrderPaymentSuccess({ orderId: order.id, traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown', paymentMethod: 'cash_on_delivery', paymentReference: body.receiptNumber || 'COD-REC', actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
     return c.json({ success: true, collection: cod.toJSON() });
   });
 

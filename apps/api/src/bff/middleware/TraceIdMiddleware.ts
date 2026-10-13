@@ -1,6 +1,12 @@
 import { MiddlewareHandler } from 'hono';
 import { TraceContext } from '../../platform/TraceContext.js';
 
+declare module 'hono' {
+  interface ContextVariableMap {
+    traceContext: TraceContext;
+  }
+}
+
 export const TraceIdMiddleware: MiddlewareHandler = async (c, next) => {
   const traceContext = TraceContext.fromHeaders(c.req.raw.headers);
   c.set('traceContext', traceContext);

@@ -6,7 +6,8 @@ import { OrderEmailTemplates } from '../payments/OrderEmailTemplates.js';
 export async function notifyCodOrderPlaced(
   order: Order,
   notificationsGateway: NotificationsGateway,
-  settingsGateway: SettingsGateway
+  settingsGateway: SettingsGateway,
+  traceId: string
 ): Promise<void> {
   try {
     // 1. Email al cliente
@@ -31,7 +32,7 @@ export async function notifyCodOrderPlaced(
       idempotencyKey: `email_cod_admin_${order.id}`,
       html: adminHtml,
     });
-  } catch (err) {
-    console.error('[notifyCodOrderPlaced] Error:', err);
+  } catch {
+    console.error(JSON.stringify({ event: 'orders.cod_notification_failed', order_id: order.id, trace_id: traceId }));
   }
 }

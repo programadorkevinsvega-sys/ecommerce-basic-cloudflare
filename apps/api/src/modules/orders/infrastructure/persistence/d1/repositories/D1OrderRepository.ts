@@ -5,6 +5,7 @@ import { IOrderRepository, OrderHistoryRecord } from '../../../../domain/ports/I
 interface OrderRow {
   id: string;
   customer_id: string | null;
+  guest_cart_id_hash: string | null;
   customer_email: string;
   customer_name: string;
   customer_phone: string;
@@ -56,17 +57,17 @@ export class D1OrderRepository implements IOrderRepository {
 
     await this.db.prepare(
       `INSERT INTO orders_orders (
-         id, customer_id, customer_email, customer_name, customer_phone,
+         id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
          payment_method, status, payment_status, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
          updated_at = excluded.updated_at`
     ).bind(
-      order.id, order.customerId, order.customerEmail, order.customerName, order.customerPhone,
+      order.id, order.customerId, order.guestCartIdHash, order.customerEmail, order.customerName, order.customerPhone,
       JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt
@@ -148,6 +149,7 @@ export class D1OrderRepository implements IOrderRepository {
     return new Order({
       id: row.id,
       customerId: row.customer_id,
+      guestCartIdHash: row.guest_cart_id_hash,
       customerEmail: row.customer_email,
       customerName: row.customer_name,
       customerPhone: row.customer_phone,

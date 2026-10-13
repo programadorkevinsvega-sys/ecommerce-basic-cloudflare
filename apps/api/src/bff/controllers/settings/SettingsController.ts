@@ -20,7 +20,7 @@ export class SettingsController {
   public static createRoutes(gateway: SettingsGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
-    router.get('/', async (c) => {
+    router.get('/', createAuthMiddleware(identityGateway, 'admin', 'settings:read'), async (c) => {
       try {
         const settings = await gateway.getSettings();
         return c.json({ data: settings });

@@ -15,6 +15,7 @@ import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
 import { reconcileWompiEvent } from './reconcileWompiEvent.js';
 import { registerAdminPaymentRoutes } from './registerAdminPaymentRoutes.js';
 import { hasReservedStock } from './hasReservedStock.js';
+import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 
 export class PaymentsController {
   public static createRoutes(
@@ -48,6 +49,9 @@ export class PaymentsController {
             const session = await identityGateway.validateSession(token);
             if (session.actorType !== 'customer' || session.actorId !== order.customerId) return c.json({ error: 'Pedido no encontrado' }, 404);
           } catch { return c.json({ error: 'Pedido no encontrado' }, 404); }
+        } else {
+          const cartHash = await hashGuestCartId(c.req.header('cookie')?.match(/(?:^|;\s*)vega_cart_id=([^;]+)/)?.[1]);
+          if (!cartHash || !order.guestCartIdHash || cartHash !== order.guestCartIdHash) return c.json({ error: 'Pedido no encontrado' }, 404);
         }
 
         const publicKey = c.env.WOMPI_PUBLIC_KEY;
@@ -73,9 +77,8 @@ export class PaymentsController {
         });
 
         return c.json({ success: true, checkout: { ...checkoutData, wompiCheckoutUrl } });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return c.json({ error: msg }, 500);
+      } catch {
+        return c.json({ error: 'No fue posible iniciar el pago' }, 500);
       }
     });
 
@@ -122,6 +125,7 @@ export class PaymentsController {
 
         await processOrderPaymentSuccess({
           orderId: res.orderId,
+          traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown',
           paymentMethod: 'wompi',
           paymentReference: String(canonical.id || ''),
           actor: 'wompi-webhook',

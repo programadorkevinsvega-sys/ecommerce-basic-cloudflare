@@ -3,6 +3,7 @@ import { getCookie, setCookie } from 'hono/cookie';
 import { Env } from '../../../platform/Env.js';
 import { CartGateway } from '../../gateways/cart/CartGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { isValidGuestCartId } from '../../security/GuestCartCapability.js';
 
 export class CartController {
   public static createRoutes(cartGateway: CartGateway, identityGateway: IdentityGateway): Hono<{ Bindings: Env }> {
@@ -10,7 +11,7 @@ export class CartController {
 
     const getOrCreateCartId = (c: any): string => {
       let cartId = getCookie(c, 'vega_cart_id');
-      if (!cartId) {
+      if (!isValidGuestCartId(cartId)) {
         cartId = `cart_${crypto.randomUUID()}`;
         setCookie(c, 'vega_cart_id', cartId, {
           path: '/',
@@ -25,7 +26,7 @@ export class CartController {
 
     const getCustomerId = async (c: any): Promise<string | undefined> => {
       const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'vega_customer_token');
+      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
       if (!token) return undefined;
       try {
         const session = await identityGateway.validateSession(token);

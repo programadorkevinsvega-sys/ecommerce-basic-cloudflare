@@ -16,7 +16,7 @@ export class CustomerAccountController {
 
     const getCustomerSession = async (c: any) => {
       const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'vega_customer_token');
+      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
       if (!token) return null;
       try {
         const ver = await identityGateway.validateSession(token);
@@ -33,13 +33,16 @@ export class CustomerAccountController {
         return c.redirect('/cuenta/login?redirect=/cuenta');
       }
 
-      const orders = await ordersGateway.listOrders({ customerId: session.actorId, limit: 50 });
-      const invoices = await invoicingGateway.listInvoices({ customerId: session.actorId, limit: 50 });
+      const [profile, orders, invoices] = await Promise.all([
+        identityGateway.getCustomerProfile(session.actorId),
+        ordersGateway.listOrders({ customerId: session.actorId, limit: 50 }),
+        invoicingGateway.listInvoices({ customerId: session.actorId, limit: 50 }),
+      ]);
 
       const html = renderCustomerAccountPage({
         customer: {
           id: session.actorId,
-          email: session.actorId.includes('@') ? session.actorId : 'cliente@vegastore.com',
+          email: profile.email,
         },
         orders: orders.map((o) => o.toJSON()),
         invoices: invoices.map((i) => i.toJSON()),

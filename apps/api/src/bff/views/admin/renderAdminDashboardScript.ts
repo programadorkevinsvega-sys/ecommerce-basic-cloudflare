@@ -132,7 +132,7 @@ export function renderAdminDashboardScript(): string {
         updateSerpPreview();
         document.getElementById('newProductForm').scrollIntoView({ behavior: 'smooth' });
       } catch (err) {
-        console.error('Error loading product for edit', err);
+        console.error('No fue posible cargar el producto para editar');
       }
     }
 

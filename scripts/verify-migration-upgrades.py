@@ -22,6 +22,8 @@ def check_fresh_schema() -> None:
         apply_module(db, module)
     tables = db.execute("SELECT count(*) FROM sqlite_master WHERE type='table'").fetchone()[0]
     assert tables >= 60, f"Expected the complete schema, found {tables} tables"
+    order_columns = {row[1] for row in db.execute("PRAGMA table_info(orders_orders)")}
+    assert "guest_cart_id_hash" in order_columns, "Guest order ownership migration is missing"
 
     db.execute(
         """INSERT INTO payments_cod_collections
@@ -47,7 +49,7 @@ def check_fresh_schema() -> None:
     )
     row = db.execute("SELECT description,placement,starts_at,sort_order FROM storefront_banners WHERE id='b1'").fetchone()
     assert row == ("new", "product", "2026-10-13T00:00:00Z", 7), row
-    print(f"Fresh schema + COD insert + banner update passed ({tables} tables).")
+    print(f"Fresh schema + COD insert + banner update + guest order capability passed ({tables} tables).")
 
 
 def check_legacy_backfills() -> None:
@@ -67,6 +69,19 @@ def check_legacy_backfills() -> None:
     assert db.execute("SELECT created_at FROM payments_cod_collections WHERE id='c'").fetchone()[0] == "2026-01-01T00:00:00Z"
     assert db.execute("SELECT read FROM realtime_notifications WHERE id='n'").fetchone()[0] == 1
     print("Legacy upgrade passed (COD timestamp backfill; read state preserved).")
+
+    orders = sqlite3.connect(":memory:")
+    orders_path = MIGRATIONS / "orders/infrastructure/persistence/d1/migrations"
+    orders.executescript(next(orders_path.glob("0001_*.sql")).read_text(encoding="utf-8"))
+    orders.execute(
+        """INSERT INTO orders_orders
+        (id, customer_email, customer_name, customer_phone, shipping_address, shipping_zone_id,
+         subtotal_cents, total_cents, payment_method, created_at, updated_at)
+        VALUES ('legacy-guest','g@example.test','Guest','3000000000','{}','zone',100,100,'wompi','t0','t0')"""
+    )
+    orders.executescript((orders_path / "0002_guest_cart_capability.sql").read_text(encoding="utf-8"))
+    assert orders.execute("SELECT guest_cart_id_hash FROM orders_orders WHERE id='legacy-guest'").fetchone() == (None,)
+    print("Legacy orders upgrade passed (existing guest order preserved with nullable capability).")
 
 
 if __name__ == "__main__":

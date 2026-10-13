@@ -6,7 +6,7 @@ export function renderShippingHandlersScript(): string {
       try {
         return JSON.parse(decodeURIComponent(raw));
       } catch (e) {
-        console.error('Error parseando datos de zona de envío:', e);
+        console.error('No fue posible interpretar los datos de la zona de envío');
         return null;
       }
     }

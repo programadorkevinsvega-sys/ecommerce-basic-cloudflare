@@ -14,14 +14,19 @@ export const storefrontComponentStyles = String.raw`
     }
     .collection-note strong { color: var(--text); font-size: .88rem; }
     .note-mark { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 12px; background: var(--accent); color: var(--primary); font-size: 1.2rem; font-weight: 900; }
+    .campaign-carousel-wrap { margin-bottom: 2rem; }
     .campaign-carousel {
-      display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; overscroll-behavior-inline: contain;
+      display: flex; gap: 1rem; overflow-x: auto; overscroll-behavior-inline: contain;
       scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; padding: .25rem .25rem .85rem;
       scrollbar-width: thin; scrollbar-color: #b9c4b2 transparent;
       scroll-behavior: smooth;
     }
     .campaign-carousel > .campaign-banner { flex: 0 0 min(94%, 1120px); min-width: 0; margin: 0; scroll-snap-align: center; }
     .campaign-carousel:focus-visible { outline: 3px solid #6b9d26; outline-offset: 3px; }
+    .campaign-carousel-controls { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .5rem; }
+    .campaign-carousel-controls button { min-height: 2.75rem; padding: .5rem .9rem; border: 1px solid #657264; border-radius: .5rem; background: #fff; color: #17241d; cursor: pointer; }
+    .campaign-carousel-controls button:focus-visible { outline: 3px solid #6b9d26; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { .campaign-carousel { scroll-behavior: auto; } }
     .campaign-banner {
       display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); align-items: stretch;
       overflow: hidden; margin-bottom: 2rem; background: linear-gradient(135deg, #121c17 0%, #1a2a22 100%);

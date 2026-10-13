@@ -5,7 +5,7 @@ export function renderPromotionsHandlersScript(): string {
         const enc = btn.getAttribute('data-item');
         return JSON.parse(decodeURIComponent(enc));
       } catch (e) {
-        console.error('Error al decodificar item data:', e);
+        console.error('No fue posible interpretar los datos de la promoción');
         return null;
       }
     }

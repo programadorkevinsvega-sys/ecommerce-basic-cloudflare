@@ -106,8 +106,9 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
 
   app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));
-  app.onError((err, c) => {
-    console.error('Unhandled BFF error:', err);
+  app.onError((_err, c) => {
+    const traceContext = c.get('traceContext');
+    console.error(JSON.stringify({ event: 'bff.unhandled_error', trace_id: traceContext?.traceId, request_id: traceContext?.requestId }));
     return c.json({ error: 'Error interno del servidor' }, 500);
   });
 

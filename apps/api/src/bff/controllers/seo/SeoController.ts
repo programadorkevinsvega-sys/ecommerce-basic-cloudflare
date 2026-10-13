@@ -101,9 +101,8 @@ export class SeoController {
         const body = await c.req.json();
         const redirect = await seoGateway.createRedirect(body);
         return c.json({ data: redirect }, 201);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al registrar redirección';
-        return c.json({ error: msg }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible registrar la redirección' }, 400);
       }
     });
 

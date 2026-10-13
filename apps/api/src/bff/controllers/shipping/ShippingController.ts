@@ -49,9 +49,8 @@ export class ShippingController {
           const body = await c.req.json();
           const zone = await shippingGateway.createZone(body);
           return c.json({ data: zone }, 201);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al crear zona';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear la zona' }, 400);
         }
       }
     );
@@ -66,9 +65,8 @@ export class ShippingController {
           const body = await c.req.json();
           const zone = await shippingGateway.updateZone({ ...body, id });
           return c.json({ data: zone });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al actualizar zona';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar la zona' }, 400);
         }
       }
     );
@@ -82,9 +80,8 @@ export class ShippingController {
           const id = c.req.param('id');
           const zone = await shippingGateway.toggleZone(id);
           return c.json({ data: zone });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al alternar estado de zona';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar el estado de la zona' }, 400);
         }
       }
     );
@@ -98,9 +95,8 @@ export class ShippingController {
           const id = c.req.param('id');
           await shippingGateway.deleteZone(id);
           return c.json({ success: true });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error al eliminar zona';
-          return c.json({ error: msg }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible eliminar la zona' }, 400);
         }
       }
     );

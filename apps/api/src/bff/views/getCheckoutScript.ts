@@ -66,8 +66,8 @@ export function getCheckoutScript(
               }
             }
           }
-        } catch (e) {
-          console.error(e);
+        } catch {
+          console.error('No fue posible validar la opción de pago');
         }
       }
 

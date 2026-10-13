@@ -633,6 +633,7 @@ Tablas: 4; índices explícitos: 6. Copias: `migrations/orders__0001_init.sql` y
 Declaraciones de columnas/restricciones:
 - `id TEXT PRIMARY KEY`
 - `customer_id TEXT`
+- `guest_cart_id_hash TEXT` (migración `orders__0002_guest_cart_capability.sql`, SHA-256 del cookie guest; nullable para pedidos históricos)
 - `customer_email TEXT NOT NULL`
 - `customer_name TEXT NOT NULL`
 - `customer_phone TEXT NOT NULL`

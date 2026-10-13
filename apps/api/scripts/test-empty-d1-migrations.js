@@ -21,6 +21,6 @@ try {
   apply();
   const count = query('SELECT COUNT(*) AS count FROM d1_migrations')[0]?.count;
   const settings = query("SELECT name FROM pragma_table_info('settings_store')").map((row) => row.name);
-  if (count !== 27 || !settings.includes('company_nit')) throw new Error(`Resultado inesperado: ${count} migraciones; settings_store=${settings.join(',')}`);
+  if (count !== 28 || !settings.includes('company_nit')) throw new Error(`Resultado inesperado: ${count} migraciones; settings_store=${settings.join(',')}`);
   console.log(`Migraciones D1 en blanco correctas e idempotentes: ${count}; settings__0001 precedió settings__0002.`);
 } finally { fs.rmSync(temporary, { recursive: true, force: true }); }

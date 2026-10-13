@@ -26,10 +26,10 @@ export function renderStorefrontActionsScript(): string {
     }
 
     function filterBanners(card) {
-      const [search, placement, state] = card.querySelectorAll('.form-grid input, .form-grid select');
+      const [search, placement, state, type] = card.querySelector('.banner-filters').querySelectorAll('input, select');
       card.querySelectorAll('[data-banner-row="1"]').forEach((row) => {
         const matches = row.dataset.title.includes(search.value.toLowerCase()) &&
-          (!placement.value || row.dataset.placement === placement.value) && (!state.value || row.dataset.active === state.value);
+          (!placement.value || row.dataset.placement === placement.value) && (!state.value || row.dataset.active === state.value) && (!type.value || row.dataset.type === type.value);
         row.hidden = !matches;
       });
     }

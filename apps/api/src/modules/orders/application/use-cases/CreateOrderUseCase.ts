@@ -13,6 +13,7 @@ export interface CreateOrderLineInput {
 
 export interface CreateOrderCommand {
   customerId?: string | null;
+  guestCartIdHash?: string | null;
   customerEmail: string;
   customerName: string;
   customerPhone: string;
@@ -38,6 +39,9 @@ export class CreateOrderUseCase {
   }
 
   public async execute(cmd: CreateOrderCommand): Promise<Order> {
+    if (cmd.customerId && cmd.guestCartIdHash || !cmd.customerId && !/^[a-f0-9]{64}$/.test(cmd.guestCartIdHash || '')) {
+      throw new Error('El mecanismo de acceso del pedido no es válido');
+    }
     const orderId = `ord-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
@@ -54,6 +58,7 @@ export class CreateOrderUseCase {
     const order = new Order({
       id: orderId,
       customerId: cmd.customerId,
+      guestCartIdHash: cmd.guestCartIdHash,
       customerEmail: cmd.customerEmail,
       customerName: cmd.customerName,
       customerPhone: cmd.customerPhone,

@@ -62,8 +62,8 @@ export class CatalogController {
             slug,
           });
           return c.json({ data: category }, 201);
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al crear categoría' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear la categoría' }, 400);
         }
       }
     );
@@ -75,8 +75,8 @@ export class CatalogController {
         try {
           await catalogGateway.deleteCategory(c.req.param('id'));
           return c.json({ success: true });
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar categoría' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible eliminar la categoría' }, 400);
         }
       }
     );
@@ -98,8 +98,8 @@ export class CatalogController {
 
           const brand = await catalogGateway.createBrand(parsed.data);
           return c.json({ data: brand }, 201);
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al crear marca' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear la marca' }, 400);
         }
       }
     );
@@ -121,8 +121,8 @@ export class CatalogController {
 
           const attr = await catalogGateway.createAttribute(parsed.data);
           return c.json({ data: attr }, 201);
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al crear atributo' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear el atributo' }, 400);
         }
       }
     );
@@ -139,8 +139,8 @@ export class CatalogController {
 
           const product = await catalogGateway.createProduct(parsed.data);
           return c.json({ data: product }, 201);
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al crear producto' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible crear el producto' }, 400);
         }
       }
     );
@@ -156,8 +156,8 @@ export class CatalogController {
 
           const product = await catalogGateway.updateProduct({ id: c.req.param('id'), ...parsed.data });
           return c.json({ data: product });
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al actualizar producto' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible actualizar el producto' }, 400);
         }
       }
     );
@@ -169,8 +169,8 @@ export class CatalogController {
         try {
           await catalogGateway.deleteProduct(c.req.param('id'));
           return c.json({ success: true });
-        } catch (err) {
-          return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar producto' }, 400);
+        } catch {
+          return c.json({ error: 'No fue posible eliminar el producto' }, 400);
         }
       }
     );

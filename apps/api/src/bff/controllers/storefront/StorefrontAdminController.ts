@@ -18,8 +18,8 @@ export class StorefrontAdminController {
         const body = await c.req.json();
         const banner = await storefrontGateway.createBanner(body);
         return c.json({ data: banner }, 201);
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al crear banner' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible crear el banner' }, 400);
       }
     });
 
@@ -41,8 +41,8 @@ export class StorefrontAdminController {
         const body = await c.req.json();
         const banner = await storefrontGateway.updateBanner({ id: c.req.param('id'), ...body });
         return c.json({ data: banner });
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al actualizar banner' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible actualizar el banner' }, 400);
       }
     });
 
@@ -50,8 +50,8 @@ export class StorefrontAdminController {
       try {
         await storefrontGateway.deleteBanner(c.req.param('id'));
         return c.json({ success: true });
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar banner' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible eliminar el banner' }, 400);
       }
     });
 
@@ -66,8 +66,8 @@ export class StorefrontAdminController {
         const body = await c.req.json();
         const announcement = await storefrontGateway.createAnnouncement(body);
         return c.json({ data: announcement }, 201);
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al crear anuncio' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible crear el anuncio' }, 400);
       }
     });
 
@@ -76,8 +76,8 @@ export class StorefrontAdminController {
         const body = await c.req.json();
         const announcement = await storefrontGateway.updateAnnouncement({ id: c.req.param('id'), ...body });
         return c.json({ data: announcement });
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al actualizar anuncio' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible actualizar el anuncio' }, 400);
       }
     });
 
@@ -85,8 +85,8 @@ export class StorefrontAdminController {
       try {
         await storefrontGateway.deleteAnnouncement(c.req.param('id'));
         return c.json({ success: true });
-      } catch (err) {
-        return c.json({ error: err instanceof Error ? err.message : 'Error al eliminar anuncio' }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible eliminar el anuncio' }, 400);
       }
     });
 

@@ -14,6 +14,7 @@ export interface ShippingAddressSnapshot {
 export interface OrderProps {
   id: string;
   customerId?: string | null;
+  guestCartIdHash?: string | null;
   customerEmail: string;
   customerName: string;
   customerPhone: string;
@@ -36,6 +37,7 @@ export interface OrderProps {
 export class Order {
   public readonly id: string;
   public readonly customerId: string | null;
+  public readonly guestCartIdHash: string | null;
   public readonly customerEmail: string;
   public readonly customerName: string;
   public readonly customerPhone: string;
@@ -60,6 +62,7 @@ export class Order {
 
     this.id = props.id;
     this.customerId = props.customerId || null;
+    this.guestCartIdHash = props.guestCartIdHash || null;
     this.customerEmail = props.customerEmail.trim();
     this.customerName = props.customerName.trim();
     this.customerPhone = props.customerPhone.trim();

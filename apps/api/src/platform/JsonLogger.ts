@@ -20,8 +20,10 @@ export interface LogEntry {
 
 export class JsonLogger {
   private static readonly SENSITIVE_KEYS = new Set([
-    'password', 'token', 'secret', 'authorization', 'cookie',
-    'pan', 'cvv', 'card_number', 'security_code', 'api_key'
+    'password', 'token', 'secret', 'authorization', 'cookie', 'email', 'phone',
+    'address', 'shippingaddress', 'customer', 'customername', 'customeremail',
+    'recipient', 'recipientemail', 'to', 'taxid', 'nit', 'pan', 'cvv', 'cardnumber',
+    'security_code', 'api_key', 'html', 'body', 'payload'
   ]);
 
   private readonly serviceName: string;
@@ -51,13 +53,12 @@ export class JsonLogger {
     if (err instanceof Error) {
       errorObj = {
         name: err.name,
-        message: err.message,
-        stack: err.stack,
+        message: 'Operation failed',
       };
     } else if (err) {
       errorObj = {
         name: 'UnknownError',
-        message: String(err),
+        message: 'Operation failed',
       };
     }
     this.log('error', message, data, errorObj);
@@ -86,9 +87,11 @@ export class JsonLogger {
   private sanitize(obj: Record<string, unknown>): Record<string, unknown> {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (JsonLogger.SENSITIVE_KEYS.has(key.toLowerCase())) {
+      if (JsonLogger.SENSITIVE_KEYS.has(key.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
         sanitized[key] = '[REDACTED]';
-      } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      } else if (Array.isArray(value)) {
+        sanitized[key] = '[REDACTED]';
+      } else if (value && typeof value === 'object') {
         sanitized[key] = this.sanitize(value as Record<string, unknown>);
       } else {
         sanitized[key] = value;

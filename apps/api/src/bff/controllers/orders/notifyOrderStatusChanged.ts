@@ -6,7 +6,8 @@ export async function notifyOrderStatusChanged(
   order: Order,
   newStatus: string,
   note: string | undefined,
-  notificationsGateway: NotificationsGateway
+  notificationsGateway: NotificationsGateway,
+  traceId: string
 ): Promise<void> {
   if (!order.customerEmail) return;
 
@@ -31,7 +32,7 @@ export async function notifyOrderStatusChanged(
       idempotencyKey: `email_st_${order.id}_${newStatus}`,
       html: templateData.html,
     });
-  } catch (err) {
-    console.error(`[notifyOrderStatusChanged] Error enviando email (${newStatus}):`, err);
+  } catch {
+    console.error(JSON.stringify({ event: 'orders.status_notification_failed', order_id: order.id, status: newStatus, trace_id: traceId }));
   }
 }

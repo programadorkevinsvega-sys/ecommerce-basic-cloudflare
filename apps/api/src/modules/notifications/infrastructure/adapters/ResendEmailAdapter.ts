@@ -18,12 +18,7 @@ export class ResendEmailAdapter implements IEmailPort {
 
   public async sendEmail(message: EmailMessage): Promise<EmailSendResult> {
     if (!this.apiKey) {
-      // Modo desarrollo / fallback sin API key
-      console.log(`[ResendEmailAdapter:Mock] To: ${message.to} | Subject: ${message.subject} | Key: ${message.idempotencyKey}`);
-      return {
-        success: true,
-        messageId: `mock_${crypto.randomUUID()}`,
-      };
+      return { success: false, error: 'El proveedor de correo no está configurado' };
     }
 
     try {
@@ -43,15 +38,13 @@ export class ResendEmailAdapter implements IEmailPort {
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        return { success: false, error: `Resend error (${res.status}): ${errText}` };
+        return { success: false, error: `El proveedor de correo rechazó la solicitud (${res.status})` };
       }
 
       const data = await res.json() as { id?: string };
       return { success: true, messageId: data.id };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg };
+    } catch {
+      return { success: false, error: 'No fue posible contactar al proveedor de correo' };
     }
   }
 }

@@ -8,6 +8,7 @@ import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.j
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { renderAdminLoginPage } from '../../views/admin/renderAdminLoginPage.js';
 import { renderAdminDashboardPage } from '../../views/admin/renderAdminDashboardPage.js';
+import { StoreSettingsResponse } from '../../gateways/settings/SettingsGateway.js';
 
 export class AdminUiController {
   public static createRoutes(
@@ -41,6 +42,7 @@ export class AdminUiController {
         if (session.actorType !== 'admin') {
           return c.redirect('/admin/login');
         }
+        const can = (permission: string) => hasPermission(session.permissions, permission);
 
         const [
           products,
@@ -56,18 +58,18 @@ export class AdminUiController {
           divipolaLocations,
           settings,
         ] = await Promise.all([
-          catalogGateway.listProducts({ limit: 50 }),
-          catalogGateway.listCategories(),
-          catalogGateway.listBrands(),
-          catalogGateway.listAttributes(),
-          storefrontGateway.listBanners(),
-          storefrontGateway.listAnnouncements(),
-          cmsGateway.listPages(50, 0),
-          promotionsGateway.listPromotionRules(),
-          promotionsGateway.listCoupons(),
-          shippingGateway.listZones(),
-          shippingGateway.listLocations(),
-          settingsGateway.getSettings(),
+          can('catalog:read') ? catalogGateway.listProducts({ limit: 50 }) : Promise.resolve([]),
+          can('catalog:read') ? catalogGateway.listCategories() : Promise.resolve([]),
+          can('catalog:read') ? catalogGateway.listBrands() : Promise.resolve([]),
+          can('catalog:read') ? catalogGateway.listAttributes() : Promise.resolve([]),
+          can('storefront:read') ? storefrontGateway.listBanners() : Promise.resolve([]),
+          can('storefront:read') ? storefrontGateway.listAnnouncements() : Promise.resolve([]),
+          can('cms:read') ? cmsGateway.listPages(50, 0) : Promise.resolve([]),
+          can('promotions:read') ? promotionsGateway.listPromotionRules() : Promise.resolve([]),
+          can('promotions:read') ? promotionsGateway.listCoupons() : Promise.resolve([]),
+          can('shipping:read') ? shippingGateway.listZones() : Promise.resolve([]),
+          can('shipping:read') ? shippingGateway.listLocations() : Promise.resolve([]),
+          can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings()),
         ]);
 
         const html = renderAdminDashboardPage({
@@ -84,7 +86,6 @@ export class AdminUiController {
           divipolaLocations,
           settings,
           adminEmail: session.actorId || 'admin@vega.com',
-          adminToken: token,
         });
 
         return c.html(html);
@@ -96,4 +97,13 @@ export class AdminUiController {
 
     return router;
   }
+}
+
+function hasPermission(permissions: string[], required: string): boolean {
+  return permissions.some((permission) => permission === '*' || permission === required ||
+    permission.endsWith(':*') && required.startsWith(permission.slice(0, -1)));
+}
+
+function emptySettings(): StoreSettingsResponse {
+  return { id: '', storeName: 'Vega Store', currency: 'COP', taxRatePercent: 0, supportEmail: '', requireCodVerification: false, updatedAt: '' };
 }

@@ -2,6 +2,9 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { env, exports } from 'cloudflare:workers';
 import { OrdersController } from '../../src/bff/controllers/orders/OrdersController.js';
 import { D1InventoryRepository } from '../../src/modules/inventory/infrastructure/persistence/d1/repositories/D1InventoryRepository.js';
+import { D1OrderRepository } from '../../src/modules/orders/infrastructure/persistence/d1/repositories/D1OrderRepository.js';
+import { Order } from '../../src/modules/orders/domain/entities/Order.js';
+import { hashGuestCartId } from '../../src/bff/security/GuestCartCapability.js';
 
 describe('Worker API security and runtime bindings', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -66,7 +69,7 @@ describe('Worker API security and runtime bindings', () => {
     const settings = { getSettings: vi.fn().mockResolvedValue({ taxRatePercent: 0 }) };
     const app = OrdersController.createRoutes(orders as any, {} as any, shipping as any, catalog as any, {} as any, { reserveStock } as any, {} as any, settings as any, promotions as any);
     const response = await app.fetch(new Request('https://shop.test/api/v1/orders', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'vega_cart_id=cart_123e4567-e89b-42d3-a456-426614174000' },
       body: JSON.stringify({ customerEmail: 'customer@example.test', customerName: 'Customer', customerPhone: '3000000000', paymentMethod: 'wompi', shippingZoneId: zone.id, shippingAddress: { daneCode: '11001' }, lines: [{ productId: product.id, quantity: 1, unitPriceCents: 1 }] }),
     }));
     expect(response.status).toBe(409);
@@ -87,5 +90,22 @@ describe('Worker API security and runtime bindings', () => {
       .bind('active-reservation', 'reserved-order', 'item-1', 2, 'pending', new Date(Date.now() + 60000).toISOString(), new Date().toISOString()).run();
     expect(await repository.hasActiveReservation('reserved-order', [{ productId: 'item-1', quantity: 2 }])).toBe(true);
     expect(await repository.hasActiveReservation('reserved-order', [{ productId: 'item-1', quantity: 1 }])).toBe(false);
+  });
+
+  it('persists the guest cart capability hash in D1 without returning it in order JSON', async () => {
+    const guestCartIdHash = await hashGuestCartId('cart_123e4567-e89b-42d3-a456-426614174000');
+    const order = new Order({
+      id: 'guest-capability-persistence', guestCartIdHash, customerEmail: 'guest@example.test',
+      customerName: 'Guest', customerPhone: '3000000000',
+      shippingAddress: { department: 'Antioquia', municipality: 'Medellín', daneCode: '05001', addressLine: 'Street' },
+      shippingZoneId: 'zone', shippingCostCents: 0, subtotalCents: 1000, totalCents: 1190,
+      paymentMethod: 'wompi', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    });
+    const repository = new D1OrderRepository(env.DB);
+    await repository.save(order);
+    const stored = await repository.findById(order.id);
+
+    expect(stored?.guestCartIdHash).toBe(guestCartIdHash);
+    expect(stored?.toJSON()).not.toHaveProperty('guestCartIdHash');
   });
 });

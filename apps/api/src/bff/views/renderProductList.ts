@@ -25,7 +25,7 @@ export function renderProductList(
     const isInformative = item.bannerType === 'informative';
     const ctaHtml = isInformative ? '' : `<a class="campaign-action" href="${escapeHtml(item.linkUrl)}">${escapeHtml(item.buttonText || 'Explorar colección')} <span aria-hidden="true">↗</span></a>`;
     return `
-    <article class="campaign-banner">
+    <article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="${index + 1} de ${banners.length}">
       <div class="campaign-copy">
         <span class="eyebrow">${isInformative ? 'Comunicado' : 'Selección de la tienda'}</span>
         <h2>${escapeHtml(item.title)}</h2>
@@ -37,7 +37,7 @@ export function renderProductList(
   };
 
   const bannerHtml = banners.length > 1
-    ? `<section id="heroCarousel" class="campaign-carousel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section>`
+    ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
     : banners.length === 1 && banners[0]
       ? renderBanner(banners[0], 0).replace('<article class="campaign-banner">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
       : '';
@@ -91,29 +91,16 @@ export function renderProductList(
   }
   html += `</div>
   <script>
-    (function initAutoCarousel() {
-      const carousel = document.getElementById('heroCarousel');
-      if (!carousel) return;
-      let timer = setInterval(() => {
-        const itemWidth = carousel.firstElementChild ? carousel.firstElementChild.offsetWidth + 16 : 300;
-        if (carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 10) {
-          carousel.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          carousel.scrollBy({ left: itemWidth, behavior: 'smooth' });
-        }
-      }, 5000);
-      carousel.addEventListener('mouseenter', () => clearInterval(timer));
-      carousel.addEventListener('mouseleave', () => {
-        timer = setInterval(() => {
-          const itemWidth = carousel.firstElementChild ? carousel.firstElementChild.offsetWidth + 16 : 300;
-          if (carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 10) {
-            carousel.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            carousel.scrollBy({ left: itemWidth, behavior: 'smooth' });
-          }
-        }, 5000);
+    document.querySelectorAll('.campaign-carousel-controls button[data-carousel-direction]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const carousel = document.getElementById(button.getAttribute('aria-controls'));
+        if (!carousel) return;
+        const slide = carousel.querySelector('.campaign-banner');
+        const distance = slide ? slide.getBoundingClientRect().width + 16 : carousel.clientWidth;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        carousel.scrollBy({ left: Number(button.dataset.carouselDirection) * distance, behavior: reduceMotion ? 'instant' : 'smooth' });
       });
-    })();
+    });
 
     async function addToCartFromCard(productId, priceCents, btn) {
       const origText = btn.innerText;

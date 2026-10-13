@@ -44,6 +44,8 @@ Wrangler 3 puede ordenar mal archivos con nombres prefijados `<módulo>__NNNN` a
 
 No hay rollback automático de DDL. Las nuevas migraciones deben ser aditivas y compatibles hacia atrás; recuperar una aplicación defectuosa implica detener el release, volver el Worker a la versión compatible y preparar una migración correctiva expand/contract tras respaldar. No borrar datos ni objetos R2 como rollback genérico.
 
+La migración `orders__0002_guest_cart_capability.sql` agrega `orders_orders.guest_cart_id_hash`. Antes de desplegar el Worker que exige ese hash para pedidos invitados, inspeccionar `orders_orders` y verificar que no queden pedidos guest con pago `pending` sin hash; esperar a que se liquiden o reconciliarlos operativamente. La columna acepta `NULL` para preservar pedidos históricos y compatibilidad con la versión previa. Los pedidos nuevos invitados guardan un SHA-256 del cookie aleatorio `vega_cart_id`; el valor del cookie no se persiste en claro.
+
 ```text
 Release candidate
       ↓

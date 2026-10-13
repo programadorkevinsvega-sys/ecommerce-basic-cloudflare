@@ -21,6 +21,8 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 
 ## 1. Aislamiento entre clientes (ISO)
 
+`GET /api/v1/settings` expone configuración privada de la tienda (incluidos datos legales) y debe exigir una sesión administrativa válida con `settings:read`. El storefront público debe usar únicamente los endpoints públicos de contenido; no debe reutilizar este endpoint administrativo.
+
 - **SEC-ISO-01** El `customerId` / `adminId` se obtiene **únicamente de la sesión validada en el servidor**. Nunca de la URL, el body, headers ni cookies no firmadas.
 - **SEC-ISO-02** Toda consulta sobre datos propiedad de un cliente (direcciones, carritos, pedidos, pagos, cuentas y cuotas de crédito) se limita al actor de la sesión usando la columna de propiedad del módulo (`customer_id`). Las búsquedas por ID **siempre** combinan el identificador del recurso con el filtro de propiedad; un ID recibido del cliente nunca basta. Cada repositorio vive en su módulo y solo accede a tablas de su prefijo; está prohibido SQL suelto en rutas, gateways o módulos ajenos.
 - **SEC-ISO-03** Un recurso ajeno responde **404** (no 403) para no revelar su existencia.
@@ -278,6 +280,8 @@ La certificación global solo se declara completa cuando todos los controles apl
 Se añadieron comprobaciones server-side a las rutas CRUD de storefront, mutación de settings y creación de redirecciones SEO. `AuthMiddleware` y `Role.hasPermission` interpretan `recurso:*` como permisos del recurso, además de conservar `*` global y la denegación por defecto. La consulta de pedidos aplica ownership de sesión o permiso de lectura de pedidos. Las rutas de notificaciones limitan canal/recipiente al actor autenticado y restringen el marcado de lectura a notificaciones que ya puede consultar.
 
 El catálogo público fuerza el estado `published`; el estado enviado por query ya no habilita borradores. Las rutas públicas de estado de pedido no muestran datos de contacto o dirección. La inicialización de Wompi falla cerrada si faltan llaves; el webhook comprueba el checksum y reconcilia contra la API Wompi antes de aplicar el estado. El recaudo COD requiere permiso, método COD, estado no recaudado y monto entero igual al total. La ruta de factura ahora requiere sesión y ownership o permiso administrativo; inventario, auditoría y notas crédito aplican permisos en el servidor.
+
+La sesión de login ya no se devuelve en JSON ni se inyecta en el HTML/localStorage; el panel usa las cookies `HttpOnly`. El resultado y el inicio de pago de pedidos invitados requieren posesión del cookie de carrito validado, comparando un hash almacenado; el resultado se marca `private, no-store`. La carga del panel precarga datos según los permisos del administrador. Los errores BFF y logs evitan propagar texto interno, payloads o PII; `JsonLogger` conserva correlación por `trace_id` y redacciona campos sensibles.
 
 Se implementó CSRF por Origin/Sec-Fetch-Site en mutaciones con sesión y rate limits por IP para autenticación, inicio de pago/checkout y otras escrituras. El limiter es defensa contra abuso aproximada; faltan límites por actor/pedido, Turnstile donde aplique y prueba de carga/despliegue. Las pruebas verifican el webhook con firma estándar y API simulada dentro del Worker local, pero no reemplazan el evento real de sandbox de Wompi. MFA/reautenticación, auditoría completa de toda mutación y validación de bindings contra la cuenta de producción siguen pendientes de certificación.
 

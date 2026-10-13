@@ -15,8 +15,8 @@ import { notifyOrderStatusChanged } from './notifyOrderStatusChanged.js';
 import { normalizeShippingAddress } from './normalizeShippingAddress.js';
 import { extractAdminToken } from './extractAdminToken.js';
 import { calculateOrderPricing } from './calculateOrderPricing.js';
-import { getCustomerId } from './getCustomerId.js';
 import { validateOrderPolicy } from './validateOrderPolicy.js';
+import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -91,14 +91,23 @@ export class OrdersController {
 
       const auth = c.req.header('Authorization');
       const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
-      const customerId = await getCustomerId(token, identityGateway);
+      let customerId: string | null = null;
+      if (token) {
+        try {
+          const session = await identityGateway.validateSession(token);
+          if (session.actorType !== 'customer') return c.json({ error: 'No autorizado' }, 403);
+          customerId = session.actorId;
+        } catch { return c.json({ error: 'Sesión inválida' }, 401); }
+      }
+      const guestCartIdHash = customerId ? null : await hashGuestCartId(getCookie(c, 'vega_cart_id'));
+      if (!customerId && !guestCartIdHash) return c.json({ error: 'Carrito invitado inválido' }, 400);
 
       const zone = await shippingGateway.getZone(String(body.shippingZoneId || ''));
       if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
       const shippingCostCents = zone.priceInCents;
       let pricing;
       try { pricing = await calculateOrderPricing(catalogGateway, promotionsGateway, settingsGateway, body.lines, body.couponCode, customerId, shippingCostCents); }
-      catch (error) { return c.json({ error: error instanceof Error ? error.message : 'No fue posible calcular el pedido' }, 400); }
+      catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
 
       // Normalizar shippingAddress al esquema del dominio
       const shippingAddress = normalizeShippingAddress(body.shippingAddress);
@@ -108,6 +117,7 @@ export class OrdersController {
       try {
         const order = await ordersGateway.createOrder({
           customerId,
+          guestCartIdHash,
           customerEmail:    body.customerEmail,
           customerName:     body.customerName,
           customerPhone:    body.customerPhone,
@@ -142,7 +152,7 @@ export class OrdersController {
 
         // Si es pago contra entrega, notificar al cliente y a la empresa por email
         if (order.paymentMethod === 'cash_on_delivery') {
-          await notifyCodOrderPlaced(order, notificationsGateway, settingsGateway).catch(() => {});
+          await notifyCodOrderPlaced(order, notificationsGateway, settingsGateway, (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown');
         }
 
         await realtimeGateway.publishNotification({
@@ -159,9 +169,8 @@ export class OrdersController {
         });
 
         return c.json({ success: true, order: order.toJSON() }, 201);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Error al crear el pedido';
-        return c.json({ error: msg }, 400);
+      } catch {
+        return c.json({ error: 'No fue posible crear el pedido' }, 400);
       }
     });
 
@@ -215,7 +224,7 @@ export class OrdersController {
         actor: res.actorId,
       });
 
-      await notifyOrderStatusChanged(updated, body.status, body.note, notificationsGateway).catch(() => {});
+      await notifyOrderStatusChanged(updated, body.status, body.note, notificationsGateway, (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown');
 
       return c.json({ success: true, order: updated.toJSON() });
     });

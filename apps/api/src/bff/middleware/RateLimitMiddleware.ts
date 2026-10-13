@@ -7,7 +7,7 @@ export const RateLimitMiddleware: MiddlewareHandler<{ Bindings: Env }> = async (
   const isCheckout = c.req.path === '/api/v1/orders' || c.req.path === '/api/v1/payments/wompi/init';
   const binding = isAuth ? c.env.AUTH_LIMITER : isCheckout ? c.env.CHECKOUT_LIMITER : c.env.API_WRITE_LIMITER;
   const ip = c.req.header('cf-connecting-ip') || 'unknown';
-  const outcome = await binding.limit({ key: `${ip}:${c.req.path}` });
+  const outcome = await binding.limit({ key: ip });
   if (!outcome.success) return c.json({ error: 'Demasiadas solicitudes; inténtalo más tarde' }, 429, { 'Retry-After': '60' });
   return next();
 };

@@ -14,6 +14,7 @@ import { renderCheckoutResultPage } from '../../views/renderCheckoutResultPage.j
 import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { renderStorefrontBanners } from '../../views/renderStorefrontBanners.js';
+import { hashGuestCartId, isValidGuestCartId } from '../../security/GuestCartCapability.js';
 
 export class StorefrontCheckoutController {
   public static createRoutes(
@@ -30,7 +31,7 @@ export class StorefrontCheckoutController {
 
     const getOrCreateCartId = (c: any): string => {
       let cartId = getCookie(c, 'vega_cart_id');
-      if (!cartId) {
+      if (!isValidGuestCartId(cartId)) {
         cartId = `cart_${crypto.randomUUID()}`;
         setCookie(c, 'vega_cart_id', cartId, {
           path: '/',
@@ -119,6 +120,19 @@ export class StorefrontCheckoutController {
         return c.redirect('/', 302);
       }
 
+      if (order.customerId) {
+        const auth = c.req.header('Authorization');
+        const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
+        if (!token) return c.redirect('/auth/login', 302);
+        try {
+          const session = await identityGateway.validateSession(token);
+          if (session.actorType !== 'customer' || session.actorId !== order.customerId) return c.notFound();
+        } catch { return c.notFound(); }
+      } else {
+        const cartHash = await hashGuestCartId(getCookie(c, 'vega_cart_id'));
+        if (!cartHash || !order.guestCartIdHash || cartHash !== order.guestCartIdHash) return c.notFound();
+      }
+
       const bodyHtml = renderCheckoutResultPage(order, ref);
       const html = renderBaseLayout({
         title: 'Estado de tu Orden',
@@ -129,6 +143,7 @@ export class StorefrontCheckoutController {
         footerMenuItems: nav.footerMenuItems,
       });
 
+      c.header('Cache-Control', 'private, no-store');
       return c.html(html);
     });
 

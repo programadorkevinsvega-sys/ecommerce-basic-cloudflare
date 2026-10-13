@@ -9,6 +9,7 @@ import { OrderEmailTemplates } from './OrderEmailTemplates.js';
 
 export interface ProcessPaymentSuccessParams {
   orderId: string;
+  traceId: string;
   paymentMethod: string;
   paymentReference?: string;
   actor: string;
@@ -24,6 +25,7 @@ export interface ProcessPaymentSuccessParams {
 export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessParams): Promise<void> {
   const {
     orderId,
+    traceId,
     paymentMethod,
     paymentReference,
     actor,
@@ -106,8 +108,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       },
     });
     invoiceNumber = invoice.invoiceNumber;
-  } catch (err) {
-    console.error('[processPaymentSuccess:invoice] Error:', err);
+  } catch {
+    console.error(JSON.stringify({ event: 'payments.invoice_issue_failed', order_id: order.id, trace_id: traceId }));
   }
 
   // 3. Enviar emails transaccionales con Resend (Al Cliente Y a la Empresa)
@@ -134,8 +136,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       idempotencyKey: `email_admin_${order.id}`,
       html: adminHtml,
     });
-  } catch (err) {
-    console.error('[processPaymentSuccess:email] Error:', err);
+  } catch {
+    console.error(JSON.stringify({ event: 'payments.confirmation_email_failed', order_id: order.id, trace_id: traceId }));
   }
 
   // 4. Registro de auditoría
@@ -148,8 +150,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       entityId: order.id,
       changes: { totalCents: order.totalCents, paymentMethod, paymentReference, invoiceNumber },
     });
-  } catch (err) {
-    console.error('[processPaymentSuccess:audit] Error:', err);
+  } catch {
+    console.error(JSON.stringify({ event: 'payments.audit_write_failed', order_id: order.id, trace_id: traceId }));
   }
 
   // 5. Notificación en tiempo real al panel admin
