@@ -15,6 +15,7 @@
     "dev:admin": "pnpm --filter @ecommerce/admin dev",
     "db:build-migrations": "node scripts/build-migrations.js",
     "db:check-migrations": "node scripts/check-migration-consistency.js",
+    "cloudflare:check-bindings": "node scripts/check-cloudflare-bindings.js",
     "db:test-migrations": "python3 scripts/verify-migration-upgrades.py",
     "db:migrate:local": "pnpm --filter @ecommerce/api db:migrate:local",
     "db:migrate:remote": "pnpm --filter @ecommerce/api db:migrate:remote",

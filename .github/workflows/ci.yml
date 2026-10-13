@@ -34,6 +34,9 @@ jobs:
       - name: Consistencia de copias generadas de migraciones D1
         run: pnpm db:check-migrations
 
+      - name: Consistencia de bindings Cloudflare en ambas configuraciones Wrangler
+        run: pnpm cloudflare:check-bindings
+
       - name: Aplicación SQL desde cero y actualización compatible
         run: pnpm db:test-migrations
 
