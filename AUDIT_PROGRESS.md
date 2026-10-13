@@ -1,6 +1,6 @@
 # Progreso de auditoría integral
 
-Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas. Tras el commit `75fa3f7`, Wrangler registró la versión `96848681-c4a4-4009-aaa8-fc3303421def`, con D1/KV/Queue/R2 y los tres rate limiters ligados; `/health` devolvió 200. El arreglo de replay de pagos está desplegado. Las modificaciones de esta continuación (validación de imágenes, HEAD R2 y permisos de inventario) están en trabajo y todavía no se han publicado.
+Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas. El commit `4743bc1` está publicado y desplegado como versión `89aa891e-569b-4739-ba0b-b3961eb63160`, con D1/KV/Queue/R2 y los tres rate limiters ligados. `/health` devolvió 200; las rutas administrativas de inventario devolvieron 401 sin sesión.
 
 ## Fases
 
@@ -11,7 +11,7 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 | Migraciones | Runner y reproducción local/remota completados | Runner ordena módulo/versión. D1 vacía: 29 migraciones, segunda pasada idempotente, settings v1 antes de v2. `orders__0002` e `inventory__0002` se aplicaron y verificaron en producción con Wrangler 4. |
 | Wompi / pagos | Firma y API real verificadas; pruebas de comercio sin conciliar | El usuario confirma que los 4 intentos pendientes de 2 pedidos son transacciones de prueba propias; no corresponden a clientes y no requieren conciliación operativa. El endpoint oficial de seguimiento consulta por ID, ausente en esos registros. El webhook histórico firmado y la autenticación a API real fueron verificados en producción. |
 | Media / R2 | Validación estructural, límites y binding R2 verificados | Parser de PNG/JPEG/WebP/AVIF con dimensiones y topes 10 MiB/16.384 px/40 MP; body multipart limitado también en streaming, validación de HEAD antes de D1 y rollback de clave temporal si falla. D1/R2 local integra con dimensiones. Smoke remoto aislado subió/descargó/igualó/borró un objeto temporal. Pendientes: decodificación completa, eliminación EXIF/GPS y GC seguro de huérfanos. |
-| Banners | Administración y presentación implementadas | Filtros aislados por búsqueda/estado/tipo/ubicación, duplicación inactiva, vista previa, validación URL, home/categoría/producto/checkout. Carrusel con controles de teclado y movimiento reducido; sin autoplay. Pendiente verificación visual/desplegada. |
+| Banners | Administración y presentación implementadas | Filtros aislados por búsqueda/estado/tipo/ubicación, duplicación inactiva, vista previa, validación URL, home/categoría/producto/checkout. Carrusel con controles de teclado y movimiento reducido; sin autoplay. Pendiente verificación visual en navegador. |
 | Reserva / Workers | Pruebas locales completadas | Worker real local con D1 para concurrencia/idempotencia de consumo, reserva ausente, compatibilidad de ventas históricas, fallo de reserva desde OrdersController y webhook Wompi con llamada HTTP simulada. |
 | Documentación / CI | Actualizada | README, seguridad, recuperación, manifiesto, workflow y este registro. |
 
@@ -53,6 +53,7 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 - R2 remoto: Wrangler 4 subió `audit-smoke/<id>.png` al bucket configurado, lo descargó y `cmp` confirmó igualdad byte por byte; se borró solo esa clave aleatoria y un GET posterior confirmó que ya no existe. No se tocaron otros objetos.
 - Producción SSR: `/`, `/productos`, `/admin/login` y `/health` devolvieron HTTP 200. Es verificación HTTP/HTML; no equivale a inspección visual en navegador.
 - Auditoría de inventario: `GET /api/v1/admin/inventory` ahora es de solo lectura; inicializar artículos ausentes pasó a `POST /api/v1/admin/inventory/sync`, con permiso `inventory:adjust` y registro por artículo en audit. Prueba cubre anónimo, permiso de lectura, denegación de escritura y evento auditado.
+- Despliegue integrado: commit `4743bc1` apareció en Wrangler como versión `89aa891e-569b-4739-ba0b-b3961eb63160`. `GET /api/v1/admin/inventory` y `POST /api/v1/admin/inventory/sync` sin sesión respondieron 401; `/health` reportó D1/KV/Queue/R2 saludables.
 - Sin decodificador visual disponible: no hay Chromium, Playwright ni Puppeteer instalados en el entorno, por lo que no se certificaron el diseño visual ni los estados admin autenticados en navegador.
 
 ## Pendientes que impiden certificar producción
@@ -67,8 +68,8 @@ Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones ad
 - MFA/reautenticación de acciones administrativas críticas, auditoría de todas las mutaciones, rate limits por actor/pedido, Turnstile, pruebas de carga y análisis de XSS/CSRF en navegador.
 - Revisar el comportamiento del carrusel con lectores de pantalla/teclado en navegador y en tienda desplegada.
 - La inspección visual de Home, catálogo, login y panel admin sigue pendiente porque el entorno no incluye un navegador gráfico; solo se validaron los estados HTTP/SSR y pruebas de markup.
-- No se hizo instalación limpia de dependencias, test de todos los flujos externos, despliegue ni prueba real de pagos. `orders__0002` sí se aplicó remotamente y se verificó.
+- No se hizo instalación limpia de dependencias, ni test de todos los flujos externos o prueba sandbox de pago end-to-end. Los pushes activan despliegue integrado, pero no se ejecutó `wrangler deploy` manualmente. `orders__0002` e `inventory__0002` sí se aplicaron remotamente y se verificaron.
 
 ## Git
 
-Commits `4a25cae` y `e4e15bd` se publicaron en `origin/main`; commits recientes incluyen `a96aaaf` (manejo seguro de bindings ausentes), `013f784` (bindings de rate limit para el Worker integrado) y `75fa3f7` (replay Wompi no duplica eventos financieros). El commit `75fa3f7` ya está desplegado como versión `96848681-c4a4-4009-aaa8-fc3303421def`; el healthcheck está saludable. Cada push observado activó despliegue automático; nunca se ejecutó `wrangler deploy`. No se incluyeron `.dev.vars`, credenciales ni temporales.
+Commits `4a25cae` y `e4e15bd` se publicaron en `origin/main`; commits recientes incluyen `a96aaaf`, `013f784`, `75fa3f7` y `4743bc1`. Este último está desplegado como versión `89aa891e-569b-4739-ba0b-b3961eb63160`; el healthcheck está saludable. Nunca se ejecutó `wrangler deploy`. No se incluyeron `.dev.vars`, credenciales ni temporales.
