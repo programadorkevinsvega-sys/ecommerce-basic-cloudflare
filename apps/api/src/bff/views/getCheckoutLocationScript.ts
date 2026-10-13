@@ -19,7 +19,7 @@ export function getCheckoutLocationScript(): string {
       document.dispatchEvent(new Event('checkout-location-change'));
     };
     const searchLocations = async () => {
-      const query = cityInput.value.trim();
+      const query = (cityInput.dataset.restoreLocation === 'true' ? cityInput.value.split(',')[0] : cityInput.value).trim();
       const requestId = ++requestNumber;
       suggestions.replaceChildren();
       suggestions.hidden = true;
@@ -30,6 +30,13 @@ export function getCheckoutLocationScript(): string {
         const result = await response.json();
         if (requestId !== requestNumber) return;
         const locations = result.data || [];
+        if (cityInput.dataset.restoreLocation === 'true') {
+          delete cityInput.dataset.restoreLocation;
+          const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+          const restoredName = cityInput.value;
+          const restored = locations.find((location) => normalize(location.fullName) === normalize(restoredName) || normalize(location.municipality) === normalize(restoredName));
+          if (restored) { await selectLocation(restored); return; }
+        }
         for (const location of locations) {
           const option = document.createElement('button');
           option.type = 'button';

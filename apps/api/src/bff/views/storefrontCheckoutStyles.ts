@@ -18,6 +18,7 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-step-current { color: #16201b; font-weight: 700; }
     .checkout-step-line { width: 32px; height: 2px; background: #c7ccbe; }
     .checkout-title { margin: 0 0 1.5rem; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: clamp(2rem, 5vw, 2.4rem); letter-spacing: -.03em; line-height: 1.1; }
+    .checkout-draft-note { margin: -.9rem 0 1.2rem; color: #5b675f; font-size: .78rem; }
     .checkout-columns { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.5rem; }
     .checkout-form { display: flex; min-width: 0; flex: 2 1 560px; flex-direction: column; gap: 1.25rem; }
     .checkout-required-note { margin: 0; color: #5b675f; font-size: .82rem; }

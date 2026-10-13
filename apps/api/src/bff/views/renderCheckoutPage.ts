@@ -3,6 +3,7 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ShippingZoneDto } from '../gateways/shipping/ShippingGateway.js';
 import { getCheckoutScript } from './getCheckoutScript.js';
 import { getCheckoutLocationScript } from './getCheckoutLocationScript.js';
+import { getCheckoutDraftScript } from './getCheckoutDraftScript.js';
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -24,7 +25,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
   const zoneOptions = zones.map((zone) => `<option value="${escapeHtml(zone.id)}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}" data-locations="${escapeHtml(JSON.stringify(zone.locations))}">${escapeHtml(zone.name)} · ${zone.priceInCents === 0 ? 'Envío gratis' : formatPrice(zone.priceInCents)}</option>`).join('');
   return `<section class="checkout-page" aria-labelledby="checkout-title">
     <nav class="checkout-steps" aria-label="Progreso de la compra"><ol><li class="checkout-step checkout-step-done"><span class="checkout-step-number" aria-hidden="true">✓</span>Carrito<span class="checkout-sr-only"> (completado)</span></li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step checkout-step-current" aria-current="step"><span class="checkout-step-number" aria-hidden="true">2</span>Datos y pago</li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step"><span class="checkout-step-number" aria-hidden="true">3</span>Confirmación</li></ol></nav>
-    <h1 class="checkout-title" id="checkout-title">Finalizar compra</h1>
+    <h1 class="checkout-title" id="checkout-title">Finalizar compra</h1><p class="checkout-draft-note">Tus datos se conservan temporalmente en esta pestaña durante 2 horas y se borran al crear el pedido.</p>
     <div class="checkout-columns"><form id="checkout-form" class="checkout-form" novalidate><p class="checkout-required-note">Los campos marcados con * son obligatorios.</p>
       ${renderContactFields()}
       ${renderAddressFields(zoneOptions)}
@@ -33,7 +34,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
     </form>
     ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent)}
     </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()} · Colombia</span><span>Compra segura · Precios en COP</span></footer>
-  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}`;
+  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}${getCheckoutDraftScript()}`;
 }
 
 function renderContactFields(): string {

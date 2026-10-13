@@ -165,7 +165,7 @@ export function getCheckoutScript(
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Error al crear pedido');
-          const orderId = data.order.id;
+          const orderId = (window.clearCheckoutDraft?.(), data.order.id);
           await fetch('/api/v1/cart/clear', { method: 'POST' });
           if (method === 'wompi') {
             document.getElementById('checkout-cta-label').textContent = 'Redirigiendo a Wompi…';

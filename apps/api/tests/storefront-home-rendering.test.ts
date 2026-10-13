@@ -159,6 +159,14 @@ describe('storefront presentation', () => {
     expect(html).toContain("option.className = 'checkout-location-option'");
     expect(html).toContain("/api/v1/shipping/locations?q=");
     expect(html).toContain('daneCode: daneCode');
+    expect(html).toContain('vega.checkout.draft.v1');
+    expect(html).toContain('sessionStorage.setItem(storageKey');
+    expect(html).toContain('2 * 60 * 60 * 1000');
+    expect(html).toContain("window.addEventListener('pagehide', save)");
+    expect(html).toContain('window.clearCheckoutDraft?.()');
+    expect(html).toContain('se borran al crear el pedido');
+    expect(html).toContain("city.dataset.restoreLocation = 'true'");
+    expect(html).toContain('normalize(location.municipality) === normalize(restoredName)');
     expect(html).toContain('data-min-days="1"');
     expect(html).toContain('Lámpara de lectura');
     expect(html).toContain('240.000');
