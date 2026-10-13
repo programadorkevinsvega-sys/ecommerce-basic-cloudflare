@@ -170,6 +170,16 @@ Siempre que se revierta el Worker de forma que afecte a `orders`, `payments`, `i
 - No borrar objetos ni ejecutar limpiezas masivas como respuesta automática a un rollback.
 - Verificar consistencia entre metadatos D1 (`media_assets`) y objetos R2 antes de reanudar operaciones críticas (SEC-R2-08).
 
+### Procesamiento seguro y recolección de medios
+
+Las subidas nuevas se decodifican y re-encodean a WebP mediante el binding Cloudflare Images `IMAGES`; los formatos de salida de imagen descartan EXIF/GPS. El contenido anterior permanece en R2 y es legible mediante el MIME guardado en D1. Un rollback de código no restaura los bytes originales de una subida ya convertida; no hay migración D1 asociada. El binding de Images se factura según las transformaciones únicas, por lo que un rollback de código no desactiva ni revierte cargos ya realizados.
+
+El cron de medios revisa hasta 1.000 objetos `media/` por ejecución diaria, conserva un cursor en KV y solo elimina un objeto si su edad supera siete días y no existe `media_assets.storage_key` asociado. Excluye los prefijos privados y de facturación. La operación es idempotente para claves ya borradas, pero no restaura objetos eliminados; ante una referencia inconsistente o incidente, detener el Worker/Cron y recuperar el objeto desde la retención/copia disponible antes de reanudar. No ejecutar un borrado masivo de R2 como rollback.
+
+### MFA administrativo
+
+Al desplegar el control obligatorio, una cuenta con `mfa_enabled=0` solo puede entrar a `/admin/mfa-setup`; APIs y datos de administración permanecen bloqueados hasta confirmar un TOTP con la contraseña revalidada. Después, el login exige TOTP. Antes de revertir el Worker, considerar que una versión anterior podría permitir saltarse MFA. No revertir a una versión sin el gate mientras haya una cuenta con MFA deshabilitado; si se necesita rollback por incidente, mantener acceso de administrador detenido hasta volver a aplicar una versión con el gate. Guardar el secreto TOTP en un gestor de contraseñas seguro durante el enrolamiento.
+
 ## Queues y eventos (activas en este proyecto)
 
 El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (contrato §6.5 y §8).

@@ -27,6 +27,8 @@ import { AuditController } from './controllers/audit/AuditController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
 import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
+import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
+import { createAdminMutationAuditMiddleware } from './middleware/AdminMutationAuditMiddleware.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -34,7 +36,10 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
   app.use('/api/*', RateLimitMiddleware);
+  app.use('/media/upload', RateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);
+  app.use('/api/v1/admin/*', createAdminMfaGateMiddleware(cRoot.identityGateway));
+  app.use('*', createAdminMutationAuditMiddleware(cRoot.identityGateway, cRoot.auditGateway));
 
   // Storefront Admin API
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
@@ -44,7 +49,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
-  app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway));
+  app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway, cRoot.catalogGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway, cRoot.catalogGateway, cRoot.auditGateway));
   app.route('/', OrdersController.createRoutes(
     cRoot.ordersGateway,

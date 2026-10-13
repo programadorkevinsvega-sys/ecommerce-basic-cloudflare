@@ -31,30 +31,32 @@ export function createAuthMiddleware(
       return c.json({ error: 'No autenticado: sesión requerida' }, 401);
     }
 
-    try {
-      const session: AuthenticatedSession = await gateway.validateSession(token);
+    let session: AuthenticatedSession;
+    try { session = await gateway.validateSession(token); }
+    catch { return c.json({ error: 'Sesión inválida o expirada' }, 401); }
 
-      if (session.actorType !== requiredActorType) {
-        return c.json({ error: 'Acceso denegado: tipo de sesión incompatible' }, 403);
-      }
-
-      if (requiredPermission) {
-        const hasPermission = session.permissions.some((permission) => {
-          if (permission === '*' || permission === requiredPermission) return true;
-          return permission.endsWith(':*') && requiredPermission.startsWith(permission.slice(0, -1));
-        });
-        if (!hasPermission) {
-          return c.json({ error: `Permiso insuficiente: requiere ${requiredPermission}` }, 403);
-        }
-      }
-
-      c.set('actorId', session.actorId);
-      c.set('actorType', session.actorType);
-      c.set('permissions', session.permissions);
-
-      return next();
-    } catch {
-      return c.json({ error: 'Sesión inválida o expirada' }, 401);
+    if (session.actorType !== requiredActorType) {
+      return c.json({ error: 'Acceso denegado: tipo de sesión incompatible' }, 403);
     }
+
+    if (requiredActorType === 'admin' && !session.mfaEnabled) {
+      return c.json({ error: 'MFA obligatorio: completa el enrolamiento antes de usar el panel' }, 403);
+    }
+
+    if (requiredPermission) {
+      const hasPermission = session.permissions.some((permission) => {
+        if (permission === '*' || permission === requiredPermission) return true;
+        return permission.endsWith(':*') && requiredPermission.startsWith(permission.slice(0, -1));
+      });
+      if (!hasPermission) {
+        return c.json({ error: `Permiso insuficiente: requiere ${requiredPermission}` }, 403);
+      }
+    }
+
+    c.set('actorId', session.actorId);
+    c.set('actorType', session.actorType);
+    c.set('permissions', session.permissions);
+
+    return next();
   };
 }

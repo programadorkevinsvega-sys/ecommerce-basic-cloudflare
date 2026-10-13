@@ -8,7 +8,7 @@ describe('inventory admin read/write permissions', () => {
     const audit = vi.fn().mockResolvedValue({ id: 'audit-1' });
     const catalog = { listProducts: vi.fn().mockResolvedValue([{ id: 'p1', stockQuantity: 8 }]) };
     let permissions = ['inventory:read'];
-    const identity = { validateSession: vi.fn(async () => ({ actorId: 'admin-1', actorType: 'admin', permissions })) };
+    const identity = { validateSession: vi.fn(async () => ({ actorId: 'admin-1', actorType: 'admin', mfaEnabled: true, permissions })) };
     const inventory = { listStocks: stocks, adjustStock: adjust };
     const app = InventoryController.createRoutes(inventory as any, identity as any, catalog as any, { record: audit } as any);
     const session = { cookie: '__Host-admin-session=valid' };

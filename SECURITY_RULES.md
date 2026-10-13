@@ -41,7 +41,7 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-AUTH-06** Registro de clientes abierto, pero con Turnstile, rate limiting y verificación de correo antes de operaciones sensibles (p. ej. compra a crédito).
 - **SEC-AUTH-07** Turnstile obligatorio en registro, login, recuperación de contraseña y formularios públicos, verificado en el servidor.
 - **SEC-AUTH-08** Recuperación de contraseña: token aleatorio de un solo uso, guardado con hash, expiración corta (≤ 1 h); al usarlo se invalidan las sesiones del usuario.
-- **SEC-AUTH-09** **Administradores:** autenticación multifactor (TOTP) obligatoria antes del lanzamiento. Bloqueo progresivo por intentos fallidos.
+- **SEC-AUTH-09** **Administradores:** TOTP obligatorio. Una cuenta que aún no lo activó solo obtiene una sesión restringida a enrolamiento, exige reautenticación por contraseña y no puede leer ni mutar datos administrativos hasta confirmar un código. Todo login posterior exige TOTP. Bloqueo progresivo por intentos fallidos.
 
 ## 3. Sesiones (SES)
 
@@ -88,7 +88,7 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 
 - **SEC-ADM-01** **Denegar por defecto:** cada ruta `/api/v1/admin/*` exige autenticación de administrador **y** un permiso RBAC concreto (`recurso:acción`), verificado en el servidor. Ocultar un botón no es autorización.
 - **SEC-ADM-02** Roles con privilegios mínimos (Superadmin, Editor, Ventas, Soporte, …); la asignación de roles es una acción crítica. No se puede eliminar ni degradar al último Superadmin.
-- **SEC-ADM-03** Toda mutación administrativa se registra en `audit` (quién, qué, cuándo, IP, antes/después sin datos sensibles).
+- **SEC-ADM-03** Toda mutación administrativa se registra en `audit` antes y después del handler (actor, método, ruta y resultado; sin body ni secretos). Si la auditoría previa no está disponible, la mutación se bloquea. Las rutas administrativas fuera de `/api/v1/admin/` también se auditan.
 - **SEC-ADM-04** Acciones críticas con **re-autenticación**: reembolsos, cambio de roles, cambio de credenciales de pago o de plantillas de email, borrados masivos, exportaciones de clientes.
 - **SEC-ADM-05** El panel puede protegerse con **Cloudflare Access** como capa adicional; no sustituye los controles de la aplicación.
 - **SEC-ADM-06** Las exportaciones (CSV de clientes/pedidos) requieren permiso específico, se auditan y no incluyen más PII de la necesaria.
@@ -107,13 +107,13 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-R2-01** Bucket **privado**: sin dominio público ni `r2.dev` habilitado. Los medios de producto se sirven **a través del Worker** (ruta `/media/*`, cacheada), no por acceso directo a R2.
 - **SEC-R2-02** Permisos mínimos del binding limitados a este bucket; solo `infrastructure/storage/r2` del módulo `media` lo usa. Rotación de credenciales si se usan tokens S3.
 - **SEC-R2-03** Las claves las genera el servidor (`media/{uuid}`; `private/u/{customerId}/{uuid}` para documentos privados). El nombre original del archivo vive en D1, **nunca** en la clave.
-- **SEC-R2-04** Solo administradores con permiso suben medios. Validar por **firma real del archivo** (magic bytes), tipo permitido (JPEG, PNG, WebP, AVIF), tamaño máximo y dimensiones. El límite configurado es 10 MiB, 16.384 px por lado y 40 MP; el cuerpo multipart se limita a 11 MiB incluso en streaming. **SVG excluido** salvo sanitización explícita. Eliminar metadatos EXIF/GPS.
+- **SEC-R2-04** Solo administradores con permiso suben medios. Validar por firma real del archivo, decodificar todos los píxeles y re-encodear a WebP, tipo permitido de entrada (JPEG, PNG, WebP, AVIF), tamaño máximo y dimensiones. El límite configurado es 10 MiB, 16.384 px por lado y 40 MP; el cuerpo multipart se limita a 11 MiB incluso en streaming. **SVG excluido**. El re-encode descarta EXIF/GPS.
 - **SEC-R2-05** Prefijos privados (documentos de clientes, p. ej. para crédito) **nunca** se sirven por la ruta pública; cada acceso verifica propiedad en D1 y responde con `Content-Disposition: attachment`.
 - **SEC-R2-06** Respuestas de archivos con `X-Content-Type-Options: nosniff`; sin listado de objetos; sin CORS hacia el navegador.
-- **SEC-R2-07** Verificar el tamaño real con `HEAD` tras subir; si excede el límite, borrar y rechazar. Limpieza por Cron de subidas huérfanas.
+- **SEC-R2-07** Verificar el tamaño real con `HEAD` tras subir; si excede el límite, borrar y rechazar. La limpieza Cron solo considera `media/` público con más de siete días, comprueba cada clave contra `media_assets` antes de borrarla y nunca barre prefijos privados/documentales.
 - **SEC-R2-08** Verificar consistencia entre metadatos D1 y objetos R2 antes de reanudar operaciones críticas tras un incidente.
 
-Estado de implementación: el Worker verifica estructura de contenedores/cabeceras y CRC de chunks PNG, además de extraer dimensiones; no ejecuta decodificación completa de píxeles ni elimina EXIF/GPS todavía. Esos dos controles permanecen pendientes de certificación y no deben marcarse como cumplidos.
+Estado de implementación: la validación estructural inicial se complementa con `IMAGES.info()` y una salida WebP que fuerza el decode/re-encode completo en Cloudflare Workers, quitando metadatos de origen. La ruta se prueba en runtime Workers local; la transformación remota facturable aún no se ha ejecutado. La recolección Cron se valida unitariamente, pero no se ha ejecutado contra R2 de producción.
 
 ## 10. Frontend (FE)
 

@@ -4,9 +4,10 @@ import { Env } from '../../../platform/Env.js';
 import { CartGateway } from '../../gateways/cart/CartGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { isValidGuestCartId } from '../../security/GuestCartCapability.js';
+import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 
 export class CartController {
-  public static createRoutes(cartGateway: CartGateway, identityGateway: IdentityGateway): Hono<{ Bindings: Env }> {
+  public static createRoutes(cartGateway: CartGateway, identityGateway: IdentityGateway, catalogGateway: CatalogGateway): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
     const getOrCreateCartId = (c: any): string => {
@@ -49,14 +50,18 @@ export class CartController {
       const cartId = getOrCreateCartId(c);
       const customerId = await getCustomerId(c);
       const body = await c.req.json();
-      if (!body.productId || !body.quantity || body.quantity <= 0) {
+      if (typeof body.productId !== 'string' || !Number.isSafeInteger(body.quantity) || body.quantity < 1 || body.quantity > 99) {
         return c.json({ error: 'productId y quantity son requeridos' }, 400);
       }
+      let product;
+      try { product = await catalogGateway.getProductById(body.productId); }
+      catch { return c.json({ error: 'Producto no disponible' }, 404); }
+      if (product.status !== 'published') return c.json({ error: 'Producto no disponible' }, 404);
       const cart = await cartGateway.addItem(
         cartId,
         body.productId,
         Number(body.quantity),
-        Number(body.unitPriceCents || 0),
+        product.priceInCents,
         customerId
       );
       return c.json({ success: true, cart });

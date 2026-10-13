@@ -86,6 +86,12 @@ export class AdminUser {
     this.props.updatedAt = new Date().toISOString();
   }
 
+  public stageMfaSecret(secret: string): void {
+    this.props.mfaSecret = secret;
+    this.props.mfaEnabled = false;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public changeRole(newRoleId: string): void {
     this.props.roleId = newRoleId;
     this.props.updatedAt = new Date().toISOString();

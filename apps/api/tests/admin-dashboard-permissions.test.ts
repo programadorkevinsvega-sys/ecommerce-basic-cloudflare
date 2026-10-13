@@ -10,7 +10,7 @@ import { ShippingGateway } from '../src/bff/gateways/shipping/ShippingGateway.js
 
 describe('admin dashboard permissions', () => {
   it('does not fetch settings, promotion, or shipping data for an editor role', async () => {
-    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'editor-1', actorType: 'admin', permissions: ['catalog:*', 'storefront:*', 'cms:*'] }) } as unknown as IdentityGateway;
+    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'editor-1', actorType: 'admin', mfaEnabled: true, permissions: ['catalog:*', 'storefront:*', 'cms:*'] }) } as unknown as IdentityGateway;
     const catalog = {
       listProducts: vi.fn().mockResolvedValue([]), listCategories: vi.fn().mockResolvedValue([]),
       listBrands: vi.fn().mockResolvedValue([]), listAttributes: vi.fn().mockResolvedValue([]),
@@ -32,5 +32,13 @@ describe('admin dashboard permissions', () => {
     expect(promotions.listCoupons).not.toHaveBeenCalled();
     expect(shipping.listZones).not.toHaveBeenCalled();
     expect(html).not.toContain('NIT-PRIVATE-SENTINEL');
+  });
+
+  it('routes an authenticated administrator without MFA to the enrollment-only page', async () => {
+    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'admin-1', actorType: 'admin', permissions: [], mfaEnabled: false }) } as unknown as IdentityGateway;
+    const response = await AdminUiController.createRoutes(identity, {} as CatalogGateway, {} as SettingsGateway, {} as StorefrontGateway, {} as CmsGateway, {} as PromotionsGateway, {} as ShippingGateway)
+      .request('/', { headers: { cookie: '__Host-admin-session=pending' } });
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toBe('/admin/mfa-setup');
   });
 });

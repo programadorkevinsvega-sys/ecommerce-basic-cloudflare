@@ -18,6 +18,7 @@
       "bucket_name": "ecommerce-vega-production"
     }
   ],
+  "images": { "binding": "IMAGES" },
   "kv_namespaces": [
     {
       "binding": "CACHE",

@@ -42,6 +42,11 @@ export class D1MediaAssetRepository implements IMediaAssetRepository {
     return row ? this.toDomain(row) : null;
   }
 
+  public async isStorageKeyReferenced(key: string): Promise<boolean> {
+    const row = await this.db.prepare('SELECT 1 AS found FROM media_assets WHERE storage_key = ? LIMIT 1').bind(key).first();
+    return Boolean(row);
+  }
+
   public async save(asset: MediaAsset): Promise<void> {
     const p = asset.toPrimitives();
     await this.db

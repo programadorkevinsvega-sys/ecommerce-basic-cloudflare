@@ -48,9 +48,9 @@ describe('media and banner input validation', () => {
   });
 
   it('rejects unsupported filename extensions before writing to R2', async () => {
-    const storage = { put: async () => 12, head: async () => ({ sizeBytes: 12 }), get: async () => null, delete: async () => undefined } as IMediaStoragePort;
+    const storage = { put: async () => 12, head: async () => ({ sizeBytes: 12 }), get: async () => null, delete: async () => undefined, listPublicMedia: async () => ({ objects: [] }) } as IMediaStoragePort;
     const repository = { save: async () => undefined } as unknown as IMediaAssetRepository;
-    const useCase = new UploadMediaUseCase(storage, repository);
+    const useCase = new UploadMediaUseCase(storage, repository, passThroughImageProcessor);
     const result = await useCase.execute({ originalFileName: 'image.svg', data: png, altText: 'Image', uploadedByAdminId: 'admin' });
 
     expect(result.isFail()).toBe(true);
@@ -63,7 +63,7 @@ describe('media and banner input validation', () => {
     const saved: Array<{ width?: number; height?: number }> = [];
     const storage = { put, head, get: async () => null, delete: vi.fn(async () => undefined) } as unknown as IMediaStoragePort;
     const repository = { save: async (asset: { toPrimitives(): { width?: number; height?: number } }) => { saved.push(asset.toPrimitives()); } } as unknown as IMediaAssetRepository;
-    const result = await new UploadMediaUseCase(storage, repository).execute({
+    const result = await new UploadMediaUseCase(storage, repository, passThroughImageProcessor).execute({
       originalFileName: 'one-pixel.png', data: png, altText: 'Imagen', uploadedByAdminId: 'admin',
     });
 
@@ -77,7 +77,7 @@ describe('media and banner input validation', () => {
     const deletion = vi.fn(async () => undefined);
     const save = vi.fn(async () => undefined);
     const storage = { put: vi.fn(async () => png.length), head: vi.fn(async () => null), get: async () => null, delete: deletion } as unknown as IMediaStoragePort;
-    const result = await new UploadMediaUseCase(storage, { save } as unknown as IMediaAssetRepository).execute({
+    const result = await new UploadMediaUseCase(storage, { save } as unknown as IMediaAssetRepository, passThroughImageProcessor).execute({
       originalFileName: 'one-pixel.png', data: png, altText: 'Imagen', uploadedByAdminId: 'admin',
     });
 
@@ -87,7 +87,7 @@ describe('media and banner input validation', () => {
   });
 
   it('bounds streamed media upload requests when Content-Length is absent', async () => {
-    const identity = { validateSession: async () => ({ actorId: 'admin', actorType: 'admin', permissions: ['media:create'] }) };
+    const identity = { validateSession: async () => ({ actorId: 'admin', actorType: 'admin', mfaEnabled: true, permissions: ['media:create'] }) };
     const app = MediaController.createRoutes({} as any, identity as any);
     const body = new ReadableStream<Uint8Array>({ start(controller) {
       controller.enqueue(new Uint8Array(12 * 1024 * 1024));
@@ -124,6 +124,8 @@ describe('media and banner input validation', () => {
     expect(publicMarkup).not.toContain('setInterval');
   });
 });
+
+const passThroughImageProcessor = { decodeAndSanitize: async (data: Uint8Array) => ({ data, mimeType: 'image/webp' as const, width: 1, height: 1 }) };
 
 function jpegHeader(): Uint8Array {
   return new Uint8Array([0xff, 0xd8, 0xff, 0xc0, 0, 11, 8, 0, 1, 0, 1, 1, 1, 0x11, 0,

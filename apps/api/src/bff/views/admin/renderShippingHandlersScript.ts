@@ -32,11 +32,11 @@ export function renderShippingHandlersScript(): string {
       const locsHtml = data.type === 'national'
         ? '<em>Cobertura nacional estándar para todo Colombia</em>'
         : data.locations.length > 0
-        ? '<code>' + data.locations.join(', ') + '</code> (' + data.locations.length + ' códigos DANE)'
+        ? '<code>' + escapeHtml((data.locations || []).join(', ')) + '</code> (' + data.locations.length + ' códigos DANE)'
         : '<em>Sin municipios asignados explícitamente</em>';
 
       document.getElementById('modalShContent').innerHTML = [
-        '<p><strong>ID:</strong> <code>' + data.id + '</code></p>',
+        '<p><strong>ID:</strong> <code>' + escapeHtml(data.id) + '</code></p>',
         '<p><strong>Tipo de Cobertura:</strong> ' + typeLabel + '</p>',
         '<p><strong>Tarifa de Envío:</strong> <span style="color:#38bdf8; font-weight:700;">' + formattedPrice + '</span></p>',
         '<p><strong>Plazo Estimado:</strong> ' + data.minEstimatedDays + ' a ' + data.maxEstimatedDays + ' días hábiles</p>',

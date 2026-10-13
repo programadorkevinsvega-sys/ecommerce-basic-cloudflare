@@ -12,6 +12,8 @@ export interface IIdentityPublicApi {
   validateSession(rawToken: string): Promise<AuthenticatedActor>;
   logout(rawToken: string): Promise<void>;
   getCustomerProfile(customerId: string): Promise<CustomerProfileOutput>;
+  beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }>;
+  confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void>;
 }
 
 export class IdentityPublicApi implements IIdentityPublicApi {
@@ -53,5 +55,16 @@ export class IdentityPublicApi implements IIdentityPublicApi {
     const res = await this.container.getCustomerProfileUseCase.execute(customerId);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }> {
+    const res = await this.container.beginAdminMfaEnrollmentUseCase.execute(adminId, password);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void> {
+    const res = await this.container.confirmAdminMfaEnrollmentUseCase.execute(adminId, code);
+    if (res.isFail()) throw res.error;
   }
 }

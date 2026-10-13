@@ -9,6 +9,8 @@ import { LoginAdminUseCase } from './application/use-cases/LoginAdminUseCase.js'
 import { ValidateSessionUseCase } from './application/use-cases/ValidateSessionUseCase.js';
 import { LogoutUseCase } from './application/use-cases/LogoutUseCase.js';
 import { GetCustomerProfileUseCase } from './application/use-cases/GetCustomerProfileUseCase.js';
+import { BeginAdminMfaEnrollmentUseCase } from './application/use-cases/BeginAdminMfaEnrollmentUseCase.js';
+import { ConfirmAdminMfaEnrollmentUseCase } from './application/use-cases/ConfirmAdminMfaEnrollmentUseCase.js';
 
 export interface IdentityModuleContainer {
   registerCustomerUseCase: RegisterCustomerUseCase;
@@ -17,6 +19,8 @@ export interface IdentityModuleContainer {
   validateSessionUseCase: ValidateSessionUseCase;
   logoutUseCase: LogoutUseCase;
   getCustomerProfileUseCase: GetCustomerProfileUseCase;
+  beginAdminMfaEnrollmentUseCase: BeginAdminMfaEnrollmentUseCase;
+  confirmAdminMfaEnrollmentUseCase: ConfirmAdminMfaEnrollmentUseCase;
 }
 
 export function createIdentityModule(env: Env): IdentityModuleContainer {
@@ -32,5 +36,7 @@ export function createIdentityModule(env: Env): IdentityModuleContainer {
     validateSessionUseCase: new ValidateSessionUseCase(sessionRepo, adminRepo, roleRepo),
     logoutUseCase: new LogoutUseCase(sessionRepo),
     getCustomerProfileUseCase: new GetCustomerProfileUseCase(customerRepo),
+    beginAdminMfaEnrollmentUseCase: new BeginAdminMfaEnrollmentUseCase(adminRepo),
+    confirmAdminMfaEnrollmentUseCase: new ConfirmAdminMfaEnrollmentUseCase(adminRepo),
   };
 }

@@ -24,6 +24,7 @@ export class ResolveMediaUrlUseCase {
     if (!asset) {
       return Result.fail(new Error('Recurso multimedia no encontrado'));
     }
+    if (asset.isPrivate) return Result.fail(new Error('Recurso multimedia no encontrado'));
 
     return Result.ok({
       id: asset.id,

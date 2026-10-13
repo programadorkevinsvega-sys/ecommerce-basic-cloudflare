@@ -70,9 +70,13 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
             const json = await res.json();
             if (json.data && json.data.length > 0) {
               const dl = document.getElementById('divipolaDatalist');
-              dl.innerHTML = json.data.map(l =>
-                '<option value="' + l.daneCode + '" label="' + l.municipality + ' (' + l.department + ')">' + l.municipality + ', ' + l.department + '</option>'
-              ).join('');
+              dl.replaceChildren(...json.data.map(l => {
+                const option = document.createElement('option');
+                option.value = String(l.daneCode || '');
+                option.label = String(l.municipality || '') + ' (' + String(l.department || '') + ')';
+                option.textContent = String(l.municipality || '') + ', ' + String(l.department || '');
+                return option;
+              }));
             }
           } catch (e) {}
         }, 300);
@@ -135,18 +139,25 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
 
             resultDiv.style.background = '#064e3b';
             resultDiv.style.color = '#a7f3d0';
-            resultDiv.innerHTML = [
-              '<div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">✓ ¡Envío disponible a ' + (cov.locationName || daneCode) + '!</div>',
-              '<div><strong>Tarifa estimada:</strong> ' + priceFmt + ' | <strong>Tiempo:</strong> ' + cov.minEstimatedDays + ' a ' + cov.maxEstimatedDays + ' días hábiles</div>',
-              '<div style="margin-top:0.35rem; font-size:0.83rem; line-height:1.45; border-top:1px dashed rgba(255,255,255,0.2); padding-top:0.35rem;">' + shippingNote + '</div>'
-            ].join('');
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;';
+            title.textContent = '✓ ¡Envío disponible a ' + String(cov.locationName || daneCode) + '!';
+            const detail = document.createElement('div');
+            detail.textContent = 'Tarifa estimada: ' + priceFmt + ' | Tiempo: ' + Number(cov.minEstimatedDays) + ' a ' + Number(cov.maxEstimatedDays) + ' días hábiles';
+            const note = document.createElement('div');
+            note.style.cssText = 'margin-top:0.35rem;font-size:0.83rem;line-height:1.45;border-top:1px dashed rgba(255,255,255,0.2);padding-top:0.35rem;';
+            note.textContent = shippingNote.replace(/<[^>]*>/g, '');
+            resultDiv.replaceChildren(title, detail, note);
           } else {
             resultDiv.style.background = '#7f1d1d';
             resultDiv.style.color = '#fecaca';
-            resultDiv.innerHTML = [
-              '<div style="font-weight:700; margin-bottom:0.25rem;">✕ Sin cobertura para este destino</div>',
-              '<div>' + (cov.reason || 'Este producto no está disponible para envíos a esta zona.') + '</div>'
-            ].join('');
+            const title = document.createElement('div');
+            title.style.fontWeight = '700';
+            title.style.marginBottom = '0.25rem';
+            title.textContent = '✕ Sin cobertura para este destino';
+            const reason = document.createElement('div');
+            reason.textContent = String(cov.reason || 'Este producto no está disponible para envíos a esta zona.');
+            resultDiv.replaceChildren(title, reason);
           }
         } catch (e) {
           resultDiv.style.background = '#7f1d1d';

@@ -4,6 +4,7 @@ export interface Env {
   API_WRITE_LIMITER: RateLimit;
   DB: D1Database;
   MEDIA_BUCKET: R2Bucket;
+  IMAGES: ImagesBinding;
   CACHE: KVNamespace;
   EVENTS_QUEUE: Queue;
   ANALYTICS?: AnalyticsEngineDataset;

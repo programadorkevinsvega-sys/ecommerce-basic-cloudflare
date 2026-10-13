@@ -35,9 +35,38 @@ export class AdminAuthController {
           `__Host-admin-session=${session.rawToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=${new Date(session.expiresAt).toUTCString()}`
         );
 
-        return c.json({ status: 'ok' });
+        return c.json({ status: 'ok', mfaEnabled: session.mfaEnabled });
       } catch (err: unknown) {
         return c.json({ error: 'Credenciales inválidas' }, 401);
+      }
+    });
+
+    router.post('/mfa/enrollment', async (c) => {
+      const actor = await getPendingAdmin(c.req.raw, gateway);
+      if (!actor) return c.json({ error: 'Se requiere una sesión administrativa pendiente de MFA' }, 401);
+      const body = await c.req.json().catch(() => null);
+      const parsed = z.object({ password: z.string().min(1).max(128) }).strict().safeParse(body);
+      if (!parsed.success) return c.json({ error: 'Solicitud inválida' }, 400);
+      try {
+        const enrollment = await gateway.beginAdminMfaEnrollment(actor.actorId, parsed.data.password);
+        c.header('cache-control', 'no-store');
+        return c.json(enrollment);
+      } catch {
+        return c.json({ error: 'No se pudo iniciar el enrolamiento MFA' }, 403);
+      }
+    });
+
+    router.post('/mfa/confirm', async (c) => {
+      const actor = await getPendingAdmin(c.req.raw, gateway);
+      if (!actor) return c.json({ error: 'Se requiere una sesión administrativa pendiente de MFA' }, 401);
+      const body = await c.req.json().catch(() => null);
+      const parsed = z.object({ code: z.string().regex(/^\d{6}$/) }).strict().safeParse(body);
+      if (!parsed.success) return c.json({ error: 'Código TOTP inválido' }, 400);
+      try {
+        await gateway.confirmAdminMfaEnrollment(actor.actorId, parsed.data.code);
+        return c.json({ status: 'enabled', redirect: '/admin' });
+      } catch {
+        return c.json({ error: 'Código TOTP inválido o enrolamiento vencido' }, 400);
       }
     });
 
@@ -55,5 +84,17 @@ export class AdminAuthController {
     });
 
     return router;
+  }
+}
+
+async function getPendingAdmin(request: Request, gateway: IdentityGateway) {
+  const token = request.headers.get('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1]
+    || request.headers.get('authorization')?.replace(/^Bearer\s+/, '');
+  if (!token) return null;
+  try {
+    const actor = await gateway.validateSession(token);
+    return actor.actorType === 'admin' && !actor.mfaEnabled ? actor : null;
+  } catch {
+    return null;
   }
 }

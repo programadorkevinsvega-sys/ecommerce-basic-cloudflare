@@ -665,3 +665,10 @@ Se resolverán como ADR antes de la fase que las necesite:
 - [`ROLLBACK_RECOVERY.md`](./ROLLBACK_RECOVERY.md): estrategia de release, rollback de Worker/Pages, D1, R2, Queues, caché y reconciliación de pagos (estado: PENDIENTE).
 - [`ROADMAP.md`](./ROADMAP.md): fases, entregables y criterios de salida (cada fase indica las secciones del contrato y las reglas de seguridad/recuperación que aplican).
 - `docs/PROJECT_RULES.md` (se crea en la Fase 0): nombres reales de Worker, D1, Queues, buckets y contextos.
+
+## Operación de seguridad: MFA y medios
+
+- Tras el despliegue, el admin existente inicia sesión con su contraseña y es redirigido a `/admin/mfa-setup`. Debe reingresar la contraseña, importar el URI/secreto TOTP en su autenticador, guardar una copia del secreto en un gestor seguro y confirmar un código de seis dígitos. Hasta completar esa confirmación, la sesión solo puede realizar el enrolamiento.
+- En logins siguientes, ingresar el código TOTP en el formulario. Las sesiones administrativas sin MFA no pueden consultar ni mutar recursos protegidos.
+- Las imágenes de entrada aceptadas (JPEG, PNG, WebP y AVIF, hasta 10 MiB, 16.384 px por lado y 40 MP) se decodifican por completo y se convierten a WebP antes de guardarse en R2. La recodificación descarta EXIF/GPS. El Worker requiere el binding `IMAGES` declarado en los dos `wrangler.jsonc`; el procesamiento de salida usa Cloudflare Images y sus transformaciones únicas son facturables según el plan de Cloudflare.
+- El cron revisa diariamente hasta 1.000 claves de `media/` y solo borra las mayores de siete días sin fila referencial en `media_assets`. Excluye medios privados y documentos. No se ejecuta una limpieza de producción manual como parte del despliegue.

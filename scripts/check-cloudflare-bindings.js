@@ -13,6 +13,14 @@ const expected = normalize(configs[0].config.ratelimits);
 const actual = normalize(configs[1].config.ratelimits);
 const errors = [];
 
+if (expectedImagesBinding(configs[0].config) !== 'IMAGES' || expectedImagesBinding(configs[1].config) !== 'IMAGES') {
+  errors.push('El binding de Cloudflare Images debe declararse como IMAGES en ambas configuraciones Wrangler');
+}
+
+function expectedImagesBinding(config) {
+  return config.images?.binding;
+}
+
 for (const name of required) {
   const binding = expected[name];
   if (!binding || !actual[name]) errors.push(`${name} falta en una configuración Wrangler`);
@@ -28,4 +36,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('Bindings de rate limiting coinciden y tienen namespace_id únicos en ambos Wrangler configs.');
+console.log('Bindings IMAGES y rate limiting coinciden; los namespace_id están separados.');

@@ -37,9 +37,9 @@ export function renderProductList(
   };
 
   const bannerHtml = banners.length > 1
-    ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
+    ? `<div class="campaign-carousel-wrap"><section id="heroCarousel" class="campaign-carousel" role="region" aria-roledescription="carrusel" aria-label="Colecciones destacadas" aria-live="polite" tabindex="0">${banners.map(renderBanner).join('')}</section><div class="campaign-carousel-controls" role="group" aria-label="Controles del carrusel"><button type="button" data-carousel-direction="-1" aria-controls="heroCarousel">Anterior</button><button type="button" data-carousel-direction="1" aria-controls="heroCarousel">Siguiente</button></div></div>`
     : banners.length === 1 && banners[0]
-      ? renderBanner(banners[0], 0).replace('<article class="campaign-banner">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
+      ? renderBanner(banners[0], 0).replace('<article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="1 de 1">', '<section class="campaign-banner" aria-label="Colección destacada">').replace('</article>', '</section>')
       : '';
 
   let html = `
@@ -100,6 +100,15 @@ export function renderProductList(
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         carousel.scrollBy({ left: Number(button.dataset.carouselDirection) * distance, behavior: reduceMotion ? 'instant' : 'smooth' });
       });
+    });
+    const heroCarousel = document.getElementById('heroCarousel');
+    heroCarousel?.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const slide = heroCarousel.querySelector('.campaign-banner');
+      const distance = slide ? slide.getBoundingClientRect().width + 16 : heroCarousel.clientWidth;
+      const direction = event.key === 'ArrowLeft' ? -1 : 1;
+      heroCarousel.scrollBy({ left: direction * distance, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     });
 
     async function addToCartFromCard(productId, priceCents, btn) {

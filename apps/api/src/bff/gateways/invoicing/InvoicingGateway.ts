@@ -6,6 +6,7 @@ import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/
 export interface InvoicingGateway {
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   getInvoice(query: { id?: string; orderId?: string; invoiceNumber?: string }): Promise<Invoice | null>;
+  getInvoiceDocument(invoiceId: string): Promise<{ stream: ReadableStream; sizeBytes: number; etag: string } | null>;
   listInvoices(filters?: { customerId?: string; limit?: number; offset?: number }): Promise<Invoice[]>;
   createCreditNote(cmd: CreateCreditNoteCommand): Promise<CreditNote>;
 }

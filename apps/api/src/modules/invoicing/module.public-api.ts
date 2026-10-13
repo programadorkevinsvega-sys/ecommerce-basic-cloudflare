@@ -15,6 +15,10 @@ export class InvoicingPublicApi {
     return this.container.getInvoiceUseCase.execute(query);
   }
 
+  public async getInvoiceDocument(invoiceId: string) {
+    return this.container.getInvoiceDocumentUseCase.execute(invoiceId);
+  }
+
   public async listInvoices(filters?: { customerId?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
     return this.container.listInvoicesUseCase.execute(filters);
   }

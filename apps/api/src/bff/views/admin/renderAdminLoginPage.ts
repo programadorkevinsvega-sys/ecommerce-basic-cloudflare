@@ -33,6 +33,10 @@ export function renderAdminLoginPage(): string {
         <label for="password">Contraseña</label>
         <input type="password" id="password" required placeholder="••••••••" />
       </div>
+      <div class="form-group">
+        <label for="totpCode">Código de autenticación (si ya activaste MFA)</label>
+        <input type="text" id="totpCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" />
+      </div>
       <button type="submit">Iniciar Sesión</button>
       <div id="errorBox" class="error"></div>
     </form>
@@ -42,6 +46,7 @@ export function renderAdminLoginPage(): string {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const totpCode = document.getElementById('totpCode').value;
       const errBox = document.getElementById('errorBox');
       errBox.style.display = 'none';
 
@@ -49,11 +54,11 @@ export function renderAdminLoginPage(): string {
         const res = await fetch('/api/v1/admin/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password, ...(totpCode ? { totpCode } : {}) })
         });
         const data = await res.json();
         if (res.ok) {
-          window.location.href = '/admin';
+          window.location.href = data.mfaEnabled ? '/admin' : '/admin/mfa-setup';
         } else {
           errBox.textContent = data.error || 'Credenciales inválidas';
           errBox.style.display = 'block';

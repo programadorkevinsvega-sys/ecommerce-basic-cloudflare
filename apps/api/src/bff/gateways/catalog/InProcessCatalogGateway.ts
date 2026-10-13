@@ -35,6 +35,11 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return product.toPrimitives();
   }
 
+  public async getProductById(id: string): Promise<CatalogProductDto> {
+    const product = await this.publicApi.getProductById(id);
+    return product.toPrimitives();
+  }
+
   public async listProducts(params: {
     limit?: number;
     offset?: number;

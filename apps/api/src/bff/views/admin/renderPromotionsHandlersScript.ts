@@ -52,10 +52,10 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('modalPromoTitle').textContent = '🔍 Detalle: ' + data.name;
       const disc = data.discountType === 'percentage' ? data.discountValue + '%' : '$' + Math.round(data.discountValue / 100).toLocaleString('es-CO') + ' COP';
       document.getElementById('modalPromoBody').innerHTML = '<div>' +
-        '<p style="margin-bottom:0.5rem;"><strong>ID:</strong> ' + data.id + '</p>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Nombre:</strong> ' + data.name + '</p>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Tipo de Descuento:</strong> ' + data.discountType + ' (' + disc + ')</p>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Alcance:</strong> ' + data.targetType + (data.targetId ? ' (ID: ' + data.targetId + ')' : '') + '</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>ID:</strong> ' + escapeHtml(data.id) + '</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Nombre:</strong> ' + escapeHtml(data.name) + '</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Tipo de Descuento:</strong> ' + escapeHtml(data.discountType) + ' (' + escapeHtml(disc) + ')</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Alcance:</strong> ' + escapeHtml(data.targetType) + (data.targetId ? ' (ID: ' + escapeHtml(data.targetId) + ')' : '') + '</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Compra Mínima:</strong> $' + Math.round(data.minOrderAmountCents / 100).toLocaleString('es-CO') + ' COP</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Vigencia:</strong> Desde ' + data.startsAt.substring(0, 10) + ' hasta ' + data.endsAt.substring(0, 10) + '</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Prioridad:</strong> ' + data.priority + '</p>' +
@@ -104,10 +104,10 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('modalPromoTitle').textContent = '🎟️ Detalle del Cupón: ' + data.code;
       const disc = data.discountType === 'percentage' ? data.discountValue + '%' : '$' + Math.round(data.discountValue / 100).toLocaleString('es-CO') + ' COP';
       document.getElementById('modalPromoBody').innerHTML = '<div>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Código:</strong> <code style="color:#f59e0b;">' + data.code + '</code></p>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Descripción:</strong> ' + (data.description || 'Sin descripción') + '</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Código:</strong> <code style="color:#f59e0b;">' + escapeHtml(data.code) + '</code></p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Descripción:</strong> ' + escapeHtml(data.description || 'Sin descripción') + '</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Descuento:</strong> ' + disc + '</p>' +
-        '<p style="margin-bottom:0.5rem;"><strong>Alcance:</strong> ' + (data.targetType || 'all') + (data.targetId ? ' (ID: ' + data.targetId + ')' : '') + '</p>' +
+        '<p style="margin-bottom:0.5rem;"><strong>Alcance:</strong> ' + escapeHtml(data.targetType || 'all') + (data.targetId ? ' (ID: ' + escapeHtml(data.targetId) + ')' : '') + '</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Compra Mínima:</strong> $' + Math.round(data.minOrderAmountCents / 100).toLocaleString('es-CO') + ' COP</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Usos Actuales:</strong> ' + data.currentUsesCount + (data.maxUsesGlobal ? ' / ' + data.maxUsesGlobal : ' (ilimitado)') + '</p>' +
         '<p style="margin-bottom:0.5rem;"><strong>Límite por Cliente:</strong> ' + (data.maxUsesPerCustomer || 1) + '</p>' +

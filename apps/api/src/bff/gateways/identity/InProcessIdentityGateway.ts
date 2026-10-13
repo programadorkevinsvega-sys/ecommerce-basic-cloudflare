@@ -23,9 +23,17 @@ export class InProcessIdentityGateway implements IdentityGateway {
     return { rawToken: res.rawToken, expiresAt: res.expiresAt };
   }
 
-  public async loginAdmin(input: LoginAdminGatewayInput): Promise<{ rawToken: string; expiresAt: string }> {
+  public async loginAdmin(input: LoginAdminGatewayInput): Promise<{ rawToken: string; expiresAt: string; mfaEnabled: boolean }> {
     const res = await this.publicApi.loginAdmin(input);
-    return { rawToken: res.rawToken, expiresAt: res.expiresAt };
+    return { rawToken: res.rawToken, expiresAt: res.expiresAt, mfaEnabled: res.admin.mfaEnabled };
+  }
+
+  public async beginAdminMfaEnrollment(adminId: string, password: string) {
+    return this.publicApi.beginAdminMfaEnrollment(adminId, password);
+  }
+
+  public async confirmAdminMfaEnrollment(adminId: string, code: string) {
+    return this.publicApi.confirmAdminMfaEnrollment(adminId, code);
   }
 
   public async validateSession(rawToken: string): Promise<AuthenticatedSession> {

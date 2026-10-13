@@ -12,7 +12,7 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Factura de Venta #${invoice.invoiceNumber}</title>
+  <title>Factura de Venta #${escapeHtml(invoice.invoiceNumber)}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 2.5rem; background: #fff; }
     .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0284c7; padding-bottom: 1.5rem; margin-bottom: 2rem; }
@@ -32,13 +32,13 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
 <body>
   <div class="header">
     <div>
-      <h1 class="title">${snap?.company?.storeName || snap?.company?.legalName || 'VEGA STORE'}</h1>
-      <p style="margin: 0.3rem 0; color: #64748b;">NIT: ${snap?.company?.nit || 'No registrado'} · Régimen Simplificado / Común</p>
-      <p style="margin: 0; color: #64748b;">${snap?.company?.address || 'Colombia'} · ${snap?.company?.email || 'soporte@tienda.com'}</p>
+      <h1 class="title">${escapeHtml(snap?.company?.storeName || snap?.company?.legalName || 'VEGA STORE')}</h1>
+      <p style="margin: 0.3rem 0; color: #64748b;">NIT: ${escapeHtml(snap?.company?.nit || 'No registrado')} · Régimen Simplificado / Común</p>
+      <p style="margin: 0; color: #64748b;">${escapeHtml(snap?.company?.address || 'Colombia')} · ${escapeHtml(snap?.company?.email || 'soporte@tienda.com')}</p>
     </div>
     <div style="text-align: right;">
       <h2 style="margin: 0; font-size: 1.4rem;">FACTURA DE VENTA</h2>
-      <p style="font-size: 1.2rem; font-weight: 700; color: #0284c7; margin: 0.3rem 0;">#${invoice.invoiceNumber}</p>
+      <p style="font-size: 1.2rem; font-weight: 700; color: #0284c7; margin: 0.3rem 0;">#${escapeHtml(invoice.invoiceNumber)}</p>
       <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Fecha: ${new Date(invoice.createdAt).toLocaleString('es-CO')}</p>
     </div>
   </div>
@@ -46,17 +46,17 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
   <div class="grid">
     <div class="card">
       <h3>Datos del Cliente</h3>
-      <div><strong>Nombre:</strong> ${invoice.customerName}</div>
-      <div><strong>Identificación:</strong> ${invoice.customerTaxId || 'No registrada'}</div>
-      <div><strong>Email:</strong> ${invoice.customerEmail}</div>
-      <div><strong>Teléfono:</strong> ${invoice.customerPhone || 'No registrado'}</div>
+      <div><strong>Nombre:</strong> ${escapeHtml(invoice.customerName)}</div>
+      <div><strong>Identificación:</strong> ${escapeHtml(invoice.customerTaxId || 'No registrada')}</div>
+      <div><strong>Email:</strong> ${escapeHtml(invoice.customerEmail)}</div>
+      <div><strong>Teléfono:</strong> ${escapeHtml(invoice.customerPhone || 'No registrado')}</div>
     </div>
     <div class="card">
       <h3>Información de Pedido y Entrega</h3>
-      <div><strong>Pedido:</strong> #${invoice.orderId}</div>
+      <div><strong>Pedido:</strong> #${escapeHtml(invoice.orderId)}</div>
       <div><strong>Método de Pago:</strong> ${invoice.paymentMethod === 'wompi' ? 'Wompi en línea' : 'Contra entrega'}</div>
-      <div><strong>Dirección:</strong> ${snap?.shippingAddress?.addressLine || 'N/A'}</div>
-      <div><strong>Ciudad:</strong> ${snap?.shippingAddress?.municipality || 'N/A'}, ${snap?.shippingAddress?.department || ''}</div>
+      <div><strong>Dirección:</strong> ${escapeHtml(snap?.shippingAddress?.addressLine || 'N/A')}</div>
+      <div><strong>Ciudad:</strong> ${escapeHtml(snap?.shippingAddress?.municipality || 'N/A')}, ${escapeHtml(snap?.shippingAddress?.department || '')}</div>
     </div>
   </div>
 
@@ -73,9 +73,9 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
     <tbody>
       ${(snap?.lines || []).map((l: any) => `
         <tr>
-          <td><strong>${l.productName}</strong></td>
-          <td><code>${l.productSku}</code></td>
-          <td style="text-align:center;">${l.quantity}</td>
+          <td><strong>${escapeHtml(l.productName)}</strong></td>
+          <td><code>${escapeHtml(l.productSku)}</code></td>
+          <td style="text-align:center;">${Number(l.quantity)}</td>
           <td style="text-align:right;">$${(l.unitPriceCents / 100).toLocaleString('es-CO')}</td>
           <td style="text-align:right;"><strong>$${(l.totalCents / 100).toLocaleString('es-CO')}</strong></td>
         </tr>
@@ -88,7 +88,7 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
     ${invoice.discountCents > 0 ? `<div class="total-row" style="color:#ef4444;"><span>Descuento:</span><span>-$${(invoice.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
     <div class="total-row"><span>IVA (19%):</span><span>$${(invoice.taxCents / 100).toLocaleString('es-CO')}</span></div>
     <div class="total-row"><span>Envío:</span><span>$${(invoice.shippingCostCents / 100).toLocaleString('es-CO')}</span></div>
-    <div class="total-row grand-total"><span>TOTAL:</span><span>$${(invoice.totalCents / 100).toLocaleString('es-CO')} ${invoice.currency}</span></div>
+    <div class="total-row grand-total"><span>TOTAL:</span><span>$${(invoice.totalCents / 100).toLocaleString('es-CO')} ${escapeHtml(invoice.currency)}</span></div>
   </div>
 
   <div class="footer">
@@ -112,4 +112,8 @@ export class HtmlInvoicePdfAdapter implements IInvoicePdfPort {
       contentBytes,
     };
   }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] || character);
 }

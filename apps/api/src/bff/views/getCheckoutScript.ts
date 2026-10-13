@@ -3,11 +3,14 @@ export function getCheckoutScript(
   subtotalCents: number,
   taxRatePercent: number
 ): string {
+  const safeCartItemsJson = cartItemsJson.replace(/[<>&\u2028\u2029]/g, (character) => ({ '<': '\\u003c', '>': '\\u003e', '&': '\\u0026', '\u2028': '\\u2028', '\u2029': '\\u2029' })[character] || character);
+  const safeSubtotalCents = Number.isSafeInteger(subtotalCents) ? subtotalCents : 0;
+  const safeTaxRatePercent = Number.isFinite(taxRatePercent) ? taxRatePercent : 0;
   return `
     <script>
-      const cartItems = ${cartItemsJson};
-      const subtotalCents = ${subtotalCents};
-      const TAX_RATE = ${taxRatePercent} / 100;
+      const cartItems = ${safeCartItemsJson};
+      const subtotalCents = ${safeSubtotalCents};
+      const TAX_RATE = ${safeTaxRatePercent} / 100;
       let shippingCostCents = 0;
 
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
@@ -46,7 +49,7 @@ export function getCheckoutScript(
               alertBox.style.display = 'block';
               alertBox.style.background = '#fee2e2';
               alertBox.style.color = '#991b1b';
-              alertBox.innerHTML = '<strong>Aviso de Cobertura:</strong> ' + p.blockingReasons.join('<br>');
+              alertBox.textContent = 'Aviso de Cobertura: ' + p.blockingReasons.join(' · ');
               btn.disabled = true;
             } else {
               btn.disabled = false;
@@ -54,7 +57,7 @@ export function getCheckoutScript(
                 alertBox.style.display = 'block';
                 alertBox.style.background = '#fef3c7';
                 alertBox.style.color = '#92400e';
-                alertBox.innerHTML = '<strong>Contra Entrega Restringido:</strong> ' + p.codBlockingReasons.join('<br>');
+                alertBox.textContent = 'Contra Entrega Restringido: ' + p.codBlockingReasons.join(' · ');
                 codRadio.disabled = true;
                 codRadio.checked = false;
                 document.querySelector('input[value="wompi"]').checked = true;

@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { Env } from '../../../platform/Env.js';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
@@ -9,8 +8,8 @@ export class InvoicingController {
     invoicingGateway: InvoicingGateway,
     identityGateway: IdentityGateway,
     auditGateway: AuditGateway
-  ): Hono<{ Bindings: Env }> {
-    const app = new Hono<{ Bindings: Env }>();
+  ): Hono {
+    const app = new Hono();
 
     // GET /api/v1/invoices/:id/document — Descarga o visualización directa del HTML/PDF de la factura
     app.get('/api/v1/invoices/:id/document', async (c) => {
@@ -28,19 +27,16 @@ export class InvoicingController {
       } catch { return c.json({ error: 'Factura no encontrada' }, 404); }
 
       if (!invoice.pdfR2Key) return c.json({ error: 'Documento no disponible' }, 404);
-
-      const object = await c.env.MEDIA_BUCKET.get(invoice.pdfR2Key);
+      const object = await invoicingGateway.getInvoiceDocument(invoice.id);
       if (!object) return c.json({ error: 'Archivo en almacenamiento no encontrado' }, 404);
-
-      const headers = new Headers();
-      object.writeHttpMetadata(headers);
-      headers.set('etag', object.httpEtag);
-      headers.set('Content-Type', 'text/html; charset=utf-8');
-      headers.set('Content-Disposition', 'attachment; filename="factura.html"');
-      headers.set('X-Content-Type-Options', 'nosniff');
-      headers.set('Cache-Control', 'private, no-store');
-
-      return new Response(object.body, { headers });
+      return new Response(object.stream, { headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Length': String(object.sizeBytes),
+        'Content-Disposition': 'attachment; filename="factura.html"',
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'private, no-store',
+        etag: object.etag,
+      } });
     });
 
     // GET /api/v1/admin/invoices — Lista de facturas para el panel de administración

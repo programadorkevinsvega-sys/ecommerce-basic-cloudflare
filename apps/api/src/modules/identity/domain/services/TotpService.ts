@@ -25,6 +25,11 @@ export class TotpService {
     return false;
   }
 
+  public static async generateCurrentCode(secretBase32: string, timestamp = Date.now()): Promise<string> {
+    const counter = Math.floor(timestamp / 1000 / this.PERIOD_SECONDS);
+    return this.generateCodeForCounter(secretBase32, counter);
+  }
+
   private static async generateCodeForCounter(secretBase32: string, counter: number): Promise<string> {
     const keyBytes = this.base32Decode(secretBase32);
     const cryptoKey = await crypto.subtle.importKey(

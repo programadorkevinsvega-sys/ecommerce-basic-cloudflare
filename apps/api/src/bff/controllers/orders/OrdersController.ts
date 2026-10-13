@@ -45,8 +45,8 @@ export class OrdersController {
       const isDestinationCovered = !!zone && zone.isActive;
       const zoneAllowsCod = !!zone && zone.allowsCashOnDelivery;
 
-      const allProducts = await catalogGateway.listProducts({ limit: 100 });
-      const productsMap = new Map(allProducts.map((p) => [p.id, p]));
+      const allProducts = await catalogGateway.listProducts({ limit: 100, status: 'published' });
+      const productsMap = new Map(allProducts.filter((product) => product.status === 'published').map((p) => [p.id, p]));
 
       const evaluatedItems = items.map((it: { productId: string; quantity: number }) => {
         const prod = productsMap.get(it.productId);

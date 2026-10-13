@@ -44,7 +44,7 @@ describe('CSRF and request rate middleware', () => {
   });
 
   it('protects private store settings behind settings:read', async () => {
-    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'admin', actorType: 'admin', permissions: ['settings:read'] }) } as unknown as IdentityGateway;
+    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'admin', actorType: 'admin', mfaEnabled: true, permissions: ['settings:read'] }) } as unknown as IdentityGateway;
     const settings = { getSettings: vi.fn().mockResolvedValue({ id: 's', storeName: 'Shop', currency: 'COP', taxRatePercent: 19, supportEmail: 'support@example.test', companyNit: 'private-nit', requireCodVerification: false, updatedAt: 'now' }) } as unknown as SettingsGateway;
     const app = SettingsController.createRoutes(settings, identity);
 

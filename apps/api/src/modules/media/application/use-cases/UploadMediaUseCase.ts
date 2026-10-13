@@ -3,6 +3,7 @@ import { MediaAsset } from '../../domain/entities/MediaAsset.js';
 import { ImageValidator } from '../../domain/services/ImageValidator.js';
 import { IMediaStoragePort } from '../../domain/ports/IMediaStoragePort.js';
 import { IMediaAssetRepository } from '../../domain/ports/IMediaAssetRepository.js';
+import { IImageProcessor } from '../../domain/ports/IImageProcessor.js';
 
 export interface UploadMediaInput {
   originalFileName: string;
@@ -26,10 +27,12 @@ export interface UploadMediaOutput {
 export class UploadMediaUseCase {
   private readonly storagePort: IMediaStoragePort;
   private readonly assetRepo: IMediaAssetRepository;
+  private readonly imageProcessor: IImageProcessor;
 
-  public constructor(storagePort: IMediaStoragePort, assetRepo: IMediaAssetRepository) {
+  public constructor(storagePort: IMediaStoragePort, assetRepo: IMediaAssetRepository, imageProcessor: IImageProcessor) {
     this.storagePort = storagePort;
     this.assetRepo = assetRepo;
+    this.imageProcessor = imageProcessor;
   }
 
   public async execute(input: UploadMediaInput): Promise<Result<UploadMediaOutput, Error>> {
@@ -54,6 +57,10 @@ export class UploadMediaUseCase {
       return Result.fail(new Error('La extensión del archivo no coincide con su contenido'));
     }
 
+    let processed: Awaited<ReturnType<IImageProcessor['decodeAndSanitize']>>;
+    try { processed = await this.imageProcessor.decodeAndSanitize(input.data, validation.detectedMimeType); }
+    catch { return Result.fail(new Error('La imagen no pudo decodificarse o procesarse de forma segura')); }
+
     const assetId = crypto.randomUUID();
     const isPrivate = Boolean(input.isPrivate);
     // SEC-R2-03: clave generada en servidor sin nombre original
@@ -62,9 +69,9 @@ export class UploadMediaUseCase {
       : `media/${assetId}`;
 
     try {
-      await this.storagePort.put(storageKey, input.data, validation.detectedMimeType);
+      await this.storagePort.put(storageKey, processed.data, processed.mimeType);
       const stored = await this.storagePort.head(storageKey);
-      if (!stored || stored.sizeBytes !== input.data.length) throw new Error('stored_size_mismatch');
+      if (!stored || stored.sizeBytes !== processed.data.length) throw new Error('stored_size_mismatch');
     } catch {
       await this.storagePort.delete(storageKey).catch(() => undefined);
       return Result.fail(new Error('No se pudo verificar el objeto almacenado'));
@@ -75,10 +82,10 @@ export class UploadMediaUseCase {
       id: assetId,
       storageKey,
       originalFileName: input.originalFileName,
-      mimeType: validation.detectedMimeType,
-      fileSizeBytes: input.data.length,
-      width: validation.width,
-      height: validation.height,
+      mimeType: processed.mimeType,
+      fileSizeBytes: processed.data.length,
+      width: processed.width,
+      height: processed.height,
       altText: input.altText.trim(),
       folderId: input.folderId,
       isPrivate,

@@ -88,6 +88,7 @@ export interface AppCompositionRoot {
   notificationsGateway: NotificationsGateway;
   auditGateway: AuditGateway;
   outboxRelayService: OutboxRelayService;
+  mediaOrphanCollector: ReturnType<typeof createMediaModule>['collectOrphanedMediaUseCase'];
 }
 
 export function buildCompositionRoot(env: Env): AppCompositionRoot {
@@ -167,5 +168,6 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     notificationsGateway,
     auditGateway,
     outboxRelayService,
+    mediaOrphanCollector: mediaContainer.collectOrphanedMediaUseCase,
   };
 }

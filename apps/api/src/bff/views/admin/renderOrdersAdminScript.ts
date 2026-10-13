@@ -20,36 +20,36 @@ export function renderOrdersAdminScript(): string {
         tbody.innerHTML = data.orders.map(o => \`
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:0.75rem;">
-              <code style="color:#38bdf8; font-weight:700;">#\${o.id.replace('ord-', '')}</code>
-              <br><small style="color:var(--muted);">\${new Date(o.createdAt).toLocaleDateString('es-CO')}</small>
+              <code style="color:#38bdf8; font-weight:700;">#\${escapeHtml(String(o.id).replace('ord-', ''))}</code>
+              <br><small style="color:var(--muted);">\${escapeHtml(new Date(o.createdAt).toLocaleDateString('es-CO'))}</small>
             </td>
             <td style="padding:0.75rem;">
               <strong>\${escapeHtml(o.customerName)}</strong>
               <br><small style="color:var(--muted);">\${escapeHtml(o.customerPhone)}</small>
             </td>
             <td style="padding:0.75rem; font-weight:700;">
-              $\${(o.totalCents/100).toLocaleString('es-CO')}
+              $\${(Number(o.totalCents)/100).toLocaleString('es-CO')}
             </td>
             <td style="padding:0.75rem;">
               \${o.paymentMethod === 'wompi' ? '💳 Wompi' : '💵 Contra Entrega'}
             </td>
             <td style="padding:0.75rem;">
               <span class="tag" style="background:\${o.status === 'confirmed' ? '#14532d' : o.status === 'delivered' ? '#047857' : o.status === 'cancelled' ? '#7f1d1d' : '#334155'}; color:#fff;">
-                \${o.status}
+                \${escapeHtml(o.status)}
               </span>
             </td>
             <td style="padding:0.75rem;">
               <span class="tag" style="background:\${o.paymentStatus === 'approved' ? '#14532d' : o.paymentStatus === 'collected' ? '#047857' : o.paymentStatus === 'failed' ? '#7f1d1d' : '#78350f'}; color:#fff;">
-                \${o.paymentStatus}
+                \${escapeHtml(o.paymentStatus)}
               </span>
             </td>
             <td style="padding:0.75rem; text-align:center;">
               <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
-                <button onclick="openOrderDetailModal('\${o.id}')"
+                <button onclick="openOrderDetailModal(\${escapeHtml(JSON.stringify(String(o.id)))})"
                   style="padding:0.35rem 0.65rem; background:#0284c7; border:none; border-radius:5px; color:#fff; font-size:0.8rem; cursor:pointer; font-weight:600;">
                   👁️ Detalle
                 </button>
-                <select onchange="updateOrderStatus('\${o.id}', this.value)"
+                <select onchange="updateOrderStatus(\${escapeHtml(JSON.stringify(String(o.id)))}, this.value)"
                   style="padding:0.3rem; border:1px solid var(--border); border-radius:4px; font-size:0.8rem; background:transparent; color:inherit;">
                   <option value="">Estado…</option>
                   <option value="confirmed" \${o.status==='confirmed'?'selected':''}>Confirmado</option>

@@ -9,6 +9,7 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { renderAdminLoginPage } from '../../views/admin/renderAdminLoginPage.js';
 import { renderAdminDashboardPage } from '../../views/admin/renderAdminDashboardPage.js';
 import { StoreSettingsResponse } from '../../gateways/settings/SettingsGateway.js';
+import { renderAdminMfaSetupPage } from '../../views/admin/renderAdminMfaSetupPage.js';
 
 export class AdminUiController {
   public static createRoutes(
@@ -27,6 +28,20 @@ export class AdminUiController {
       return c.html(renderAdminLoginPage());
     });
 
+    router.get('/mfa-setup', async (c) => {
+      const token = c.req.header('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1];
+      if (!token) return c.redirect('/admin/login');
+      try {
+        const session = await identityGateway.validateSession(token);
+        if (session.actorType !== 'admin') return c.redirect('/admin/login');
+        if (session.mfaEnabled) return c.redirect('/admin');
+        c.header('cache-control', 'no-store');
+        return c.html(renderAdminMfaSetupPage());
+      } catch {
+        return c.redirect('/admin/login');
+      }
+    });
+
     // Panel de control principal protegido
     router.get('/', async (c) => {
       const cookieHeader = c.req.header('cookie') || '';
@@ -42,6 +57,7 @@ export class AdminUiController {
         if (session.actorType !== 'admin') {
           return c.redirect('/admin/login');
         }
+        if (!session.mfaEnabled) return c.redirect('/admin/mfa-setup');
         const can = (permission: string) => hasPermission(session.permissions, permission);
 
         const [

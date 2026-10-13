@@ -15,6 +15,7 @@ export interface ICatalogPublicApi {
   updateProduct(input: UpdateProductInput): Promise<Product>;
   deleteProduct(id: string): Promise<void>;
   getProductBySlug(slug: string): Promise<Product>;
+  getProductById(id: string): Promise<Product>;
   listProducts(input: ListProductsInput): Promise<Product[]>;
   createCategory(input: CreateCategoryInput): Promise<Category>;
   listCategories(): Promise<Category[]>;
@@ -51,6 +52,12 @@ export class CatalogPublicApi implements ICatalogPublicApi {
 
   public async getProductBySlug(slug: string): Promise<Product> {
     const res = await this.container.getProductBySlugUseCase.execute(slug);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async getProductById(id: string): Promise<Product> {
+    const res = await this.container.getProductByIdUseCase.execute(id);
     if (res.isFail()) throw res.error;
     return res.value;
   }

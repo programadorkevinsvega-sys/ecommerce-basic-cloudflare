@@ -9,4 +9,5 @@ export interface IMediaStoragePort {
   head(key: string): Promise<{ sizeBytes: number } | null>;
   get(key: string): Promise<StoredMediaObject | null>;
   delete(key: string): Promise<void>;
+  listPublicMedia(cursor: string | undefined, limit: number): Promise<{ objects: Array<{ key: string; uploadedAt: string }>; cursor?: string }>;
 }

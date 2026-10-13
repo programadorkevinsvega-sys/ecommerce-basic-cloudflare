@@ -9,6 +9,7 @@ export interface AuthenticatedActor {
   actorId: string;
   actorType: ActorType;
   permissions: string[];
+  mfaEnabled?: boolean;
 }
 
 export class ValidateSessionUseCase {
@@ -38,12 +39,14 @@ export class ValidateSessionUseCase {
     await this.sessionRepo.save(session);
 
     let permissions: string[] = [];
+    let mfaEnabled: boolean | undefined;
 
     if (session.actorType === 'admin') {
       const admin = await this.adminRepo.findById(session.actorId);
       if (!admin || !admin.isActive) {
         return Result.fail(new Error('Usuario administrador inactivo'));
       }
+      mfaEnabled = admin.mfaEnabled;
       const role = await this.roleRepo.findById(admin.roleId);
       if (role) {
         permissions = role.permissions;
@@ -54,6 +57,7 @@ export class ValidateSessionUseCase {
       actorId: session.actorId,
       actorType: session.actorType,
       permissions,
+      mfaEnabled,
     });
   }
 }

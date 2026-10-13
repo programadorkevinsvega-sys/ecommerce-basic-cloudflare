@@ -114,6 +114,7 @@ export interface CatalogGateway {
   updateProduct(request: UpdateProductGatewayRequest): Promise<CatalogProductDto>;
   deleteProduct(id: string): Promise<void>;
   getProductBySlug(slug: string): Promise<CatalogProductDto>;
+  getProductById(id: string): Promise<CatalogProductDto>;
   listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string }): Promise<CatalogProductDto[]>;
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
   listCategories(): Promise<CategoryDto[]>;

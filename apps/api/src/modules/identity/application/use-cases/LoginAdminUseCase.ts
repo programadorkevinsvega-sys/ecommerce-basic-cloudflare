@@ -22,6 +22,7 @@ export interface LoginAdminOutput {
     email: string;
     fullName: string;
     roleId: string;
+    mfaEnabled: boolean;
   };
 }
 
@@ -51,7 +52,10 @@ export class LoginAdminUseCase {
       return Result.fail(new Error('Credenciales inválidas'));
     }
 
-    // Validación de MFA obligatorio si está habilitado (SEC-AUTH-09)
+    // Nunca permite estado inconsistente: MFA activo sin secreto invalida el login.
+    if (admin.mfaEnabled && !admin.mfaSecret) {
+      return Result.fail(new Error('No se pudo validar el segundo factor'));
+    }
     if (admin.mfaEnabled && admin.mfaSecret) {
       if (!input.totpCode) {
         return Result.fail(new Error('Código TOTP de segundo factor requerido'));
@@ -96,6 +100,7 @@ export class LoginAdminUseCase {
         email: admin.email,
         fullName: admin.fullName,
         roleId: admin.roleId,
+        mfaEnabled: admin.mfaEnabled,
       },
     });
   }

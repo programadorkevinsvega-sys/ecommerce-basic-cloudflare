@@ -12,12 +12,12 @@ export function renderPaymentsAdminScript(): string {
         }
         tbody.innerHTML = data.transactions.map(t => \`
           <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.75rem;"><code>\${t.reference}</code></td>
-            <td style="padding:0.75rem;"><code>\${t.orderId?.slice(0,12)}…</code></td>
-            <td style="padding:0.75rem;">\${t.paymentMethod}</td>
-            <td style="padding:0.75rem; font-weight:700;">$\${(t.amountInCents/100).toLocaleString('es-CO')}</td>
-            <td style="padding:0.75rem;"><span class="tag">\${t.status}</span></td>
-            <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${new Date(t.createdAt).toLocaleString('es-CO')}</td>
+            <td style="padding:0.75rem;"><code>\${escapeHtml(t.reference)}</code></td>
+            <td style="padding:0.75rem;"><code>\${escapeHtml(t.orderId?.slice(0,12) || '')}…</code></td>
+            <td style="padding:0.75rem;">\${escapeHtml(t.paymentMethod)}</td>
+            <td style="padding:0.75rem; font-weight:700;">$\${(Number(t.amountInCents)/100).toLocaleString('es-CO')}</td>
+            <td style="padding:0.75rem;"><span class="tag">\${escapeHtml(t.status)}</span></td>
+            <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(t.createdAt).toLocaleString('es-CO'))}</td>
           </tr>
         \`).join('');
       } catch (e) {
