@@ -37,8 +37,13 @@ export class ProcessWompiWebhookUseCase {
     const updated = this.applyProviderStatus(tx, txData.status, txData.id, txData.status_message);
     if (updated) await this.paymentRepo.updateTransaction(updated);
     const current = updated ?? tx;
-    const needsOutbox = txData.status === 'APPROVED' && current.status === 'approved' ||
-      ['DECLINED', 'VOIDED', 'ERROR'].includes(txData.status) && current.status === 'declined';
+    // Emit only for a real state transition. A provider may retry the same event
+    // after the local transaction is already final; that retry must not enqueue
+    // downstream financial side effects again.
+    const needsOutbox = updated !== null && (
+      txData.status === 'APPROVED' && current.status === 'approved' ||
+      ['DECLINED', 'VOIDED', 'ERROR'].includes(txData.status) && current.status === 'declined'
+    );
     if (needsOutbox) {
       await this.outboxRepo.save({
         id: `payments_wompi_${tx.id}_${current.status}`,
