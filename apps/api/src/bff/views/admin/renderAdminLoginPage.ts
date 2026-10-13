@@ -27,11 +27,11 @@ export function renderAdminLoginPage(): string {
     <form id="adminLoginForm">
       <div class="form-group">
         <label for="email">Correo Institucional</label>
-        <input type="email" id="email" required placeholder="admin@vega.com" />
+        <input type="email" id="email" autocomplete="username" required placeholder="Correo configurado para administración" />
       </div>
       <div class="form-group">
         <label for="password">Contraseña</label>
-        <input type="password" id="password" required placeholder="••••••••" />
+        <input type="password" id="password" autocomplete="current-password" required placeholder="••••••••" />
       </div>
       <div class="form-group">
         <label for="totpCode">Código de autenticación (si ya activaste MFA)</label>

@@ -565,6 +565,7 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | Variable | Tipo | Valor / Ejemplo | Propósito |
 |---|---|---|---|
 | `ENVIRONMENT` | String | `production` \| `staging` \| `development` | Identifica el entorno de ejecución activo. |
+| `ADMIN_EMAIL` | String | `admin@tudominio.com` | Correo de inicio de sesión del único Superadmin activo. No es un canal de entrega para TOTP. |
 | `RESEND_FROM_EMAIL` | String | `Vega Store <envio@tudominio.com>` | Remitente verificado en Resend para todos los correos transaccionales (confirmación de compra, notificaciones al admin, cambios de estado del pedido). En pruebas se puede usar `Vega Store <onboarding@resend.dev>`. |
 | `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` \| `pub_test_...` | Llave pública de Wompi Colombia para inicializar el widget de checkout en frontend y validaciones. |
 
@@ -576,10 +577,15 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | Secreto | Proveedor / Servicio | Cómo obtenerlo | Propósito |
 |---|---|---|---|
 | `RESEND_API_KEY` | [Resend](https://resend.com) | Panel de Resend > API Keys (`re_...`) | Autenticación en la API de Resend para el envío de correos transaccionales con plantillas HTML. |
+| `ADMIN_PASSWORD` | Cloudflare Workers | Workers & Pages > Settings > Variables and Secrets > Add secret | Contraseña de inicio de sesión del Superadmin configurado por `ADMIN_EMAIL`. Configurar como secret; nunca enviarla por correo ni guardarla en el repositorio. |
 | `RESEND_WEBHOOK_SECRET` | [Resend](https://resend.com) | Panel de Resend > Webhooks (opcional) | Validación de firmas de eventos de entrega/rebote de correo. |
 | `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
 | `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación SHA-256 del checksum Wompi (`properties` + `timestamp` + secreto), no HMAC. |
+
+Cuando existen ambos valores, el login del Worker los valida y los sincroniza con la única cuenta Superadmin activa de `identity`; así se conserva el `adminId`, el rol y el estado MFA, y la base solo conserva el hash PBKDF2 de la contraseña. Si aún no existen ambos valores, se mantiene temporalmente el login D1 para evitar bloquear el acceso durante la configuración. El titular debe configurar ambos antes de usar las credenciales nuevas. El enrolamiento MFA muestra un secreto/URI TOTP después de reautenticar la contraseña; el código se genera en la app autenticadora y **no se envía por email**.
+
+En producción, define `ADMIN_EMAIL` como variable de texto en **Workers & Pages > ecommerce-basic-cloudflare > Settings > Variables and Secrets**. El correo real no se guarda en Git. Añade `ADMIN_PASSWORD` como secret desde el mismo panel o con el comando interactivo de abajo. No compartas la contraseña por chat ni la incluyas en archivos versionados.
 
 #### Comandos para configurar los secretos en producción:
 ```bash
@@ -587,6 +593,7 @@ npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put WOMPI_PRIVATE_KEY
 npx wrangler secret put WOMPI_INTEGRITY_SECRET
 npx wrangler secret put WOMPI_EVENTS_SECRET
+pnpm exec wrangler secret put ADMIN_PASSWORD --config wrangler.jsonc
 # Opcional si usas webhook de Resend:
 npx wrangler secret put RESEND_WEBHOOK_SECRET
 ```

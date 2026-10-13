@@ -4,6 +4,7 @@ import { PasswordHasher } from '../../domain/services/PasswordHasher.js';
 import { TotpService } from '../../domain/services/TotpService.js';
 import { SessionTokenGenerator } from '../../domain/services/SessionTokenGenerator.js';
 import { Session } from '../../domain/entities/Session.js';
+import { ConfiguredSecretComparator } from '../../domain/services/ConfiguredSecretComparator.js';
 import { Result } from '../../../../shared-kernel/Result.js';
 
 export interface LoginAdminInput {
@@ -29,14 +30,25 @@ export interface LoginAdminOutput {
 export class LoginAdminUseCase {
   private readonly adminRepo: IAdminUserRepository;
   private readonly sessionRepo: ISessionRepository;
+  private readonly configuredEmail?: string;
+  private readonly configuredPassword?: string;
 
-  public constructor(adminRepo: IAdminUserRepository, sessionRepo: ISessionRepository) {
+  public constructor(
+    adminRepo: IAdminUserRepository,
+    sessionRepo: ISessionRepository,
+    credentials?: { email?: string; password?: string },
+  ) {
     this.adminRepo = adminRepo;
     this.sessionRepo = sessionRepo;
+    this.configuredEmail = credentials?.email?.trim().toLowerCase() || undefined;
+    this.configuredPassword = credentials?.password || undefined;
   }
 
   public async execute(input: LoginAdminInput): Promise<Result<LoginAdminOutput, Error>> {
-    const admin = await this.adminRepo.findByEmail(input.email);
+    const configuredCredentials = Boolean(this.configuredEmail && this.configuredPassword);
+    const admin = configuredCredentials
+      ? await this.adminRepo.findSoleActiveSuperadmin()
+      : await this.adminRepo.findByEmail(input.email);
     if (!admin || !admin.isActive) {
       return Result.fail(new Error('Credenciales inválidas'));
     }
@@ -45,7 +57,10 @@ export class LoginAdminUseCase {
       return Result.fail(new Error('Cuenta bloqueada temporalmente por intentos fallidos'));
     }
 
-    const isPasswordValid = await PasswordHasher.verify(input.password, admin.passwordHash);
+    const isPasswordValid = configuredCredentials
+      ? input.email.trim().toLowerCase() === this.configuredEmail
+        && ConfiguredSecretComparator.matches(input.password, this.configuredPassword as string)
+      : await PasswordHasher.verify(input.password, admin.passwordHash);
     if (!isPasswordValid) {
       admin.registerFailedAttempt();
       await this.adminRepo.save(admin);
@@ -66,6 +81,11 @@ export class LoginAdminUseCase {
         await this.adminRepo.save(admin);
         return Result.fail(new Error('Código TOTP inválido o expirado'));
       }
+    }
+
+    if (configuredCredentials) {
+      const passwordHash = await PasswordHasher.hash(this.configuredPassword as string);
+      admin.synchronizeConfiguredCredentials(this.configuredEmail as string, passwordHash);
     }
 
     admin.resetFailedAttempts();

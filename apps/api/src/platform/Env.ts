@@ -9,6 +9,8 @@ export interface Env {
   EVENTS_QUEUE: Queue;
   ANALYTICS?: AnalyticsEngineDataset;
   ENVIRONMENT?: string;
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
   WOMPI_PUBLIC_KEY?: string;
   WOMPI_PRIVATE_KEY?: string;
   WOMPI_ENVIRONMENT?: 'sandbox' | 'production';

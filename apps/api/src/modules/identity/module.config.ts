@@ -32,7 +32,10 @@ export function createIdentityModule(env: Env): IdentityModuleContainer {
   return {
     registerCustomerUseCase: new RegisterCustomerUseCase(customerRepo),
     loginCustomerUseCase: new LoginCustomerUseCase(customerRepo, sessionRepo),
-    loginAdminUseCase: new LoginAdminUseCase(adminRepo, sessionRepo),
+    loginAdminUseCase: new LoginAdminUseCase(adminRepo, sessionRepo, {
+      email: env.ADMIN_EMAIL,
+      password: env.ADMIN_PASSWORD,
+    }),
     validateSessionUseCase: new ValidateSessionUseCase(sessionRepo, adminRepo, roleRepo),
     logoutUseCase: new LogoutUseCase(sessionRepo),
     getCustomerProfileUseCase: new GetCustomerProfileUseCase(customerRepo),

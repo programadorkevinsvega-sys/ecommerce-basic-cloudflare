@@ -97,6 +97,12 @@ export class AdminUser {
     this.props.updatedAt = new Date().toISOString();
   }
 
+  public synchronizeConfiguredCredentials(email: string, passwordHash: string): void {
+    this.props.email = email.trim().toLowerCase();
+    this.props.passwordHash = passwordHash;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public toSnapshot(): AdminUserProps {
     return { ...this.props };
   }

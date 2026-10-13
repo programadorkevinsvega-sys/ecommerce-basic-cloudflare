@@ -20,6 +20,13 @@ export class D1AdminUserRepository implements IAdminUserRepository {
     return row ? this.mapToEntity(row) : null;
   }
 
+  public async findSoleActiveSuperadmin(): Promise<AdminUser | null> {
+    const query = "SELECT * FROM identity_admins WHERE role_id = 'role_superadmin' AND is_active = 1 ORDER BY created_at ASC LIMIT 2";
+    const { results } = await this.db.prepare(query).all();
+    if (!results || results.length !== 1) return null;
+    return this.mapToEntity(results[0] as Record<string, unknown>);
+  }
+
   public async countSuperadmins(): Promise<number> {
     const query = `
       SELECT COUNT(*) as count 

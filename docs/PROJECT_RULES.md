@@ -58,6 +58,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | Variable | Tipo | Valor Predeterminado / Ejemplo | Descripción |
 |---|---|---|---|
 | `ENVIRONMENT` | String | `production` | Entorno de despliegue activo (`production`, `staging`, `development`). |
+| `ADMIN_EMAIL` | String | `admin@tudominio.com` | Identificador de login para la única cuenta Superadmin activa. No se usa para enviar TOTP. |
 | `RESEND_FROM_EMAIL` | String | `Vega Store <onboarding@resend.dev>` | Dirección de correo del remitente configurada en Resend para todos los envíos transaccionales. |
 | `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` / `pub_test_...` | Llave pública de comercio para checkout cliente y validación de contexto. |
 
@@ -67,6 +68,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 
 | Nombre del Secreto | Servicio / Proveedor | Propósito |
 |---|---|---|
+| `ADMIN_PASSWORD` | Cloudflare Workers | Contraseña del Superadmin identificado por `ADMIN_EMAIL`; se configura solo como secret y nunca se registra ni se sube al repositorio. |
 | `RESEND_API_KEY` | Resend | Token API para el despacho de correos electrónicos transaccionales y facturas. |
 | `RESEND_WEBHOOK_SECRET` | Resend | (Opcional) Validación de firma de webhooks entrantes de Resend. |
 | `WOMPI_PRIVATE_KEY` | Wompi Colombia | Llave privada para reconciliación de pagos contra la API de Wompi. |

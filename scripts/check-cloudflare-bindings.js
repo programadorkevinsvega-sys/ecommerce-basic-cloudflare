@@ -12,6 +12,13 @@ const normalize = (entries = []) => Object.fromEntries(entries.map((entry) => [e
 const expected = normalize(configs[0].config.ratelimits);
 const actual = normalize(configs[1].config.ratelimits);
 const errors = [];
+const adminEmails = configs.map(({ config }) => config.vars?.ADMIN_EMAIL);
+if (adminEmails.some(Boolean) && (!adminEmails[0] || adminEmails[0] !== adminEmails[1] || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmails[0]))) {
+  errors.push('Si ADMIN_EMAIL se define en Wrangler, debe ser válido e idéntico en ambas configuraciones');
+}
+if (configs.some(({ config }) => config.vars?.ADMIN_PASSWORD !== undefined)) {
+  errors.push('ADMIN_PASSWORD debe configurarse como secret y nunca en vars de Wrangler');
+}
 
 if (expectedImagesBinding(configs[0].config) !== 'IMAGES' || expectedImagesBinding(configs[1].config) !== 'IMAGES') {
   errors.push('El binding de Cloudflare Images debe declararse como IMAGES en ambas configuraciones Wrangler');
@@ -36,4 +43,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('Bindings IMAGES y rate limiting coinciden; los namespace_id están separados.');
+console.log('Bindings IMAGES y rate limits coinciden; secretos fuera de vars, ADMIN_EMAIL puede configurarse en Dashboard.');
