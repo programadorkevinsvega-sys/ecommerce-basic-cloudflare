@@ -59,7 +59,7 @@ export function renderProductList(
   html += '<div class="grid">';
   for (const product of products) {
     const formattedPrice = (product.priceInCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    const imageHtml = product.mediaIds?.[0] ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />` : '<div class="product-media-placeholder" aria-hidden="true">Vega Store</div>';
+    const imageHtml = product.mediaIds?.[0] ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'product-media-placeholder',textContent:'Imagen no disponible'}))" />` : '<div class="product-media-placeholder" aria-hidden="true">Vega Store</div>';
     const discountInfo = discountMap?.get(product.id);
     let priceHtml = `<div class="card-price">${formattedPrice}</div>`;
     let promoBadge = '';

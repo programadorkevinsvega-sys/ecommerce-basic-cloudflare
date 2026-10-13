@@ -38,12 +38,12 @@ export const storefrontProductStyles = String.raw`
     .product-card-v2 .card-title a { color: #17241d; text-decoration: none; }
     .product-card-v2 .card-title a:hover { color: #285432; }
     .card-pricing-block {
-      display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: .4rem;
+      display: flex; flex-direction: column; align-items: stretch; gap: .1rem; margin-top: auto; padding-top: .4rem;
     }
-    .card-price-group { display: flex; align-items: baseline; gap: .45rem; }
+    .card-price-group { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .45rem; row-gap: .1rem; min-width: 0; }
     .card-price-sale { color: #dc2626; font-weight: 850; font-size: 1.22rem; }
     .card-price-old { font-size: .88rem; color: #8c998e; text-decoration: line-through; }
-    .card-stock-indicator { font-size: .72rem; font-weight: 600; color: #2c6e43; }
+    .card-stock-indicator { align-self: flex-end; text-align: right; line-height: 1.25; font-size: .72rem; font-weight: 600; color: #2c6e43; }
     .card-stock-indicator.stock-low { color: #b45309; }
     .product-card-v2 .product-card-footer {
       display: flex; flex-direction: column; gap: .65rem; padding-top: .65rem; border-top: 1px solid #f0f3ed;

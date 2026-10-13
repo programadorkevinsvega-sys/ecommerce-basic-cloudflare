@@ -79,7 +79,7 @@ export class InvoicingController {
           action: 'invoicing.credit_note_issued',
           entityType: 'credit_note',
           entityId: creditNote.id,
-          changes: { invoiceId, amountInCents: body.amountInCents, reason: body.reason },
+          changes: { invoiceId, amountInCents: body.amountInCents, reasonProvided: true, reasonLength: body.reason.trim().length },
         });
 
         return c.json({ success: true, creditNote: creditNote.toJSON() });

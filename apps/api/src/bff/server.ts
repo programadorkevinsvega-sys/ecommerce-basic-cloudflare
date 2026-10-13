@@ -29,6 +29,7 @@ import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.
 import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
 import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
 import { createAdminMutationAuditMiddleware } from './middleware/AdminMutationAuditMiddleware.js';
+import { AdminMutationSnapshotProvider } from './middleware/AdminMutationSnapshotProvider.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -39,7 +40,12 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.use('/media/upload', RateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);
   app.use('/api/v1/admin/*', createAdminMfaGateMiddleware(cRoot.identityGateway));
-  app.use('*', createAdminMutationAuditMiddleware(cRoot.identityGateway, cRoot.auditGateway));
+  const mutationSnapshots = new AdminMutationSnapshotProvider(cRoot);
+  app.use('*', createAdminMutationAuditMiddleware(
+    cRoot.identityGateway,
+    cRoot.auditGateway,
+    mutationSnapshots,
+  ));
 
   // Storefront Admin API
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
