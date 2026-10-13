@@ -4,6 +4,7 @@ import { renderProductList } from '../src/bff/views/renderProductList.js';
 import { renderProductDetail } from '../src/bff/views/renderProductDetail.js';
 import { renderCatalogPage } from '../src/bff/views/renderCatalogPage.js';
 import { renderCheckoutPage } from '../src/bff/views/renderCheckoutPage.js';
+import { renderStorefrontBanners } from '../src/bff/views/renderStorefrontBanners.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 
 const product: CatalogProductDto = {
@@ -36,6 +37,16 @@ describe('storefront presentation', () => {
     expect(html).not.toContain('class="campaign-action"');
   });
 
+  it('keeps one public banner in a single fixed-size image frame', () => {
+    const html = renderStorefrontBanners([{
+      id: 'banner-1', title: 'Campaña', description: 'Una campaña', imageUrl: '/media/banner-wide',
+      linkUrl: '/productos', altText: 'Banner de campaña', bannerType: 'promotional', buttonText: 'Ver',
+    }], 'Contenido destacado');
+    expect(html).toContain('class="campaign-banner-single"');
+    expect(html.match(/class="campaign-banner"/g)).toHaveLength(1);
+    expect(html).toContain('src="/media/banner-wide"');
+  });
+
   it('includes accessible search, navigation and responsive presentation styles', () => {
     const html = renderBaseLayout({ title: 'Inicio', description: 'Tienda', bodyHtml: '<h1>Inicio</h1>' });
     expect(html).toContain('aria-label="Buscar productos"');
@@ -43,6 +54,9 @@ describe('storefront presentation', () => {
     expect(html).toContain('VEGA');
     expect(html).toContain('prefers-reduced-motion');
     expect(html).toContain('max-width: 760px');
+    expect(html).toContain('height: 380px; min-height: 380px; max-height: 380px');
+    expect(html).toContain('grid-template-rows: auto 220px');
+    expect(html).toContain('object-fit: cover');
   });
 
   it('renders product details from actual catalog, discount, stock and shipping data', () => {

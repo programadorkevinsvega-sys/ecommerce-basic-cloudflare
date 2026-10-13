@@ -15,6 +15,7 @@ export const storefrontComponentStyles = String.raw`
     .collection-note strong { color: var(--text); font-size: .88rem; }
     .note-mark { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 12px; background: var(--accent); color: var(--primary); font-size: 1.2rem; font-weight: 900; }
     .campaign-carousel-wrap { margin-bottom: 2rem; }
+    .campaign-banner-single { margin-bottom: 2rem; }
     .campaign-carousel {
       display: flex; gap: 1rem; overflow-x: auto; overscroll-behavior-inline: contain;
       scroll-snap-type: x mandatory; scroll-padding-inline: .25rem; padding: .25rem .25rem .85rem;
@@ -47,7 +48,7 @@ export const storefrontComponentStyles = String.raw`
     .campaign-carousel-wrap { margin-bottom: 2.6rem; }
     .campaign-carousel { gap: 0; padding: 0; overflow: visible; }
     .campaign-carousel > .campaign-banner { flex-basis: 100%; }
-    .campaign-banner { min-height: 380px; grid-template-columns: minmax(0, 1fr) minmax(320px, .85fr); margin: 0; border-radius: 20px; background: #1f4d3a; box-shadow: none; }
+    .campaign-banner { height: 380px; min-height: 380px; max-height: 380px; grid-template-columns: minmax(0, 1fr) minmax(320px, .85fr); margin: 0; border-radius: 20px; background: #1f4d3a; box-shadow: none; }
     .campaign-banner:not(:has(.campaign-image)) { grid-template-columns: 1fr; background-image: radial-gradient(ellipse at 90% 20%, rgba(220,233,202,.12), transparent 40%); }
     .campaign-copy { padding: clamp(2rem, 5vw, 4.2rem); }
     .campaign-copy .eyebrow { color: #dce9ca; letter-spacing: .13em; }
@@ -94,7 +95,7 @@ export const storefrontComponentStyles = String.raw`
       box-shadow: 0 4px 14px rgba(200, 241, 105, 0.25);
     }
     .campaign-action:hover, .product-action:hover { background: #d7f994; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(200, 241, 105, 0.35); }
-    .campaign-image { position: relative; min-height: 280px; width: 100%; height: 100%; overflow: hidden; background: #1a2921; }
+    .campaign-image { position: relative; min-height: 0; max-height: 100%; width: 100%; height: 100%; overflow: hidden; background: #1a2921; }
     .campaign-image-missing { display: none; }
     .campaign-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
     .search-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -117,10 +118,10 @@ export const storefrontComponentStyles = String.raw`
       .site-nav a.cart-link { min-height: 38px; }
       .collection-hero { min-height: 0; flex-direction: column; align-items: flex-start; gap: 1.5rem; }
       .collection-note { width: 100%; }
-      .campaign-banner { grid-template-columns: minmax(0, 1fr); }
+      .campaign-banner { height: auto; min-height: 0; max-height: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 220px; }
       .campaign-carousel > .campaign-banner { flex-basis: 94%; }
-      .campaign-image { min-height: 190px; max-height: 260px; }
-      .campaign-image img { max-height: 260px; }
+      .campaign-image { height: 220px; min-height: 220px; max-height: 220px; }
+      .campaign-image img { height: 100%; max-height: none; }
       .site-header { padding: .9rem 1rem; }
       .site-nav { width: auto; }
       .site-nav a { min-height: 40px; padding: .45rem .65rem; font-size: .84rem !important; }
