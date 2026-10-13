@@ -9,8 +9,6 @@ export function renderStorefrontCarouselScript(carouselId: string): string {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const pauseButton = controls.querySelector('[data-carousel-pause]');
     let manuallyPaused = false;
-    let hovered = false;
-    let focused = false;
     let timer;
     const syncPlayback = () => {
       window.clearInterval(timer);
@@ -18,7 +16,7 @@ export function renderStorefrontCarouselScript(carouselId: string): string {
       pauseButton.textContent = manuallyPaused ? 'Reanudar' : 'Pausar';
       pauseButton.setAttribute('aria-label', manuallyPaused ? 'Reanudar carrusel automático' : 'Pausar carrusel automático');
       pauseButton.setAttribute('aria-pressed', String(manuallyPaused));
-      if (!reducedMotion && !manuallyPaused && !hovered && !focused && !document.hidden) timer = window.setInterval(() => move(1), 6000);
+      if (!reducedMotion && !manuallyPaused && !document.hidden) timer = window.setInterval(() => move(1), 6000);
     };
     const move = direction => {
       const currentIndex = Math.round(carousel.scrollLeft / carousel.clientWidth);
@@ -31,13 +29,6 @@ export function renderStorefrontCarouselScript(carouselId: string): string {
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       event.preventDefault();
       move(event.key === 'ArrowLeft' ? -1 : 1);
-    });
-    const shell = carousel.parentElement;
-    shell.addEventListener('mouseenter', () => { hovered = true; syncPlayback(); });
-    shell.addEventListener('mouseleave', () => { hovered = false; syncPlayback(); });
-    shell.addEventListener('focusin', () => { focused = true; syncPlayback(); });
-    shell.addEventListener('focusout', event => {
-      if (!shell.contains(event.relatedTarget)) { focused = false; syncPlayback(); }
     });
     document.addEventListener('visibilitychange', syncPlayback);
     syncPlayback();

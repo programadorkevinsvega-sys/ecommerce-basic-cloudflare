@@ -17,11 +17,12 @@ export const storefrontComponentStyles = String.raw`
     .campaign-carousel-wrap { margin-bottom: 2rem; }
     .campaign-banner-single { margin-bottom: 2rem; }
     .campaign-carousel {
-      display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain;
+      display: flex; gap: 0; overflow: hidden; overscroll-behavior-inline: contain;
       scroll-snap-type: x mandatory; scroll-padding-inline: 0; padding: 0 0 .85rem;
-      scrollbar-width: thin; scrollbar-color: #b9c4b2 transparent;
+      scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-y;
       scroll-behavior: smooth;
     }
+    .campaign-carousel::-webkit-scrollbar { display: none; }
     .campaign-carousel > .campaign-banner { flex: 0 0 min(94%, 1120px); min-width: 0; margin: 0; scroll-snap-align: center; }
     .campaign-carousel:focus-visible { outline: 3px solid #6b9d26; outline-offset: 3px; }
     .campaign-carousel-controls { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .5rem; }
@@ -46,7 +47,7 @@ export const storefrontComponentStyles = String.raw`
     .site-nav .customer-email { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .container { padding-top: 1.5rem; }
     .campaign-carousel-wrap { margin-bottom: 2.6rem; }
-    .campaign-carousel { gap: 0; padding: 0; overflow-x: auto; overflow-y: hidden; }
+    .campaign-carousel { gap: 0; padding: 0; overflow: hidden; }
     .campaign-carousel > .campaign-banner { flex-basis: 100%; }
     .campaign-banner { height: 380px; min-height: 380px; max-height: 380px; grid-template-columns: minmax(0, 1fr) minmax(320px, .85fr); margin: 0; border-radius: 20px; background: #1f4d3a; box-shadow: none; }
     .campaign-banner:not(:has(.campaign-image)) { grid-template-columns: 1fr; background-image: radial-gradient(ellipse at 90% 20%, rgba(220,233,202,.12), transparent 40%); }

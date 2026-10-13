@@ -61,7 +61,9 @@ describe('storefront presentation', () => {
     expect(html).toContain('carousel.scrollTo({ left: nextIndex * carousel.clientWidth');
     expect(html).toContain('(currentIndex + direction + slides.length) % slides.length');
     const layout = renderBaseLayout({ title: 'Banners', description: 'Campañas', bodyHtml: html });
-    expect(layout).toContain('overflow-x: auto; overflow-y: hidden');
+    expect(layout).toContain('overflow: hidden; overscroll-behavior-inline: contain');
+    expect(layout).toContain('scrollbar-width: none; -ms-overflow-style: none');
+    expect(layout).toContain('touch-action: pan-y');
     expect(layout).toContain('.campaign-carousel > .campaign-banner { flex-basis: 100%; }');
     expect(layout).not.toContain('overflow: visible;');
   });

@@ -124,7 +124,7 @@ describe('media and banner input validation', () => {
     expect(publicMarkup).toContain('window.setInterval(() => move(1), 6000)');
     expect(publicMarkup).toContain('data-carousel-pause');
     expect(publicMarkup).toContain("event.key !== 'ArrowRight'");
-    expect(publicMarkup).toContain("shell.addEventListener('mouseenter'");
+    expect(publicMarkup).not.toContain("addEventListener('mouseenter'");
   });
 });
 
