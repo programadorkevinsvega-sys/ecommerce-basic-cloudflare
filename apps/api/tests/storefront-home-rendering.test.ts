@@ -144,7 +144,7 @@ describe('storefront presentation', () => {
     const zone = {
       id: 'zone-medellin', name: 'Medellín', type: 'city' as const, priceInCents: 900000,
       minEstimatedDays: 1, maxEstimatedDays: 2, allowsCashOnDelivery: true, isActive: true,
-      locations: ['Medellín'], createdAt: '2026-01-01', updatedAt: '2026-01-01',
+      locations: ['05001'], createdAt: '2026-01-01', updatedAt: '2026-01-01',
     };
     const html = renderCheckoutPage(cart, new Map([[product.id, product]]), [zone], 19);
     expect(html).toContain('checkout-steps');
@@ -152,6 +152,10 @@ describe('storefront presentation', () => {
     expect(html).toContain('id="cust-tax-id"');
     expect(html).toContain('id="dest-zone"');
     expect(html).toContain('Medellín ·');
+    expect(html).toContain('data-locations="[&quot;05001&quot;]"');
+    expect(html).toContain('id="addr-city-suggestions"');
+    expect(html).toContain("/api/v1/shipping/locations?q=");
+    expect(html).toContain('daneCode: daneCode');
     expect(html).toContain('data-min-days="1"');
     expect(html).toContain('Lámpara de lectura');
     expect(html).toContain('240.000');

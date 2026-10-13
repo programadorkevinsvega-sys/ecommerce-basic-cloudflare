@@ -12,8 +12,13 @@ export function getCheckoutScript(
       const subtotalCents = ${safeSubtotalCents};
       const TAX_RATE = ${safeTaxRatePercent} / 100;
       let shippingCostCents = 0;
+      let zonePolicyAllowsOrder = false;
       const checkoutStatus = document.getElementById('policy-alert');
       const checkoutError = document.getElementById('checkout-error');
+      function updateSubmitAvailability() {
+        const hasVerifiedLocation = Boolean(document.getElementById('addr-dane-code').value);
+        document.getElementById('btn-submit-order').disabled = !zonePolicyAllowsOrder || !hasVerifiedLocation;
+      }
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
       function updateCheckoutCta() {
         const total = subtotalCents + calcTax(subtotalCents) + shippingCostCents;
@@ -36,6 +41,7 @@ export function getCheckoutScript(
         const btn = document.getElementById('btn-submit-order');
         if (!zoneId) {
           shippingCostCents = 0;
+          zonePolicyAllowsOrder = false;
           btn.disabled = true;
           codRadio.disabled = true;
           setCheckoutStatus('Selecciona tu zona para consultar cobertura, costo y tiempo estimado de entrega.', 'idle');
@@ -43,6 +49,7 @@ export function getCheckoutScript(
           return;
         }
         shippingCostCents = parseInt(opt.getAttribute('data-rate'), 10) || 0;
+        zonePolicyAllowsOrder = false;
         btn.disabled = true;
         setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle');
         updateTotals();
@@ -60,10 +67,12 @@ export function getCheckoutScript(
           if (data.success) {
             const p = data.policy;
             if (!p.canProceed) {
+              zonePolicyAllowsOrder = false;
               setCheckoutStatus('No hay cobertura para este pedido: ' + p.blockingReasons.join(' · '), 'error');
               btn.disabled = true;
             } else {
-              btn.disabled = false;
+              zonePolicyAllowsOrder = true;
+              updateSubmitAvailability();
               const minDays = Number(opt.dataset.minDays || 0);
               const maxDays = Number(opt.dataset.maxDays || minDays);
               const delivery = minDays ? ' Entrega estimada: ' + minDays + (maxDays !== minDays ? ' a ' + maxDays : '') + ' días hábiles.' : '';
@@ -109,10 +118,11 @@ export function getCheckoutScript(
         const taxId = document.getElementById('cust-tax-id')?.value.trim() || '';
         const dept  = document.getElementById('addr-dept').value.trim();
         const city  = document.getElementById('addr-city').value.trim();
+        const daneCode = document.getElementById('addr-dane-code').value, municipality = document.getElementById('addr-municipality').value;
         const line  = document.getElementById('addr-line').value.trim();
-        if (!name || !phone || !email || !taxId || !dept || !city || !line) {
+        if (!name || !phone || !email || !taxId || !dept || !city || !daneCode || !municipality || !line) {
           checkoutError.hidden = false;
-          checkoutError.textContent = 'Completa los campos obligatorios, incluida tu cédula o NIT.';
+          checkoutError.textContent = 'Selecciona un municipio de las sugerencias para validar el código DANE y la cobertura.';
           return;
         }
         const method     = document.querySelector('input[name="payment-method"]:checked').value;
@@ -140,7 +150,8 @@ export function getCheckoutScript(
                 recipientName: name,
                 phone: phone,
                 department: dept,
-                city: city,
+                city: municipality,
+                daneCode: daneCode,
                 addressLine: line,
               },
               lines: cartItems.map(i => ({
@@ -178,11 +189,12 @@ export function getCheckoutScript(
         } catch (e) {
           checkoutError.hidden = false;
           checkoutError.textContent = e.message || 'No se pudo procesar el pedido. Intenta de nuevo.';
-          btn.disabled = false;
+          updateSubmitAvailability();
           updateCheckoutCta();
         }
       }
       document.getElementById('dest-zone').addEventListener('change', handleZoneChange);
+      document.addEventListener('checkout-location-change', updateSubmitAvailability);
       document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', updateCheckoutCta));
       // Inicializar totales al cargar
       updateTotals();

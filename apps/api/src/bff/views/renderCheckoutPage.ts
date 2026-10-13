@@ -2,6 +2,7 @@ import { CartDto } from '../gateways/cart/CartGateway.js';
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ShippingZoneDto } from '../gateways/shipping/ShippingGateway.js';
 import { getCheckoutScript } from './getCheckoutScript.js';
+import { getCheckoutLocationScript } from './getCheckoutLocationScript.js';
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -20,7 +21,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
   });
   const itemsJson = JSON.stringify(cartItems);
   const rows = cart.items.map((item) => renderCheckoutItem(item, productsMap.get(item.productId))).join('');
-  const zoneOptions = zones.map((zone) => `<option value="${escapeHtml(zone.id)}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}">${escapeHtml(zone.name)} · ${zone.priceInCents === 0 ? 'Envío gratis' : formatPrice(zone.priceInCents)}</option>`).join('');
+  const zoneOptions = zones.map((zone) => `<option value="${escapeHtml(zone.id)}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}" data-locations="${escapeHtml(JSON.stringify(zone.locations))}">${escapeHtml(zone.name)} · ${zone.priceInCents === 0 ? 'Envío gratis' : formatPrice(zone.priceInCents)}</option>`).join('');
   return `<section class="checkout-page" aria-labelledby="checkout-title">
     <nav class="checkout-steps" aria-label="Progreso de la compra"><ol><li class="checkout-step checkout-step-done"><span class="checkout-step-number" aria-hidden="true">✓</span>Carrito<span class="checkout-sr-only"> (completado)</span></li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step checkout-step-current" aria-current="step"><span class="checkout-step-number" aria-hidden="true">2</span>Datos y pago</li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step"><span class="checkout-step-number" aria-hidden="true">3</span>Confirmación</li></ol></nav>
     <h1 class="checkout-title" id="checkout-title">Finalizar compra</h1>
@@ -32,7 +33,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
     </form>
     ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent)}
     </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()} · Colombia</span><span>Compra segura · Precios en COP</span></footer>
-  </section>${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}`;
+  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}`;
 }
 
 function renderContactFields(): string {
@@ -46,9 +47,9 @@ function renderContactFields(): string {
 
 function renderAddressFields(zoneOptions: string): string {
   return `<fieldset class="checkout-card"><legend><span>2.</span> Dirección de entrega</legend><div class="checkout-fields">
-    <div class="checkout-field"><label for="addr-dept">Departamento *</label><input id="addr-dept" type="text" autocomplete="address-level1" required></div>
-    <div class="checkout-field"><label for="addr-city">Ciudad o municipio *</label><input id="addr-city" type="text" autocomplete="address-level2" required></div>
     <div class="checkout-field checkout-field-full"><label for="dest-zone">Zona de envío *</label><select id="dest-zone" required><option value="">Selecciona tu zona o municipio</option>${zoneOptions}</select></div>
+    <div class="checkout-field"><label for="addr-dept">Departamento *</label><input id="addr-dept" type="text" autocomplete="address-level1" readonly required></div>
+    <div class="checkout-field"><label for="addr-city">Ciudad o municipio *</label><input id="addr-city" type="text" list="addr-city-suggestions" autocomplete="off" required placeholder="Escribe y selecciona tu municipio"><datalist id="addr-city-suggestions"></datalist><input id="addr-dane-code" type="hidden"><input id="addr-municipality" type="hidden"><small id="addr-city-help" role="status" aria-live="polite">Selecciona primero tu zona y luego el municipio sugerido para verificar la cobertura.</small></div>
     <div class="checkout-field checkout-field-full"><label for="addr-line">Dirección *</label><input id="addr-line" type="text" autocomplete="street-address" required placeholder="Calle, carrera, edificio, apartamento"></div>
   </div><div id="policy-alert" class="checkout-policy" role="status" aria-live="polite" data-state="idle"><span aria-hidden="true">ⓘ</span><span>Selecciona tu zona para consultar cobertura, costo y tiempo estimado de entrega.</span></div></fieldset>`;
 }
