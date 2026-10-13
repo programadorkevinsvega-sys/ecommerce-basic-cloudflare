@@ -29,7 +29,7 @@ export function createInventoryModule(env: Env): InventoryModuleContainer {
     releaseStockUseCase: new ReleaseStockUseCase(repo, outbox),
     adjustStockUseCase: new AdjustStockUseCase(repo, outbox),
     listStockUseCase: new ListStockUseCase(repo),
-    consumeStockUseCase: new ConsumeStockUseCase(repo, outbox),
+    consumeStockUseCase: new ConsumeStockUseCase(repo),
     checkActiveReservationUseCase: new CheckActiveReservationUseCase(repo),
   };
 }

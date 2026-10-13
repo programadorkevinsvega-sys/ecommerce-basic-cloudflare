@@ -24,6 +24,7 @@ def check_fresh_schema() -> None:
     assert tables >= 60, f"Expected the complete schema, found {tables} tables"
     order_columns = {row[1] for row in db.execute("PRAGMA table_info(orders_orders)")}
     assert "guest_cart_id_hash" in order_columns, "Guest order ownership migration is missing"
+    assert db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='inventory_order_consumptions'").fetchone(), "Idempotent inventory migration is missing"
 
     db.execute(
         """INSERT INTO payments_cod_collections
@@ -82,6 +83,14 @@ def check_legacy_backfills() -> None:
     orders.executescript((orders_path / "0002_guest_cart_capability.sql").read_text(encoding="utf-8"))
     assert orders.execute("SELECT guest_cart_id_hash FROM orders_orders WHERE id='legacy-guest'").fetchone() == (None,)
     print("Legacy orders upgrade passed (existing guest order preserved with nullable capability).")
+
+    inventory = sqlite3.connect(":memory:")
+    inventory_path = MIGRATIONS / "inventory/infrastructure/persistence/d1/migrations"
+    inventory.executescript((inventory_path / "0001_init.sql").read_text(encoding="utf-8"))
+    inventory.execute("INSERT INTO inventory_stocks(product_id,quantity,reserved_quantity,updated_at) VALUES('legacy-product',4,1,'t0')")
+    inventory.executescript((inventory_path / "0002_idempotent_order_consumption.sql").read_text(encoding="utf-8"))
+    assert inventory.execute("SELECT quantity,reserved_quantity FROM inventory_stocks WHERE product_id='legacy-product'").fetchone() == (4, 1)
+    print("Legacy inventory upgrade passed (stock preserved; idempotency ledger added).")
 
 
 if __name__ == "__main__":

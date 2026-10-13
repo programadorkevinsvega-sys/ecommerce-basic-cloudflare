@@ -464,6 +464,24 @@ Declaraciones de columnas/restricciones:
 
 Repositorios que referencian la tabla: `apps/api/src/modules/inventory/infrastructure/persistence/d1/repositories/D1InventoryOutboxRepository.ts`
 
+## `inventory__0002_idempotent_order_consumption.sql` · fuente `apps/api/src/modules/inventory/infrastructure/persistence/d1/migrations/0002_idempotent_order_consumption.sql`
+
+Tablas: 1; índices explícitos: 1. Copias: `migrations/inventory__0002_idempotent_order_consumption.sql` y `apps/api/migrations/inventory__0002_idempotent_order_consumption.sql`.
+
+### `inventory_order_consumptions`
+
+Declaraciones de columnas/restricciones:
+- `order_id TEXT NOT NULL`
+- `product_id TEXT NOT NULL`
+- `quantity INTEGER NOT NULL CHECK (quantity > 0)`
+- `status TEXT NOT NULL CHECK (status IN ('processing', 'completed'))`
+- `created_at TEXT NOT NULL`
+- Clave primaria compuesta `(order_id, product_id)` para hacer único el consumo por artículo y pedido.
+
+Índices: `idx_inventory_consumptions_status` (status, created_at).
+
+Repositorios que referencian la tabla: `apps/api/src/modules/inventory/infrastructure/persistence/d1/repositories/D1InventoryRepository.ts`.
+
 ## `invoicing__0001_init.sql` · fuente `apps/api/src/modules/invoicing/infrastructure/persistence/d1/migrations/0001_init.sql`
 
 Tablas: 4; índices explícitos: 4. Copias: `migrations/invoicing__0001_init.sql` y `apps/api/migrations/invoicing__0001_init.sql`.

@@ -109,7 +109,7 @@ export class PaymentsController {
       if (res.ignored && res.orderId) {
         const currentOrder = await ordersGateway.getOrder(res.orderId);
         const status = String(canonical.status).toUpperCase();
-        if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved' || ['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });
+        if (['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });
       }
 
       const wompiStatus = String(canonical.status ?? '').toUpperCase();

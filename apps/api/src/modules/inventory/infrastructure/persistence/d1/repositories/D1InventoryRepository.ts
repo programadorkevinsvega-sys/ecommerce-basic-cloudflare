@@ -104,6 +104,57 @@ export class D1InventoryRepository implements IInventoryRepository {
     ).bind(quantity, new Date().toISOString(), productId).run();
   }
 
+  public async consumeOrder(orderId: string, items: Array<{ productId: string; quantity: number }>): Promise<boolean> {
+    const now = new Date().toISOString();
+    const payload = JSON.stringify({ orderId, items });
+    const statements: D1PreparedStatement[] = [];
+    for (const item of items) {
+      statements.push(this.db.prepare(
+        `INSERT OR IGNORE INTO inventory_order_consumptions (order_id, product_id, quantity, status, created_at)
+         SELECT ?, ?, ?, 'processing', ? WHERE EXISTS (
+           SELECT 1 FROM inventory_stocks WHERE product_id = ? AND quantity >= ? AND reserved_quantity >= ?
+         ) AND COALESCE((SELECT SUM(quantity) FROM inventory_reservations
+           WHERE order_id = ? AND product_id = ? AND status = 'pending' AND expires_at > ?), 0) >= ?`
+      ).bind(orderId, item.productId, item.quantity, now, item.productId, item.quantity, item.quantity, orderId, item.productId, now, item.quantity));
+      statements.push(this.db.prepare(
+        `UPDATE inventory_stocks SET quantity = MAX(0, quantity - ?), reserved_quantity = MAX(0, reserved_quantity - ?), updated_at = ?
+         WHERE product_id = ? AND EXISTS (SELECT 1 FROM inventory_order_consumptions WHERE order_id = ? AND product_id = ? AND status = 'processing')`
+      ).bind(item.quantity, item.quantity, now, item.productId, orderId, item.productId));
+      const movementId = `sale_${orderId.length}_${orderId}_${item.productId}`;
+      statements.push(this.db.prepare(
+        `INSERT OR IGNORE INTO inventory_movements (id, product_id, type, quantity, reason, reference_id, created_at)
+         SELECT ?, ?, 'sale', ?, ?, ?, ? WHERE EXISTS (
+           SELECT 1 FROM inventory_order_consumptions WHERE order_id = ? AND product_id = ? AND status = 'processing'
+         ) AND EXISTS (SELECT 1 FROM inventory_stocks WHERE product_id = ?)`
+      ).bind(movementId, item.productId, item.quantity, `Venta confirmada orden ${orderId}`, orderId, now, orderId, item.productId, item.productId));
+    }
+    statements.push(this.db.prepare(
+      `UPDATE inventory_reservations SET status = 'confirmed' WHERE order_id = ? AND status = 'pending'
+       AND EXISTS (SELECT 1 FROM inventory_order_consumptions WHERE order_id = ? AND status = 'processing')`
+    ).bind(orderId, orderId));
+    statements.push(this.db.prepare(
+      `INSERT OR IGNORE INTO inventory_outbox_events (id, event_name, payload, status, created_at)
+       SELECT ?, 'inventory.stock.consumed.v1', ?, 'pending', ? WHERE EXISTS (
+         SELECT 1 FROM inventory_order_consumptions WHERE order_id = ? AND status = 'processing'
+       )`
+    ).bind(`inventory_stock_consumed_${orderId}`, payload, now, orderId));
+    statements.push(this.db.prepare(
+      `UPDATE inventory_order_consumptions SET status = 'completed' WHERE order_id = ? AND status = 'processing'`
+    ).bind(orderId));
+
+    const result = await this.db.batch(statements);
+    const firstClaimInserted = (result[0]?.meta?.changes ?? 0) > 0;
+    const { results } = await this.db.prepare(
+      'SELECT product_id, quantity, status FROM inventory_order_consumptions WHERE order_id = ?'
+    ).bind(orderId).all<{ product_id: string; quantity: number; status: string }>();
+    const completed = new Map((results || []).map((row) => [row.product_id, row]));
+    if (items.every((item) => {
+      const row = completed.get(item.productId);
+      return row?.quantity === item.quantity && row.status === 'completed';
+    })) return firstClaimInserted;
+    throw new Error('No se pudo consumir el inventario reservado para la orden');
+  }
+
   public async listStocks(): Promise<InventoryStock[]> {
     const { results } = await this.db
       .prepare('SELECT * FROM inventory_stocks ORDER BY quantity ASC')

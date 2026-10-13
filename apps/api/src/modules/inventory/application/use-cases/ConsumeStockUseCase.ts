@@ -1,4 +1,3 @@
-import { IInventoryOutboxRepository } from '../../domain/ports/IInventoryOutboxRepository.js';
 import { IInventoryRepository } from '../../domain/ports/IInventoryRepository.js';
 
 export interface ConsumeStockCommand {
@@ -7,36 +6,19 @@ export interface ConsumeStockCommand {
 }
 
 export class ConsumeStockUseCase {
-  private readonly repo: IInventoryRepository;
-  private readonly outbox: IInventoryOutboxRepository;
-
-  public constructor(repo: IInventoryRepository, outbox: IInventoryOutboxRepository) {
-    this.repo = repo;
-    this.outbox = outbox;
-  }
+  public constructor(private readonly repo: IInventoryRepository) {}
 
   public async execute(cmd: ConsumeStockCommand): Promise<void> {
+    if (!cmd.orderId || !cmd.items.length) throw new Error('La orden requiere identificador y productos para consumir inventario');
+    const totals = new Map<string, number>();
     for (const item of cmd.items) {
-      const stock = await this.repo.getStock(item.productId);
-      if (stock) {
-        stock.consume(item.quantity);
-        await this.repo.saveStock(stock);
-        await this.repo.recordMovement({
-          id: crypto.randomUUID(),
-          productId: item.productId,
-          type: 'sale',
-          quantity: item.quantity,
-          referenceId: cmd.orderId,
-          reason: `Venta confirmada orden ${cmd.orderId}`,
-          createdAt: new Date().toISOString(),
-        });
+      if (!item.productId || !Number.isSafeInteger(item.quantity) || item.quantity <= 0) {
+        throw new Error('Los productos y cantidades de inventario no son válidos');
       }
+      const total = (totals.get(item.productId) ?? 0) + item.quantity;
+      if (!Number.isSafeInteger(total)) throw new Error('La cantidad agregada excede el límite permitido');
+      totals.set(item.productId, total);
     }
-
-    await this.repo.confirmReservation(cmd.orderId);
-    await this.outbox.publish('inventory.stock.consumed.v1', {
-      orderId: cmd.orderId,
-      items: cmd.items,
-    });
+    await this.repo.consumeOrder(cmd.orderId, [...totals].map(([productId, quantity]) => ({ productId, quantity })));
   }
 }

@@ -44,7 +44,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
   // 1. Descontar stock
   if (order.lines?.length) {
     const items = order.lines.map((l) => ({ productId: l.productId, quantity: l.quantity }));
-    await inventoryGateway.consumeStock(orderId, items).catch(() => {});
+    await inventoryGateway.consumeStock(orderId, items);
   }
 
   // 2. Emitir factura inmutable
@@ -108,8 +108,9 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       },
     });
     invoiceNumber = invoice.invoiceNumber;
-  } catch {
+  } catch (error) {
     console.error(JSON.stringify({ event: 'payments.invoice_issue_failed', order_id: order.id, trace_id: traceId }));
+    throw error;
   }
 
   // 3. Enviar emails transaccionales con Resend (Al Cliente Y a la Empresa)

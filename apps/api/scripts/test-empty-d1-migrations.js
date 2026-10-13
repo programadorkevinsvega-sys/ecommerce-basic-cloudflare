@@ -19,8 +19,15 @@ const query = (sql) => JSON.parse(execFileSync(wrangler, ['d1', 'execute', datab
 try {
   apply();
   apply();
-  const count = query('SELECT COUNT(*) AS count FROM d1_migrations')[0]?.count;
+  const names = query('SELECT name FROM d1_migrations ORDER BY rowid').map((row) => row.name);
+  const expected = fs.readdirSync(path.join(apiDir, 'migrations')).filter((name) => name.endsWith('.sql')).length;
+  const count = names.length;
   const settings = query("SELECT name FROM pragma_table_info('settings_store')").map((row) => row.name);
-  if (count !== 28 || !settings.includes('company_nit')) throw new Error(`Resultado inesperado: ${count} migraciones; settings_store=${settings.join(',')}`);
-  console.log(`Migraciones D1 en blanco correctas e idempotentes: ${count}; settings__0001 precedió settings__0002.`);
+  const v1 = names.indexOf('settings__0001_init.sql');
+  const v2 = names.indexOf('settings__0002_company_tax_fields.sql');
+  const inventoryTable = query("SELECT name FROM sqlite_master WHERE type='table' AND name='inventory_order_consumptions'");
+  if (count !== expected || v1 < 0 || v2 <= v1 || !settings.includes('company_nit') || inventoryTable.length !== 1) {
+    throw new Error(`Resultado inesperado: ${count}/${expected} migraciones; settings_store=${settings.join(',')}`);
+  }
+  console.log(`Migraciones D1 en blanco correctas e idempotentes: ${count}; settings v1 precedió v2.`);
 } finally { fs.rmSync(temporary, { recursive: true, force: true }); }

@@ -19,8 +19,16 @@ describe('media and banner input validation', () => {
   it('allows HTTPS image references and internal destinations but rejects active schemes and external redirects', () => {
     expect(isSafeImageUrl('https://images.example.test/banner.webp')).toBe(true);
     expect(isSafeImageUrl('https://127.0.0.1/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://2130706433/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://100.64.0.1/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://192.168.1.5/banner.webp')).toBe(false);
-    expect(isSafeImageUrl('https://localhost/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://localhost./banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://[::1]/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://[fc00::1]/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://[fe80::1]/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://[2001:db8::1]/banner.webp')).toBe(false);
+    expect(isSafeImageUrl('https://[2606:4700:4700::1111]/banner.webp')).toBe(true);
+    expect(isSafeImageUrl('https://images.example.test:8443/banner.webp')).toBe(false);
     expect(isSafeImageUrl('javascript:alert(1)')).toBe(false);
     expect(isSafeImageUrl('//attacker.test/image')).toBe(false);
     expect(isSafeStoreLink('/productos/ofertas')).toBe(true);
