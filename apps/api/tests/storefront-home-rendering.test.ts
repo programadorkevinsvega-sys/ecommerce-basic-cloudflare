@@ -71,7 +71,9 @@ describe('storefront presentation', () => {
     expect(html).toContain('Pago contra entrega');
     expect(html).toContain('Mostrando ');
     expect(html).toContain('role="status"');
+    expect(html).toContain('id="catalog-filter-empty" hidden');
     expect(html).not.toContain('Marca Ejemplo');
+    expect(html).not.toContain('Limpiar filtros');
   });
 
   it('renders the discounted effective price and a useful empty state', () => {

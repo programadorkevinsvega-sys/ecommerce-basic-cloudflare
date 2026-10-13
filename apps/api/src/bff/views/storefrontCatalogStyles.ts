@@ -10,8 +10,6 @@ export const storefrontCatalogStyles = String.raw`
     .catalog-filters > summary::-webkit-details-marker { display: none; }
     .catalog-chevron { color: #65716a; transition: transform .18s ease; }
     .catalog-filters[open] .catalog-chevron { transform: rotate(180deg); }
-    .catalog-clear-button { width: 100%; min-height: 40px; margin: .55rem 0 .25rem; border: 0; border-radius: 9px; background: transparent; color: #1f4d3a; font: inherit; font-size: .84rem; font-weight: 650; text-align: left; cursor: pointer; }
-    .catalog-clear-button:hover { background: #e8ebe2; }
     .catalog-filter-group { display: flex; flex-direction: column; gap: .35rem; padding: 1rem 0 .8rem; border-top: 1px solid #e1e4da; }
     .catalog-filter-group h2 { margin: 0 0 .25rem; font-size: .9rem; font-weight: 650; letter-spacing: 0; }
     .catalog-filter-option { display: flex; min-height: 40px; align-items: center; gap: .65rem; padding: 0 .4rem; border-radius: 8px; color: #424e47; font-size: .82rem; cursor: pointer; }
@@ -34,7 +32,7 @@ export const storefrontCatalogStyles = String.raw`
     .catalog-results-count { margin: 0 0 .55rem; color: #65716a; font-size: .78rem; }
     .catalog-cart-feedback { margin: 0 0 .8rem; padding: .7rem .9rem; border: 1px solid #cfe0d5; border-radius: 10px; background: #e4eee8; color: #1f4d3a; font-size: .85rem; }
     .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-    .catalog-grid[hidden], .catalog-grid [hidden] { display: none !important; }
+    .catalog-grid[hidden], .catalog-grid [hidden], .catalog-filter-empty[hidden] { display: none !important; }
     .catalog-filter-empty, .catalog-empty { display: flex; min-height: 280px; flex-direction: column; align-items: center; justify-content: center; gap: .7rem; padding: 2rem; border: 1px solid #e1e4da; border-radius: 16px; background: #fff; text-align: center; }
     .catalog-filter-empty > span, .catalog-empty > span { color: #1f4d3a; font-size: 2rem; }
     .catalog-filter-empty h2, .catalog-empty h2 { margin: 0; font-size: 1.25rem; }
