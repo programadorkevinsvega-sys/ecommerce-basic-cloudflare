@@ -1,5 +1,50 @@
 export function renderStorefrontFormsScript(): string {
   return `
+    async function handleBannerFileUpload(input, prefix) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const statusSpan = document.getElementById(prefix + 'UploadStatus');
+      const imgInput = document.getElementById(prefix + 'Img');
+      const previewImg = document.getElementById(prefix + 'ImgPreview');
+      const altInput = document.getElementById(prefix + 'Alt');
+
+      if (statusSpan) {
+        statusSpan.textContent = '⏳ Subiendo imagen del banner a R2...';
+        statusSpan.style.color = '#38bdf8';
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('altText', altInput?.value || file.name.replace(/\\.[^/.]+$/, ''));
+      formData.append('isPrivate', 'false');
+
+      try {
+        const headers = window.adminHeaders ? window.adminHeaders(false) : {};
+        const res = await fetch('/media/upload', { method: 'POST', headers, body: formData });
+        const json = await res.json();
+        if (res.ok && json.data?.id) {
+          const url = '/media/' + json.data.id;
+          if (imgInput) imgInput.value = url;
+          if (previewImg) previewImg.src = url;
+          if (statusSpan) {
+            statusSpan.textContent = '✅ Imagen subida a R2 y lista';
+            statusSpan.style.color = '#34d399';
+          }
+        } else {
+          if (statusSpan) {
+            statusSpan.textContent = '❌ ' + (json.error || 'Error al subir');
+            statusSpan.style.color = '#f87171';
+          }
+        }
+      } catch (err) {
+        if (statusSpan) {
+          statusSpan.textContent = '❌ Error de conexión al subir imagen';
+          statusSpan.style.color = '#f87171';
+        }
+      }
+    }
+    window.handleBannerFileUpload = handleBannerFileUpload;
+
     async function handleBannerSubmit(e, bannerType) {
       e.preventDefault();
       const isPromo = bannerType === 'promotional';

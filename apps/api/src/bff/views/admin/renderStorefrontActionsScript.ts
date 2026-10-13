@@ -29,6 +29,8 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('pbLink').value = link;
         document.getElementById('pbAlt').value = alt;
         document.getElementById('pbImg').value = img;
+        const pImgPreview = document.getElementById('pbImgPreview');
+        if (pImgPreview) pImgPreview.src = img;
         document.getElementById('pbPlacement').value = placement;
         document.getElementById('pbSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('pbCancelBtn').style.display = 'inline-block';
@@ -39,6 +41,8 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('ibDesc').value = desc || '';
         document.getElementById('ibAlt').value = alt;
         document.getElementById('ibImg').value = img;
+        const iImgPreview = document.getElementById('ibImgPreview');
+        if (iImgPreview) iImgPreview.src = img;
         document.getElementById('ibPlacement').value = placement;
         document.getElementById('ibSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('ibCancelBtn').style.display = 'inline-block';
@@ -51,6 +55,10 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('newPromoBannerForm').reset();
       document.getElementById('pbSubmitBtn').textContent = 'Publicar Banner Promocional';
       document.getElementById('pbCancelBtn').style.display = 'none';
+      const pImgPreview = document.getElementById('pbImgPreview');
+      if (pImgPreview) pImgPreview.src = '/media/banner-default.webp';
+      const pStatus = document.getElementById('pbUploadStatus');
+      if (pStatus) pStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }
 
     function resetInfoBannerForm() {
@@ -58,6 +66,10 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('newInfoBannerForm').reset();
       document.getElementById('ibSubmitBtn').textContent = 'Publicar Banner Informativo';
       document.getElementById('ibCancelBtn').style.display = 'none';
+      const iImgPreview = document.getElementById('ibImgPreview');
+      if (iImgPreview) iImgPreview.src = '/media/banner-default.webp';
+      const iStatus = document.getElementById('ibUploadStatus');
+      if (iStatus) iStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }
 
     async function setAnnouncementStatus(id, isActive) {

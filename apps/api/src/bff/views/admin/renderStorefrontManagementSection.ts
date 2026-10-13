@@ -23,9 +23,16 @@ export function renderStorefrontManagementSection(
       return `
         <tr>
           <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
-            ${escapeHtml(b.title)}
-            ${ctaMeta}
-            ${b.description ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;"><em>"${escapeHtml(b.description)}"</em></div>` : ''}
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <div style="width:40px; height:40px; border-radius:6px; background:#1e293b; overflow:hidden; flex-shrink:0; display:grid; place-items:center;">
+                ${b.imageUrl ? `<img src="${escapeHtml(b.imageUrl)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'" />` : '<span style="font-size:0.6rem; color:#64748b;">Sin img</span>'}
+              </div>
+              <div>
+                ${escapeHtml(b.title)}
+                ${ctaMeta}
+                ${b.description ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;"><em>"${escapeHtml(b.description)}"</em></div>` : ''}
+              </div>
+            </div>
           </td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(b.placement)}</td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155;">
@@ -48,7 +55,7 @@ export function renderStorefrontManagementSection(
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div>
           <h2 style="margin:0;">🎯 Banners Hero Promocionales (${promoBanners.length})</h2>
-          <small style="color:#94a3b8;">Banners de campañas comerciales con botón de acción (CTA) y enlace directo a colección.</small>
+          <small style="color:#94a3b8;">Banners de campañas con botón CTA. Sube una foto a R2 o escribe una URL externa.</small>
         </div>
       </div>
       <form id="newPromoBannerForm" onsubmit="handleBannerSubmit(event, 'promotional')" style="margin-bottom: 1.5rem;">
@@ -58,13 +65,27 @@ export function renderStorefrontManagementSection(
           <div><label>Descripción / Subtítulo</label><input type="text" id="pbDesc" placeholder="Ej. Aprovecha hasta 30% de descuento..." /></div>
           <div><label>Texto del Botón (CTA)</label><input type="text" id="pbBtnText" required value="Explorar colección" placeholder="Ej. Comprar Ahora, Ver Ofertas" /></div>
           <div><label>URL de Destino</label><input type="text" id="pbLink" required value="/productos" /></div>
-          <div><label>URL de Imagen</label><input type="text" id="pbImg" value="/media/banner-default.webp" /></div>
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="pbAlt" required placeholder="Colección destacada..." /></div>
           <div>
             <label>Ubicación</label>
             <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
           </div>
         </div>
+
+        <div style="border: 1px dashed #475569; border-radius: 8px; padding: 0.9rem; margin: 0.85rem 0; background: #0f172a;">
+          <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
+          <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
+            <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
+              <img id="pbImgPreview" src="/media/banner-default.webp" style="width:100%; height:100%; object-fit:cover;" onerror="this.src=''" />
+            </div>
+            <div style="flex:1; min-width:240px;">
+              <input type="file" id="pbFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'pb')" />
+              <input type="text" id="pbImg" value="/media/banner-default.webp" placeholder="https://... o /media/..." oninput="document.getElementById('pbImgPreview').src=this.value" />
+              <div id="pbUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button>
         <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
         <div id="pbMsg" class="msg"></div>
@@ -80,7 +101,7 @@ export function renderStorefrontManagementSection(
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div>
           <h2 style="margin:0;">📢 Banners Hero Informativos (${infoBanners.length})</h2>
-          <small style="color:#94a3b8;">Banners de imagen y texto editorial de marca sin botón de acción comercial.</small>
+          <small style="color:#94a3b8;">Banners de comunicado sin botón CTA. Sube una foto a R2 o escribe una URL externa.</small>
         </div>
       </div>
       <form id="newInfoBannerForm" onsubmit="handleBannerSubmit(event, 'informative')" style="margin-bottom: 1.5rem;">
@@ -88,13 +109,27 @@ export function renderStorefrontManagementSection(
         <div class="form-grid">
           <div><label>Título Informativo</label><input type="text" id="ibTitle" required placeholder="Ej. Envíos Nacionales Seguros" /></div>
           <div><label>Descripción / Mensaje</label><input type="text" id="ibDesc" placeholder="Ej. Calidad garantizada en todas nuestras entregas..." /></div>
-          <div><label>URL de Imagen</label><input type="text" id="ibImg" value="/media/banner-default.webp" /></div>
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="ibAlt" required placeholder="Comunicado de la tienda..." /></div>
           <div>
             <label>Ubicación</label>
             <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option></select>
           </div>
         </div>
+
+        <div style="border: 1px dashed #475569; border-radius: 8px; padding: 0.9rem; margin: 0.85rem 0; background: #0f172a;">
+          <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
+          <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
+            <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
+              <img id="ibImgPreview" src="/media/banner-default.webp" style="width:100%; height:100%; object-fit:cover;" onerror="this.src=''" />
+            </div>
+            <div style="flex:1; min-width:240px;">
+              <input type="file" id="ibFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'ib')" />
+              <input type="text" id="ibImg" value="/media/banner-default.webp" placeholder="https://... o /media/..." oninput="document.getElementById('ibImgPreview').src=this.value" />
+              <div id="ibUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button>
         <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
         <div id="ibMsg" class="msg"></div>
