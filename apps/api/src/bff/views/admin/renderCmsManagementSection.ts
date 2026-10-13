@@ -67,19 +67,62 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
             <input type="text" id="cmsSeoDesc" placeholder="Descripción breve para Google..." maxlength="200" />
           </div>
         </div>
-        <div style="margin-bottom: 1rem;">
-          <label>Contenido Principal (Editor Visual WYSIWYG)</label>
-          <div style="display:flex; gap:0.3rem; margin-bottom:0.4rem; padding:0.4rem; background:#1e293b; border:1px solid #334155; border-radius:6px; flex-wrap:wrap;">
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormat('bold')"><strong>B</strong></button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormat('italic')"><em>I</em></button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormatBlock('h2')">H2</button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormatBlock('h3')">H3</button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormat('insertUnorderedList')">• Lista</button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormat('insertOrderedList')">1. Lista</button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsCreateLink()">🔗 Enlace</button>
-            <button type="button" class="btn-action" style="padding:0.25rem 0.5rem;" onclick="cmsFormatBlock('p')">Párrafo</button>
+        <div style="margin-bottom: 1.25rem;">
+          <label style="font-weight:700; margin-bottom:0.5rem; display:block;">📄 Documento y Contenido Principal (Editor Estilo Word)</label>
+          <!-- Barra de Herramientas Estilo Word -->
+          <div style="display:flex; gap:0.4rem; padding:0.6rem; background:#1e293b; border:1px solid #334155; border-bottom:none; border-radius:8px 8px 0 0; flex-wrap:wrap; align-items:center;">
+            <!-- Jerarquía de Encabezados -->
+            <select onchange="cmsFormatBlock(this.value); this.selectedIndex=0;" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
+              <option value="">Formato…</option>
+              <option value="h1">Título 1 (H1)</option>
+              <option value="h2">Título 2 (H2)</option>
+              <option value="h3">Título 3 (H3)</option>
+              <option value="p">Párrafo Normal</option>
+              <option value="blockquote">Cita destacada</option>
+            </select>
+            <!-- Tamaño de Letra -->
+            <select onchange="cmsFontSize(this.value); this.selectedIndex=0;" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
+              <option value="">Tamaño…</option>
+              <option value="2">Pequeña (13px)</option>
+              <option value="3">Normal (16px)</option>
+              <option value="4">Mediana (18px)</option>
+              <option value="5">Grande (24px)</option>
+              <option value="6">Muy Grande (32px)</option>
+            </select>
+            <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
+            <!-- Estilos de Texto -->
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('bold')" title="Negrita (Ctrl+B)"><strong>B</strong></button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('italic')" title="Cursiva (Ctrl+I)"><em>I</em></button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('underline')" title="Subrayado (Ctrl+U)"><span style="text-decoration:underline;">U</span></button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('strikeThrough')" title="Tachado"><span style="text-decoration:line-through;">S</span></button>
+            <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
+            <!-- Alineación de Párrafo -->
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyLeft')" title="Alinear a la izquierda">⬅️ Izq</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyCenter')" title="Centrar">🎯 Centrar</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyRight')" title="Alinear a la derecha">➡️ Der</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyFull')" title="Justificar">↔️ Justificar</button>
+            <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
+            <!-- Listas -->
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertUnorderedList')" title="Viñetas">• Lista</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertOrderedList')" title="Numeración">1. Lista</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertHorizontalRule')" title="Línea horizontal">➖ Línea</button>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsCreateLink()" title="Insertar enlace">🔗 Enlace</button>
+            <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
+            <!-- Color de Letra y Resaltado -->
+            <label style="display:inline-flex; align-items:center; gap:0.25rem; margin:0; font-size:0.75rem; cursor:pointer;" title="Color del texto">
+              🎨 Color:
+              <input type="color" onchange="cmsFontColor(this.value)" value="#0f172a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:0.25rem; margin:0; font-size:0.75rem; cursor:pointer;" title="Resaltador">
+              🖍️ Resaltar:
+              <input type="color" onchange="cmsHighlightColor(this.value)" value="#fef08a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
+            </label>
+            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; background:#475569; color:#fff;" onclick="cmsFormat('removeFormat')" title="Limpiar formato">🧹 Limpiar</button>
           </div>
-          <div id="cmsEditor" contenteditable="true" style="min-height:160px; padding:0.75rem; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#fff; overflow-y:auto; line-height:1.6;" placeholder="Escribe el contenido de la página aquí..."></div>
+          <!-- Hoja de Documento estilo Word (fondo claro, legible, profesional) -->
+          <div style="background:#0f172a; padding:1.25rem; border:1px solid #334155; border-radius:0 0 8px 8px;">
+            <div id="cmsEditor" contenteditable="true" style="min-height:280px; max-height:550px; padding:2rem; background:#ffffff; color:#0f172a; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.3); overflow-y:auto; line-height:1.75; font-size:1rem; outline:none;" placeholder="Escribe el documento o redacta el contenido aquí..."></div>
+          </div>
           <textarea id="cmsBody" style="display:none;"></textarea>
         </div>
         <button type="submit" class="btn-primary" id="cmsSubmitBtn">Publicar Página CMS</button>

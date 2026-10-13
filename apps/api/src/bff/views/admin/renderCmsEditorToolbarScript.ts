@@ -8,6 +8,19 @@ export function renderCmsEditorToolbarScript(): string {
       document.getElementById('cmsEditor').focus();
       document.execCommand('formatBlock', false, '<' + tag + '>');
     }
+    function cmsFontSize(size) {
+      if (!size) return;
+      document.getElementById('cmsEditor').focus();
+      document.execCommand('fontSize', false, size);
+    }
+    function cmsFontColor(color) {
+      document.getElementById('cmsEditor').focus();
+      document.execCommand('foreColor', false, color);
+    }
+    function cmsHighlightColor(color) {
+      document.getElementById('cmsEditor').focus();
+      document.execCommand('hiliteColor', false, color);
+    }
     function cmsCreateLink() {
       const url = prompt('Ingresa la URL del enlace (ej: /productos o https://...):');
       if (url) {
@@ -30,6 +43,9 @@ export function renderCmsEditorToolbarScript(): string {
     }
     window.cmsFormat = cmsFormat;
     window.cmsFormatBlock = cmsFormatBlock;
+    window.cmsFontSize = cmsFontSize;
+    window.cmsFontColor = cmsFontColor;
+    window.cmsHighlightColor = cmsHighlightColor;
     window.cmsCreateLink = cmsCreateLink;
     window.loadCmsTemplate = loadCmsTemplate;
   `;
