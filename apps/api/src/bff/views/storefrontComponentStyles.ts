@@ -20,26 +20,28 @@ export const storefrontComponentStyles = String.raw`
       scrollbar-width: thin; scrollbar-color: #b9c4b2 transparent;
       scroll-behavior: smooth;
     }
-    .campaign-carousel > .campaign-banner { flex: 0 0 min(92%, 1080px); min-width: 0; margin: 0; scroll-snap-align: start; }
+    .campaign-carousel > .campaign-banner { flex: 0 0 min(94%, 1120px); min-width: 0; margin: 0; scroll-snap-align: center; }
     .campaign-carousel:focus-visible { outline: 3px solid #6b9d26; outline-offset: 3px; }
     .campaign-banner {
-      display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr); align-items: stretch;
-      overflow: hidden; margin-bottom: 2rem; background: var(--primary); color: #fff; border-radius: var(--radius-lg);
+      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); align-items: stretch;
+      overflow: hidden; margin-bottom: 2rem; background: linear-gradient(135deg, #121c17 0%, #1a2a22 100%);
+      color: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(18, 28, 23, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08); position: relative;
     }
-    .campaign-copy { padding: clamp(1.4rem, 4vw, 2.8rem); align-self: center; }
-    .campaign-copy .eyebrow { color: var(--accent); }
-    .campaign-copy h2 { margin: 0 0 .75rem; color: #fff; font-size: clamp(1.65rem, 3vw, 2.6rem); }
-    .campaign-copy p { max-width: 540px; margin: 0 0 1.2rem; color: #d2dcd1; }
+    .campaign-copy { padding: clamp(1.8rem, 4.5vw, 3.2rem); align-self: center; z-index: 2; }
+    .campaign-copy .eyebrow { color: var(--accent); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; display: inline-block; }
+    .campaign-copy h2 { margin: 0 0 .85rem; color: #fff; font-size: clamp(1.65rem, 3.2vw, 2.6rem); font-weight: 800; line-height: 1.18; letter-spacing: -0.03em; }
+    .campaign-copy p { max-width: 540px; margin: 0 0 1.4rem; color: #d5ded8; font-size: 1rem; line-height: 1.55; }
     .campaign-action, .product-action {
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: fit-content;
-      padding: .78rem 1rem; border-radius: 10px; background: var(--accent); color: var(--primary);
-      text-decoration: none; font-size: .9rem; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; width: fit-content;
+      padding: .82rem 1.4rem; border-radius: 12px; background: var(--accent); color: var(--primary);
+      text-decoration: none; font-size: .92rem; font-weight: 800; transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(200, 241, 105, 0.25);
     }
-    .campaign-action:hover, .product-action:hover { background: #d7f994; }
-    .campaign-image { min-height: 240px; background: #34473a; }
-    .campaign-image-missing { display: grid; place-items: center; color: #d2dcd1; }
-    .campaign-image-missing::after { content: 'Imagen de colección no disponible'; padding: 1rem; text-align: center; font-size: .9rem; }
-    .campaign-image img { width: 100%; height: 100%; object-fit: cover; }
+    .campaign-action:hover, .product-action:hover { background: #d7f994; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(200, 241, 105, 0.35); }
+    .campaign-image { position: relative; min-height: 280px; width: 100%; height: 100%; overflow: hidden; background: #1a2921; }
+    .campaign-image-missing { display: none; }
+    .campaign-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
     .search-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     .clear-search { display: inline-flex; align-items: center; padding: 0 .9rem; color: var(--muted); font-size: .88rem; font-weight: 700; text-decoration: none; }
     .clear-search:hover { color: var(--text); }
