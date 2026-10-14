@@ -17,6 +17,10 @@ export function renderAuditManagementSection(): string {
           <button id="audit-page-next" class="audit-page-button" onclick="changeAuditPage(1)" disabled>Siguiente</button>
         </footer>
       </div>
+      <dialog id="audit-detail-dialog" class="audit-detail-dialog" aria-labelledby="audit-detail-title">
+        <header><h2 id="audit-detail-title">Detalle de auditoría</h2><form method="dialog"><button class="audit-detail-close">Cerrar</button></form></header>
+        <pre id="audit-detail-content"></pre>
+      </dialog>
     </section>
   `;
 }

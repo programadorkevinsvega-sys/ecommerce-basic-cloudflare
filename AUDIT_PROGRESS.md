@@ -354,3 +354,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Centralicé el estilo de acciones de filas en Productos, Pedidos, Inventario, Envíos, Facturación, Catálogo, CMS y Marketing: altura de 34 px, tipografía de 12 px, padding, borde, radio, foco accesible y estados hover compartidos.
 - Las acciones neutrales, principales, de publicación/ocultamiento y destructivas mantienen colores semánticos uniformes. Los botones principales de encabezado y formularios conservan su tamaño mayor.
 - TypeScript, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+### Contención del detalle extenso en Auditoría (2026-10-14)
+
+- La tabla mostraba el JSON completo en cada celda de Detalles, forzando que el texto ocupara demasiado espacio y deformara la lectura de la tabla.
+- La celda ahora limita la vista previa a tres líneas y ofrece “Ver detalle”. El diálogo muestra el JSON formateado en un área desplazable, asignándolo como texto para evitar interpretar contenido como HTML. La tabla usa columnas de ancho controlado y mantiene el desplazamiento horizontal solo en pantallas estrechas.
+- Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual con navegador.
