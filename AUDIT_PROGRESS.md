@@ -159,3 +159,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Envíos y cobertura ahora presenta cabecera, formulario agrupado, selección DANE, tabla compacta de zonas y modal de detalle con estilo claro. Se conservaron los mismos controles, IDs, mensajes, acciones, datos DANE, y formularios de creación/edición.
 - Facturación ahora tiene cabecera y tabla adaptable; mantiene consulta, ver/descargar PDF y emisión de notas crédito con los mismos endpoints, IDs y validaciones.
 - Cambios solo de BFF/presentación y CSS; sin modificaciones de dominio, permisos, endpoints, D1 o datos. Diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para el cambio de interfaz.
+- Commit `b706dee` enviado a `main`; publiqué el Worker `07d11b99-5d34-49e3-9eff-48118c5b9c8a`. `/health` posterior respondió `healthy` y D1/KV/Queue/R2 `ok`.
