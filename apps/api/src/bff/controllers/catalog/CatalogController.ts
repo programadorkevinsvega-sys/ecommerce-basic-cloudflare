@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
+import { CatalogGateway, CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
@@ -24,7 +24,7 @@ export class CatalogController {
       const searchQuery = c.req.query('q');
 
       const products = await catalogGateway.listProducts({ limit, offset, status: 'published', searchQuery });
-      return c.json({ data: products.filter((product) => product.status === 'published') });
+      return c.json({ data: products.filter((product) => product.status === 'published').map(publicCatalogProduct) });
     });
 
     router.get('/products/:slug', async (c) => {
@@ -32,7 +32,7 @@ export class CatalogController {
       try {
         const product = await catalogGateway.getProductBySlug(slug);
         if (product.status !== 'published') return c.json({ error: 'Producto no encontrado' }, 404);
-        return c.json({ data: product });
+        return c.json({ data: publicCatalogProduct(product) });
       } catch {
         return c.json({ error: 'Producto no encontrado' }, 404);
       }
@@ -207,4 +207,10 @@ export class CatalogController {
 
     return router;
   }
+}
+
+function publicCatalogProduct(product: CatalogProductDto): Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion'> {
+  const publicProduct: Record<string, unknown> = { ...product };
+  for (const field of ['supplierCostCents', 'targetMarginBasisPoints', 'pricingTargetType', 'targetProfitCents', 'pricingVersion', 'legacyPriceBeforeTaxCents']) delete publicProduct[field];
+  return publicProduct as Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion'>;
 }

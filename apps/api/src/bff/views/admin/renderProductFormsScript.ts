@@ -51,7 +51,9 @@ export function renderProductFormsScript(): string {
         sku: document.getElementById('pSku').value,
         priceInCents: window.copPesosToCents('pPrice'),
         supplierCostCents: window.copPesosToCents('pCost'),
+        pricingTargetType: document.getElementById('pTargetType').value,
         targetMarginBasisPoints: Math.round(Number(document.getElementById('pMargin').value) * 100),
+        targetProfitCents: document.getElementById('pTargetType').value === 'profit' ? window.copPesosToCents('pTargetProfit') : null,
         allowedPaymentMethods: [
           ...(document.getElementById('pPayWompi').checked ? ['wompi'] : []),
           ...(document.getElementById('pPayCod').checked ? ['cash_on_delivery'] : [])

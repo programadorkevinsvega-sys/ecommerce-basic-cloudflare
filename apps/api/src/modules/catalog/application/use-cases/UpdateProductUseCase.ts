@@ -12,6 +12,8 @@ export interface UpdateProductInput {
   priceInCents?: number;
   supplierCostCents?: number | null;
   targetMarginBasisPoints?: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;
@@ -79,6 +81,8 @@ export class UpdateProductUseCase {
           priceInCents: calculateRecommendedPrice({
             supplierCostCents: input.supplierCostCents,
             targetMarginBasisPoints: input.targetMarginBasisPoints ?? product.targetMarginBasisPoints,
+            pricingTargetType: input.pricingTargetType ?? product.pricingTargetType,
+            targetProfitCents: input.targetProfitCents === undefined ? product.targetProfitCents : input.targetProfitCents,
             taxRateBasisPoints: input.taxRateBasisPoints ?? 1900,
             includeWompi: (input.allowedPaymentMethods ?? product.allowedPaymentMethods).includes('wompi'),
             transactionShippingCents: input.transactionShippingCents ?? 0,

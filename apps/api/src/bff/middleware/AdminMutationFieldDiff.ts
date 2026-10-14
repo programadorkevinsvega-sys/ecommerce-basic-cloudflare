@@ -1,5 +1,6 @@
 const SAFE_FIELDS = new Set([
   'id', 'orderId', 'productId', 'name', 'title', 'slug', 'status', 'priceInCents', 'stockQuantity', 'quantity',
+  'pricingTargetType', 'targetProfitCents', 'targetMarginBasisPoints',
   'reservedQuantity', 'availableQuantity', 'sortOrder', 'placement', 'bannerType', 'isActive',
   'startsAt', 'endsAt', 'buttonText', 'altText', 'shippingScope', 'saleMode',
   'allowsCashOnDelivery', 'targetType', 'targetId', 'discountType', 'discountValue',

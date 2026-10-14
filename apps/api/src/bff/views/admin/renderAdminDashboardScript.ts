@@ -92,8 +92,11 @@ export function renderAdminDashboardScript(): string {
         window.setCopInputValue('pPrice', Math.round((p.priceInCents || 0) / 100));
         window.setCopInputValue('pCost', p.supplierCostCents == null ? '' : Math.round(p.supplierCostCents / 100));
         document.getElementById('pMargin').value = Number(p.targetMarginBasisPoints || 2000) / 100;
+        document.getElementById('pTargetType').value = p.pricingTargetType || 'margin';
+        window.setCopInputValue('pTargetProfit', p.targetProfitCents == null ? '' : Math.round(p.targetProfitCents / 100));
         document.getElementById('pPayWompi').checked = (p.allowedPaymentMethods || ['wompi']).includes('wompi');
         document.getElementById('pPayCod').checked = (p.allowedPaymentMethods || []).includes('cash_on_delivery');
+        window.updateProductPricingTargetFields?.();
         window.updateRecommendedProductPrice?.();
         document.getElementById('pStock').value = p.stockQuantity ?? 10;
         document.getElementById('pCondition').value = p.condition || 'new';
@@ -144,6 +147,8 @@ export function renderAdminDashboardScript(): string {
     function resetProductForm() {
       document.getElementById('pEditId').value = '';
       document.getElementById('newProductForm').reset();
+      window.updateProductPricingTargetFields?.();
+      window.updateRecommendedProductPrice?.();
       const wrap = document.getElementById('pLocalZonesWrapper');
       if (wrap) wrap.style.display = 'none';
       window.currentProductMediaIds = [];

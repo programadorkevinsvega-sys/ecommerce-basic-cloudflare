@@ -12,6 +12,8 @@ export interface CreateProductInput {
   priceInCents: number;
   supplierCostCents?: number;
   targetMarginBasisPoints?: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;
@@ -65,7 +67,7 @@ export class CreateProductUseCase {
       const now = new Date().toISOString();
       const allowedPaymentMethods = input.allowedPaymentMethods || ['wompi', ...(input.allowsCashOnDelivery ? ['cash_on_delivery' as const] : [])];
       const pricing = input.supplierCostCents !== undefined
-          ? calculateRecommendedPrice({ supplierCostCents: input.supplierCostCents, targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000, taxRateBasisPoints: input.taxRateBasisPoints ?? 1900, includeWompi: allowedPaymentMethods.includes('wompi'), transactionShippingCents: input.transactionShippingCents ?? 0 })
+          ? calculateRecommendedPrice({ supplierCostCents: input.supplierCostCents, targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000, pricingTargetType: input.pricingTargetType ?? 'margin', targetProfitCents: input.targetProfitCents, taxRateBasisPoints: input.taxRateBasisPoints ?? 1900, includeWompi: allowedPaymentMethods.includes('wompi'), transactionShippingCents: input.transactionShippingCents ?? 0 })
         : null;
       const product = new Product({
         id: crypto.randomUUID(),
@@ -75,6 +77,8 @@ export class CreateProductUseCase {
         priceInCents: pricing?.priceInCents ?? input.priceInCents,
         supplierCostCents: input.supplierCostCents ?? null,
         targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000,
+        pricingTargetType: input.pricingTargetType ?? 'margin',
+        targetProfitCents: input.targetProfitCents ?? null,
         allowedPaymentMethods,
         pricingVersion: pricing ? 2 : 1,
         sku: input.sku,

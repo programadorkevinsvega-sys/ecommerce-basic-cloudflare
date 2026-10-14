@@ -98,6 +98,13 @@ Declaraciones de columnas/restricciones:
 - `slug TEXT NOT NULL UNIQUE`
 - `description TEXT NOT NULL`
 - `price_in_cents INTEGER NOT NULL`
+- `supplier_cost_cents INTEGER` (catalog v4)
+- `target_margin_basis_points INTEGER NOT NULL DEFAULT 2000` (catalog v4)
+- `pricing_target_type TEXT NOT NULL DEFAULT 'margin' CHECK (pricing_target_type IN ('margin', 'profit'))` (catalog v5)
+- `target_profit_cents INTEGER CHECK (target_profit_cents IS NULL OR target_profit_cents >= 0)` (catalog v5)
+- `allowed_payment_methods TEXT NOT NULL DEFAULT '["wompi","cash_on_delivery"]'` (catalog v4)
+- `pricing_version INTEGER NOT NULL DEFAULT 1` (catalog v4)
+- `legacy_price_before_tax_cents INTEGER` (catalog v4)
 - `sku TEXT NOT NULL UNIQUE`
 - `stock_quantity INTEGER NOT NULL DEFAULT 0`
 - `status TEXT NOT NULL DEFAULT 'draft'`

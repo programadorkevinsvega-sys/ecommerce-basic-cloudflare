@@ -1,38 +1,6 @@
-import { Product, ProductStatus, ProductCondition } from '../../../../domain/entities/Product.js';
-import { ProductSalePolicy, ShippingScope, SaleMode } from '../../../../domain/entities/ProductSalePolicy.js';
+import { Product } from '../../../../domain/entities/Product.js';
 import { IProductRepository } from '../../../../domain/ports/IProductRepository.js';
-
-interface ProductRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price_in_cents: number;
-  supplier_cost_cents: number | null;
-  target_margin_basis_points: number;
-  allowed_payment_methods: string;
-  pricing_version: number;
-  legacy_price_before_tax_cents: number | null;
-  sku: string;
-  stock_quantity: number;
-  status: string;
-  condition: string;
-  specifications: string;
-  brand?: string;
-  product_type?: string;
-  tags: string;
-  barcode_gtin?: string;
-  seo_title?: string;
-  seo_description?: string;
-  canonical_url?: string;
-  og_image_id?: string;
-  noindex: number;
-  allows_cash_on_delivery: number;
-  shipping_scope: string;
-  sale_mode: string;
-  created_at: string;
-  updated_at: string;
-}
+import { D1ProductMapper, ProductRow } from './D1ProductMapper.js';
 
 export class D1ProductRepository implements IProductRepository {
   private readonly db: D1Database;
@@ -44,13 +12,13 @@ export class D1ProductRepository implements IProductRepository {
   public async findById(id: string): Promise<Product | null> {
     const row = await this.db.prepare('SELECT * FROM catalog_products WHERE id = ?').bind(id).first<ProductRow>();
     if (!row) return null;
-    return this.hydrate(row);
+    return D1ProductMapper.hydrate(row, this.db);
   }
 
   public async findBySlug(slug: string): Promise<Product | null> {
     const row = await this.db.prepare('SELECT * FROM catalog_products WHERE slug = ?').bind(slug).first<ProductRow>();
     if (!row) return null;
-    return this.hydrate(row);
+    return D1ProductMapper.hydrate(row, this.db);
   }
 
   public async save(product: Product): Promise<void> {
@@ -58,11 +26,11 @@ export class D1ProductRepository implements IProductRepository {
     await this.db.batch([
       this.db.prepare(
         `INSERT INTO catalog_products (
-          id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
+          id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, pricing_target_type, target_profit_cents, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
           status, condition, specifications, brand, product_type, tags, barcode_gtin,
           seo_title, seo_description, canonical_url, og_image_id, noindex,
           allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
@@ -70,6 +38,8 @@ export class D1ProductRepository implements IProductRepository {
           price_in_cents = excluded.price_in_cents,
           supplier_cost_cents = excluded.supplier_cost_cents,
           target_margin_basis_points = excluded.target_margin_basis_points,
+          pricing_target_type = excluded.pricing_target_type,
+          target_profit_cents = excluded.target_profit_cents,
           allowed_payment_methods = excluded.allowed_payment_methods,
           pricing_version = excluded.pricing_version,
           legacy_price_before_tax_cents = excluded.legacy_price_before_tax_cents,
@@ -93,6 +63,7 @@ export class D1ProductRepository implements IProductRepository {
           updated_at = excluded.updated_at`
       ).bind(
         p.id, p.name, p.slug, p.description, p.priceInCents, p.supplierCostCents, p.targetMarginBasisPoints,
+        p.pricingTargetType, p.targetProfitCents,
         JSON.stringify(p.allowedPaymentMethods), p.pricingVersion, p.legacyPriceBeforeTaxCents, p.sku, p.stockQuantity,
         p.status, p.condition, JSON.stringify(p.specifications), p.brand ?? null,
         p.productType ?? null, JSON.stringify(p.tags), p.barcodeGtin ?? null,
@@ -141,7 +112,7 @@ export class D1ProductRepository implements IProductRepository {
     params.push(limit, offset);
 
     const { results } = await this.db.prepare(query).bind(...params).all<ProductRow>();
-    return Promise.all((results || []).map((r) => this.hydrate(r)));
+    return Promise.all((results || []).map((row) => D1ProductMapper.hydrate(row, this.db)));
   }
 
   public async search(query: string, limit: number, offset: number): Promise<Product[]> {
@@ -159,59 +130,4 @@ export class D1ProductRepository implements IProductRepository {
     return products;
   }
 
-  private async hydrate(row: ProductRow): Promise<Product> {
-    const categories = await this.db.prepare('SELECT category_id FROM catalog_product_categories WHERE product_id = ?').bind(row.id).all<{ category_id: string }>();
-    const images = await this.db.prepare('SELECT media_id FROM catalog_product_images WHERE product_id = ? ORDER BY sort_order ASC').bind(row.id).all<{ media_id: string }>();
-    const coverage = await this.db.prepare('SELECT zone_id FROM catalog_product_coverage WHERE product_id = ?').bind(row.id).all<{ zone_id: string }>();
-
-    let specs: Record<string, unknown> = {};
-    try { specs = JSON.parse(row.specifications || '{}'); } catch { specs = {}; }
-
-    let tags: string[] = [];
-    try { tags = JSON.parse(row.tags || '[]'); } catch { tags = []; }
-
-    return new Product({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      description: row.description,
-      priceInCents: row.price_in_cents,
-      supplierCostCents: row.supplier_cost_cents, targetMarginBasisPoints: row.target_margin_basis_points,
-      allowedPaymentMethods: this.parsePaymentMethods(row.allowed_payment_methods),
-      pricingVersion: row.pricing_version,
-      legacyPriceBeforeTaxCents: row.legacy_price_before_tax_cents,
-      sku: row.sku,
-      stockQuantity: row.stock_quantity,
-      status: row.status as ProductStatus,
-      condition: (row.condition || 'new') as ProductCondition,
-      specifications: specs,
-      brand: row.brand ?? undefined,
-      productType: row.product_type ?? undefined,
-      tags,
-      barcodeGtin: row.barcode_gtin ?? undefined,
-      seoTitle: row.seo_title ?? undefined,
-      seoDescription: row.seo_description ?? undefined,
-      canonicalUrl: row.canonical_url ?? undefined,
-      ogImageId: row.og_image_id ?? undefined,
-      noindex: row.noindex === 1,
-      salePolicy: new ProductSalePolicy({
-        allowsCashOnDelivery: row.allows_cash_on_delivery === 1,
-        shippingScope: row.shipping_scope as ShippingScope,
-        localCoverageZones: (coverage.results || []).map((c) => c.zone_id),
-        saleMode: row.sale_mode as SaleMode,
-      }),
-      categoryIds: (categories.results || []).map((c) => c.category_id),
-      mediaIds: (images.results || []).map((i) => i.media_id),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    });
-  }
-
-  private parsePaymentMethods(value: string): Array<'wompi' | 'cash_on_delivery'> {
-    try {
-      const parsed: unknown = JSON.parse(value);
-      if (Array.isArray(parsed)) return parsed.filter((item): item is 'wompi' | 'cash_on_delivery' => item === 'wompi' || item === 'cash_on_delivery');
-    } catch { /* Backward-compatible fallback for rows created before payment metadata. */ }
-    return ['wompi', 'cash_on_delivery'];
-  }
 }

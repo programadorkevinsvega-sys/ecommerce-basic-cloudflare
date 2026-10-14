@@ -19,4 +19,9 @@ describe('precio recomendado por margen sobre venta', () => {
     expect(() => calculateRecommendedPrice({ supplierCostCents: 6_000_000, targetMarginBasisPoints: 9999, taxRateBasisPoints: 1900, includeWompi: true, transactionShippingCents: 900_000 }))
       .toThrow('El margen no es alcanzable con Wompi');
   });
+
+  it('calcula el precio para obtener una ganancia neta fija en pesos', () => {
+    const result = calculateRecommendedPrice({ supplierCostCents: 6_000_000, targetMarginBasisPoints: 2000, pricingTargetType: 'profit', targetProfitCents: 2_000_000, taxRateBasisPoints: 1900, includeWompi: true, transactionShippingCents: 900_000 });
+    expect(result.estimatedNetProfitCents).toBeGreaterThanOrEqual(2_000_000);
+  });
 });

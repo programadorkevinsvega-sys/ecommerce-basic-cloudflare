@@ -1,6 +1,8 @@
 export interface RecommendedPriceInput {
   supplierCostCents: number;
   targetMarginBasisPoints: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   taxRateBasisPoints: number;
   includeWompi: boolean;
   transactionShippingCents: number;
@@ -16,10 +18,13 @@ export interface RecommendedPrice {
 
 export function calculateRecommendedPrice(input: RecommendedPriceInput): RecommendedPrice {
   const { supplierCostCents: cost, targetMarginBasisPoints: margin, taxRateBasisPoints: tax } = input;
-  if (![cost, margin, tax].every(Number.isSafeInteger) || cost < 0 || margin < 0 || margin >= 10000 || tax < 0) {
+  const targetType = input.pricingTargetType ?? 'margin';
+  if (![cost, tax].every(Number.isSafeInteger) || cost < 0 || tax < 0 ||
+    targetType === 'margin' && (!Number.isSafeInteger(margin) || margin < 0 || margin >= 10000) ||
+    targetType === 'profit' && (!Number.isSafeInteger(input.targetProfitCents) || Number(input.targetProfitCents) < 0)) {
     throw new Error('Parámetros de precio inválidos');
   }
-  assertMarginIsReachable(input);
+  if (targetType === 'margin') assertMarginIsReachable(input);
   let low = cost;
   let high = Math.max(cost + 100000, Math.ceil(cost * 4 + 100000));
   if (!Number.isSafeInteger(high)) high = Number.MAX_SAFE_INTEGER;
@@ -58,5 +63,8 @@ function meetsTarget(price: number, input: RecommendedPriceInput): boolean {
   const tax = Math.round(price * input.taxRateBasisPoints / (10000 + input.taxRateBasisPoints));
   const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
   const netSales = price - tax;
-  return netSales - input.supplierCostCents - fee + (input.includeWompi ? 70000 : 0) >= netSales * input.targetMarginBasisPoints / 10000;
+  const netProfit = netSales - input.supplierCostCents - fee + (input.includeWompi ? 70000 : 0);
+  return input.pricingTargetType === 'profit'
+    ? netProfit >= Number(input.targetProfitCents)
+    : netProfit >= netSales * input.targetMarginBasisPoints / 10000;
 }

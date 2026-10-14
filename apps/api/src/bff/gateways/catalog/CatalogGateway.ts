@@ -7,6 +7,8 @@ export interface CreateProductGatewayRequest {
   priceInCents: number;
   supplierCostCents?: number;
   targetMarginBasisPoints?: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;
@@ -40,6 +42,8 @@ export interface UpdateProductGatewayRequest {
   priceInCents?: number;
   supplierCostCents?: number | null;
   targetMarginBasisPoints?: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;
@@ -73,6 +77,8 @@ export interface CatalogProductDto {
   priceInCents: number;
   supplierCostCents?: number | null;
   targetMarginBasisPoints?: number;
+  pricingTargetType?: 'margin' | 'profit';
+  targetProfitCents?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   pricingVersion?: number;
   sku: string;

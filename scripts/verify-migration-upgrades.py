@@ -26,7 +26,7 @@ def check_fresh_schema() -> None:
     assert "guest_cart_id_hash" in order_columns, "Guest order ownership migration is missing"
     assert db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='inventory_order_consumptions'").fetchone(), "Idempotent inventory migration is missing"
     catalog_columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_products)")}
-    assert {"supplier_cost_cents", "target_margin_basis_points", "allowed_payment_methods", "pricing_version"} <= catalog_columns
+    assert {"supplier_cost_cents", "target_margin_basis_points", "pricing_target_type", "target_profit_cents", "allowed_payment_methods", "pricing_version"} <= catalog_columns
     assert "legacy_price_before_tax_cents" in catalog_columns
     order_columns = {row[1] for row in db.execute("PRAGMA table_info(orders_orders)")}
     assert {"tax_cents", "pricing_version", "estimated_payment_fee_cents"} <= order_columns
@@ -116,7 +116,12 @@ def check_legacy_backfills() -> None:
     assert legacy == (10000, 1, None, 2000), legacy
     catalog.execute("UPDATE catalog_products SET supplier_cost_cents=5000,allowed_payment_methods='[\"wompi\"]',pricing_version=2 WHERE id='p'")
     assert catalog.execute("SELECT supplier_cost_cents,allowed_payment_methods,pricing_version FROM catalog_products WHERE id='p'").fetchone() == (5000, '["wompi"]', 2)
-    print("Legacy catalog upgrade passed (price unchanged; pricing metadata persisted).")
+    catalog.executescript((catalog_path / "0005_profit_target_pricing.sql").read_text(encoding="utf-8"))
+    defaults = catalog.execute("SELECT price_in_cents,pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone()
+    assert defaults == (10000, "margin", None), defaults
+    catalog.execute("UPDATE catalog_products SET pricing_target_type='profit',target_profit_cents=2000000 WHERE id='p'")
+    assert catalog.execute("SELECT pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone() == ("profit", 2000000)
+    print("Legacy catalog upgrade passed (price unchanged; existing margin retained; fixed profit metadata persisted).")
 
     invoices = sqlite3.connect(":memory:")
     invoice_path = MIGRATIONS / "invoicing/infrastructure/persistence/d1/migrations"
