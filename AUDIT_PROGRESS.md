@@ -104,4 +104,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El panel carga “Contra Entrega” desde `salePolicy.allowsCashOnDelivery` sin exigir el antiguo elemento duplicado `cash_on_delivery`; al guardar reconstruye la lista canónica. El checkout público decide COD desde esa misma política, evitando mostrar “Ningún medio de pago” para ese estado legado.
 - Agregadas regresiones para lista vacía heredada, checkout COD-only y creación autoritativa del pedido sin comisión Wompi.
 - Verificaciones: `pnpm test` (40 archivos, 110 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm lint`, `pnpm typecheck`, `git diff --check`, Wrangler deploy dry-run. Sin cambios de esquema ni escrituras en D1.
-- Pendiente: commit/push, publicar versión Worker y comprobar `/health`.
+- Commit `65a74ba` enviado a `main`; Worker publicado como `bc8dfab4-ae53-4f3f-9fea-ec690388e284`. `/health` posterior respondió `healthy` con D1/KV/Queue/R2 en `ok`. No se tocaron migraciones ni datos de producción.
