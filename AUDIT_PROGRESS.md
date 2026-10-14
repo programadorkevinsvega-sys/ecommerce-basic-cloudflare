@@ -184,4 +184,5 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - Recaudos contra entrega ahora presenta primero la tabla de recaudos ya registrados y el botón “Crear nuevo recaudo”; el formulario abre en un modal. Conciliar muestra la lista de liquidaciones y “Crear conciliación” abre su formulario en otro modal.
 - Las filas consumen las listas que ya devuelve `GET /api/v1/admin/payments`; se conservaron POST, permisos, validaciones y contratos existentes. No hubo cambios en backend de negocio, D1 ni datos.
-- Validaciones: `pnpm typecheck`, `pnpm lint` (incluye arquitectura/límite 200 líneas), `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No se ejecutaron pruebas automatizadas para este cambio de presentación. Commit/push y comprobación de deployment pendientes.
+- Validaciones: `pnpm typecheck`, `pnpm lint` (incluye arquitectura/límite 200 líneas), `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No se ejecutaron pruebas automatizadas para este cambio de presentación.
+- Commit `022d28e` enviado a `main`. El push no generó deployment; publiqué con `pnpm --filter @ecommerce/api run deploy`, versión `e1a1f6e5-4220-49de-8af8-fd379c3b59f5`. `/health` respondió `healthy`, D1/KV/Queue/R2 `ok`.
