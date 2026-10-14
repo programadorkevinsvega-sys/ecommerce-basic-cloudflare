@@ -2,49 +2,6 @@ export function renderProductFormsScript(): string {
   return `
     window.currentProductMediaIds = [];
 
-    function updateRecommendedProductPrice() {
-      const costInput = document.getElementById('pCost');
-      if (!costInput?.value.trim()) {
-        window.setCopInputValue('pPrice', '');
-        document.getElementById('pPriceBreakdown').textContent = 'Ingresa el costo del proveedor en pesos colombianos para calcular el precio recomendado.';
-        return;
-      }
-      const cost = window.copPesosToCents('pCost');
-      const marginBps = Math.round(Number(document.getElementById('pMargin')?.value) * 100);
-      const includeWompi = document.getElementById('pPayWompi')?.checked;
-      if (!Number.isSafeInteger(cost) || cost < 0 || !Number.isSafeInteger(marginBps) || marginBps <= 0 || marginBps >= 10000) return;
-      const shipping = Number(document.getElementById('transactionShippingCents')?.value || 0);
-      const fee = (price) => includeWompi ? Math.round((Math.ceil((price + shipping + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
-      const meets = (price) => {
-        const taxRate = Number(document.getElementById('productTaxRate')?.value || 19);
-        const tax = Math.round(price * taxRate / (100 + taxRate));
-        const net = price - tax;
-        return net - cost - fee(price) >= net * marginBps / 10000;
-      };
-      let low = cost, high = Math.max(cost * 4 + 100000, 100000);
-      while (!meets(high)) high *= 2;
-      while (low < high) { const mid = Math.floor((low + high) / 2); if (meets(mid)) high = mid; else low = mid + 1; }
-      window.setCopInputValue('pPrice', Math.ceil(low / 100));
-      const taxRate = Number(document.getElementById('productTaxRate')?.value || 19);
-      const tax = Math.round(low * taxRate / (100 + taxRate));
-      const grossFee = fee(low);
-      const buyerTransactionFee = includeWompi ? 70000 : 0;
-      const netFeeCost = Math.max(0, grossFee - buyerTransactionFee);
-      const netProfit = low - tax - cost - netFeeCost;
-      const netSales = low - tax;
-      const actualMargin = netSales > 0 ? (netProfit / netSales * 100).toFixed(2) : '0,00';
-      const pesos = (cents) => '$' + Math.round(cents / 100).toLocaleString('es-CO');
-      document.getElementById('pPriceBreakdown').innerHTML = '<dl class="price-breakdown">' +
-        '<div><dt>Precio bruto del producto (IVA incluido)</dt><dd>' + pesos(low) + '</dd></div>' +
-        '<div><dt>IVA incluido estimado</dt><dd>' + pesos(tax) + '</dd></div>' +
-        '<div><dt>Costo del proveedor</dt><dd>' + pesos(cost) + '</dd></div>' +
-        (includeWompi ? '<div><dt>Costo Wompi estimado, neto del cargo cobrado al comprador</dt><dd>' + pesos(netFeeCost) + '</dd></div>' : '') +
-        '<div class="price-breakdown-total"><dt>Ganancia neta estimada</dt><dd>' + pesos(netProfit) + '</dd></div>' +
-        '<div><dt>Margen real sobre venta sin IVA</dt><dd>' + actualMargin.replace('.', ',') + '%</dd></div>' +
-        '</dl><p>El precio bruto es el total del producto antes del envío. Los $700 de transacción se suman una sola vez en checkout; el costo Wompi mostrado descuenta ese valor. La comisión varía según pago y envío.</p>';
-    }
-    ['pCost', 'pMargin', 'pPayWompi'].forEach((id) => document.getElementById(id)?.addEventListener('input', updateRecommendedProductPrice));
-
     function updateProductMediaGrid() {
       const grid = document.getElementById('pMediaGrid');
       const hiddenInput = document.getElementById('pMediaIdsJson');

@@ -14,4 +14,9 @@ describe('precio recomendado por margen sobre venta', () => {
     expect(result.estimatedPaymentFeeCents).toBe(0);
     expect(result.estimatedMarginBasisPoints).toBeGreaterThanOrEqual(2000);
   });
+
+  it('rechaza pronto márgenes que superan el máximo matemático de Wompi', () => {
+    expect(() => calculateRecommendedPrice({ supplierCostCents: 6_000_000, targetMarginBasisPoints: 9999, taxRateBasisPoints: 1900, includeWompi: true, transactionShippingCents: 900_000 }))
+      .toThrow('El margen no es alcanzable con Wompi');
+  });
 });

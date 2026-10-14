@@ -9,6 +9,7 @@ import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
 import { renderCopInputScript } from './renderCopInputScript.js';
 import { renderStorefrontActionsScript } from './renderStorefrontActionsScript.js';
 import { renderProductFormsScript } from './renderProductFormsScript.js';
+import { renderProductPricingScript } from './renderProductPricingScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
 import { renderCmsFormsScript } from './renderCmsFormsScript.js';
 import { renderPromotionsFormsScript } from './renderPromotionsFormsScript.js';
@@ -162,6 +163,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     window.escapeHtml = escapeHtml;
   </script>
   <script>${renderCopInputScript()}</script>
+  <script>${renderProductPricingScript()}</script>
   <script>${renderAdminDashboardScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>

@@ -19,9 +19,14 @@ export function calculateRecommendedPrice(input: RecommendedPriceInput): Recomme
   if (![cost, margin, tax].every(Number.isSafeInteger) || cost < 0 || margin < 0 || margin >= 10000 || tax < 0) {
     throw new Error('Parámetros de precio inválidos');
   }
+  assertMarginIsReachable(input);
   let low = cost;
   let high = Math.max(cost + 100000, Math.ceil(cost * 4 + 100000));
-  while (!meetsTarget(high, input)) high *= 2;
+  if (!Number.isSafeInteger(high)) high = Number.MAX_SAFE_INTEGER;
+  while (!meetsTarget(high, input)) {
+    if (high >= Number.MAX_SAFE_INTEGER / 2) throw new Error('El precio recomendado excede el límite calculable');
+    high *= 2;
+  }
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
     if (meetsTarget(mid, input)) high = mid;
@@ -39,6 +44,14 @@ export function calculateRecommendedPrice(input: RecommendedPriceInput): Recomme
     estimatedNetProfitCents: netProfit,
     estimatedMarginBasisPoints: netSales ? Math.floor(netProfit * 10000 / netSales) : 0,
   };
+}
+
+function assertMarginIsReachable(input: RecommendedPriceInput): void {
+  if (!input.includeWompi) return;
+  const maximumMarginBasisPoints = 10000 - (409 * 119 * (10000 + input.taxRateBasisPoints)) / 1000000;
+  if (input.targetMarginBasisPoints >= Math.ceil(maximumMarginBasisPoints)) {
+    throw new Error(`El margen no es alcanzable con Wompi; debe ser inferior a ${Math.floor(maximumMarginBasisPoints) / 100}%`);
+  }
 }
 
 function meetsTarget(price: number, input: RecommendedPriceInput): boolean {
