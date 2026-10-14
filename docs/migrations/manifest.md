@@ -52,6 +52,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `catalog__0004_product_pricing.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; 8 productos siguen v1, sin conversión de precios |
 | `catalog__0005_profit_target_pricing.sql` | v5 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aplicada desde esquema vacío y anterior; defaults conservan margen y precio; segunda ejecución sin cambios |
 | `catalog__0005_profit_target_pricing.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; 8 productos default `margin`, sin objetivo fijo ni cambios de precio |
+| `catalog__0006_suppliers_variants.sql` | v6 | Local temporal | 2026-10-14 | trabajo actual | ✅ Aplicada desde D1 vacía junto con las 38 migraciones previas; segunda pasada idempotente |
+| `catalog__0006_suppliers_variants.sql` | v6 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada y verificada en `d1_migrations` y `sqlite_master`; tablas confirmadas |
 
 ---
 
