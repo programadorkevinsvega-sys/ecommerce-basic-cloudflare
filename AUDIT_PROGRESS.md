@@ -504,4 +504,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - La captura mostró que `Eliminar` envolvía a una segunda línea porque los cuatro controles excedían el ancho de la columna. Aumenté el espacio de la columna de acciones de artículos y configuré sus controles para permanecer en una sola línea en escritorios; en pantallas estrechas pueden envolver para conservar accesibilidad.
 - Pruebas: UI Blog (7), typecheck, lint de arquitectura, `git diff --check` y Wrangler dry-run.
-- Despliegue pendiente.
+- Commit `0df16a7` enviado a `main`; Worker desplegado en la versión `5af29e9c-a09a-47df-8fcd-e1142e74a632`.
