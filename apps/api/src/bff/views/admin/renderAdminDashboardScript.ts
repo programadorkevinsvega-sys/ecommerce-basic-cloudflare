@@ -145,6 +145,7 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSaleMode').value = p.salePolicy?.saleMode || 'both';
         document.getElementById('pDesc').value = p.description || '';
         document.getElementById('pSpecs').value = JSON.stringify(p.specifications || {});
+        window.setProductAttributeValues?.(p.specifications || {});
         document.getElementById('pSeoTitle').value = p.seoTitle || '';
         document.getElementById('pCanonical').value = p.canonicalUrl || '';
         document.getElementById('pSeoDesc').value = p.seoDescription || '';

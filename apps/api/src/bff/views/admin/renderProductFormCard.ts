@@ -1,7 +1,8 @@
 import { ShippingZoneDto } from '../../gateways/shipping/ShippingGateway.js';
 import { BrandDto } from '../../gateways/catalog/CatalogGateway.js';
+import { AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 
-export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = []): string {
+export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = []): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national');
   const registeredBrands = brands.map((brand) => brand.name);
   const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
@@ -10,6 +11,13 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
   const zoneOptions = localZones.map((z) =>
     `<option value="${escapeHtml(z.id)}">${escapeHtml(z.name)} (${escapeHtml(z.type)})</option>`
   ).join('');
+  const attributeFields = attributes.map((attribute) => {
+    const fieldId = `pAttr-${escapeHtml(attribute.code)}`;
+    const control = attribute.type === 'select'
+      ? `<select id="${fieldId}" data-product-attribute="${escapeHtml(attribute.code)}"><option value="">Sin especificar</option>${attribute.options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('')}</select>`
+      : `<input id="${fieldId}" data-product-attribute="${escapeHtml(attribute.code)}" type="${attribute.type === 'number' ? 'number' : 'text'}" />`;
+    return `<div><label for="${fieldId}">${escapeHtml(attribute.name)}</label>${control}</div>`;
+  }).join('');
 
   return `
     <div class="card" style="margin-bottom:1rem;">
@@ -73,6 +81,11 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
         <div style="margin-bottom: 1rem;">
           <label>Descripción</label>
           <textarea id="pDesc" rows="2" required placeholder="Descripción detallada del producto..."></textarea>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <h3>Atributos del producto</h3>
+          <p>Los valores seleccionados se guardan con las especificaciones del producto.</p>
+          <div class="form-grid" id="productAttributes">${attributeFields || '<p>No hay atributos configurados. Crea opciones desde Catálogo → Atributos.</p>'}</div>
         </div>
         <div style="margin-bottom: 1rem;">
           <label>Especificaciones Técnicas (JSON)</label>

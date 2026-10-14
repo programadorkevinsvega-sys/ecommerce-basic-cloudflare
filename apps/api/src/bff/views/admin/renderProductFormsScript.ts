@@ -2,6 +2,12 @@ export function renderProductFormsScript(): string {
   return `
     window.currentProductMediaIds = [];
 
+    window.setProductAttributeValues = (specifications = {}) => {
+      document.querySelectorAll('[data-product-attribute]').forEach((field) => {
+        field.value = specifications[field.dataset.productAttribute] ?? '';
+      });
+    };
+
     function updateProductMediaGrid() {
       const grid = document.getElementById('pMediaGrid');
       const hiddenInput = document.getElementById('pMediaIdsJson');
@@ -43,6 +49,11 @@ export function renderProductFormsScript(): string {
         msg.style.display = 'block';
         return;
       }
+
+      document.querySelectorAll('[data-product-attribute]').forEach((field) => {
+        if (field.value !== '') specs[field.dataset.productAttribute] = field.type === 'number' ? Number(field.value) : field.value;
+        else delete specs[field.dataset.productAttribute];
+      });
 
       const tags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(Boolean);
       const payload = {

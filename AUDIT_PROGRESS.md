@@ -265,3 +265,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La administración de Catálogo permite guardar descripción al crear una marca y editar la descripción de marcas existentes. El endpoint de actualización requiere `catalog:edit` y registra la mutación en auditoría. Se reutiliza la columna `catalog_brands.description`; no requiere migración.
 - Las tarjetas de marcas en Inicio enlazan a la página individual cuando la marca está registrada; los nombres históricos sin entidad conservan búsqueda de productos.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador. Pendiente confirmar las páginas en el despliegue.
+
+### Atributos seleccionables al crear productos (2026-10-14)
+
+- El formulario de producto ahora recibe los atributos registrados. Los de tipo `select` muestran sus opciones; los de tipo texto y número muestran el control correspondiente.
+- Los valores se guardan dentro de `specifications` usando el código del atributo, aparecen al editar el producto y continúan visibles en sus especificaciones públicas. No requiere cambio de esquema ni migración.
+- La entidad independiente de variantes (combinaciones con SKU/stock/precio propios) no existe en el modelo actual; esta corrección asigna valores de atributos al producto existente y no simula una tabla de variantes.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice verificación visual en navegador.
