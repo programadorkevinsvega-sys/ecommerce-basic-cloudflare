@@ -512,4 +512,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Banners promocionales e informativos ya no referencian `/media/banner-default.webp` (no existía en el repositorio ni como recurso de media). La vista previa muestra “Sin imagen”, se actualiza al pegar URL/subir archivo, y el formulario requiere una imagen antes de publicar para evitar guardar la ruta rota.
 - La carga existente a R2 no cambió. Abarca los inputs de imágenes de productos, banners, marcas, colecciones, autores y artículos.
 - Pruebas: `pnpm test` (46 archivos/139 pruebas), tests dirigidos de UI (19), typecheck, lint, `git diff --check` y Wrangler dry-run aprobados.
-- Commit, push y despliegue pendientes.
+- Commit `e83bbff` enviado a `main`; Worker desplegado en la versión `b8aabb42-bf58-4b09-a881-833afe3ad16b`. `/health` respondió HTTP 200 tras publicar.
