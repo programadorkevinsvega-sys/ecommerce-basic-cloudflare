@@ -67,6 +67,20 @@ def check_fresh_schema() -> None:
 
 
 def check_legacy_backfills() -> None:
+    cms = sqlite3.connect(":memory:")
+    cms_path = MIGRATIONS / "cms/infrastructure/persistence/d1/migrations"
+    cms.executescript((cms_path / "0001_init.sql").read_text(encoding="utf-8"))
+    cms.execute("INSERT INTO cms_pages(id,title,slug,status,current_version,created_at,updated_at) VALUES('legacy-page','Página existente','sobre-nosotros','published',1,'t0','t0')")
+    cms.execute("INSERT INTO cms_page_versions(id,page_id,version_number,title,blocks,created_at) VALUES('legacy-version','legacy-page',1,'Página existente','[]','t0')")
+    cms.executescript((cms_path / "0002_institutional_pages.sql").read_text(encoding="utf-8"))
+    cms.executescript((cms_path / "0003_blog.sql").read_text(encoding="utf-8"))
+    cms.executescript((cms_path / "0003_blog.sql").read_text(encoding="utf-8"))
+    assert cms.execute("SELECT title,status FROM cms_pages WHERE id='legacy-page'").fetchone() == ("Página existente", "published")
+    assert {row[0] for row in cms.execute("SELECT name FROM sqlite_master WHERE type='table'")} >= {
+        "cms_blog_authors", "cms_blog_categories", "cms_blog_posts", "cms_blog_post_categories",
+    }
+    print("Legacy CMS upgrade passed (existing published page preserved; blog migration repeatable).")
+
     db = sqlite3.connect(":memory:")
     for module in ("payments", "realtime", "storefront"):
         source = MIGRATIONS / module / "infrastructure/persistence/d1/migrations"

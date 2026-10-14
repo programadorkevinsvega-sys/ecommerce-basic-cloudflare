@@ -32,7 +32,10 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('storefront', 'Anuncios & Barra Superior', "switchTab('storefront', this); showMarketingPage('announcements')", false, undefined, undefined, true)}
         ${navItem('promotions', 'Regla de Promoción', "switchTab('promotions', this); showMarketingPage('promotion-rule')", false, undefined, undefined, true)}
         ${navItem('promotions', 'Cupón de Descuento', "switchTab('promotions', this); showMarketingPage('discount-coupon')", false, undefined, undefined, true)}
+      </ul></section>
+      <section class="admin-nav-group"><h2>CMS</h2><ul>
         ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
+        ${navItem('blog', 'Blog', "switchTab('blog', this); blogInit()", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Sistema</h2><ul>
         ${navItem('audit', 'Auditoría', "switchTab('audit'); loadAdminAudit();")}

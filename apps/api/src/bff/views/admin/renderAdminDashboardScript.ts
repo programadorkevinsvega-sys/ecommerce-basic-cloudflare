@@ -26,6 +26,7 @@ export function renderAdminDashboardScript(): string {
       legacy?.classList.toggle('taxonomies-mode', tabId === 'taxonomies');
       document.querySelector('.admin-main')?.classList.toggle('taxonomies-page-active', tabId === 'taxonomies');
       legacy?.classList.toggle('cms-mode', tabId === 'cms');
+      document.querySelector('.admin-main')?.classList.toggle('blog-page-active', tabId === 'blog');
       legacy?.classList.toggle('storefront-mode', tabId === 'storefront');
       legacy?.classList.toggle('promotions-mode', tabId === 'promotions');
       legacy?.classList.toggle('products-mode', tabId === 'products');

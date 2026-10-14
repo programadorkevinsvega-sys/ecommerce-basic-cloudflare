@@ -100,8 +100,12 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `cms__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `cms__0002_institutional_pages.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `7125966` | ✅ Aplicada por el runner; consulta posterior confirmó las nueve páginas en borrador y la página de términos publicada |
 | `cms__0002_institutional_pages.sql` | v2 | Local | Pendiente | trabajo actual | ⏳ Por aplicar; la inserción está condicionada por slug/ID y versión |
+| `cms__0003_blog.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | Este release | ✅ Aplicada con el runner; ledger y cuatro tablas verificadas; `PRAGMA foreign_key_check` vacío |
+| `cms__0003_blog.sql` | v3 | Local (Miniflare/D1) | 2026-10-14 | Este release | ✅ Desde D1 vacía, upgrade legado y segunda pasada idempotente; publicación/SSR verificadas |
 
 `cms__0002_institutional_pages.sql` es una migración de contenido aditiva: inserta solo cuando el slug no existe, crea versión 1 únicamente para los IDs de página sembrados y deja cada página en `draft`. No cambia tablas ni elimina datos. La reversión del Worker conserva estas páginas; no borrar las filas para volver a una versión anterior. Los borradores se publican desde Administración → Páginas CMS después de completar y revisar su contenido.
+
+`cms__0003_blog.sql` agrega `cms_blog_authors`, `cms_blog_categories`, `cms_blog_posts` y `cms_blog_post_categories` con índices y claves foráneas internas al módulo. No altera páginas ni datos existentes. Puede volver a ejecutarse porque las tablas e índices usan `IF NOT EXISTS`. No tiene down migration: si el Worker se revierte, se conservan los artículos y el esquema; no ejecutar `DROP`. La publicación programada la procesa el Cron ya configurado cada cinco minutos y deja una entrada de auditoría por artículo publicado.
 
 ---
 

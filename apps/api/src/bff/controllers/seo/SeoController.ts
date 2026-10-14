@@ -41,6 +41,10 @@ export class SeoController {
         `    <loc>${baseUrl}/sitemap-products.xml</loc>`,
         `    <lastmod>${today}</lastmod>`,
         '  </sitemap>',
+        '  <sitemap>',
+        `    <loc>${baseUrl}/sitemap-blog.xml</loc>`,
+        `    <lastmod>${today}</lastmod>`,
+        '  </sitemap>',
         '</sitemapindex>',
       ].join('\n');
 

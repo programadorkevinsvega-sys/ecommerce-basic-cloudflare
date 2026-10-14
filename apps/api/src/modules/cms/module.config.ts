@@ -7,6 +7,11 @@ import { GetPageBySlugUseCase } from './application/use-cases/GetPageBySlugUseCa
 import { GetMenuByCodeUseCase } from './application/use-cases/GetMenuByCodeUseCase.js';
 import { ListPagesUseCase } from './application/use-cases/ListPagesUseCase.js';
 import { DeletePageUseCase } from './application/use-cases/DeletePageUseCase.js';
+import { D1BlogPostRepository } from './infrastructure/persistence/d1/repositories/D1BlogPostRepository.js';
+import { SaveBlogPostUseCase } from './application/use-cases/SaveBlogPostUseCase.js';
+import { ManageBlogTaxonomyUseCase } from './application/use-cases/ManageBlogTaxonomyUseCase.js';
+import { ListBlogPostsUseCase } from './application/use-cases/ListBlogPostsUseCase.js';
+import { PublishScheduledBlogPostsUseCase } from './application/use-cases/PublishScheduledBlogPostsUseCase.js';
 
 export interface CmsModuleContainer {
   createPageUseCase: CreatePageUseCase;
@@ -15,11 +20,17 @@ export interface CmsModuleContainer {
   getMenuByCodeUseCase: GetMenuByCodeUseCase;
   listPagesUseCase: ListPagesUseCase;
   deletePageUseCase: DeletePageUseCase;
+  blogRepository: D1BlogPostRepository;
+  saveBlogPostUseCase: SaveBlogPostUseCase;
+  manageBlogTaxonomyUseCase: ManageBlogTaxonomyUseCase;
+  listBlogPostsUseCase: ListBlogPostsUseCase;
+  publishScheduledBlogPostsUseCase: PublishScheduledBlogPostsUseCase;
 }
 
 export function createCmsModule(env: Env): CmsModuleContainer {
   const pageRepo = new D1PageRepository(env.DB);
   const menuRepo = new D1MenuRepository(env.DB);
+  const blogRepository = new D1BlogPostRepository(env.DB);
 
   return {
     createPageUseCase: new CreatePageUseCase(pageRepo),
@@ -28,5 +39,10 @@ export function createCmsModule(env: Env): CmsModuleContainer {
     getMenuByCodeUseCase: new GetMenuByCodeUseCase(menuRepo),
     listPagesUseCase: new ListPagesUseCase(pageRepo),
     deletePageUseCase: new DeletePageUseCase(pageRepo),
+    blogRepository,
+    saveBlogPostUseCase: new SaveBlogPostUseCase(blogRepository),
+    manageBlogTaxonomyUseCase: new ManageBlogTaxonomyUseCase(blogRepository),
+    listBlogPostsUseCase: new ListBlogPostsUseCase(blogRepository),
+    publishScheduledBlogPostsUseCase: new PublishScheduledBlogPostsUseCase(blogRepository),
   };
 }

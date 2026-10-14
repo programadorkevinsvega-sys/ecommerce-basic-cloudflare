@@ -34,6 +34,8 @@ import { renderMarketingDashboardCss } from './renderMarketingDashboardCss.js';
 import { renderSystemDashboardCss } from './renderSystemDashboardCss.js';
 import { renderAdminPaginationCss } from './renderAdminPaginationCss.js';
 import { renderAdminPaginationScript } from './renderAdminPaginationScript.js';
+import { renderBlogDashboardCss } from './renderBlogDashboardCss.js';
+import { renderBlogAdminScript } from './renderBlogAdminScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -42,7 +44,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderBlogDashboardCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
@@ -84,6 +86,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderStorefrontFormsScript()}</script>
   <script>${renderCmsEditorToolbarScript()}</script>
   <script>${renderCmsFormsScript()}</script>
+  <script>${renderBlogAdminScript()}</script>
   <script>${renderPromotionsFormsScript()}</script>
   <script>${renderPromotionsHandlersScript()}</script>
   <script>${renderShippingFormsScript()}</script>

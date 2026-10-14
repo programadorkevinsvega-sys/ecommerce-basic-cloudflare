@@ -9,7 +9,7 @@ export class AdminMutationSnapshotProvider {
       return { mfaEnabled: session.mfaEnabled === true };
     }
     if (path === '/api/v1/settings') return this.gateways.settingsGateway.getSettings();
-    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices)\/([^/]+)(?:\/|$)/);
+    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|cms\/blog\/posts|cms\/blog\/authors|cms\/blog\/categories|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices)\/([^/]+)(?:\/|$)/);
     if (resource) {
       const kind = resource[1];
       const rawId = resource[2];
@@ -22,6 +22,9 @@ export class AdminMutationSnapshotProvider {
       if (kind === 'banners') return (await this.gateways.storefrontGateway.listBanners()).find((item) => item.id === id) ?? null;
       if (kind === 'announcements') return (await this.gateways.storefrontGateway.listAnnouncements()).find((item) => item.id === id) ?? null;
       if (kind === 'cms/pages') return (await this.gateways.cmsGateway.listPages(500)).find((item) => item.id === id) ?? null;
+      if (kind === 'cms/blog/posts') return this.gateways.cmsGateway.getBlogPostById(id);
+      if (kind === 'cms/blog/authors') return (await this.gateways.cmsGateway.listBlogAuthors(1, 50)).items.find((item) => item.id === id) ?? null;
+      if (kind === 'cms/blog/categories') return (await this.gateways.cmsGateway.listBlogCategories(1, 50)).items.find((item) => item.id === id) ?? null;
       if (kind === 'shipping/zones') return this.gateways.shippingGateway.getZone(id);
       if (kind === 'promotions/rules') return (await this.gateways.promotionsGateway.listPromotionRules()).find((item) => item.id === id) ?? null;
       if (kind === 'promotions/coupons') return (await this.gateways.promotionsGateway.listCoupons()).find((item) => item.id === id) ?? null;
@@ -52,6 +55,8 @@ export class AdminMutationSnapshotProvider {
       '/api/v1/admin/products', '/api/v1/admin/categories', '/api/v1/admin/brands',
       '/api/v1/admin/attributes', '/api/v1/admin/storefront/banners',
       '/api/v1/admin/storefront/announcements', '/api/v1/admin/cms/pages',
+      '/api/v1/admin/cms/blog/posts',
+      '/api/v1/admin/cms/blog/authors', '/api/v1/admin/cms/blog/categories',
       '/api/v1/admin/shipping/zones', '/api/v1/admin/promotions/rules',
       '/api/v1/admin/promotions/coupons',
     ]);

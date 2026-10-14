@@ -104,6 +104,7 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-CMS-04** Las redirecciones gestionables (301/302) solo aceptan destinos **relativos o de dominios propios**; prohibidas las redirecciones abiertas.
 - **SEC-CMS-05** Las URLs de enlaces y CTA aceptan solo esquemas `https`, `mailto` y `tel` (nunca `javascript:` ni `data:`).
 - **SEC-CMS-06** Slugs únicos y validados; cambiar un slug crea una redirección, no deja enlaces rotos ni colisiones con rutas reservadas (`/admin`, `/api`, `/cuenta`…).
+- **Blog CMS:** las rutas de administración de artículos, autores y categorías requieren sesión MFA y permisos `cms:read/create/update`; artículos y taxonomías validan entradas en el servidor y el contenido HTML aplica lista permitida. Las imágenes se referencian por IDs públicos de Media, nunca por una URL de carga libre. Las rutas públicas solo consultan artículos `published`; el cron publica los programados vencidos y registra la acción como sistema.
 
 ## 9. Almacenamiento y medios en R2 (R2)
 

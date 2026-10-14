@@ -36,6 +36,14 @@ export default {
       ctx.waitUntil(collectOldMedia(compositionRoot.mediaOrphanCollector, env.CACHE, logger));
     }
 
+    ctx.waitUntil((async () => {
+      try {
+        const published = await compositionRoot.cmsGateway.publishScheduledBlogPosts(scheduledAt.toISOString(), 50);
+        for (const id of published) await compositionRoot.auditGateway.record({ actorId: 'scheduled-blog-publisher', actorType: 'system', action: 'cms.blog_post.published_by_schedule', entityType: 'cms_blog_post', entityId: id, changes: { status: 'published', publishedAt: scheduledAt.toISOString() } });
+        if (published.length) logger.info('Artículos del blog publicados por programación', { count: published.length });
+      } catch (error) { logger.error('Falló la publicación programada del blog', error); }
+    })());
+
     ctx.waitUntil(
       (async () => {
         try {

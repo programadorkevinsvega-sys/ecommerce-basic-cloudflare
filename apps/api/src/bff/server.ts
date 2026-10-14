@@ -20,6 +20,8 @@ import { StorefrontAdminController } from './controllers/storefront/StorefrontAd
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
+import { CmsBlogAdminController } from './controllers/cms/CmsBlogAdminController.js';
+import { CmsBlogPublicController } from './controllers/cms/CmsBlogPublicController.js';
 import { PromotionsController } from './controllers/promotions/PromotionsController.js';
 import { ShippingController } from './controllers/shipping/ShippingController.js';
 import { CartController } from './controllers/cart/CartController.js';
@@ -62,6 +64,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
+  app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
@@ -120,6 +123,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   ));
   app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway));
   app.route('/', CollectionPagesController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.cmsGateway,cRoot.settingsGateway,cRoot.promotionsGateway));
+  app.route('/', CmsBlogPublicController.createRoutes(cRoot.cmsGateway,cRoot.identityGateway,cRoot.settingsGateway));
 
   // Infra y Auth
   app.route('/health', HealthController.createRoutes());

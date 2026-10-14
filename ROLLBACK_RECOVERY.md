@@ -175,6 +175,12 @@ Siempre que se revierta el Worker de forma que afecte a `orders`, `payments`, `i
 - [ ] **Emails:** consultar `notifications_log`; **no reenviar** correos ya entregados; la idempotencia debe impedir duplicados.
 - [ ] **Auditoría:** dejar constancia del incidente en `audit`.
 
+### Blog CMS (`cms__0003_blog.sql`, 2026-10-14)
+
+La migración agrega cuatro tablas y sus índices en el prefijo `cms_`; no altera páginas CMS, no copia imágenes y no elimina datos. Antes de aplicarla se verificaron las 44 migraciones previas, CMS `0001/0002`, 10 páginas existentes, ausencia de tablas `cms_blog_*` y el bookmark de recuperación `00000281-0000002c-00005104-2ff90a6ebf8df4bdae26749c3607144e`. Se aplicó únicamente v3 con `apps/api/scripts/apply-migrations.js`; el ledger confirmó v3, existen las cuatro tablas y `PRAGMA foreign_key_check` no devolvió filas. El bookmark posterior consultado fue `00000281-0000003a-00005104-757e689778ef5f22c91bc4aa60bb4f81`. No se creó una copia manual separada. No hay down migration: si hay que revertir la aplicación, conservar tablas y datos y restaurar el Worker compatible anterior. Las imágenes siguen referenciadas por ID de Media; no borrar objetos de R2 como parte del rollback.
+
+La publicación programada se ejecuta cada cinco minutos y es condicional a `status='scheduled'` y a que `scheduled_at` haya vencido, por lo que repetir el cron no vuelve a publicar ni duplica su efecto. El auditor debe conservar los registros de publicación automática. La generación dinámica del sitemap no requiere backfill ni invalidación manual.
+
 ## R2
 
 - Mantener el bucket privado y las claves de objeto estables durante el release.

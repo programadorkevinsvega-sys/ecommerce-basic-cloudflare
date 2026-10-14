@@ -9,6 +9,7 @@ import { storefrontCmsStyles } from './storefrontCmsStyles.js';
 import { storefrontNotFoundStyles } from './storefrontNotFoundStyles.js';
 import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
 import { renderStoreFooterDetails, renderStoreLegalIdentity, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
+import { storefrontBlogStyles } from './storefrontBlogStyles.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -23,6 +24,7 @@ export interface LayoutProps {
   description: string;
   canonicalUrl?: string;
   ogImageUrl?: string;
+  ogType?: string;
   noindex?: boolean;
   jsonLd?: string;
   bodyHtml: string;
@@ -38,9 +40,9 @@ export interface LayoutProps {
 export function renderBaseLayout(props: LayoutProps): string {
   const safeTitle = escapeHtml(props.title);
   const safeDesc = escapeHtml(props.description);
-  const canonical = props.canonicalUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/';
+  const canonical = escapeHtml(props.canonicalUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/');
   const robots = props.noindex ? 'noindex, nofollow' : 'index, follow';
-  const ogImage = props.ogImageUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/media/og-default.jpg';
+  const ogImage = escapeHtml(props.ogImageUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/media/og-default.jpg');
   const jsonLdScript = props.jsonLd ? `<script type="application/ld+json">${props.jsonLd}</script>` : '';
 
   const topBarHtml = `<div class="announcement-bar">
@@ -72,7 +74,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <link rel="canonical" href="${canonical}">
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="${escapeHtml(props.ogType || 'website')}">
   <meta property="og:site_name" content="Vega Store">
   <meta property="og:locale" content="es_CO">
   <link rel="alternate" hreflang="es-CO" href="${canonical}">
@@ -83,7 +85,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}${storefrontNotFoundStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}${storefrontNotFoundStyles}${storefrontBlogStyles}</style>
 </head>
 <body class="${props.checkoutMode ? 'checkout-mode' : ''}">
   ${props.checkoutMode ? '' : topBarHtml}

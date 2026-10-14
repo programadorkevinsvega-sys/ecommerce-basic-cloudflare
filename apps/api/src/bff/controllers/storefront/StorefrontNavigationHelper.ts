@@ -59,6 +59,9 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
     if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/colecciones')) {
       cleanHeaderMenuItems.push({ title: 'Colecciones', url: '/colecciones' });
     }
+    if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/blog')) {
+      cleanHeaderMenuItems.push({ title: 'Blog', url: '/blog' });
+    }
 
     const configuredFooterItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
       ? footerMenu.items.map((it: CmsMenuItemDto) => ({
@@ -87,6 +90,7 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
         { title: 'Inicio', url: '/' },
         { title: 'Catálogo', url: '/productos' },
         { title: 'Marcas', url: '/marcas' },
+        { title: 'Blog', url: '/blog' },
       ],
       footerMenuItems: [
         { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },

@@ -171,6 +171,9 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Versionado automático con histórico en `cms_page_versions` y control de borrador/publicado.
 - [x] Menús dinámicos anidados en árbol jerárquico (`header`, `footer`) en `cms_menus` y `cms_menu_items`.
 - [x] CRUD y endpoints de administración protegidos con RBAC (`cms:create`, `cms:update`) y rutas públicas SSR en `/p/:slug`.
+- [x] Blog independiente dentro del módulo CMS: artículos, autores, categorías, imágenes de Media, borrador/publicación/archivo y publicaciones programadas por Cron.
+- [x] Rutas `/blog` paginada y `/blog/:slug` SSR con filtro por categoría, artículos relacionados, canonical, noindex, Open Graph, JSON-LD `BlogPosting` y sitemap específico.
+- [x] Gestión administrativa independiente de Páginas CMS dentro del grupo “CMS”, con paginación de artículos, autores y categorías y RBAC `cms:*`.
 
 **SEO**
 - [x] `seo_metadata` por entidad (producto, categoría, página) con plantillas y sobrescritura manual en BD D1.
