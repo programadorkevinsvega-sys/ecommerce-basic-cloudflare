@@ -1,6 +1,10 @@
+import { renderPaymentRecordDetailsScript } from './renderPaymentRecordDetailsScript.js';
+
 export function renderPaymentsAdminScript(): string {
   return `
     let _adminPaymentTransactions = [];
+    let _adminPaymentCollections = [];
+    let _adminPaymentSettlements = [];
     let _adminPaymentOrders = new Map();
     let _adminPaymentInvoices = new Map();
 
@@ -12,6 +16,8 @@ export function renderPaymentsAdminScript(): string {
         const data = await res.json();
         if (!data.success) throw new Error('No se pudieron cargar pagos');
         _adminPaymentTransactions = data.transactions || [];
+        _adminPaymentCollections = data.collections || [];
+        _adminPaymentSettlements = data.settlementCosts || [];
         const [orders, invoices] = await Promise.all([
           loadAdminPaymentLookup('/api/v1/admin/orders', 'orders'),
           loadAdminPaymentLookup('/api/v1/admin/invoices', 'invoices'),
@@ -21,9 +27,9 @@ export function renderPaymentsAdminScript(): string {
         invoices.forEach(invoice => { if (!_adminPaymentInvoices.has(invoice.orderId)) _adminPaymentInvoices.set(invoice.orderId, invoice); });
         renderAdminPaymentTransactions();
         const collectionsBody = document.getElementById('cod-collections-table-body');
-        if (collectionsBody) window.paginateAdminTable('cod-collections', collectionsBody, data.collections || [], row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td></tr>\`, 5, 'Aún no hay recaudos registrados.');
+        if (collectionsBody) window.paginateAdminTable('cod-collections', collectionsBody, _adminPaymentCollections, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-collection-id="\${escapeHtml(row.id)}" onclick="viewCodCollection(this)">Ver</button></td></tr>\`, 6, 'Aún no hay recaudos registrados.');
         const settlementBody = document.getElementById('settlement-table-body');
-        if (settlementBody) window.paginateAdminTable('payment-settlements', settlementBody, data.settlementCosts || [], row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td></tr>\`, 5, 'Aún no hay conciliaciones registradas.');
+        if (settlementBody) window.paginateAdminTable('payment-settlements', settlementBody, _adminPaymentSettlements, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button></td></tr>\`, 6, 'Aún no hay conciliaciones registradas.');
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
@@ -62,6 +68,8 @@ export function renderPaymentsAdminScript(): string {
     function normalizePaymentSearch(value) {
       return String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
     }
+
+    ${renderPaymentRecordDetailsScript()}
 
     function paymentStatusClass(status) {
       const normalized = String(status || '').toLowerCase();

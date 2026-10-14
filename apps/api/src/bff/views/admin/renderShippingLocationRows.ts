@@ -15,10 +15,11 @@ export function renderShippingLocationRows(locations: DivipolaLocationDto[], zon
       : '<span class="shipping-badge inactive">Sin cobertura activa</span>';
     const editableZone = activeLocalZones[0] || localZones[0];
     const button = editableZone
-      ? `<button class="shipping-action primary" type="button" data-item="${encodeURIComponent(JSON.stringify(editableZone))}" onclick="editShippingZoneModal(this)">Editar zona local</button>`
+      ? `<button class="shipping-action primary" type="button" data-item="${encodeURIComponent(JSON.stringify(editableZone))}" onclick="editShippingZoneModal(this)">Editar cobertura</button>`
       : `<button class="shipping-action primary" type="button" data-code="${escapeHtml(location.daneCode)}" data-name="${escapeHtml(location.municipality)}" onclick="createZoneForLocation(this)">Crear zona local</button>`;
+    const view = `<button class="shipping-action" type="button" data-code="${escapeHtml(location.daneCode)}" data-name="${escapeHtml(location.municipality)}" data-department="${escapeHtml(location.department)}" data-type="${escapeHtml(location.type)}" onclick="viewShippingLocation(this)">Ver</button>`;
     const search = `${location.municipality} ${location.department} ${location.daneCode}`.toLowerCase();
-    return `<tr data-shipping-search="${escapeHtml(search)}"><td><strong>${escapeHtml(location.municipality)}</strong></td><td>${escapeHtml(location.department)}</td><td><code>${escapeHtml(location.daneCode)}</code></td><td>${coverage}</td><td>${button}</td></tr>`;
+    return `<tr data-shipping-search="${escapeHtml(search)}"><td><strong>${escapeHtml(location.municipality)}</strong></td><td>${escapeHtml(location.department)}</td><td><code>${escapeHtml(location.daneCode)}</code></td><td>${coverage}</td><td><div class="shipping-row-actions">${view}${button}</div></td></tr>`;
   }).join('');
 }
 

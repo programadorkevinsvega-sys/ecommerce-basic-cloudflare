@@ -15,7 +15,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
     <section class="shipping-page-panel" data-shipping-panel="locations" aria-labelledby="shipping-locations-title" hidden>
         <div class="card shipping-locations-page-card"><div class="shipping-section-heading"><div><h2 id="shipping-locations-title">Municipios DANE</h2><p id="shipping-location-count">Cargando municipios…</p><small class="shipping-catalog-note">El catálogo cargado contiene municipios principales; no incluye todos los municipios de DIVIPOLA. La cobertura nacional se muestra por separado.</small></div></div>
         <label class="shipping-location-search" for="shipping-location-search">Buscar municipio, departamento o código</label><input id="shipping-location-search" type="search" placeholder="Ej. Medellín o 05001" oninput="filterShippingDirectory()" />
-        <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Municipio</th><th>Departamento</th><th>Código DANE</th><th>Cobertura actual</th><th>Acción</th></tr></thead><tbody id="shippingLocationsTableBody">${renderShippingLocationRows(divipolaLocations, zones)}</tbody></table></div>
+        <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Municipio</th><th>Departamento</th><th>Código DANE</th><th>Cobertura actual</th><th>Acciones</th></tr></thead><tbody id="shippingLocationsTableBody">${renderShippingLocationRows(divipolaLocations, zones)}</tbody></table></div>
         <nav class="admin-pagination" id="shipping-locations-pagination" aria-label="Paginación de municipios DANE"><button class="admin-page-button" type="button" data-page-direction="previous" disabled>Anterior</button><span aria-live="polite">Página 1</span><button class="admin-page-button" type="button" data-page-direction="next" disabled>Siguiente</button></nav>
       </div>
     </section>
@@ -37,6 +37,10 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
         </form>
       </section>
     </div>
+    <dialog id="shipping-location-detail" class="shipping-detail-dialog" aria-labelledby="shipping-location-detail-title">
+      <header><h2 id="shipping-location-detail-title">Municipio DANE</h2><form method="dialog"><button class="shipping-modal-close" aria-label="Cerrar">×</button></form></header>
+      <dl><div><dt>Municipio</dt><dd id="shipping-detail-name"></dd></div><div><dt>Departamento</dt><dd id="shipping-detail-department"></dd></div><div><dt>Código DANE</dt><dd id="shipping-detail-code"></dd></div><div><dt>Tipo</dt><dd id="shipping-detail-type"></dd></div></dl>
+    </dialog>
     <div id="shippingDetailsModal" class="shipping-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalShTitle"><button class="shipping-modal-backdrop" type="button" aria-label="Cerrar detalles de zona" onclick="closeShippingDetailsModal()"></button><section class="shipping-modal-dialog"><header><h2 id="modalShTitle">Detalles de zona de envío</h2><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingDetailsModal()">×</button></header><div id="modalShContent" class="shipping-modal-content"></div><footer><button type="button" class="btn-primary" onclick="closeShippingDetailsModal()">Cerrar</button></footer></section></div>
   </section>`;
 }

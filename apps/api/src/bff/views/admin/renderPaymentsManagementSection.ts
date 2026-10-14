@@ -8,13 +8,13 @@ export function renderPaymentsManagementSection(): string {
       <section class="payments-page-panel" data-payment-panel="collections" aria-labelledby="payments-page-collections">
         <div id="cod-collection-section" class="card payments-page-card">
           <header class="payments-card-heading"><div><h2 id="payments-page-collections">Recaudos contra entrega</h2><p>Consulta los recaudos registrados y crea uno al confirmar la entrega.</p></div><button type="button" class="btn-primary" onclick="openCodCollectionForm()">Crear nuevo recaudo</button></header>
-          <div class="payments-table-scroll"><table class="payments-table"><thead><tr><th>Pedido</th><th>Recibo / guía</th><th>Monto recibido</th><th>Fecha</th><th>Registrado por</th></tr></thead><tbody id="cod-collections-table-body"><tr><td colspan="5">Cargando recaudos…</td></tr></tbody></table></div>
+          <div class="payments-table-scroll"><table class="payments-table"><thead><tr><th>Pedido</th><th>Recibo / guía</th><th>Monto recibido</th><th>Fecha</th><th>Registrado por</th><th>Acciones</th></tr></thead><tbody id="cod-collections-table-body"><tr><td colspan="6">Cargando recaudos…</td></tr></tbody></table></div>
         </div>
       </section>
       <section class="payments-page-panel" data-payment-panel="conciliation" aria-labelledby="payments-page-conciliation" hidden>
         <div class="card payments-page-card">
           <header class="payments-card-heading"><div><h2 id="payments-page-conciliation">Conciliaciones de Wompi</h2><p>Consulta las liquidaciones registradas y compara la comisión real con la estimada.</p></div><button type="button" class="btn-primary" onclick="openSettlementForm()">Crear conciliación</button></header>
-          <div class="payments-table-scroll"><table class="payments-table"><thead><tr><th>Pedido</th><th>Estimación</th><th>Liquidación real</th><th>Diferencia</th><th>Reporte</th></tr></thead><tbody id="settlement-table-body"></tbody></table></div>
+          <div class="payments-table-scroll"><table class="payments-table"><thead><tr><th>Pedido</th><th>Estimación</th><th>Liquidación real</th><th>Diferencia</th><th>Reporte</th><th>Acciones</th></tr></thead><tbody id="settlement-table-body"><tr><td colspan="6">Cargando conciliaciones…</td></tr></tbody></table></div>
         </div>
       </section>
       <section class="payments-page-panel" data-payment-panel="transactions" aria-labelledby="payments-page-transactions" hidden>
@@ -50,6 +50,10 @@ export function renderPaymentsManagementSection(): string {
           </form>
         </section>
       </div>
+      <dialog id="payment-record-details" class="payments-detail-dialog" aria-labelledby="payment-detail-title">
+        <header><h2 id="payment-detail-title">Detalle del movimiento</h2><form method="dialog"><button class="payments-modal-close" aria-label="Cerrar">×</button></form></header>
+        <dl id="payment-detail-fields"></dl>
+      </dialog>
     </section>
   `;
 }

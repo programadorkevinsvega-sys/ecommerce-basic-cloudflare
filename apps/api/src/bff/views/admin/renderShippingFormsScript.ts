@@ -1,3 +1,5 @@
+import { renderShippingLocationDetailsScript } from './renderShippingLocationDetailsScript.js';
+
 export function renderShippingFormsScript(): string {
   return `
     function onShippingTypeChange() {
@@ -40,9 +42,11 @@ export function renderShippingFormsScript(): string {
       const national = zones.some((zone) => zone.type === 'national' && zone.isActive);
       const coverage = active.length ? '<span class="shipping-badge active">Zona local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' + (national ? '<small>Cobertura nacional también activa</small>' : '') : local.length ? '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>' : national ? '<span class="shipping-badge neutral">Solo cobertura nacional</span><small>Sin tarifa local específica</small>' : '<span class="shipping-badge inactive">Sin cobertura activa</span>';
       const zone = active[0] || local[0];
-      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar zona local</button>' : '<button class="shipping-action primary" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" onclick="createZoneForLocation(this)">Crear zona local</button>';
-      return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td>' + action + '</td></tr>';
+      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar cobertura</button>' : '<button class="shipping-action primary" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" onclick="createZoneForLocation(this)">Crear zona local</button>';
+      const view = '<button class="shipping-action" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" onclick="viewShippingLocation(this)">Ver</button>';
+      return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td><div class="shipping-row-actions">' + view + action + '</div></td></tr>';
     }
+    ${renderShippingLocationDetailsScript()}
     function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
     async function filterShippingLocations() {
       clearTimeout(shippingSelectTimer);

@@ -380,3 +380,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La tabla usaba la clase genérica heredada `.tag`, que aplicaba fondo azul oscuro y texto claro a estados como `approved`.
 - Reemplacé esa clase por estados acotados: Aprobado/Recaudado en verde, Pendiente en ámbar, errores/rechazos en rojo y valores desconocidos en neutro. Los estados se muestran en español.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+### Acciones seguras para Municipios DANE y movimientos financieros (2026-10-14)
+
+- Añadí una acción Ver accesible para municipios, recaudos contra entrega y conciliaciones; los detalles se construyen con `textContent`. En municipios, la acción existente ahora se llama Editar cobertura porque edita la zona de envío relacionada, no la fuente oficial DANE.
+- No expuse Desactivar/Eliminar para municipios: `shipping_divipola` es un catálogo oficial de referencia sin estado, y eliminar una fila podría romper zonas y validación de checkout. Tampoco habilité edición/desactivación/eliminación de recaudos o conciliaciones: son registros financieros sin operaciones de reversión, y borrar o cambiar valores sobrescribiría el historial. Hace falta definir una operación de anulación/corrección append-only con motivo y auditoría antes de agregar esas acciones.
+- Sin migraciones ni cambios de backend. Typecheck, lint de arquitectura y `git diff --check`; no ejecuté pruebas automatizadas ni revisión visual.
