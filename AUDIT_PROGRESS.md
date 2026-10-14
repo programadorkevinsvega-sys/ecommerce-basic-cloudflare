@@ -192,4 +192,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El formulario de crear/editar zonas de envío ahora se abre en modal desde la página de zonas. Añadí una página independiente de municipios DANE con búsqueda, estado de cobertura y acción para iniciar una zona individual con municipio y código DANE precargados.
 - La página usa el catálogo de solo lectura que ya entrega el servidor y conserva las rutas/contratos existentes; no se añadieron endpoints ni escritura de municipios DANE porque el backend actual no ofrece esa operación.
 - Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador.
-- Commit/push, deployment y `/health` pendientes.
+- Commit `d230059` enviado a `main`; Wrangler registró el deployment `31f90a82-db8e-48e1-a459-5c3f779d2bf5`. `/health` respondió `healthy`, D1/KV/Queue/R2 `ok`.
