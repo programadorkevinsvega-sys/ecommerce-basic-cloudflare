@@ -464,4 +464,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - La pestaña Blog no activaba la clase `blog-mode`; por eso heredaba el fondo azul oscuro del contenedor legacy. Ahora aplica la misma superficie clara y tipografía neutra de la gestión CMS. Ajusté contraste del filtro y la tabla.
 - “+ Nuevo artículo” abre el modal inmediatamente, sin esperar a que respondan las consultas de autores/categorías; los fallos de carga se notifican dentro del formulario.
-- Verificación: typecheck, lint de arquitectura y 4 pruebas de UI/seguridad CMS aprobadas; `git diff --check` limpio. Push y publicación pendientes.
+- Verificación: typecheck, lint de arquitectura y 4 pruebas de UI/seguridad CMS aprobadas; `git diff --check` limpio. Commit `92d66e7` enviado a `main`. Wrangler dry-run aprobado y despliegue real confirmado, versión `4b3b8442-f6c2-47d3-82ac-8cc3e79d82bb`. `/health`, `/blog` y `/sitemap-blog.xml` respondieron HTTP 200. Sin inspección visual en navegador.
