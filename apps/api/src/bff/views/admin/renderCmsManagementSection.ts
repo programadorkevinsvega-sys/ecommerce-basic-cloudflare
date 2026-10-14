@@ -25,10 +25,12 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
         </td>
         <td>${escapeHtml(p.updatedAt.substring(0, 10))}</td>
         <td class="cms-page-actions">
+          <div class="cms-actions-group">
           <a class="btn-action btn-action-view" href="/p/${escapeHtml(p.slug)}" target="_blank">Ver</a>
           <button class="btn-action" onclick="editCmsPage('${p.id}', '${escapeJs(p.title)}', '${escapeJs(p.slug)}', '${p.status}', '${escapeJs(p.seoTitle || '')}', '${escapeJs(p.seoDescription || '')}', '${escapeJs(bodyContent)}')">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteCmsPage('${p.id}')">Eliminar</button>
+          </div>
         </td>
       </tr>
     `;
@@ -126,8 +128,7 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           </div>
           <textarea id="cmsBody" style="display:none;"></textarea>
         </div>
-        <button type="submit" class="btn-primary" id="cmsSubmitBtn">Publicar Página CMS</button>
-        <button type="button" class="btn-action" id="cmsCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetCmsForm()">Cancelar</button>
+        <footer class="cms-form-actions"><button type="button" class="cms-secondary" id="cmsCancelBtn" onclick="resetCmsForm()">Cancelar</button><button type="submit" class="btn-primary" id="cmsSubmitBtn">Publicar Página CMS</button></footer>
         <div id="cmsMsg" class="msg"></div>
       </form>
       <table class="cms-table">

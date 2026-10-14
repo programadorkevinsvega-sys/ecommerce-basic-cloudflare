@@ -98,7 +98,6 @@ export function renderCmsFormsScript(): string {
       document.getElementById('cmsEditor').innerHTML = bodyText;
       updateCmsSeoCounters();
       document.getElementById('cmsSubmitBtn').textContent = 'Guardar Cambios';
-      document.getElementById('cmsCancelBtn').style.display = 'inline-block';
       document.getElementById('newCmsPageForm').hidden = false;
       document.getElementById('cms-editor-heading').textContent = 'Editar página';
       document.getElementById('newCmsPageForm').scrollIntoView({ behavior: 'smooth' });
@@ -119,7 +118,6 @@ export function renderCmsFormsScript(): string {
       const slugInput = document.getElementById('cmsSlug');
       if (slugInput) delete slugInput.dataset.manual;
       document.getElementById('cmsSubmitBtn').textContent = 'Publicar Página CMS';
-      document.getElementById('cmsCancelBtn').style.display = 'none';
       document.getElementById('newCmsPageForm').hidden = true;
       document.getElementById('cms-editor-heading').textContent = 'Nueva página';
       updateCmsSeoCounters();
