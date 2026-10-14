@@ -23,7 +23,7 @@ export function renderPromotionsManagementSection(
   ).join('');
 
   return `
-    <div class="card">
+    <div class="card" data-marketing-page="promotion-rule">
       <h2 id="prFormTitle">Crear Nueva Regla de Promoción</h2>
       <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
         Descuentos automáticos aplicados en catálogo y detalle de productos por fecha y alcance.
@@ -74,7 +74,7 @@ export function renderPromotionsManagementSection(
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" data-marketing-page="discount-coupon">
       <h2 id="cpFormTitle">Crear Nuevo Cupón de Descuento</h2>
       <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
         Códigos canjeables al pagar o en carrito. Pueden ser para todo el catálogo, un producto específico o una categoría.

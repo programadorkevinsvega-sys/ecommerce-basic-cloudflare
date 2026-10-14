@@ -53,7 +53,7 @@ export function renderStorefrontManagementSection(
   return `
     <dialog id="banner-preview-dialog" aria-labelledby="banner-preview-title" style="max-width:900px; border:0; border-radius:12px; padding:1.5rem;"><h2 id="banner-preview-title"></h2><p></p><img alt="" style="display:block; max-width:100%; max-height:55vh; object-fit:contain;" /><a hidden></a><form method="dialog"><button class="btn-primary">Cerrar vista previa</button></form></dialog>
     <!-- SECCIÓN 1: BANNERS HERO PROMOCIONALES CON BOTÓN -->
-    <div class="card">
+    <div class="card" data-marketing-page="promo-banners">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div>
           <h2 style="margin:0;">🎯 Banners Hero Promocionales (${promoBanners.length})</h2>
@@ -103,7 +103,7 @@ export function renderStorefrontManagementSection(
     </div>
 
     <!-- SECCIÓN 2: BANNERS HERO INFORMATIVOS SIN BOTÓN -->
-    <div class="card" style="margin-top:2rem;">
+    <div class="card" data-marketing-page="info-banners" style="margin-top:2rem;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div>
           <h2 style="margin:0;">📢 Banners Hero Informativos (${infoBanners.length})</h2>
@@ -151,7 +151,7 @@ export function renderStorefrontManagementSection(
     </div>
 
     <!-- SECCIÓN 3: ANUNCIOS Y BARRA SUPERIOR -->
-    <div class="card" style="margin-top:2rem;">
+    <div class="card" data-marketing-page="announcements" style="margin-top:2rem;">
       <h2>Anuncios & Barra Superior (${announcements.length})</h2>
       <form id="newAnnouncementForm" style="margin-bottom: 1.5rem;">
         <input type="hidden" id="aEditId" value="" />

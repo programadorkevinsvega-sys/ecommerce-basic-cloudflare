@@ -26,8 +26,11 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('taxonomies', 'Variantes', "switchTab('taxonomies', this); showCatalogPage('variants', this)", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Marketing</h2><ul>
-        ${navItem('storefront', 'Banners y anuncios', "switchTab('storefront')")}
-        ${navItem('promotions', 'Promociones y cupones', "switchTab('promotions')")}
+        ${navItem('storefront', 'Banners Hero Promocionales', "switchTab('storefront', this); showMarketingPage('promo-banners')", false, undefined, undefined, true)}
+        ${navItem('storefront', 'Banners Hero Informativos', "switchTab('storefront', this); showMarketingPage('info-banners')", false, undefined, undefined, true)}
+        ${navItem('storefront', 'Anuncios & Barra Superior', "switchTab('storefront', this); showMarketingPage('announcements')", false, undefined, undefined, true)}
+        ${navItem('promotions', 'Regla de Promoción', "switchTab('promotions', this); showMarketingPage('promotion-rule')", false, undefined, undefined, true)}
+        ${navItem('promotions', 'Cupón de Descuento', "switchTab('promotions', this); showMarketingPage('discount-coupon')", false, undefined, undefined, true)}
         ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
       </ul></section>
       <section class="admin-nav-group"><h2>Sistema</h2><ul>
