@@ -26,7 +26,7 @@ export class CollectionPagesController {
       const records=await catalog.listCollections({limit:13,offset:(page-1)*12});
       const collections=records.slice(0,12);
       return c.html(renderBaseLayout({
-        title: 'Colecciones | Vega Store',
+        title: 'Colecciones',
         description: 'Explora las colecciones disponibles de Vega Store.',
         canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones${page > 1 ? `?page=${page}` : ''}`,
         noindex: collections.length === 0,
@@ -47,7 +47,7 @@ export class CollectionPagesController {
       const products=resolved.filter((item):item is NonNullable<typeof item>=>item?.status==='published');
       const discounts=await resolveProductDiscounts(products,promotions);
       const html=renderCollectionDetailPage(collection,products,discounts);
-      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones | Vega Store`,description:collection.seoDescription||collection.description,canonicalUrl:`https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}));
+      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}));
     });
     return router;
   }
