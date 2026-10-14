@@ -34,7 +34,7 @@ describe('calculateOrderPricing', () => {
   });
 
   it('mantiene IVA dentro del precio nuevo, cuenta envío aparte y aplica tarifa Wompi una vez por pedido', async () => {
-    const modern = { ...product, priceInCents: 11900, pricingVersion: 2, allowedPaymentMethods: ['wompi'] };
+    const modern = { ...product, priceInCents: 11900, pricingVersion: 2, allowedPaymentMethods: ['wompi'], salePolicy: { ...product.salePolicy, allowsCashOnDelivery: false } };
     const g = gateways({ catalog: { listProducts: async () => [modern] } });
     const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 2 }], null, null, 900, 'wompi');
@@ -67,5 +67,15 @@ describe('calculateOrderPricing', () => {
     expect(result.policyItems[0]?.product.allowedPaymentMethods).toEqual(['cash_on_delivery']);
     expect(result.transactionFeeCents).toBe(0);
     expect(result.estimatedPaymentFeeCents).toBe(0);
+  });
+
+  it('conserva COD si el registro anterior dejó vacía la lista de métodos al apagar Wompi', async () => {
+    const legacyCodOnly = { ...product, allowedPaymentMethods: [], salePolicy: { ...product.salePolicy, allowsCashOnDelivery: true } };
+    const g = gateways({ catalog: { listProducts: async () => [legacyCodOnly] } });
+    const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 1 }], null, null, 0, 'cash_on_delivery');
+    expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);
+    expect(result.policyItems[0]?.product.allowedPaymentMethods).toEqual(['cash_on_delivery']);
+    expect(result.transactionFeeCents).toBe(0);
   });
 });

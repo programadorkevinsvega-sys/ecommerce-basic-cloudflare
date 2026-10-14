@@ -97,3 +97,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El servidor conserva los medios de pago en la evaluación final del pedido y rechaza cualquier método que no esté permitido por todos los productos. COD solo se habilita cuando también permiten las reglas del producto y la zona de envío.
 - Verificaciones: `pnpm test` (40 archivos, 108 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm lint`, `pnpm typecheck`, `git diff --check`. Sin cambios de esquema.
 - Commit `270d36a` enviado a `main`; Wrangler publicó el Worker `0ac5a858-3f5d-4a20-b2bd-1adfc85b7881`. `/health` posterior devolvió `healthy` con D1/KV/Queue/R2 en `ok`. No se hicieron consultas ni escrituras en D1 de producción.
+
+### Compatibilidad de contra entrega con productos sin Wompi (2026-10-13)
+
+- Corregido un caso legado: `allowed_payment_methods=[]` por sí solo ya no desactiva contra entrega si la política propia del producto dice que COD está permitido. Wompi sigue dependiendo exclusivamente de `allowed_payment_methods` y la cobertura COD sigue dependiendo de producto y zona.
+- El panel carga “Contra Entrega” desde `salePolicy.allowsCashOnDelivery` sin exigir el antiguo elemento duplicado `cash_on_delivery`; al guardar reconstruye la lista canónica. El checkout público decide COD desde esa misma política, evitando mostrar “Ningún medio de pago” para ese estado legado.
+- Agregadas regresiones para lista vacía heredada, checkout COD-only y creación autoritativa del pedido sin comisión Wompi.
+- Verificaciones: `pnpm test` (40 archivos, 110 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm lint`, `pnpm typecheck`, `git diff --check`, Wrangler deploy dry-run. Sin cambios de esquema ni escrituras en D1.
+- Pendiente: commit/push, publicar versión Worker y comprobar `/health`.

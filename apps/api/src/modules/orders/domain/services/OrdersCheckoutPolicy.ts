@@ -35,7 +35,9 @@ export class OrdersCheckoutPolicy {
     for (const item of input.items) {
       const p = item.product;
       const productMethods = p.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'];
-      allowedByProducts = allowedByProducts.filter((method) => productMethods.includes(method));
+      allowedByProducts = allowedByProducts.filter((method) => method === 'cash_on_delivery'
+        ? p.allowsCashOnDelivery
+        : productMethods.includes(method));
 
       // 1. Cobertura de productos locales
       if (p.shippingScope === 'local') {

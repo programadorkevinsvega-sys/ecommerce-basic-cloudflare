@@ -32,7 +32,8 @@ describe('product payment method eligibility', () => {
   });
 
   it('renders Wompi disabled and COD as the only selected method for a COD-only cart', () => {
-    const html = renderCheckoutPage(cart, new Map([[product.id, product]]), []);
+    const legacyProduct = { ...product, allowedPaymentMethods: [] };
+    const html = renderCheckoutPage(cart, new Map([[product.id, legacyProduct]]), []);
     expect(html).toMatch(/id="radio-wompi"[^>]*disabled/);
     expect(html).toMatch(/id="radio-cod"[^>]*checked[^>]*disabled/);
     expect(html).toContain('No disponible para todos los productos de este pedido.');
@@ -53,5 +54,16 @@ describe('product payment method eligibility', () => {
     });
     expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);
     expect(result.allowsCashOnDelivery).toBe(true);
+  });
+
+  it('does not let an empty legacy payment list disable separately permitted COD', () => {
+    const result = OrdersCheckoutPolicy.evaluate({
+      destinationZoneId: 'zone-1', zoneAllowsCod: true, isDestinationCovered: true,
+      items: [{ product: {
+        productId: product.id, name: product.name, allowsCashOnDelivery: true,
+        shippingScope: 'national', localCoverageZones: [], allowedPaymentMethods: [],
+      }, quantity: 1 }],
+    });
+    expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);
   });
 });

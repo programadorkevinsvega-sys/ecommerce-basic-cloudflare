@@ -76,7 +76,7 @@ function getProductPaymentMethods(items: CartDto['items'], products: Map<string,
     const methods = product.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'];
     return {
       wompi: available.wompi && methods.includes('wompi'),
-      cashOnDelivery: available.cashOnDelivery && methods.includes('cash_on_delivery') && product.salePolicy.allowsCashOnDelivery,
+      cashOnDelivery: available.cashOnDelivery && product.salePolicy.allowsCashOnDelivery,
     };
   }, { wompi: true, cashOnDelivery: true });
 }

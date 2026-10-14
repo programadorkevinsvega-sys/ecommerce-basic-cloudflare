@@ -39,7 +39,11 @@ export async function calculateOrderPricing(
     const quantity = Number(input?.quantity);
     if (!product || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Producto o cantidad inválida');
     versions.add(product.pricingVersion ?? 1);
-    const productMethods = (product.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery']).filter((method) => method !== 'cash_on_delivery' || product.salePolicy.allowsCashOnDelivery);
+    const configuredMethods = product.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'];
+    const productMethods: Array<'wompi' | 'cash_on_delivery'> = [
+      ...(configuredMethods.includes('wompi') ? ['wompi' as const] : []),
+      ...(product.salePolicy.allowsCashOnDelivery ? ['cash_on_delivery' as const] : []),
+    ];
     allowedPaymentMethods = allowedPaymentMethods === null ? productMethods : allowedPaymentMethods.filter((method) => productMethods.includes(method));
     if (product.stockQuantity < quantity) throw new Error('Inventario insuficiente');
     const discount = await promotions.evaluateProductDiscount({ productId: product.id, priceInCents: product.priceInCents });
