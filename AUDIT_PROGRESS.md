@@ -139,3 +139,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Los contadores de Pedidos por atender e Inventario bajo/agotado se calculan desde las respuestas existentes de pedidos e inventario; no se codificaron los valores de ejemplo 6 y 3.
 - Sin cambios de API, permisos, dominio o datos. Validación realizada: revisión del diff y `git diff --check`. No se ejecutaron pruebas automatizadas para este cambio de presentación.
 - Commit `b0975a2` enviado a `main`; el push generó la versión Cloudflare `930e0f6a-087f-4ef9-aeb2-7bab8265b278`. `/health` respondió `healthy` y D1/KV/Queue/R2 `ok`.
+
+### Ajuste visual de la navegación lateral (2026-10-13)
+
+- La barra lateral mantiene todos los grupos en una sola columna en escritorio y móvil. Eliminé el desbordamiento con scroll propio vertical, el carrusel horizontal responsive y el desplazamiento horizontal de grupos. Los enlaces se compactaron para acercarse a la referencia; el contenido que exceda la ventana usa el desplazamiento normal de la página.
+- Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este cambio CSS.
