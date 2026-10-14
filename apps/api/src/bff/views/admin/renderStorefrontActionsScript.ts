@@ -67,7 +67,7 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('pbSortOrder').value = sortOrder || 0;
         document.getElementById('pbSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('pbCancelBtn').style.display = 'inline-block';
-        document.getElementById('newPromoBannerForm').scrollIntoView({ behavior: 'smooth' });
+        window.openMarketingModal('promo-banners');
       } else {
         document.getElementById('ibEditId').value = id;
         document.getElementById('ibTitle').value = title;
@@ -82,7 +82,7 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('ibSortOrder').value = sortOrder || 0;
         document.getElementById('ibSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('ibCancelBtn').style.display = 'inline-block';
-        document.getElementById('newInfoBannerForm').scrollIntoView({ behavior: 'smooth' });
+        window.openMarketingModal('info-banners');
       }
     }
 
@@ -134,7 +134,7 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('aPlacement').value = placement;
       document.getElementById('aSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('aCancelBtn').style.display = 'inline-block';
-      document.getElementById('newAnnouncementForm').scrollIntoView({ behavior: 'smooth' });
+      window.openMarketingModal('announcements');
     }
 
     function resetAnnouncementForm() {

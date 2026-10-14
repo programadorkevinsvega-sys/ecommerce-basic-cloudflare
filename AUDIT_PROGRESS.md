@@ -308,3 +308,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Centralicé el color de acciones principales en un token verde oscuro compartido por Productos, Catálogo, Inventario, Pedidos, Pagos, Envíos, Facturación y formularios administrativos heredados.
 - Las acciones principales comparten color base, hover y foco visible; las acciones secundarias y destructivas conservan su jerarquía semántica.
 - Sin cambios de lógica, API o base de datos.
+
+### Rediseño de páginas de Marketing (2026-10-14)
+
+- Las cinco pantallas de Marketing usan ahora la misma superficie clara, tarjetas blancas, tablas, controles y estados de acción del resto del panel.
+- Los formularios existentes de banners promocionales e informativos, anuncios, reglas promocionales y cupones se abren en modales accesibles con botones Crear y Cancelar. Editar abre el modal existente con los datos cargados; al cerrar o cancelar se restablece el formulario.
+- Se conservaron filtros, vista previa, carga a R2, publicar/desactivar, duplicar, eliminar, edición y endpoints existentes. Sin cambios de API ni D1.
+- Typecheck, lint de arquitectura y `git diff --check` pasaron; no ejecuté pruebas automatizadas ni revisión visual en navegador.

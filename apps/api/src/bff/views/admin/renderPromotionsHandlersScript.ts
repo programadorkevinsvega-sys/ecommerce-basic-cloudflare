@@ -87,7 +87,7 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('prFormTitle').textContent = 'Editar Regla de Promoción';
       document.getElementById('prSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('prCancelBtn').style.display = 'inline-block';
-      document.getElementById('newPromoRuleForm').scrollIntoView({ behavior: 'smooth' });
+      window.openMarketingModal('promotion-rule');
     }
 
     function resetPromoRuleForm() {
@@ -144,7 +144,7 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('cpFormTitle').textContent = 'Editar Cupón de Descuento';
       document.getElementById('cpSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('cpCancelBtn').style.display = 'inline-block';
-      document.getElementById('newCouponForm').scrollIntoView({ behavior: 'smooth' });
+      window.openMarketingModal('discount-coupon');
     }
 
     function resetCouponForm() {
