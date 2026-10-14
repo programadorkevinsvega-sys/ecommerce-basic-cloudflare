@@ -8,6 +8,7 @@ interface BrandRow {
   slug: string;
   description?: string;
   website_url?: string;
+  image_media_id?: string | null;
   status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
@@ -33,16 +34,17 @@ export class D1BrandRepository implements IBrandRepository {
   public async save(brand: Brand): Promise<void> {
     const p = brand.toPrimitives();
     await this.db.prepare(
-      `INSERT INTO catalog_brands (id, name, slug, description, website_url, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO catalog_brands (id, name, slug, description, website_url, status, created_at, updated_at, image_media_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          name = excluded.name,
          slug = excluded.slug,
          description = excluded.description,
          website_url = excluded.website_url,
          status = excluded.status,
+         image_media_id = excluded.image_media_id,
          updated_at = excluded.updated_at`
-    ).bind(p.id, p.name, p.slug, p.description ?? null, p.websiteUrl ?? null, p.status, p.createdAt, p.updatedAt).run();
+    ).bind(p.id, p.name, p.slug, p.description ?? null, p.websiteUrl ?? null, p.status, p.createdAt, p.updatedAt, p.imageMediaId ?? null).run();
   }
 
   public async delete(id: string): Promise<void> {
@@ -70,6 +72,7 @@ export class D1BrandRepository implements IBrandRepository {
       slug: row.slug,
       description: row.description ?? undefined,
       websiteUrl: row.website_url ?? undefined,
+      imageMediaId: row.image_media_id ?? undefined,
       status: row.status,
       createdAt: row.created_at,
       updatedAt: row.updated_at,

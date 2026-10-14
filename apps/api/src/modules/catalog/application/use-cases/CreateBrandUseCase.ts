@@ -7,6 +7,7 @@ export interface CreateBrandInput {
   slug?: string;
   description?: string;
   websiteUrl?: string;
+  imageMediaId?: string;
 }
 
 export class CreateBrandUseCase {

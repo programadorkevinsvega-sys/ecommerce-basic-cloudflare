@@ -113,6 +113,7 @@ def check_legacy_backfills() -> None:
     catalog_path = MIGRATIONS / "catalog/infrastructure/persistence/d1/migrations"
     for migration in sorted(catalog_path.glob("000[1-3]_*.sql")):
         catalog.executescript(migration.read_text(encoding="utf-8"))
+    catalog.execute("INSERT INTO catalog_brands(id,name,slug,created_at,updated_at) VALUES('b','Legacy Brand','legacy-brand','t0','t0')")
     catalog.execute("INSERT INTO catalog_products(id,name,slug,description,price_in_cents,sku,created_at,updated_at) VALUES('p','Legacy','legacy','desc',10000,'sku','t0','t0')")
     catalog.executescript((catalog_path / "0004_product_pricing.sql").read_text(encoding="utf-8"))
     legacy = catalog.execute("SELECT price_in_cents,pricing_version,supplier_cost_cents,target_margin_basis_points FROM catalog_products WHERE id='p'").fetchone()
@@ -129,9 +130,13 @@ def check_legacy_backfills() -> None:
     previous_product = catalog.execute("SELECT price_in_cents,pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone()
     catalog.executescript((catalog_path / "0008_collections.sql").read_text(encoding="utf-8"))
     catalog.executescript((catalog_path / "0008_collections.sql").read_text(encoding="utf-8"))
+    catalog.executescript((catalog_path / "0009_collection_image.sql").read_text(encoding="utf-8"))
+    catalog.executescript((catalog_path / "0010_brand_image.sql").read_text(encoding="utf-8"))
     assert catalog.execute("SELECT price_in_cents,pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone() == previous_product
     assert catalog.execute("SELECT status FROM catalog_collections").fetchone() is None
-    print("Legacy catalog upgrade passed (price and margin metadata preserved; collection tables added from v7).")
+    assert catalog.execute("SELECT name, image_media_id FROM catalog_brands WHERE id='b'").fetchone() == ("Legacy Brand", None)
+    assert catalog.execute("SELECT image_media_id FROM catalog_collections").fetchone() is None
+    print("Legacy catalog upgrade passed (product and brand data preserved; collection and brand image columns added).")
 
     invoices = sqlite3.connect(":memory:")
     invoice_path = MIGRATIONS / "invoicing/infrastructure/persistence/d1/migrations"

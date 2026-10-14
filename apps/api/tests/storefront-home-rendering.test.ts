@@ -6,6 +6,8 @@ import { renderCatalogPage } from '../src/bff/views/renderCatalogPage.js';
 import { renderCheckoutPage } from '../src/bff/views/renderCheckoutPage.js';
 import { renderStorefrontBanners } from '../src/bff/views/renderStorefrontBanners.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
+import { renderBrandDirectoryPage } from '../src/bff/views/renderBrandDirectoryPage.js';
+import { getStorefrontNavMenus } from '../src/bff/controllers/storefront/StorefrontNavigationHelper.js';
 
 const product: CatalogProductDto = {
   id: 'product-1', name: 'Lámpara de lectura', slug: 'lampara-lectura', description: 'Luz cálida',
@@ -25,6 +27,16 @@ describe('storefront presentation', () => {
     expect(html).toContain('15.990');
     expect(html).not.toContain('Marca Ejemplo');
     expect(html).toContain('Envíos locales y nacionales');
+  });
+
+  it('shows registered brand images on the home brand cards and public directory', async () => {
+    const brand = { id:'b1', name:'Casa Verde', slug:'casa-verde', imageMediaId:'brand-media-1', status:'active' as const };
+    const home = renderProductList([product], undefined, undefined, undefined, new Map([['casa verde','/marcas/casa-verde']]), [brand]);
+    expect(home).toContain('src="/media/brand-media-1"');
+    expect(home).toContain('href="/marcas/casa-verde"');
+    expect(renderBrandDirectoryPage([brand])).toContain('alt="Casa Verde"');
+    const nav = await getStorefrontNavMenus({ getMenuByCode: async (code: string) => code === 'header' ? { items:[{title:'Inicio',url:'/'},{title:'Catálogo',url:'/productos'}] } : null, listPages:async()=>[] } as never, { getSettings:async()=>({}) } as never);
+    expect(nav.headerMenuItems.filter((item) => item.url === '/marcas')).toEqual([{ title:'Marcas', url:'/marcas' }]);
   });
 
   it('keeps informative banners free of promotional calls to action', () => {

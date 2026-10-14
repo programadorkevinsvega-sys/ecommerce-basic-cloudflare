@@ -4,6 +4,7 @@ export interface BrandProps {
   slug: string;
   description?: string;
   websiteUrl?: string;
+  imageMediaId?: string;
   status?: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;

@@ -70,6 +70,10 @@ export const storefrontComponentStyles = String.raw`
     .brand-tile { display: flex; min-height: 150px; flex-direction: column; justify-content: space-between; padding: 1.2rem; border: 1px solid #e1e5de; border-radius: 16px; background: #fff; text-decoration: none; transition: transform .2s ease, border-color .2s ease; }
     .brand-tile:hover { transform: translateY(-3px); border-color: #a9b8a8; }
     .brand-tile > span:first-child { color: #799276; font-size: 1.25rem; }
+    .brand-image-frame { display:flex; min-height:74px; align-items:center; justify-content:flex-start; }
+    .brand-image-frame img { width:min(100%,150px); height:74px; object-fit:contain; object-position:left center; }
+    .brand-detail-heading { display:flex; align-items:center; gap:1.5rem; }
+    .brand-detail-heading>img { width:150px; height:120px; object-fit:contain; }
     .brand-tile strong { font-size: 1.1rem; }
     .brand-tile > span:last-child { color: var(--muted); font-size: .8rem; }
     .benefits-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 3rem; padding: 1.6rem; border: 1px solid #e1e5de; border-radius: 18px; background: #fff; }
@@ -148,6 +152,7 @@ export const storefrontComponentStyles = String.raw`
       .site-footer { padding: 2.25rem 1rem 1.5rem; }
       .brand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
       .brand-tile { min-height: 125px; padding: .9rem; }
+      .brand-detail-heading>img { width:90px; height:90px; }
       .benefits-strip { grid-template-columns: 1fr; padding: 1rem; gap: .55rem; }
       .benefits-strip article { padding: .35rem; }
       .footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }

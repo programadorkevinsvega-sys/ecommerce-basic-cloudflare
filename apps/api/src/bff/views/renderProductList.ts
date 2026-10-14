@@ -3,6 +3,7 @@ import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js'
 import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
 import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
 import { renderStorefrontCarouselScript } from './renderStorefrontCarouselScript.js';
+import { BrandDto } from '../gateways/catalog/CatalogGateway.js';
 
 export interface BannerItem {
   id: string;
@@ -20,7 +21,8 @@ export function renderProductList(
   searchQuery?: string,
   banner?: BannerItem | BannerItem[],
   discountMap?: Map<string, ProductDiscountDto>,
-  brandLinks: Map<string, string> = new Map()
+  brandLinks: Map<string, string> = new Map(),
+  brandAssets: BrandDto[] = []
 ): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
   const banners = (Array.isArray(banner) ? banner : banner ? [banner] : []).filter(Boolean);
@@ -49,7 +51,8 @@ export function renderProductList(
         : '';
 
   const brands = [...new Set(products.map((product) => product.brand?.trim()).filter((brand): brand is string => Boolean(brand)))].slice(0, 4);
-  const brandSection = brands.length ? `<section class="brand-section" aria-labelledby="brand-title"><div class="section-heading"><div><span class="eyebrow">Encuentra lo que buscas</span><h2 id="brand-title">Compra por línea</h2></div><a href="/marcas">Ver marcas <span aria-hidden="true">↗</span></a></div><div class="brand-grid">${brands.map((brand) => `<a class="brand-tile" href="${brandLinks.get(brand.toLocaleLowerCase()) || `/productos?q=${encodeURIComponent(brand)}`}"><span aria-hidden="true">✳</span><strong>${escapeHtml(brand)}</strong><span>Ver productos <span aria-hidden="true">→</span></span></a>`).join('')}</div></section>` : '';
+  const brandByName = new Map(brandAssets.map((brand) => [brand.name.trim().toLocaleLowerCase(), brand]));
+  const brandSection = brands.length ? `<section class="brand-section" aria-labelledby="brand-title"><div class="section-heading"><div><span class="eyebrow">Encuentra lo que buscas</span><h2 id="brand-title">Compra por línea</h2></div><a href="/marcas">Ver marcas <span aria-hidden="true">↗</span></a></div><div class="brand-grid">${brands.map((name) => { const asset = brandByName.get(name.toLocaleLowerCase()); const href = brandLinks.get(name.toLocaleLowerCase()) || `/productos?q=${encodeURIComponent(name)}`; return `<a class="brand-tile" href="${escapeHtml(href)}">${asset?.imageMediaId ? `<span class="brand-image-frame"><img src="/media/${encodeURIComponent(asset.imageMediaId)}" alt="${escapeHtml(name)}" loading="lazy"></span>` : '<span aria-hidden="true">✳</span>'}<strong>${escapeHtml(name)}</strong><span>Ver productos <span aria-hidden="true">→</span></span></a>`; }).join('')}</div></section>` : '';
   const searchForm = searchQuery ? `<form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
       <label class="search-label" for="store-search">Buscar</label>
       <input id="store-search" type="search" name="q" placeholder="¿Qué estás buscando hoy?" value="${queryVal}" required />

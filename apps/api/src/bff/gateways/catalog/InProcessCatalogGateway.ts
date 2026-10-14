@@ -77,6 +77,7 @@ export class InProcessCatalogGateway implements CatalogGateway {
     slug?: string;
     description?: string;
     websiteUrl?: string;
+    imageMediaId?: string;
   }): Promise<BrandDto> {
     const brand = await this.publicApi.createBrand(request);
     return brand.toPrimitives();

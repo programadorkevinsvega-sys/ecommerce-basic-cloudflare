@@ -127,6 +127,7 @@ export interface BrandDto {
   slug: string;
   description?: string;
   websiteUrl?: string;
+  imageMediaId?: string;
   status?: 'active' | 'inactive';
 }
 
@@ -161,7 +162,7 @@ export interface CatalogGateway {
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
   listCategories(query?: CatalogPageQuery): Promise<CategoryDto[]>;
   deleteCategory(id: string): Promise<void>;
-  createBrand(request: { name: string; slug?: string; description?: string; websiteUrl?: string }): Promise<BrandDto>;
+  createBrand(request: { name: string; slug?: string; description?: string; websiteUrl?: string; imageMediaId?: string }): Promise<BrandDto>;
   listBrands(query?: CatalogPageQuery): Promise<BrandDto[]>;
   updateBrandDescription(id: string, description: string): Promise<BrandDto>;
   createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;

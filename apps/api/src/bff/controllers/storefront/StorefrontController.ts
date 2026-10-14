@@ -54,7 +54,7 @@ export class StorefrontController {
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
       const activeAnnouncement = homeContent.announcements[0];
       const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
-      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks);
+      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');

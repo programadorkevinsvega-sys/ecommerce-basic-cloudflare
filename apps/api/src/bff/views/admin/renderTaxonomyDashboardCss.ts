@@ -77,6 +77,9 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-form footer { display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #e8eaf0; padding-top:16px; }
     @media(max-width:680px) { .taxonomy-heading h1 { font-size:22px; }.taxonomy-list-heading { align-items:flex-start; padding:16px; }.taxonomy-list-heading .taxonomy-primary { flex:none; }.taxonomy-table th,.taxonomy-table td { padding:12px; }.taxonomy-modal { align-items:flex-end; padding:0; }.taxonomy-modal-dialog { max-height:93vh; border-radius:15px 15px 0 0; }.taxonomy-modal-dialog>header,.taxonomy-form { padding:17px; }.taxonomy-fields { grid-template-columns:1fr; gap:12px; }.taxonomy-fields .wide { grid-column:auto; }.taxonomy-form footer { flex-direction:column-reverse; }.taxonomy-form footer button { width:100%; } }
     .taxonomy-row-actions { min-width:300px; }
+    .brand-row-image { width:48px; height:40px; margin-right:10px; border-radius:7px; object-fit:contain; vertical-align:middle; }
+    .brand-image-preview { min-height:130px; }
+    .brand-image-preview img { width:140px; height:120px; object-fit:contain; }
     .taxonomy-row-actions .taxonomy-secondary,.taxonomy-row-actions .taxonomy-danger { min-height:34px; margin:2px; border-radius:7px; padding:0 10px; font-size:11px; }
     .taxonomy-table a { color:#303744; text-decoration:underline; text-underline-offset:3px; }
     .taxonomy-table textarea:focus { border-color:#788293; outline:0; box-shadow:0 0 0 3px #e3e6ec; }

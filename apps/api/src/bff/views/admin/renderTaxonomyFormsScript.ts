@@ -46,7 +46,7 @@ export function renderTaxonomyFormsScript(): string {
     function renderCatalogTaxonomyRow(key, item) {
       const e = escapeHtml;
       if (key === 'categories') return '<tr><td><strong>' + e(item.name) + '</strong><small>' + e(item.description || '') + '</small></td><td><code>' + e(item.slug) + '</code></td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id) + '</td></tr>';
-      if (key === 'brands') return '<tr><td><strong>' + e(item.name) + '</strong></td><td><code>' + e(item.slug) + '</code></td><td>' + e(item.description || '—') + '</td><td>' + e(item.websiteUrl || '—') + '</td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id) + '</td></tr>';
+      if (key === 'brands') return '<tr><td>' + (item.imageMediaId ? '<img class="brand-row-image" src="/media/' + e(item.imageMediaId) + '" alt="" loading="lazy">' : '') + '<strong>' + e(item.name) + '</strong></td><td><code>' + e(item.slug) + '</code></td><td>' + e(item.description || '—') + '</td><td>' + e(item.websiteUrl || '—') + '</td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id, item.status) + '</td></tr>';
       if (key === 'providers') return '<tr><td><strong>' + e(item.name) + '</strong><small>' + e(item.notes || '') + '</small></td><td>' + e(item.taxId || '—') + '</td><td>' + e([item.email,item.phone].filter(Boolean).join(' · ') || '—') + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id, item.status) + '</td></tr>';
       if (key === 'attributes') return '<tr><td><strong>' + e(item.name) + '</strong></td><td><code>' + e(item.code) + '</code></td><td>' + e(item.type) + '</td><td>' + e((item.options || []).join(', ') || '—') + '</td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id) + '</td></tr>';
       if (key === 'collections') return '<tr><td>' + (item.imageMediaId ? '<img class="collection-row-image" src="/media/' + e(item.imageMediaId) + '" alt="" loading="lazy">' : '') + '<strong>' + e(item.name) + '</strong><small>/colecciones/' + e(item.slug) + '</small></td><td>' + Number(item.productIds?.length||0) + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key,item.id,item.status) + '</td></tr>';
@@ -109,6 +109,7 @@ export function renderTaxonomyFormsScript(): string {
       modal.querySelector('h2').textContent = item ? 'Editar ' + (catalogPageCopy[key]?.[0] || 'registro').toLowerCase() : modal.dataset.createTitle;
       modal.querySelector('form')?.reset();
       if (key === 'collections') window.resetCollectionFormControls();
+      if (key === 'brands') window.setBrandImage('');
       modal.querySelectorAll('input[id$="Slug"]').forEach((field) => { delete field.dataset.edited; if (item) field.dataset.edited = 'true'; });
       if (item) fillTaxonomyForm(key, item);
       if (key === 'collections' && !item) window.openCollectionProductPicker();
@@ -128,6 +129,7 @@ export function renderTaxonomyFormsScript(): string {
       Object.entries(fields).forEach(([id,value]) => { const field = document.getElementById(id); if (field) field.value = value ?? ''; });
       if (key === 'variants') window.setCopInputValue('variantPrice', item.priceInCents == null ? '' : Math.round(item.priceInCents / 100));
       if (key === 'collections') { window.setCollectionProducts(item.productIds || []); window.setCollectionImage(item.imageMediaId || ''); }
+      if (key === 'brands') window.setBrandImage(item.imageMediaId || '');
     }
     window.closeTaxonomyModal = (key) => {
       const modal = document.getElementById('taxonomy-modal-' + key);
@@ -166,7 +168,9 @@ export function renderTaxonomyFormsScript(): string {
       try {
         const editing = taxonomyEditing?.key === key ? taxonomyEditing : null;
         const targetUrl = editing ? (key === 'collections' ? '/api/v1/admin/collections/' : '/api/v1/admin/catalog/' + key + '/') + encodeURIComponent(editing.id) : url;
-        const response = await fetch(targetUrl,{method:editing ? 'PUT' : 'POST',headers:adminHeaders(true),body:JSON.stringify(makePayload())});
+        const payload = makePayload();
+        if (key === 'brands' && editing) payload.imageMediaId = optional('brandImageId') || null;
+        const response = await fetch(targetUrl,{method:editing ? 'PUT' : 'POST',headers:adminHeaders(true),body:JSON.stringify(payload)});
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
           throw new Error(body.error || 'No se pudo guardar. Revisa los datos e inténtalo otra vez.');
@@ -176,12 +180,8 @@ export function renderTaxonomyFormsScript(): string {
         message.textContent = error instanceof Error ? error.message : 'No se pudo guardar.'; button.disabled = false;
       }
     }
-    document.getElementById('newCategoryForm')?.addEventListener('submit',(event) => submitCatalogForm(event,'categories','/api/v1/admin/categories',() => ({
-      name:document.getElementById('catName').value.trim(),slug:document.getElementById('catSlug').value || undefined,description:document.getElementById('catDesc').value.trim() || undefined
-    })));
-    document.getElementById('newBrandForm')?.addEventListener('submit',(event) => submitCatalogForm(event,'brands','/api/v1/admin/brands',() => ({
-      name:document.getElementById('brandName').value.trim(),slug:document.getElementById('brandSlug').value || undefined,description:document.getElementById('brandDescription').value.trim() || undefined,websiteUrl:document.getElementById('brandWeb').value || undefined
-    })));
+    document.getElementById('newCategoryForm')?.addEventListener('submit',(event) => submitCatalogForm(event,'categories','/api/v1/admin/categories',() => ({ name:document.getElementById('catName').value.trim(),slug:document.getElementById('catSlug').value || undefined,description:document.getElementById('catDesc').value.trim() || undefined })));
+    document.getElementById('newBrandForm')?.addEventListener('submit',(event) => submitCatalogForm(event,'brands','/api/v1/admin/brands',() => ({ name:document.getElementById('brandName').value.trim(),slug:document.getElementById('brandSlug').value || undefined,description:document.getElementById('brandDescription').value.trim() || undefined,websiteUrl:document.getElementById('brandWeb').value || undefined,imageMediaId:optional('brandImageId') })));
     document.getElementById('newAttributeForm')?.addEventListener('submit',(event) => submitCatalogForm(event,'attributes','/api/v1/admin/attributes',() => ({
       name:document.getElementById('attrName').value.trim(),code:document.getElementById('attrCode').value.trim(),type:document.getElementById('attrType').value,options:document.getElementById('attrOptions').value.split(',').map((v) => v.trim()).filter(Boolean)
     })));
