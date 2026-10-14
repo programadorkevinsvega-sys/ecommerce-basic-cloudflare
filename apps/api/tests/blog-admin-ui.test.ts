@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderAdminDashboardScript } from '../src/bff/views/admin/renderAdminDashboardScript.js';
 import { renderBlogAdminScript } from '../src/bff/views/admin/renderBlogAdminScript.js';
 import { renderBlogDashboardCss } from '../src/bff/views/admin/renderBlogDashboardCss.js';
+import { renderBlogManagementSection } from '../src/bff/views/admin/renderBlogManagementSection.js';
 
 describe('Blog admin presentation and actions', () => {
   it('uses the same light admin surface as the CMS management page', () => {
@@ -24,6 +25,11 @@ describe('Blog admin presentation and actions', () => {
   it('styles taxonomy tables and actions with the unified admin presentation',()=>{
     const css=renderBlogDashboardCss();
     expect(css).toContain('.blog-taxonomy-table');expect(css).toContain('.blog-row-action-delete');expect(css).toContain('.blog-view-content');
+  });
+  it('keeps the article actions together when the desktop table has room',()=>{
+    expect(renderBlogManagementSection()).toContain('blog-article-table');
+    expect(renderBlogDashboardCss()).toContain('.blog-article-table .blog-row-actions{flex-wrap:nowrap');
+    expect(renderBlogDashboardCss()).toContain('.blog-article-table td:last-child{min-width:330px}');
   });
 
   it('opens the new article dialog without waiting for taxonomy requests', () => {

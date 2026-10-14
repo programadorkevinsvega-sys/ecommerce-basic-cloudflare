@@ -499,3 +499,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Sin migraciones y sin cambios a datos existentes.
 - Pruebas: `pnpm test` (46 archivos/137 pruebas), `pnpm test:workers` (6 archivos/17 pruebas), `pnpm typecheck`, `pnpm lint`, `git diff --check` y `wrangler deploy --dry-run`, todos aprobados. Añadí cobertura RBAC/UI y una prueba D1 Worker para borrado y relaciones.
 - Commit `366bd74` enviado a `main`; Wrangler desplegó la versión `338d7c4a-097c-4373-a8fc-db3c0ca5afe0`. Smoke posterior: `/health` y `/blog` respondieron HTTP 200. No se hizo inspección visual autenticada del panel; no se borraron datos existentes.
+
+### Ajuste de línea para acciones del listado del Blog (2026-10-14)
+
+- La captura mostró que `Eliminar` envolvía a una segunda línea porque los cuatro controles excedían el ancho de la columna. Aumenté el espacio de la columna de acciones de artículos y configuré sus controles para permanecer en una sola línea en escritorios; en pantallas estrechas pueden envolver para conservar accesibilidad.
+- Pruebas: UI Blog (7), typecheck, lint de arquitectura, `git diff --check` y Wrangler dry-run.
+- Despliegue pendiente.
