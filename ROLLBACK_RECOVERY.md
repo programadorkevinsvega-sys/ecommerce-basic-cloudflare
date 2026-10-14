@@ -181,6 +181,10 @@ La migración agrega cuatro tablas y sus índices en el prefijo `cms_`; no alter
 
 La publicación programada se ejecuta cada cinco minutos y es condicional a `status='scheduled'` y a que `scheduled_at` haya vencido, por lo que repetir el cron no vuelve a publicar ni duplica su efecto. El auditor debe conservar los registros de publicación automática. La generación dinámica del sitemap no requiere backfill ni invalidación manual.
 
+### Contenido inicial del Blog (`cms__0004_blog_welcome_article.sql`, 2026-10-14)
+
+La migración inserta de forma idempotente el autor institucional Vega Store, la categoría Novedades y un artículo de bienvenida publicado con IDs estables. Se verificó antes de aplicarla que producción tenía v3 pero cero autores, categorías y artículos. El contenido se relaciona solo con tablas `cms_*`; no altera páginas CMS ni usa imágenes. Después se verificaron ledger v4, exactamente un artículo publicado, sus relaciones y `PRAGMA foreign_key_check` vacío; `/blog` y el detalle devolvieron HTTP 200. Bookmark Time Travel previo `00000281-00000152-00005104-0d1d5159a6b3435bacb7ba398bedf3ed`; posterior `00000281-0000019a-00005104-201a677cda563d5e1a50a199aacfeec5`. Para rollback del Worker, conservar las filas y el esquema: no borrar el artículo ni su taxonomía automáticamente.
+
 ## R2
 
 - Mantener el bucket privado y las claves de objeto estables durante el release.

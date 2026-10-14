@@ -102,10 +102,16 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `cms__0002_institutional_pages.sql` | v2 | Local | Pendiente | trabajo actual | ⏳ Por aplicar; la inserción está condicionada por slug/ID y versión |
 | `cms__0003_blog.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | Este release | ✅ Aplicada con el runner; ledger y cuatro tablas verificadas; `PRAGMA foreign_key_check` vacío |
 | `cms__0003_blog.sql` | v3 | Local (Miniflare/D1) | 2026-10-14 | Este release | ✅ Desde D1 vacía, upgrade legado y segunda pasada idempotente; publicación/SSR verificadas |
+| `cms__0004_blog_welcome_article.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `8620b98` | ✅ Aplicada con runner; ledger, artículo, autor, categoría y relación verificados; FK check vacío |
+| `cms__0004_blog_welcome_article.sql` | v4 | Local (SQLite/D1) | 2026-10-14 | `8620b98` | ✅ Upgrade legado; semilla repetida sin duplicados; 46 migraciones desde cero y segunda pasada |
 
 `cms__0002_institutional_pages.sql` es una migración de contenido aditiva: inserta solo cuando el slug no existe, crea versión 1 únicamente para los IDs de página sembrados y deja cada página en `draft`. No cambia tablas ni elimina datos. La reversión del Worker conserva estas páginas; no borrar las filas para volver a una versión anterior. Los borradores se publican desde Administración → Páginas CMS después de completar y revisar su contenido.
 
 `cms__0003_blog.sql` agrega `cms_blog_authors`, `cms_blog_categories`, `cms_blog_posts` y `cms_blog_post_categories` con índices y claves foráneas internas al módulo. No altera páginas ni datos existentes. Puede volver a ejecutarse porque las tablas e índices usan `IF NOT EXISTS`. No tiene down migration: si el Worker se revierte, se conservan los artículos y el esquema; no ejecutar `DROP`. La publicación programada la procesa el Cron ya configurado cada cinco minutos y deja una entrada de auditoría por artículo publicado.
+
+`cms__0004_blog_welcome_article.sql` crea de forma idempotente el perfil editorial Vega Store, la categoría Novedades y un único artículo de bienvenida publicado, solo si esos IDs/slugs aún no existen. No modifica páginas CMS ni artículos existentes y no contiene enlaces ni medios externos. Es una semilla de contenido y su retirada no forma parte del rollback: conservar el contenido y las tablas aunque se revierta el Worker.
+
+En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero autores/categorías/artículos, 10 páginas CMS y cero errores de claves foráneas. Aplicada con `ALLOW_REMOTE_D1_MIGRATIONS=1 pnpm db:migrate:remote`; después, ledger con v4, exactamente un artículo publicado, una categoría, un autor, una relación y `PRAGMA foreign_key_check` vacío. `/blog`, `/blog/bienvenido-al-blog-de-vega-store` y `/sitemap-blog.xml` respondieron HTTP 200. Bookmarks Time Travel: previo `00000281-00000152-00005104-0d1d5159a6b3435bacb7ba398bedf3ed`; posterior `00000281-0000019a-00005104-201a677cda563d5e1a50a199aacfeec5`.
 
 ---
 

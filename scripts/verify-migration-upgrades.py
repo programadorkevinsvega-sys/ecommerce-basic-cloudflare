@@ -75,11 +75,17 @@ def check_legacy_backfills() -> None:
     cms.executescript((cms_path / "0002_institutional_pages.sql").read_text(encoding="utf-8"))
     cms.executescript((cms_path / "0003_blog.sql").read_text(encoding="utf-8"))
     cms.executescript((cms_path / "0003_blog.sql").read_text(encoding="utf-8"))
+    blog_seed = (cms_path / "0004_blog_welcome_article.sql").read_text(encoding="utf-8")
+    cms.executescript(blog_seed)
+    cms.executescript(blog_seed)
     assert cms.execute("SELECT title,status FROM cms_pages WHERE id='legacy-page'").fetchone() == ("Página existente", "published")
     assert {row[0] for row in cms.execute("SELECT name FROM sqlite_master WHERE type='table'")} >= {
         "cms_blog_authors", "cms_blog_categories", "cms_blog_posts", "cms_blog_post_categories",
     }
-    print("Legacy CMS upgrade passed (existing published page preserved; blog migration repeatable).")
+    assert cms.execute("SELECT title,status FROM cms_blog_posts WHERE slug='bienvenido-al-blog-de-vega-store'").fetchone() == ("Bienvenido al blog de Vega Store", "published")
+    assert cms.execute("SELECT COUNT(*) FROM cms_blog_posts").fetchone()[0] == 1
+    assert cms.execute("SELECT COUNT(*) FROM cms_blog_post_categories").fetchone()[0] == 1
+    print("Legacy CMS upgrade passed (published page preserved; blog schema and welcome seed idempotent).")
 
     db = sqlite3.connect(":memory:")
     for module in ("payments", "realtime", "storefront"):

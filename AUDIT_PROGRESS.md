@@ -468,3 +468,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Verificación actual: typecheck, lint de arquitectura y `pnpm test` (46 archivos/129 pruebas) aprobados; la prueba de compilación de JavaScript de interfaz CMS y `git diff --check` limpios.
 - No inserté artículos directamente en D1: no tengo una sesión de administrador con MFA para registrar el contenido mediante las rutas auditadas del panel. La corrección permitirá que se cree desde “+ Nuevo artículo”.
 - Commit `8620b98` enviado a `main`; el push no desplegó automáticamente. Wrangler dry-run y publicación correctos; versión `5bba11f7-76d3-4025-a842-f7248507e7a2`. Smoke de `/health`, `/blog` y `/sitemap-blog.xml`: HTTP 200.
+
+### Semilla inicial del Blog CMS (2026-10-14)
+
+- Añadí `cms__0004_blog_welcome_article.sql`, una migración de contenido idempotente que crea el autor editorial Vega Store, la categoría Novedades y el artículo publicado “Bienvenido al blog de Vega Store”. No altera páginas CMS ni contenido previo.
+- Pruebas: consistencia de copias; upgrade CMS legado y repetición idempotente (exactamente un post/relación); D1 temporal desde cero con 46 migraciones y segunda pasada sin cambios; `git diff --check`.
+- Producción antes: 45 migraciones, cero autores/categorías/posts, 10 páginas CMS, sin errores FK. Aplicada solo v4 con el runner remoto autorizado. Después: v4 en ledger, un post, autor, categoría y asociación; FK check vacío. Bookmarks: previo `00000281-00000152-00005104-0d1d5159a6b3435bacb7ba398bedf3ed`, posterior `00000281-0000019a-00005104-201a677cda563d5e1a50a199aacfeec5`.
+- Smoke: `/health`, `/blog`, `/blog/bienvenido-al-blog-de-vega-store` y `/sitemap-blog.xml` respondieron HTTP 200; el título aparece en el listado público. Cambios documentales y commit/push pendientes.
