@@ -22,11 +22,17 @@ export class PdfInvoiceAdapter implements IInvoicePdfPort {
       }
     };
 
-    add(invoice.snapshot.company?.storeName || invoice.snapshot.company?.legalName || 'VEGA STORE', true, 20);
+    const company = invoice.snapshot.company;
+    add(company?.storeName || company?.legalName || 'VEGA STORE', true, 20);
     add(`FACTURA DE VENTA ${invoice.invoiceNumber}`, true, 14);
     add(`Fecha: ${new Date(invoice.createdAt).toLocaleString('es-CO')}   Pedido: ${invoice.orderId}`);
-    add(`NIT: ${invoice.snapshot.company?.nit || 'No registrado'}   ${invoice.snapshot.company?.address || 'Colombia'}`);
-    add(`Contacto: ${invoice.snapshot.company?.email || 'soporte@tienda.com'}`);
+    if (company?.legalName) add(`Razón social / Propietario: ${company.legalName}`);
+    add(`NIT / Cédula Fiscal: ${company?.nit || 'No registrado'}`);
+    add(`Dirección de la tienda: ${company?.address || 'No registrada'}`);
+    const storeLocation = [company?.city, company?.country].filter(Boolean).join(', ');
+    add(`Ciudad / País de la tienda: ${storeLocation || 'No registrados'}`);
+    add(`Email de soporte: ${company?.email || 'No registrado'}`);
+    if (company?.phone) add(`Teléfono de la tienda: ${company.phone}`);
     add('DATOS DEL CLIENTE', true, 12);
     add(`Nombre: ${invoice.customerName}   Identificación: ${invoice.customerTaxId || 'No registrada'}`);
     add(`Email: ${invoice.customerEmail}   Teléfono: ${invoice.customerPhone || 'No registrado'}`);

@@ -98,6 +98,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
           nit: storeSettings.companyNit,
           legalName: storeSettings.companyLegalName,
           address: storeSettings.companyAddress,
+          city: storeSettings.companyCity,
+          country: storeSettings.companyCountry,
           email: storeSettings.supportEmail,
           phone: storeSettings.supportPhone,
         } : undefined,

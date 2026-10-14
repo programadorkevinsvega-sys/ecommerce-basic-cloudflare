@@ -29,6 +29,8 @@ export interface InvoiceSnapshot {
     nit?: string;
     legalName?: string;
     address?: string;
+    city?: string;
+    country?: string;
     email?: string;
     phone?: string;
   };

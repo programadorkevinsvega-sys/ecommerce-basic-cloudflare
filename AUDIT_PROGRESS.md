@@ -238,3 +238,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - El formulario no mostraba ningún mensaje cuando PATCH `/api/v1/settings` fallaba; por eso los errores de validación/autorización parecían un botón que no respondía. Ahora muestra estado de guardado, errores del servidor (incluidos los campos rechazados), errores de red y restaura el botón al terminar.
 - Verificaciones: `pnpm typecheck`, `pnpm lint`, dry-run de Wrangler y `git diff --check`. No ejecuté pruebas automatizadas ni modifiqué la validación de dominios sociales o el backend.
+
+### Datos de Configuración en las facturas (2026-10-14)
+
+- La emisión de factura ya capturaba correo, razón social, NIT y dirección en el snapshot, pero el PDF omitía la razón social cuando había nombre comercial, no presentaba ciudad/país y usaba un correo de ejemplo como fallback. Ahora el snapshot incluye ciudad/país, y el PDF muestra por separado nombre comercial, razón social, NIT, dirección, ciudad/país y correo de soporte tomados de Configuración. El mismo PDF se adjunta al email de confirmación.
+- Sin migración D1: `company` está serializado dentro del snapshot JSON y los nuevos campos son opcionales. Las facturas emitidas conservan su snapshot inmutable; los PDFs históricos no se reescriben al cambiar Configuración.
+- Pendiente de validar una factura real nueva después del despliegue. No ejecuté pruebas automatizadas.
