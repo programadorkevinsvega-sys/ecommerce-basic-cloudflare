@@ -41,4 +41,22 @@ describe('field-level admin mutation audit', () => {
     expect(response.status).toBe(503);
     expect(handler).not.toHaveBeenCalled();
   });
+
+  it('allows the authenticated read-only historical price preview without a mutation snapshot', async () => {
+    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'admin-1', actorType: 'admin', permissions: [], mfaEnabled: true }) } as unknown as IdentityGateway;
+    const audit = { record: vi.fn() } as unknown as AuditGateway;
+    const read = vi.fn().mockRejectedValue(new Error('No snapshot for preview'));
+    const handler = vi.fn((c) => c.json({ data: { legacyProductCount: 0 } }));
+    const app = new Hono();
+    app.use('*', createAdminMutationAuditMiddleware(identity, audit, { read, createdResourcePath: () => null }));
+    app.post('/api/v1/admin/products/pricing-migration/preview', handler);
+
+    const response = await app.request('/api/v1/admin/products/pricing-migration/preview', {
+      method: 'POST', headers: { cookie: '__Host-admin-session=active' },
+    });
+    expect(response.status).toBe(200);
+    expect(handler).toHaveBeenCalledOnce();
+    expect(read).not.toHaveBeenCalled();
+    expect(audit.record).not.toHaveBeenCalled();
+  });
 });

@@ -11,7 +11,7 @@ interface SnapshotReader {
 
 export function createAdminMutationAuditMiddleware(identity: IdentityGateway, audit: AuditGateway, snapshots?: SnapshotReader): MiddlewareHandler {
   return async (c, next) => {
-    if (SAFE.has(c.req.method) || !isAdminMutationRoute(c.req.path) || c.req.path === '/api/v1/admin/auth/login') return next();
+    if (SAFE.has(c.req.method) || isReadOnlyAdminPost(c.req.method, c.req.path) || !isAdminMutationRoute(c.req.path) || c.req.path === '/api/v1/admin/auth/login') return next();
     const token = c.req.header('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1]
       || c.req.header('authorization')?.replace(/^Bearer\s+/, '');
     if (!token) return next();
@@ -85,6 +85,10 @@ export function createAdminMutationAuditMiddleware(identity: IdentityGateway, au
     }
     return;
   };
+}
+
+function isReadOnlyAdminPost(method: string, path: string): boolean {
+  return method === 'POST' && path === '/api/v1/admin/products/pricing-migration/preview';
 }
 
 async function readSnapshotBody(path: string, request: Request): Promise<Record<string, unknown> | undefined> {

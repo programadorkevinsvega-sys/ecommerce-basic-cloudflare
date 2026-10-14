@@ -27,7 +27,21 @@ export function renderProductFormsScript(): string {
       window.setCopInputValue('pPrice', Math.ceil(low / 100));
       const taxRate = Number(document.getElementById('productTaxRate')?.value || 19);
       const tax = Math.round(low * taxRate / (100 + taxRate));
-      document.getElementById('pPriceBreakdown').textContent = 'IVA incluido estimado: $' + Math.round(tax / 100).toLocaleString('es-CO') + '. Comisión porcentual Wompi estimada, incluido el mayor envío: $' + Math.round(fee(low) / 100).toLocaleString('es-CO') + '. En compras Wompi se suman $700 por transacción en el checkout.';
+      const grossFee = fee(low);
+      const buyerTransactionFee = includeWompi ? 70000 : 0;
+      const netFeeCost = Math.max(0, grossFee - buyerTransactionFee);
+      const netProfit = low - tax - cost - netFeeCost;
+      const netSales = low - tax;
+      const actualMargin = netSales > 0 ? (netProfit / netSales * 100).toFixed(2) : '0,00';
+      const pesos = (cents) => '$' + Math.round(cents / 100).toLocaleString('es-CO');
+      document.getElementById('pPriceBreakdown').innerHTML = '<dl class="price-breakdown">' +
+        '<div><dt>Precio bruto del producto (IVA incluido)</dt><dd>' + pesos(low) + '</dd></div>' +
+        '<div><dt>IVA incluido estimado</dt><dd>' + pesos(tax) + '</dd></div>' +
+        '<div><dt>Costo del proveedor</dt><dd>' + pesos(cost) + '</dd></div>' +
+        (includeWompi ? '<div><dt>Costo Wompi estimado, neto del cargo cobrado al comprador</dt><dd>' + pesos(netFeeCost) + '</dd></div>' : '') +
+        '<div class="price-breakdown-total"><dt>Ganancia neta estimada</dt><dd>' + pesos(netProfit) + '</dd></div>' +
+        '<div><dt>Margen real sobre venta sin IVA</dt><dd>' + actualMargin.replace('.', ',') + '%</dd></div>' +
+        '</dl><p>El precio bruto es el total del producto antes del envío. Los $700 de transacción se suman una sola vez en checkout; el costo Wompi mostrado descuenta ese valor. La comisión varía según pago y envío.</p>';
     }
     ['pCost', 'pMargin', 'pPayWompi'].forEach((id) => document.getElementById(id)?.addEventListener('input', updateRecommendedProductPrice));
 
