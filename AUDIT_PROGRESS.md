@@ -475,3 +475,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Pruebas: consistencia de copias; upgrade CMS legado y repetición idempotente (exactamente un post/relación); D1 temporal desde cero con 46 migraciones y segunda pasada sin cambios; `git diff --check`.
 - Producción antes: 45 migraciones, cero autores/categorías/posts, 10 páginas CMS, sin errores FK. Aplicada solo v4 con el runner remoto autorizado. Después: v4 en ledger, un post, autor, categoría y asociación; FK check vacío. Bookmarks: previo `00000281-00000152-00005104-0d1d5159a6b3435bacb7ba398bedf3ed`, posterior `00000281-0000019a-00005104-201a677cda563d5e1a50a199aacfeec5`.
 - Smoke: `/health`, `/blog`, `/blog/bienvenido-al-blog-de-vega-store` y `/sitemap-blog.xml` respondieron HTTP 200; el título aparece en el listado público. Cambios documentales y commit/push pendientes.
+
+### Destinos dinámicos de banners y anuncios (2026-10-14)
+
+- Amplié los selectores de banners promocionales, banners informativos y anuncios: incluyen catálogo, directorios de marcas/colecciones, Blog, páginas CMS y destinos individuales de marcas, colecciones, artículos publicados y páginas CMS publicadas. Las opciones CMS y Blog se vuelven a consultar al cargar el panel; artículos en borrador y páginas no publicadas no se ofrecen.
+- Conecté la ubicación guardada con el SSR de `/productos`, `/marcas`, `/colecciones`, `/blog`, cada artículo, páginas CMS y checkout. Se conserva compatibilidad con ubicaciones previas (`products`, `category`, `product`, `home`, `checkout`) y la barra superior global. Los filtros de banners aceptan también las nuevas ubicaciones.
+- No cambié el alcance de promociones y cupones: esos campos determinan productos/categorías elegibles para descuentos, no rutas donde mostrar contenido.
+- Corregí validación de ubicación al editar banners y el wiring de StorefrontGateway en colecciones. Sin migraciones SQL.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `pnpm test` (46 archivos, 132 pruebas) aprobados; `git diff --check` limpio. Push/despliegue y smoke HTTP pendientes.

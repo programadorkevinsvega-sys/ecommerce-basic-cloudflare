@@ -23,7 +23,7 @@ export interface BannerItemDto {
   description?: string;
   bannerType?: 'informative' | 'promotional';
   buttonText?: string;
-  placement: 'home' | 'category' | 'product' | 'checkout';
+  placement: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;
@@ -39,7 +39,7 @@ export interface UpdateBannerGatewayRequest {
   description?: string;
   bannerType?: 'informative' | 'promotional';
   buttonText?: string;
-  placement?: 'home' | 'category' | 'product' | 'checkout';
+  placement?: string;
   imageUrl?: string;
   linkUrl?: string;
   altText?: string;
@@ -52,7 +52,7 @@ export interface UpdateBannerGatewayRequest {
 export interface AnnouncementItemDto {
   id: string;
   message: string;
-  placement: 'top_bar' | 'home' | 'products';
+  placement: string;
   linkUrl?: string;
   isActive: boolean;
 }
@@ -60,7 +60,7 @@ export interface AnnouncementItemDto {
 export interface UpdateAnnouncementGatewayRequest {
   id: string;
   message?: string;
-  placement?: 'top_bar' | 'home' | 'products';
+  placement?: string;
   linkUrl?: string;
   isActive?: boolean;
   startsAt?: string;
@@ -72,7 +72,7 @@ export interface CreateBannerGatewayRequest {
   description?: string;
   bannerType?: 'informative' | 'promotional';
   buttonText?: string;
-  placement: 'home' | 'category' | 'product' | 'checkout';
+  placement: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;
@@ -87,9 +87,10 @@ export interface StorefrontGateway {
   createBanner(request: CreateBannerGatewayRequest): Promise<{ id: string; title: string }>;
   updateBanner(request: UpdateBannerGatewayRequest): Promise<BannerItemDto>;
   listBanners(): Promise<BannerItemDto[]>;
-  getPublicBanners(placement: 'category' | 'product' | 'checkout'): Promise<BannerItemDto[]>;
+  getPublicBanners(placement: string): Promise<BannerItemDto[]>;
+  getPublicAnnouncements(placement: string): Promise<AnnouncementItemDto[]>;
   deleteBanner(id: string): Promise<void>;
-  createAnnouncement(request: { message: string; placement: 'top_bar' | 'home' | 'products'; linkUrl?: string }): Promise<{ id: string; message: string }>;
+  createAnnouncement(request: { message: string; placement: string; linkUrl?: string }): Promise<{ id: string; message: string }>;
   updateAnnouncement(request: UpdateAnnouncementGatewayRequest): Promise<AnnouncementItemDto>;
   listAnnouncements(): Promise<AnnouncementItemDto[]>;
   deleteAnnouncement(id: string): Promise<void>;

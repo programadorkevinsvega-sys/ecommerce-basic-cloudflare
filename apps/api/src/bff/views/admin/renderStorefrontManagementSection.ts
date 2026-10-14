@@ -1,11 +1,19 @@
 import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
+import type { MarketingDestinationOption } from './AdminDashboardProps.js';
+import { renderMarketingDestinationOptions } from './renderMarketingDestinationOptions.js';
 
 export function renderStorefrontManagementSection(
   banners: BannerItemDto[],
-  announcements: AnnouncementItemDto[]
+  announcements: AnnouncementItemDto[],
+  destinations: MarketingDestinationOption[] = []
 ): string {
   const promoBanners = banners.filter((b) => b.bannerType !== 'informative');
   const infoBanners = banners.filter((b) => b.bannerType === 'informative');
+  const savedPlacements = [...new Set([...banners.map((item) => item.placement), ...announcements.map((item) => item.placement)])];
+  const destinationOptions = renderMarketingDestinationOptions(destinations, savedPlacements);
+  const bannerPlacements = '<option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option><option value="catalog">Catálogo</option><option value="brands">Directorio de marcas</option><option value="collections">Directorio de colecciones</option><option value="blog">Blog</option><option value="cms">Páginas CMS</option>';
+  const bannerFilterPlacements = `${bannerPlacements}${destinationOptions}`;
+  const announcementPlacements = '<option value="top_bar">Barra superior (todas las páginas)</option><option value="home">Inicio</option><option value="products">Catálogo</option><option value="catalog">Catálogo</option><option value="brands">Directorio de marcas</option><option value="collections">Directorio de colecciones</option><option value="blog">Blog</option><option value="cms">Páginas CMS</option>';
 
   const renderRows = (items: BannerItemDto[], isPromo: boolean): string => {
     if (items.length === 0) {
@@ -70,7 +78,7 @@ export function renderStorefrontManagementSection(
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="pbAlt" required placeholder="Colección destacada..." /></div>
           <div>
             <label>Ubicación</label>
-            <select id="pbPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option><option value="checkout">Checkout</option></select>
+            <select id="pbPlacement">${bannerPlacements}${destinationOptions}</select>
           </div>
           <div><label>Inicio (opcional)</label><input type="datetime-local" id="pbStartsAt" /></div>
           <div><label>Finalización (opcional)</label><input type="datetime-local" id="pbEndsAt" /></div>
@@ -95,7 +103,7 @@ export function renderStorefrontManagementSection(
         <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
         <div id="pbMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option><option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option></select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
       <table>
         <thead><tr><th>Título y Botón CTA</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody>${renderRows(promoBanners, true)}</tbody>
@@ -118,7 +126,7 @@ export function renderStorefrontManagementSection(
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="ibAlt" required placeholder="Comunicado de la tienda..." /></div>
           <div>
             <label>Ubicación</label>
-            <select id="ibPlacement"><option value="home">Página Principal (Home)</option><option value="category">Categorías</option><option value="product">Página de Producto</option><option value="checkout">Checkout</option></select>
+            <select id="ibPlacement">${bannerPlacements}${destinationOptions}</select>
           </div>
           <div><label>Inicio (opcional)</label><input type="datetime-local" id="ibStartsAt" /></div>
           <div><label>Finalización (opcional)</label><input type="datetime-local" id="ibEndsAt" /></div>
@@ -143,7 +151,7 @@ export function renderStorefrontManagementSection(
         <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
         <div id="ibMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option><option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option></select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
       <table>
         <thead><tr><th>Título y Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody>${renderRows(infoBanners, false)}</tbody>
@@ -160,7 +168,7 @@ export function renderStorefrontManagementSection(
           <div><label>Enlace Opcional</label><input type="text" id="aLink" placeholder="/productos" /></div>
           <div>
             <label>Ubicación</label>
-            <select id="aPlacement"><option value="top_bar">Barra Superior (Top Bar)</option><option value="home">Inicio (Home)</option><option value="products">Productos</option></select>
+            <select id="aPlacement">${announcementPlacements}${destinationOptions}</select>
           </div>
         </div>
         <button type="submit" class="btn-primary" id="aSubmitBtn">Publicar Anuncio</button>

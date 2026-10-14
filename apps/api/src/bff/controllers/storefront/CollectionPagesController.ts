@@ -12,9 +12,11 @@ import { renderCollectionDetailPage } from '../../views/renderCollectionDetailPa
 import { renderProductCardActionsScript } from '../../views/renderProductCardActionsScript.js';
 import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { getPageMarketingContent } from './StorefrontPageMarketing.js';
 
 export class CollectionPagesController {
-  public static createRoutes(catalog:CatalogGateway,identity: IdentityGateway, cms: CmsGateway, settings: SettingsGateway,promotions:PromotionsGateway): Hono {
+  public static createRoutes(catalog:CatalogGateway,identity: IdentityGateway, cms: CmsGateway, settings: SettingsGateway,promotions:PromotionsGateway,storefront:StorefrontGateway): Hono {
     const router = new Hono();
     router.get('/colecciones', async (c) => {
       const [customerEmail, nav] = await Promise.all([
@@ -23,18 +25,20 @@ export class CollectionPagesController {
       ]);
       const page=Number(c.req.query('page')||1);
       if(!Number.isSafeInteger(page)||page<1||page>1000000)return c.redirect('/colecciones',302);
-      const records=await catalog.listCollections({limit:13,offset:(page-1)*12});
+      const [records,marketing]=await Promise.all([catalog.listCollections({limit:13,offset:(page-1)*12}),getPageMarketingContent(storefront,'collections','Colecciones destacadas')]);
       const collections=records.slice(0,12);
       return c.html(renderBaseLayout({
         title: 'Colecciones',
         description: 'Explora las colecciones disponibles de Vega Store.',
         canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones${page > 1 ? `?page=${page}` : ''}`,
         noindex: collections.length === 0,
-        bodyHtml: collections.length?renderCollectionDirectoryPage(collections,page,records.length>12):renderCollectionsUnavailablePage(),
+        bodyHtml: marketing.bannersHtml + (collections.length?renderCollectionDirectoryPage(collections,page,records.length>12):renderCollectionsUnavailablePage()),
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
+        announcementMessage: marketing.announcementMessage,
+        announcementLink: marketing.announcementLink,
       }));
     });
     router.get('/colecciones/:slug',async(c)=>{
@@ -45,9 +49,9 @@ export class CollectionPagesController {
       }
       const resolved=await Promise.all(collection.productIds.map((id)=>catalog.getProductById(id).catch(()=>null)));
       const products=resolved.filter((item):item is NonNullable<typeof item>=>item?.status==='published');
-      const discounts=await resolveProductDiscounts(products,promotions);
-      const html=renderCollectionDetailPage(collection,products,discounts);
-      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}));
+      const [discounts,marketing]=await Promise.all([resolveProductDiscounts(products,promotions),getPageMarketingContent(storefront,`collection:${collection.slug}`,'Contenido de la colección')]);
+      const html=marketing.bannersHtml+renderCollectionDetailPage(collection,products,discounts);
+      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
     });
     return router;
   }

@@ -13,7 +13,7 @@ import { renderCheckoutPage } from '../../views/renderCheckoutPage.js';
 import { renderCheckoutResultPage } from '../../views/renderCheckoutResultPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
-import { renderStorefrontBanners } from '../../views/renderStorefrontBanners.js';
+import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
 import { hashGuestCartId, isValidGuestCartId } from '../../security/GuestCartCapability.js';
 
 export class StorefrontCheckoutController {
@@ -91,8 +91,8 @@ export class StorefrontCheckoutController {
       allProducts.forEach((p) => productsMap.set(p.id, p));
 
       const taxRate = settings?.taxRatePercent ?? 19;
-      const banners = await storefrontGateway.getPublicBanners('checkout');
-      const bodyHtml = `${renderStorefrontBanners(banners, 'Información para tu compra')}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile)}`;
+      const marketing = await getPageMarketingContent(storefrontGateway, 'checkout', 'Información para tu compra');
+      const bodyHtml = `${marketing.bannersHtml}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile)}`;
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',
@@ -102,6 +102,8 @@ export class StorefrontCheckoutController {
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
         checkoutMode: true,
+        announcementMessage: marketing.announcementMessage,
+        announcementLink: marketing.announcementLink,
       });
 
       return c.html(html);

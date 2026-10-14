@@ -5,6 +5,8 @@ import type { CmsPageDto } from '../../gateways/cms/CmsGateway.js';
 import type { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
 import type { ShippingZoneDto, DivipolaLocationDto } from '../../gateways/shipping/ShippingGateway.js';
 
+export interface MarketingDestinationOption { value: string; label: string; group: string; }
+
 export interface AdminDashboardProps {
   products: CatalogProductDto[];
   categories: CategoryDto[];
@@ -14,6 +16,7 @@ export interface AdminDashboardProps {
   variants: ProductVariantDto[];
   collections: CatalogCollectionDto[];
   banners: BannerItemDto[];
+  marketingDestinations?: MarketingDestinationOption[];
   announcements: AnnouncementItemDto[];
   cmsPages: CmsPageDto[];
   promotionRules: PromotionRuleDto[];

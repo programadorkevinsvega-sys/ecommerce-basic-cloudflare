@@ -17,7 +17,7 @@ describe('admin dashboard permissions', () => {
       listCollections: vi.fn().mockResolvedValue([]),
     } as unknown as CatalogGateway;
     const storefront = { listBanners: vi.fn().mockResolvedValue([]), listAnnouncements: vi.fn().mockResolvedValue([]) } as unknown as StorefrontGateway;
-    const cms = { listPages: vi.fn().mockResolvedValue([]) } as unknown as CmsGateway;
+    const cms = { listPages: vi.fn().mockResolvedValue([]), listBlogPosts: vi.fn().mockResolvedValue({ items: [], total: 0 }) } as unknown as CmsGateway;
     const promotions = { listPromotionRules: vi.fn(), listCoupons: vi.fn() } as unknown as PromotionsGateway;
     const shipping = { listZones: vi.fn(), listLocations: vi.fn() } as unknown as ShippingGateway;
     const settings = { getSettings: vi.fn().mockResolvedValue({ id: 's', storeName: 'Tienda', currency: 'COP', taxRatePercent: 19, supportEmail: 's@example.com', companyNit: 'NIT-PRIVATE-SENTINEL', requireCodVerification: false, updatedAt: 'now' }) } as unknown as SettingsGateway;

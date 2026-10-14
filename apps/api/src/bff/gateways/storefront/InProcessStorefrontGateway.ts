@@ -53,7 +53,7 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
     return banners.map((b) => b.toPrimitives());
   }
 
-  public async getPublicBanners(placement: 'category' | 'product' | 'checkout'): Promise<BannerItemDto[]> {
+  public async getPublicBanners(placement: string): Promise<BannerItemDto[]> {
     const banners = await this.publicApi.listBanners(placement);
     return banners.map((banner) => banner.toPrimitives());
   }
@@ -64,7 +64,7 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
 
   public async createAnnouncement(request: {
     message: string;
-    placement: 'top_bar' | 'home' | 'products';
+    placement: string;
     linkUrl?: string;
   }): Promise<{ id: string; message: string }> {
     const announcement = await this.publicApi.createAnnouncement(request);
@@ -79,6 +79,11 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
   public async listAnnouncements(): Promise<AnnouncementItemDto[]> {
     const announcements = await this.publicApi.listAnnouncements();
     return announcements.map((a) => a.toPrimitives());
+  }
+
+  public async getPublicAnnouncements(placement: string): Promise<AnnouncementItemDto[]> {
+    const announcements = await this.publicApi.listAnnouncements();
+    return announcements.filter((item) => item.placement === placement && item.isCurrentlyActive()).map((item) => item.toPrimitives());
   }
 
   public async deleteAnnouncement(id: string): Promise<void> {

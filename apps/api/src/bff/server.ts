@@ -63,7 +63,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
-  app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
+  app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 
@@ -121,9 +121,9 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.promotionsGateway,
     cRoot.settingsGateway
   ));
-  app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway));
-  app.route('/', CollectionPagesController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.cmsGateway,cRoot.settingsGateway,cRoot.promotionsGateway));
-  app.route('/', CmsBlogPublicController.createRoutes(cRoot.cmsGateway,cRoot.identityGateway,cRoot.settingsGateway));
+  app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway, cRoot.storefrontGateway));
+  app.route('/', CollectionPagesController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.cmsGateway,cRoot.settingsGateway,cRoot.promotionsGateway,cRoot.storefrontGateway));
+  app.route('/', CmsBlogPublicController.createRoutes(cRoot.cmsGateway,cRoot.identityGateway,cRoot.settingsGateway,cRoot.storefrontGateway));
 
   // Infra y Auth
   app.route('/health', HealthController.createRoutes());

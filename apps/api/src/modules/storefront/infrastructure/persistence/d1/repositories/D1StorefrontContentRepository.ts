@@ -8,7 +8,7 @@ interface BannerRow {
   description?: string;
   banner_type?: 'informative' | 'promotional';
   button_text?: string;
-  placement: 'home' | 'category' | 'product' | 'checkout';
+  placement: string;
   image_url: string;
   link_url: string;
   alt_text: string;
@@ -23,7 +23,7 @@ interface BannerRow {
 interface AnnouncementRow {
   id: string;
   message: string;
-  placement: 'top_bar' | 'home' | 'products';
+  placement: string;
   link_url?: string;
   is_active: number;
   starts_at?: string;

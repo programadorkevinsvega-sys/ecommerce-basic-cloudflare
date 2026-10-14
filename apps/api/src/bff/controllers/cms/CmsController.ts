@@ -7,9 +7,11 @@ import { renderCmsPage } from '../../views/renderCmsPage.js';
 import { CMS_INSTITUTIONAL_PAGE_ROUTES } from '../../cms/CmsInstitutionalPageRoutes.js';
 import { getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
 
 export class CmsController {
-  public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway): Hono {
+  public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, storefront: StorefrontGateway): Hono {
     const router = new Hono();
 
     const showPublishedPage = async (c: Context, slug: string, requestedPath: string) => {
@@ -19,13 +21,16 @@ export class CmsController {
         const page = await cmsGateway.getPageBySlug(slug);
         if (page.status !== 'published') throw new Error('Página no publicada');
         const rendered = renderCmsPage(page);
+        const marketing = await getPageMarketingContent(storefront, `cms:${slug}`, 'Contenido destacado');
         const canonical = `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev${requestedPath}`;
 
         const html = renderBaseLayout({
           title: rendered.title,
           description: rendered.description,
           canonicalUrl: canonical,
-          bodyHtml: rendered.bodyHtml,
+          bodyHtml: marketing.bannersHtml + rendered.bodyHtml,
+          announcementMessage: marketing.announcementMessage,
+          announcementLink: marketing.announcementLink,
           headerMenuItems,
           footerMenuItems,
           footerStoreProfile,

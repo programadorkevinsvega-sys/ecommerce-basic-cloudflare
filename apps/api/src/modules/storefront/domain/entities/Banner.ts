@@ -6,7 +6,7 @@ export interface BannerProps {
   description?: string;
   bannerType?: 'informative' | 'promotional';
   buttonText?: string;
-  placement: 'home' | 'category' | 'product' | 'checkout';
+  placement: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;
@@ -61,6 +61,7 @@ export class Banner {
   }
 
   public updateDetails(updates: Partial<Omit<BannerProps, 'id' | 'createdAt' | 'updatedAt'>>): void {
+    if (updates.placement !== undefined && !isValidPlacement(updates.placement)) throw new Error('Ubicación del banner inválida');
     this.validateContent({ ...this.props, ...updates });
     if (updates.title !== undefined) {
       if (!updates.title.trim()) throw new Error('El título del banner es obligatorio');
@@ -102,7 +103,7 @@ export class Banner {
     if (props.title && props.title.length > 160) throw new Error('El título del banner es demasiado largo');
     if (props.description && props.description.length > 1000) throw new Error('La descripción del banner es demasiado larga');
     if (props.altText && props.altText.length > 500) throw new Error('El texto alternativo es demasiado largo');
-    if (props.placement && !['home', 'category', 'product', 'checkout'].includes(props.placement)) throw new Error('Ubicación del banner inválida');
+    if (props.placement && !isValidPlacement(props.placement)) throw new Error('Ubicación del banner inválida');
     if (props.bannerType && !['informative', 'promotional'].includes(props.bannerType)) throw new Error('Tipo de banner inválido');
     if (props.imageUrl && !isSafeImageUrl(props.imageUrl)) throw new Error('La imagen debe usar una ruta interna o una URL HTTPS segura');
     if (props.linkUrl && !isSafeStoreLink(props.linkUrl)) throw new Error('Los enlaces promocionales deben apuntar a una ruta de la tienda');
@@ -111,3 +112,5 @@ export class Banner {
   }
 }
 
+
+function isValidPlacement(value: string): boolean { return /^(home|category|product|checkout|catalog|brands|collections|blog|cms|top_bar|products|brand:[a-z0-9]+(?:-[a-z0-9]+)*|collection:[a-z0-9]+(?:-[a-z0-9]+)*|blog:[a-z0-9]+(?:-[a-z0-9]+)*|cms:[a-z0-9]+(?:-[a-z0-9]+)*|product:[a-z0-9]+(?:-[a-z0-9]+)*)$/.test(value); }

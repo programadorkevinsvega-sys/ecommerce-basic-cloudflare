@@ -45,7 +45,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
 
     <div id="tab-storefront" class="tab-content">
       <header class="marketing-page-heading"><h1 class="marketing-page-title">Banners Hero Promocionales</h1><p class="marketing-page-description">Campañas visuales con CTA para la tienda.</p></header>
-      ${renderStorefrontManagementSection(props.banners, props.announcements)}
+      ${renderStorefrontManagementSection(props.banners, props.announcements, props.marketingDestinations || [])}
     </div>
 
     <div id="tab-cms" class="tab-content">

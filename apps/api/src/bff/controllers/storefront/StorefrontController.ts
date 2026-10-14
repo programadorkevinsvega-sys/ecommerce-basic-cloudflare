@@ -16,6 +16,7 @@ import { ProductSeoHelper } from '../../../modules/catalog/domain/services/Produ
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
+import { getPageMarketingContent } from './StorefrontPageMarketing.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -44,15 +45,16 @@ export class StorefrontController {
 
     router.get('/', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [products, homeContent, nav, brands] = await Promise.all([
+      const [products, homeContent, nav, brands, homeAnnouncements] = await Promise.all([
         catalogGateway.listProducts({ limit: 12, status: 'published' }),
         storefrontGateway.getHomeContent(),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
         catalogGateway.listBrands(),
+        storefrontGateway.getPublicAnnouncements('home'),
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const activeAnnouncement = homeContent.announcements[0];
+      const activeAnnouncement = homeAnnouncements[0] || homeContent.announcements[0];
       const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
       const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands);
 
@@ -80,15 +82,15 @@ export class StorefrontController {
     router.get('/productos', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const query = c.req.query('q');
-      const placement = c.req.query('category') ? 'category' as const : null;
+      const placement = c.req.query('category') ? 'category' : 'catalog';
       const [products, nav, banners] = await Promise.all([
         catalogGateway.listProducts({ limit: 24, status: 'published', searchQuery: query }),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
-        placement ? storefrontGateway.getPublicBanners(placement) : Promise.resolve([]),
+        getPageMarketingContent(storefrontGateway, placement, 'Contenido destacado', placement === 'catalog' ? ['products'] : []),
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const bodyHtml = renderCatalogPage(products, query, banners, discountMap);
+      const bodyHtml = renderCatalogPage(products, query, banners.banners, discountMap);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
@@ -106,6 +108,8 @@ export class StorefrontController {
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
+        announcementMessage: banners.announcementMessage,
+        announcementLink: banners.announcementLink,
       });
 
       return c.html(html);
@@ -122,8 +126,8 @@ export class StorefrontController {
           priceInCents: product.priceInCents,
         }).catch(() => undefined);
 
-        const banners = await storefrontGateway.getPublicBanners('product');
-        const bodyHtml = `${renderProductList([], undefined, banners)}${renderProductDetail(product, discount)}`;
+        const marketing = await getPageMarketingContent(storefrontGateway, `product:${product.slug}`, 'Contenido destacado', ['product']);
+        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount)}`;
         const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 
@@ -156,6 +160,8 @@ export class StorefrontController {
           headerMenuItems: nav.headerMenuItems,
           footerMenuItems: nav.footerMenuItems,
           footerStoreProfile: nav.footerStoreProfile,
+          announcementMessage: marketing.announcementMessage,
+          announcementLink: marketing.announcementLink,
         });
 
         return c.html(html);

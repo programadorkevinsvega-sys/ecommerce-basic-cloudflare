@@ -5,7 +5,7 @@ import { IStorefrontContentRepository } from '../../domain/ports/IStorefrontCont
 export interface UpdateAnnouncementInput {
   id: string;
   message?: string;
-  placement?: 'top_bar' | 'home' | 'products';
+  placement?: string;
   linkUrl?: string;
   isActive?: boolean;
   startsAt?: string;

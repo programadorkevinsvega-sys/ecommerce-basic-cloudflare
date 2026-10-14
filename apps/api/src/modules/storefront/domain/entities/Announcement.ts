@@ -1,7 +1,7 @@
 export interface AnnouncementProps {
   id: string;
   message: string;
-  placement: 'top_bar' | 'home' | 'products';
+  placement: string;
   linkUrl?: string;
   isActive: boolean;
   startsAt?: string;
@@ -14,6 +14,7 @@ export class Announcement {
   private readonly props: AnnouncementProps;
 
   public constructor(props: AnnouncementProps) {
+    if (!isValidPlacement(props.placement)) throw new Error('Ubicación del anuncio inválida');
     if (!props.message || props.message.trim().length === 0) {
       throw new Error('El mensaje del anuncio es obligatorio');
     }
@@ -43,7 +44,7 @@ export class Announcement {
       if (!updates.message.trim()) throw new Error('El mensaje del anuncio es obligatorio');
       this.props.message = updates.message.trim();
     }
-    if (updates.placement !== undefined) this.props.placement = updates.placement;
+    if (updates.placement !== undefined) { if (!isValidPlacement(updates.placement)) throw new Error('Ubicación del anuncio inválida'); this.props.placement = updates.placement; }
     if (updates.linkUrl !== undefined) this.props.linkUrl = updates.linkUrl;
     if (updates.isActive !== undefined) this.props.isActive = updates.isActive;
     if (updates.startsAt !== undefined) this.props.startsAt = updates.startsAt;
@@ -61,3 +62,5 @@ export class Announcement {
   }
 }
 
+
+function isValidPlacement(value: string): boolean { return /^(top_bar|home|products|catalog|brands|collections|blog|cms|brand:[a-z0-9]+(?:-[a-z0-9]+)*|collection:[a-z0-9]+(?:-[a-z0-9]+)*|blog:[a-z0-9]+(?:-[a-z0-9]+)*|cms:[a-z0-9]+(?:-[a-z0-9]+)*|product:[a-z0-9]+(?:-[a-z0-9]+)*)$/.test(value); }

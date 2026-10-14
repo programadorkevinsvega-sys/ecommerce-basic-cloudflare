@@ -9,6 +9,7 @@ import { UploadMediaUseCase } from '../src/modules/media/application/use-cases/U
 import { IMediaStoragePort } from '../src/modules/media/domain/ports/IMediaStoragePort.js';
 import { IMediaAssetRepository } from '../src/modules/media/domain/ports/IMediaAssetRepository.js';
 import { MediaController } from '../src/bff/controllers/media/MediaController.js';
+import { getPageMarketingContent } from '../src/bff/controllers/storefront/StorefrontPageMarketing.js';
 
 describe('media and banner input validation', () => {
   const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));
@@ -107,10 +108,42 @@ describe('media and banner input validation', () => {
     expect(() => new Banner({ ...base, placement: 'unknown' as any })).toThrow();
   });
 
+  it('accepts routes managed by the CMS and validates placement changes', () => {
+    const now = new Date().toISOString();
+    const base = { id: 'banner', title: 'Aviso', imageUrl: '/media/image', linkUrl: '/productos', altText: 'Aviso', placement: 'blog:bienvenido-al-blog', isActive: true, createdAt: now, updatedAt: now, sortOrder: 0 };
+    const banner = new Banner(base);
+    expect(banner.placement).toBe('blog:bienvenido-al-blog');
+    expect(() => banner.updateDetails({ placement: 'blog/../../admin' })).toThrow('Ubicación del banner inválida');
+  });
+
+  it('resolves exact page marketing, generic aliases and the global top bar', async () => {
+    const gateway = {
+      getPublicBanners: async (placement: string) => placement === 'blog:guia-de-compra'
+        ? [{ id: 'article-banner', title: 'Artículo', imageUrl: '/media/article', linkUrl: '/blog/guia-de-compra', altText: 'Artículo' }]
+        : [],
+      getPublicAnnouncements: async (placement: string) => placement === 'top_bar'
+        ? [{ id: 'top', message: 'Envío gratis', placement, isActive: true }]
+        : [],
+    };
+    const marketing = await getPageMarketingContent(gateway as any, 'blog:guia-de-compra', 'Artículo', ['blog']);
+    expect(marketing.banners.map((item) => item.id)).toEqual(['article-banner']);
+    expect(marketing.announcementMessage).toBe('Envío gratis');
+    expect(marketing.bannersHtml).toContain('Artículo');
+  });
+
   it('renders functioning filters and an accessible auto-rotating public carousel', () => {
     const adminMarkup = renderStorefrontManagementSection([], []);
     expect(adminMarkup.match(/class="form-grid banner-filters"/g)).toHaveLength(2);
     expect(adminMarkup).toContain('Filtrar tipo');
+    const destinations = renderStorefrontManagementSection([], [], [
+      { value: 'collection:verano', label: 'Verano', group: 'Colecciones' },
+      { value: 'blog:guia-de-compra', label: 'Guía de compra', group: 'Artículos del blog' },
+      { value: 'cms:politica-de-envios', label: 'Política de envíos', group: 'Páginas CMS' },
+    ]);
+    expect(destinations.match(/value="blog:guia-de-compra"/g)).toHaveLength(5);
+    expect(destinations).toContain('value="collection:verano"');
+    expect(destinations).toContain('value="cms:politica-de-envios"');
+    expect(destinations).toContain('value="catalog"');
     expect(renderStorefrontActionsScript()).toContain("card.querySelector('.banner-filters')");
 
     const publicMarkup = renderStorefrontBanners([

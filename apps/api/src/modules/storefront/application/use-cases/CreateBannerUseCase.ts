@@ -7,7 +7,7 @@ export interface CreateBannerInput {
   description?: string;
   bannerType?: 'informative' | 'promotional';
   buttonText?: string;
-  placement: 'home' | 'category' | 'product' | 'checkout';
+  placement: string;
   imageUrl: string;
   linkUrl: string;
   altText: string;

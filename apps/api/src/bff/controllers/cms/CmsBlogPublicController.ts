@@ -7,9 +7,11 @@ import { renderBlogIndexPage } from '../../views/renderBlogIndexPage.js';
 import { blogPostingJsonLd, renderBlogArticlePage } from '../../views/renderBlogArticlePage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
+import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
 
 export class CmsBlogPublicController {
-  public static createRoutes(cms:CmsGateway,identity:IdentityGateway,settings:SettingsGateway):Hono{
+  public static createRoutes(cms:CmsGateway,identity:IdentityGateway,settings:SettingsGateway,storefront:StorefrontGateway):Hono{
     const router=new Hono();
     router.get('/sitemap-blog.xml',async(c)=>{
       const urls:string[]=[];let page=1;let total=0;
@@ -19,25 +21,26 @@ export class CmsBlogPublicController {
     router.get('/blog',async(c)=>{
       const page=Number(c.req.query('page')||1);const pageSize=9;const categorySlug=c.req.query('categoria');
       if(!Number.isInteger(page)||page<1||page>10000)return notFound(c,cms,identity,settings);
-      const [categoryPage,listed,customerEmail,nav]=await Promise.all([
+      const [categoryPage,listed,customerEmail,nav,marketing]=await Promise.all([
         cms.listBlogCategories(1,100,true),
         cms.listBlogPosts({page,pageSize,publishedOnly:true,categorySlug}),
         getCustomerEmail(c,identity),getStorefrontNavMenus(cms,settings),
+        getPageMarketingContent(storefront,'blog','Artículos del blog'),
       ]);
       if(categorySlug&&!categoryPage.items.some((item)=>item.slug===categorySlug))return notFound(c,cms,identity,settings);
       const html=renderBlogIndexPage(listed.items,categoryPage.items,page,listed.total,pageSize,categorySlug);
       const url=new URL(c.req.url);url.pathname='/blog';
       const canonical=`${url.origin}/blog${page>1?`?page=${page}`:''}${categorySlug?`${page>1?'&':'?'}categoria=${encodeURIComponent(categorySlug)}`:''}`;
-      return c.html(renderBaseLayout({title:categorySlug?`${categoryPage.items.find((item)=>item.slug===categorySlug)?.name} | Blog`: 'Blog | Vega Store',description:'Consejos, novedades e inspiración de Vega Store.',canonicalUrl:canonical,bodyHtml:html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}));
+      return c.html(renderBaseLayout({title:categorySlug?`${categoryPage.items.find((item)=>item.slug===categorySlug)?.name} | Blog`: 'Blog | Vega Store',description:'Consejos, novedades e inspiración de Vega Store.',canonicalUrl:canonical,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
     });
     router.get('/blog/:slug',async(c)=>{
       const [post,customerEmail,nav]=await Promise.all([cms.getBlogPostBySlug(c.req.param('slug'),true),getCustomerEmail(c,identity),getStorefrontNavMenus(cms,settings)]);
       if(!post)return c.html(renderBaseLayout({title:'Artículo no encontrado | Vega Store',description:'El artículo solicitado no está disponible.',noindex:true,bodyHtml:renderNotFoundPage(c.req.path),customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}),404);
-      const related=await cms.listRelatedBlogPosts(post.id,post.categoryIds,4);
+      const [related,marketing]=await Promise.all([cms.listRelatedBlogPosts(post.id,post.categoryIds,4),getPageMarketingContent(storefront,`blog:${post.slug}`,'Artículo destacado')]);
       const url=new URL(c.req.url);const canonical=post.canonicalUrl||`${url.origin}/blog/${encodeURIComponent(post.slug)}`;
       const image=post.featuredImageMediaId?`${url.origin}/media/${encodeURIComponent(post.featuredImageMediaId)}`:undefined;
       const html=renderBlogArticlePage(post,related);
-      return c.html(renderBaseLayout({title:`${post.seoTitle||post.title} | Blog`,description:post.seoDescription||post.excerpt,canonicalUrl:canonical,ogImageUrl:image,ogType:'article',jsonLd:post.noindex?undefined:blogPostingJsonLd(post,canonical,image),noindex:post.noindex,bodyHtml:html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile}));
+      return c.html(renderBaseLayout({title:`${post.seoTitle||post.title} | Blog`,description:post.seoDescription||post.excerpt,canonicalUrl:canonical,ogImageUrl:image,ogType:'article',jsonLd:post.noindex?undefined:blogPostingJsonLd(post,canonical,image),noindex:post.noindex,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
     });
     return router;
   }

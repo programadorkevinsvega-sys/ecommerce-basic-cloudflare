@@ -71,11 +71,15 @@ export class AdminUiController {
           banners,
           announcements,
           cmsPages,
+          publishedCmsPages,
+          blogPosts,
           promotionRules,
           coupons,
           shippingZones,
           divipolaLocations,
           settings,
+          marketingBrands,
+          marketingCollections,
         ] = await Promise.all([
           can('catalog:read') ? catalogGateway.listProducts({ limit: 500 }) : Promise.resolve([]),
           Promise.resolve([]),
@@ -87,12 +91,23 @@ export class AdminUiController {
           can('storefront:read') ? storefrontGateway.listBanners() : Promise.resolve([]),
           can('storefront:read') ? storefrontGateway.listAnnouncements() : Promise.resolve([]),
           can('cms:read') ? cmsGateway.listPages(50, 0) : Promise.resolve([]),
+          can('cms:read') ? cmsGateway.listPages(100, 0, 'published') : Promise.resolve([]),
+          can('cms:read') ? cmsGateway.listBlogPosts({page:1,pageSize:100,status:'published',publishedOnly:true}) : Promise.resolve({items:[],total:0}),
           can('promotions:read') ? promotionsGateway.listPromotionRules() : Promise.resolve([]),
           can('promotions:read') ? promotionsGateway.listCoupons() : Promise.resolve([]),
           can('shipping:read') ? shippingGateway.listZones() : Promise.resolve([]),
           Promise.resolve([]),
           can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings()),
+          can('catalog:read') ? catalogGateway.listBrands({limit:100,offset:0}) : Promise.resolve([]),
+          can('catalog:read') ? catalogGateway.listCollections({limit:100,offset:0}) : Promise.resolve([]),
         ]);
+
+        const marketingDestinations = [
+          ...marketingBrands.filter((item) => item.status !== 'inactive').map((item) => ({value:`brand:${item.slug}`,label:item.name,group:'Marcas'})),
+          ...marketingCollections.filter((item) => item.status === 'active').map((item) => ({value:`collection:${item.slug}`,label:item.name,group:'Colecciones'})),
+          ...blogPosts.items.map((item) => ({value:`blog:${item.slug}`,label:item.title,group:'Artículos del blog'})),
+          ...publishedCmsPages.map((item) => ({value:`cms:${item.slug}`,label:item.title,group:'Páginas CMS'})),
+        ];
 
         const html = renderAdminDashboardPage({
           products,
@@ -103,6 +118,7 @@ export class AdminUiController {
           variants,
           collections,
           banners,
+          marketingDestinations,
           announcements,
           cmsPages,
           promotionRules,
