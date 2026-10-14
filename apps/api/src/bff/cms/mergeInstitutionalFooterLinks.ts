@@ -26,7 +26,15 @@ export function mergeInstitutionalFooterLinks(
 }
 
 function normalizeCmsUrl(url: string): string {
-  const match = url.match(/^\/p\/([^/?#]+)/);
+  let pathname = url;
+  try {
+    const parsed = new URL(url, 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev');
+    if (parsed.origin !== 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev') return url;
+    pathname = parsed.pathname;
+  } catch {
+    return url;
+  }
+  const match = pathname.match(/^\/p\/([^/?#]+)/);
   if (!match?.[1]) return url;
-  return CMS_INSTITUTIONAL_PAGE_ROUTES.find((route) => route.slug === match[1])?.path ?? url;
+  return CMS_INSTITUTIONAL_PAGE_ROUTES.find((route) => route.slug === match[1])?.path ?? pathname;
 }
