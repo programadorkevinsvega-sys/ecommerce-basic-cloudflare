@@ -505,3 +505,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La captura mostró que `Eliminar` envolvía a una segunda línea porque los cuatro controles excedían el ancho de la columna. Aumenté el espacio de la columna de acciones de artículos y configuré sus controles para permanecer en una sola línea en escritorios; en pantallas estrechas pueden envolver para conservar accesibilidad.
 - Pruebas: UI Blog (7), typecheck, lint de arquitectura, `git diff --check` y Wrangler dry-run.
 - Commit `0df16a7` enviado a `main`; Worker desplegado en la versión `5af29e9c-a09a-47df-8fcd-e1142e74a632`.
+
+### Estilo consistente de campos de imagen del panel (2026-10-14)
+
+- Corregí el estilo oscuro heredado de los controles nativos `input[type=file]` para todos los módulos administrativos, incluida la etiqueta del botón “Seleccionar archivo”.
+- Banners promocionales e informativos ya no referencian `/media/banner-default.webp` (no existía en el repositorio ni como recurso de media). La vista previa muestra “Sin imagen”, se actualiza al pegar URL/subir archivo, y el formulario requiere una imagen antes de publicar para evitar guardar la ruta rota.
+- La carga existente a R2 no cambió. Abarca los inputs de imágenes de productos, banners, marcas, colecciones, autores y artículos.
+- Pruebas: `pnpm test` (46 archivos/139 pruebas), tests dirigidos de UI (19), typecheck, lint, `git diff --check` y Wrangler dry-run aprobados.
+- Commit, push y despliegue pendientes.

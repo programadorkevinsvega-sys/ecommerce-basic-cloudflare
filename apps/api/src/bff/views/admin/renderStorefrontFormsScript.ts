@@ -25,7 +25,7 @@ export function renderStorefrontFormsScript(): string {
         if (res.ok && json.data?.id) {
           const url = '/media/' + json.data.id;
           if (imgInput) imgInput.value = url;
-          if (previewImg) previewImg.src = url;
+          if (previewImg) { previewImg.src = url; previewImg.hidden = false; if (previewImg.nextElementSibling) previewImg.nextElementSibling.hidden = true; }
           if (statusSpan) {
             statusSpan.textContent = '✅ Imagen subida a R2 y lista';
             statusSpan.style.color = '#34d399';
@@ -53,7 +53,7 @@ export function renderStorefrontFormsScript(): string {
       const editId = document.getElementById(prefix + 'EditId')?.value;
       const title = document.getElementById(prefix + 'Title').value;
       const desc = document.getElementById(prefix + 'Desc')?.value?.trim() || undefined;
-      const img = document.getElementById(prefix + 'Img').value || '/media/banner-default.webp';
+      const img = document.getElementById(prefix + 'Img').value.trim();
       const alt = document.getElementById(prefix + 'Alt').value;
       const placement = document.getElementById(prefix + 'Placement').value;
       const startsAt = document.getElementById(prefix + 'StartsAt').value;

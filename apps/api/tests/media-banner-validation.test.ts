@@ -3,6 +3,7 @@ import { ImageValidator } from '../src/modules/media/domain/services/ImageValida
 import { isSafeImageUrl, isSafeStoreLink } from '../src/modules/storefront/domain/services/ValidateStorefrontUrl.js';
 import { Banner } from '../src/modules/storefront/domain/entities/Banner.js';
 import { renderStorefrontManagementSection } from '../src/bff/views/admin/renderStorefrontManagementSection.js';
+import { renderMarketingDashboardCss } from '../src/bff/views/admin/renderMarketingDashboardCss.js';
 import { renderStorefrontActionsScript } from '../src/bff/views/admin/renderStorefrontActionsScript.js';
 import { renderStorefrontBanners } from '../src/bff/views/renderStorefrontBanners.js';
 import { UploadMediaUseCase } from '../src/modules/media/application/use-cases/UploadMediaUseCase.js';
@@ -158,6 +159,17 @@ describe('media and banner input validation', () => {
     expect(publicMarkup).toContain('data-carousel-pause');
     expect(publicMarkup).toContain("event.key !== 'ArrowRight'");
     expect(publicMarkup).not.toContain("addEventListener('mouseenter'");
+  });
+
+  it('renders banner image fields with the neutral file control and a real empty-state preview',()=>{
+    const markup=renderStorefrontManagementSection([],[]);
+    expect(markup).toContain('id="pbImg" value="" required');
+    expect(markup).toContain('id="ibImg" value="" required');
+    expect(markup).toContain('>Sin imagen</span>');
+    expect(markup).not.toContain('/media/banner-default.webp');
+    const css=renderMarketingDashboardCss();
+    expect(css).toContain('.admin-legacy-pane input[type="file"] {');
+    expect(css).toContain('::file-selector-button');
   });
 });
 

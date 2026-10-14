@@ -51,7 +51,7 @@ export function renderStorefrontActionsScript(): string {
       const dialog = document.getElementById('banner-preview-dialog');
       dialog.querySelector('h2').textContent = title || 'Vista previa';
       dialog.querySelector('p').textContent = description;
-      const picture = dialog.querySelector('img'); picture.src = image; picture.alt = alt;
+      const picture = dialog.querySelector('img'); picture.src = image; picture.alt = alt; picture.hidden = !image;
       const action = dialog.querySelector('a');
       action.hidden = bannerType === 'informative';
       action.textContent = document.getElementById('pbBtnText')?.value || 'Explorar colección';
@@ -69,7 +69,7 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('pbAlt').value = alt;
         document.getElementById('pbImg').value = img;
         const pImgPreview = document.getElementById('pbImgPreview');
-        if (pImgPreview) pImgPreview.src = img;
+        if (pImgPreview) { pImgPreview.src = img; pImgPreview.hidden = !img; if (pImgPreview.nextElementSibling) pImgPreview.nextElementSibling.hidden = Boolean(img); }
         document.getElementById('pbPlacement').value = placement;
         document.getElementById('pbStartsAt').value = startsAt ? startsAt.slice(0, 16) : '';
         document.getElementById('pbEndsAt').value = endsAt ? endsAt.slice(0, 16) : '';
@@ -84,7 +84,7 @@ export function renderStorefrontActionsScript(): string {
         document.getElementById('ibAlt').value = alt;
         document.getElementById('ibImg').value = img;
         const iImgPreview = document.getElementById('ibImgPreview');
-        if (iImgPreview) iImgPreview.src = img;
+        if (iImgPreview) { iImgPreview.src = img; iImgPreview.hidden = !img; if (iImgPreview.nextElementSibling) iImgPreview.nextElementSibling.hidden = Boolean(img); }
         document.getElementById('ibPlacement').value = placement;
         document.getElementById('ibStartsAt').value = startsAt ? startsAt.slice(0, 16) : '';
         document.getElementById('ibEndsAt').value = endsAt ? endsAt.slice(0, 16) : '';
@@ -101,7 +101,7 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('pbSubmitBtn').textContent = 'Publicar Banner Promocional';
       document.getElementById('pbCancelBtn').style.display = 'none';
       const pImgPreview = document.getElementById('pbImgPreview');
-      if (pImgPreview) pImgPreview.src = '/media/banner-default.webp';
+      if (pImgPreview) { pImgPreview.removeAttribute('src'); pImgPreview.hidden = true; if (pImgPreview.nextElementSibling) pImgPreview.nextElementSibling.hidden = false; }
       const pStatus = document.getElementById('pbUploadStatus');
       if (pStatus) pStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }
@@ -112,7 +112,7 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('ibSubmitBtn').textContent = 'Publicar Banner Informativo';
       document.getElementById('ibCancelBtn').style.display = 'none';
       const iImgPreview = document.getElementById('ibImgPreview');
-      if (iImgPreview) iImgPreview.src = '/media/banner-default.webp';
+      if (iImgPreview) { iImgPreview.removeAttribute('src'); iImgPreview.hidden = true; if (iImgPreview.nextElementSibling) iImgPreview.nextElementSibling.hidden = false; }
       const iStatus = document.getElementById('ibUploadStatus');
       if (iStatus) iStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }

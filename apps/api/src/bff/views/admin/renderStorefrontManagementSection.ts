@@ -89,11 +89,11 @@ export function renderStorefrontManagementSection(
           <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
           <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
             <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
-              <img id="pbImgPreview" src="/media/banner-default.webp" style="width:100%; height:100%; object-fit:cover;" onerror="this.src=''" />
+              <img id="pbImgPreview" alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false" onload="this.hidden=false;this.nextElementSibling.hidden=true" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
             </div>
             <div style="flex:1; min-width:240px;">
               <input type="file" id="pbFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'pb')" />
-              <input type="text" id="pbImg" value="/media/banner-default.webp" placeholder="https://... o /media/..." oninput="document.getElementById('pbImgPreview').src=this.value" />
+              <input type="text" id="pbImg" value="" required placeholder="https://... o /media/..." oninput="const p=document.getElementById('pbImgPreview');p.src=this.value;p.hidden=!this.value; p.nextElementSibling.hidden=!!this.value" />
               <div id="pbUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
             </div>
           </div>
@@ -137,11 +137,11 @@ export function renderStorefrontManagementSection(
           <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
           <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
             <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
-              <img id="ibImgPreview" src="/media/banner-default.webp" style="width:100%; height:100%; object-fit:cover;" onerror="this.src=''" />
+              <img id="ibImgPreview" alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false" onload="this.hidden=false;this.nextElementSibling.hidden=true" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
             </div>
             <div style="flex:1; min-width:240px;">
               <input type="file" id="ibFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'ib')" />
-              <input type="text" id="ibImg" value="/media/banner-default.webp" placeholder="https://... o /media/..." oninput="document.getElementById('ibImgPreview').src=this.value" />
+              <input type="text" id="ibImg" value="" required placeholder="https://... o /media/..." oninput="const p=document.getElementById('ibImgPreview');p.src=this.value;p.hidden=!this.value; p.nextElementSibling.hidden=!!this.value" />
               <div id="ibUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
             </div>
           </div>
