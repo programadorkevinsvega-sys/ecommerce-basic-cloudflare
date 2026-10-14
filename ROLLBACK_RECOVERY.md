@@ -253,6 +253,10 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 
 ## Evidencia y criterio de finalización
 
+### Correcciones de conciliación de pagos (2026-10-14)
+
+`payments__0005_settlement_corrections.sql` agrega una tabla de eventos correctivos append-only. La conciliación original permanece en `payments_settlement_costs`; el panel presenta la corrección más reciente como valor efectivo e incluye su motivo. Aplicar v5 antes de desplegar el Worker que expone la ruta de corrección. Si el Worker se revierte, conservar tabla y eventos; la versión anterior seguirá pudiendo leer conciliaciones originales, aunque no mostrará las correcciones nuevas. No borrar eventos ni restaurar un snapshot para revertir una corrección. Si una corrección fue errónea, registrar otra corrección explicativa con el valor respaldado por el reporte. Los recaudos contra entrega permanecen inmutables en el panel: su reversión requiere un flujo que también resuelva devolución de dinero, estado del pedido e invoice/nota crédito.
+
 Guardar en CI/CD o en el registro operativo: fecha, entorno, commit inicial/final, IDs de deployments, migraciones involucradas, comandos ejecutados, resultados de smoke/E2E, resultado de la reconciliación y responsable. **No registrar secretos ni datos privados.**
 
 La foundation de rollback solo puede declararse **COMPLETE** cuando:

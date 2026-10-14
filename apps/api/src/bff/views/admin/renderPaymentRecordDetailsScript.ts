@@ -18,6 +18,7 @@ export function renderPaymentRecordDetailsScript(): string {
         ['Comisión real', paymentMoney(row.actualFeeCents)], ['Diferencia', paymentMoney(row.varianceCents)],
         ['Referencia del reporte', row.reportReference], ['Registrado por', row.recordedBy || '—'],
         ['Fecha', new Date(row.recordedAt).toLocaleString('es-CO')],
+        ...(row.corrected ? [['Correcciones registradas', String(row.correctionCount || 0)], ['Motivo de la última corrección', row.correctionReason || '—']] : []),
       ]);
     }
 

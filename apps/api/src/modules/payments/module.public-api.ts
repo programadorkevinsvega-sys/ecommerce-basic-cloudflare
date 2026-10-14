@@ -5,6 +5,7 @@ import { RecordCodCollectionCommand } from './application/use-cases/RecordCodCol
 import { PaymentTransaction } from './domain/entities/PaymentTransaction.js';
 import { CodCollection } from './domain/entities/CodCollection.js';
 import { RecordSettlementCostCommand } from './application/use-cases/RecordSettlementCostUseCase.js';
+import { RecordSettlementCorrectionCommand } from './application/use-cases/RecordSettlementCorrectionUseCase.js';
 
 export class PaymentsPublicApi {
   private readonly container: PaymentsModuleContainer;
@@ -35,6 +36,10 @@ export class PaymentsPublicApi {
 
   public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
     await this.container.recordSettlementCostUseCase.execute(command);
+  }
+
+  public async recordSettlementCorrection(command: RecordSettlementCorrectionCommand): Promise<void> {
+    await this.container.recordSettlementCorrectionUseCase.execute(command);
   }
 
   public async listSettlementCosts(limit?: number) {

@@ -29,7 +29,7 @@ export function renderPaymentsAdminScript(): string {
         const collectionsBody = document.getElementById('cod-collections-table-body');
         if (collectionsBody) window.paginateAdminTable('cod-collections', collectionsBody, _adminPaymentCollections, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-collection-id="\${escapeHtml(row.id)}" onclick="viewCodCollection(this)">Ver</button></td></tr>\`, 6, 'Aún no hay recaudos registrados.');
         const settlementBody = document.getElementById('settlement-table-body');
-        if (settlementBody) window.paginateAdminTable('payment-settlements', settlementBody, _adminPaymentSettlements, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button></td></tr>\`, 6, 'Aún no hay conciliaciones registradas.');
+        if (settlementBody) window.paginateAdminTable('payment-settlements', settlementBody, _adminPaymentSettlements, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code>\${row.corrected ? '<small class="payments-corrected-label">Corregida</small>' : ''}</td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><div class="payments-row-actions"><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="openSettlementCorrection(this)">Corregir</button></div></td></tr>\`, 6, 'Aún no hay conciliaciones registradas.');
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
@@ -124,6 +124,28 @@ export function renderPaymentsAdminScript(): string {
       await loadAdminPayments();
     }
 
+    function openSettlementCorrection(button) {
+      const row = _adminPaymentSettlements.find(item => item.orderId === button.dataset.settlementOrder);
+      if (!row) return;
+      document.getElementById('settlement-correction-order').value = row.orderId;
+      document.getElementById('settlement-correction-fee').value = String(Math.round(Number(row.actualFeeCents) / 100));
+      document.getElementById('settlement-correction-reference').value = row.reportReference || '';
+      document.getElementById('settlement-correction-reason').value = '';
+      openPaymentsModal('settlement-correction-modal', 'settlement-correction-fee');
+    }
+
+    async function submitSettlementCorrection() {
+      const orderId = document.getElementById('settlement-correction-order').value;
+      const actualFeeCents = window.copPesosToCents('settlement-correction-fee');
+      const reportReference = document.getElementById('settlement-correction-reference').value.trim();
+      const reason = document.getElementById('settlement-correction-reason').value.trim();
+      if (!reason || reason.length < 5) return alert('Explica el motivo de la corrección (mínimo 5 caracteres).');
+      const response = await fetch('/api/v1/admin/payments/' + encodeURIComponent(orderId) + '/settlement/corrections', { method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ actualFeeCents, reportReference, reason }) });
+      if (!response.ok) return alert('No fue posible guardar la corrección. Verifica los datos y el permiso payments:edit.');
+      closePaymentsModal('settlement-correction-modal');
+      await loadAdminPayments();
+    }
+
     function openPaymentsModal(id, firstFieldId) {
       const modal = document.getElementById(id);
       if (!modal) return;
@@ -143,6 +165,8 @@ export function renderPaymentsAdminScript(): string {
     window.filterPaymentTransactions = filterPaymentTransactions;
     window.submitCodCollection = submitCodCollection;
     window.submitSettlementCost = submitSettlementCost;
+    window.submitSettlementCorrection = submitSettlementCorrection;
+    window.openSettlementCorrection = openSettlementCorrection;
     window.openCodCollectionForm = openCodCollectionForm;
     window.closeCodCollectionForm = closeCodCollectionForm;
     window.openSettlementForm = openSettlementForm;

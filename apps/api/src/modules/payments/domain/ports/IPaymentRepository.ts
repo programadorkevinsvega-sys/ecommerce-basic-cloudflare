@@ -21,5 +21,6 @@ export interface IPaymentRepository {
   saveCodCollection(cod: CodCollection): Promise<void>;
   listCodCollections(limit?: number): Promise<CodCollection[]>;
   recordSettlementCost(input: { orderId: string; actualFeeCents: number; estimatedFeeCents: number; reportReference: string; recordedBy: string; recordedAt: string }): Promise<void>;
-  listSettlementCosts(limit?: number): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string }>>;
+  recordSettlementCorrection(input: { orderId: string; actualFeeCents: number; reportReference: string; reason: string; recordedBy: string; recordedAt: string }): Promise<void>;
+  listSettlementCosts(limit?: number): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string; corrected?: boolean; correctionReason?: string; correctionCount?: number }>>;
 }

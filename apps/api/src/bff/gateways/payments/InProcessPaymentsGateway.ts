@@ -6,6 +6,7 @@ import { RecordCodCollectionCommand } from '../../../modules/payments/applicatio
 import { PaymentTransaction } from '../../../modules/payments/domain/entities/PaymentTransaction.js';
 import { CodCollection } from '../../../modules/payments/domain/entities/CodCollection.js';
 import { RecordSettlementCostCommand } from '../../../modules/payments/application/use-cases/RecordSettlementCostUseCase.js';
+import { RecordSettlementCorrectionCommand } from '../../../modules/payments/application/use-cases/RecordSettlementCorrectionUseCase.js';
 
 export class InProcessPaymentsGateway implements PaymentsGateway {
   private readonly publicApi: PaymentsPublicApi;
@@ -36,6 +37,10 @@ export class InProcessPaymentsGateway implements PaymentsGateway {
 
   public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
     return this.publicApi.recordSettlementCost(command);
+  }
+
+  public async recordSettlementCorrection(command: RecordSettlementCorrectionCommand): Promise<void> {
+    return this.publicApi.recordSettlementCorrection(command);
   }
 
   public async listSettlementCosts(limit?: number) {

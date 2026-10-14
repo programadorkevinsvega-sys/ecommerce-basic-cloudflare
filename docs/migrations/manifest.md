@@ -199,6 +199,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `payments__0003_cod_collection_receipts.sql` | v3 | `ecommerce-vega-production` | Aplicada con Wrangler; verificada | Añade `receipt_number`, `created_at`, backfill desde `collected_at` e índice; esquema consultado después de aplicar. |
 | `payments__0004_settlement_costs.sql` | v4 | Local temporal | 2026-10-13 | trabajo actual | ✅ Tabla aditiva de comisiones reales reportadas, estimación congelada y referencia de liquidación |
 | `payments__0004_settlement_costs.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; tabla creada vacía |
+| `payments__0005_settlement_corrections.sql` | v5 | Local temporal | 2026-10-14 | trabajo actual | ✅ Incluida en `pnpm db:test-migrations`; esquema vacío y actualización legacy pasaron |
+| `payments__0005_settlement_corrections.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con el runner; ledger, columnas e índice verificados. Tabla creada vacía. |
 | `realtime__0003_preserve_read_state.sql` | v3 | `ecommerce-vega-production` | SQL aplicado y ledger reconciliado | Copia `is_read` a `read`; consulta posterior confirmó 0 discrepancias. |
 
 ## Reconciliación remota de auditoría (2026-10-12)

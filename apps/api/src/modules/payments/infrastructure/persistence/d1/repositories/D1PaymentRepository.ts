@@ -131,13 +131,30 @@ export class D1PaymentRepository implements IPaymentRepository {
 
   public async recordSettlementCost(input: { orderId: string; actualFeeCents: number; estimatedFeeCents: number; reportReference: string; recordedBy: string; recordedAt: string }): Promise<void> {
     await this.db.prepare(`INSERT INTO payments_settlement_costs (order_id,actual_fee_cents,estimated_fee_cents,report_reference,recorded_by,recorded_at)
-      VALUES (?,?,?,?,?,?) ON CONFLICT(order_id) DO UPDATE SET actual_fee_cents=excluded.actual_fee_cents, estimated_fee_cents=excluded.estimated_fee_cents,
-      report_reference=excluded.report_reference,recorded_by=excluded.recorded_by,recorded_at=excluded.recorded_at`)
+      VALUES (?,?,?,?,?,?)`)
       .bind(input.orderId, input.actualFeeCents, input.estimatedFeeCents, input.reportReference, input.recordedBy, input.recordedAt).run();
   }
 
-  public async listSettlementCosts(limit = 100): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string }>> {
-    const result = await this.db.prepare('SELECT * FROM payments_settlement_costs ORDER BY recorded_at DESC LIMIT ?')
+  public async recordSettlementCorrection(input: { orderId: string; actualFeeCents: number; reportReference: string; reason: string; recordedBy: string; recordedAt: string }): Promise<void> {
+    const result = await this.db.prepare(`INSERT INTO payments_settlement_corrections
+      (id,order_id,actual_fee_cents,report_reference,reason,recorded_by,recorded_at)
+      SELECT ?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM payments_settlement_costs WHERE order_id = ?)`)
+      .bind(crypto.randomUUID(), input.orderId, input.actualFeeCents, input.reportReference, input.reason, input.recordedBy, input.recordedAt, input.orderId).run();
+    if ((result.meta?.changes ?? 0) !== 1) throw new Error('No existe una conciliación que corregir');
+  }
+
+  public async listSettlementCosts(limit = 100): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string; corrected: boolean; correctionReason?: string; correctionCount: number }>> {
+    const result = await this.db.prepare(`SELECT base.order_id, base.estimated_fee_cents,
+      COALESCE(correction.actual_fee_cents, base.actual_fee_cents) AS actual_fee_cents,
+      COALESCE(correction.report_reference, base.report_reference) AS report_reference,
+      COALESCE(correction.recorded_by, base.recorded_by) AS recorded_by,
+      COALESCE(correction.recorded_at, base.recorded_at) AS recorded_at,
+      correction.reason AS correction_reason,
+      (SELECT COUNT(*) FROM payments_settlement_corrections history WHERE history.order_id = base.order_id) AS correction_count
+      FROM payments_settlement_costs base
+      LEFT JOIN payments_settlement_corrections correction ON correction.id = (
+        SELECT id FROM payments_settlement_corrections WHERE order_id = base.order_id ORDER BY recorded_at DESC, id DESC LIMIT 1
+      ) ORDER BY COALESCE(correction.recorded_at, base.recorded_at) DESC LIMIT ?`)
       .bind(limit).all<Record<string, unknown>>();
     return (result.results || []).map((row) => ({
       orderId: row.order_id as string,
@@ -147,6 +164,9 @@ export class D1PaymentRepository implements IPaymentRepository {
       reportReference: row.report_reference as string,
       recordedBy: row.recorded_by as string,
       recordedAt: row.recorded_at as string,
+      corrected: Number(row.correction_count) > 0,
+      correctionReason: (row.correction_reason as string | null) ?? undefined,
+      correctionCount: Number(row.correction_count),
     }));
   }
 
