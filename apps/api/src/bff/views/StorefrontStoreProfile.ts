@@ -1,5 +1,6 @@
 export interface StorefrontStoreProfile {
   storeName: string;
+  footerCopyrightText?: string;
   supportEmail: string;
   supportPhone?: string;
   companyNit?: string;

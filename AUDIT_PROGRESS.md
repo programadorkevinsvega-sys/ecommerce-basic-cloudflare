@@ -1,5 +1,12 @@
 # Progreso: precios, margen, IVA y costos de pago
 
+### Identidad y copyright del footer (2026-10-14)
+
+- El nombre mostrado en el footer público y el checkout ahora sale de Nombre Comercial. Razón Social/Propietario y NIT aparecen en el bloque de marca, entre el nombre y la descripción “Productos seleccionados para acompañarte todos los días.”
+- Añadí en Configuración el texto editable de derechos reservados. El footer compone `© año actual + nombre comercial + texto`; el año cambia automáticamente. Ajusté también el bloque de footer del checkout.
+- Migración aditiva `settings__0004_footer_copyright.sql`, con valor inicial “Todos los derechos reservados.”, aplicada a producción con Wrangler; esquema reportó 38 migraciones conocidas al día.
+- Pendientes de validar: vista visual en navegador. No se ejecutan pruebas automatizadas.
+
 ## Fases
 
 1. **Diagnóstico y compatibilidad — completada.** Confirmado que el catálogo v1 guardaba precios antes de IVA, checkout lo añadía, la factura lo reconstruía y los snapshots de pedidos/facturas eran inmutables. En producción la tasa configurada leída fue 19%.

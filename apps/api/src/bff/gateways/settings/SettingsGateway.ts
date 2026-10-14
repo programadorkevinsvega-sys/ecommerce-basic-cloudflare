@@ -1,6 +1,7 @@
 export interface StoreSettingsResponse {
   id: string;
   storeName: string;
+  footerCopyrightText: string;
   currency: string;
   taxRatePercent: number;
   supportEmail: string;
@@ -19,6 +20,7 @@ export interface StoreSettingsResponse {
 
 export interface UpdateStoreSettingsRequest {
   storeName?: string;
+  footerCopyrightText?: string;
   currency?: string;
   taxRatePercent?: number;
   supportEmail?: string;

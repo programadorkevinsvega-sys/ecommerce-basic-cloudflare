@@ -6,16 +6,20 @@ export function renderStoreFooterDetails(profile?: StorefrontStoreProfile): stri
   const phone = profile.supportPhone?.trim() === '+57 300 0000000' ? '' : profile.supportPhone?.trim();
   const address = profile.companyAddress?.trim();
   const location = [profile.companyCity, profile.companyCountry].filter(Boolean).join(', ');
-  const legalName = profile.companyLegalName?.trim();
-  const nit = profile.companyNit?.trim();
   return `<section class="footer-column footer-contact" aria-labelledby="footer-contact-title">
     <h2 id="footer-contact-title">Contacto</h2>
     ${email ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>` : ''}
     ${phone ? `<a href="tel:${escapeHtml(phone.replace(/[^+\d]/g, ''))}">${escapeHtml(phone)}</a>` : ''}
-    ${legalName ? `<span>${escapeHtml(legalName)}</span>` : ''}
-    ${nit ? `<span>NIT: ${escapeHtml(nit)}</span>` : ''}
     ${address || location ? `<address>${address ? `${escapeHtml(address)}<br>` : ''}${escapeHtml(location)}</address>` : ''}
   </section>`;
+}
+
+export function renderStoreLegalIdentity(profile?: StorefrontStoreProfile): string {
+  if (!profile) return '';
+  const legalName = profile.companyLegalName?.trim();
+  const nit = profile.companyNit?.trim();
+  if (!legalName && !nit) return '';
+  return `<div class="footer-legal-identity">${legalName ? `<span>${escapeHtml(legalName)}</span>` : ''}${nit ? `<span>NIT: ${escapeHtml(nit)}</span>` : ''}</div>`;
 }
 
 export function renderStoreSocialLinks(profile?: StorefrontStoreProfile): string {
@@ -35,6 +39,7 @@ export function renderCheckoutStoreDetails(profile?: StorefrontStoreProfile): st
   const email = profile.supportEmail.trim() === 'contacto@tienda.com' ? '' : profile.supportEmail.trim();
   return `<span class="checkout-footer-store-details">
     ${email ? `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>` : ''}
+    ${profile.companyLegalName ? `<span>${escapeHtml(profile.companyLegalName)}</span>` : ''}
     ${profile.companyNit ? `<span>NIT: ${escapeHtml(profile.companyNit)}</span>` : ''}
     ${address ? `<span>${escapeHtml(address)}</span>` : ''}
   </span>`;

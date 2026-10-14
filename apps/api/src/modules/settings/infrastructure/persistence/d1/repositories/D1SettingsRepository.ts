@@ -10,7 +10,7 @@ export class D1SettingsRepository implements ISettingsRepository {
 
   public async get(): Promise<StoreSettings | null> {
     const query = `
-      SELECT id, store_name, currency, tax_rate_percent, support_email, support_phone,
+      SELECT id, store_name, footer_copyright_text, currency, tax_rate_percent, support_email, support_phone,
              company_nit, company_legal_name, company_address, company_city, company_country,
              social_instagram_url, social_tiktok_url, social_facebook_url,
              require_cod_verification, updated_at
@@ -28,6 +28,7 @@ export class D1SettingsRepository implements ISettingsRepository {
     return StoreSettings.create({
       id: result.id as string,
       storeName: result.store_name as string,
+      footerCopyrightText: (result.footer_copyright_text as string) || 'Todos los derechos reservados.',
       currency: result.currency as string,
       taxRatePercent: Number(result.tax_rate_percent),
       supportEmail: result.support_email as string,
@@ -49,13 +50,14 @@ export class D1SettingsRepository implements ISettingsRepository {
     const snapshot = settings.toSnapshot();
     const query = `
       INSERT INTO settings_store (
-        id, store_name, currency, tax_rate_percent, support_email, support_phone,
+        id, store_name, footer_copyright_text, currency, tax_rate_percent, support_email, support_phone,
         company_nit, company_legal_name, company_address, company_city, company_country,
         social_instagram_url, social_tiktok_url, social_facebook_url,
         require_cod_verification, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         store_name = excluded.store_name,
+        footer_copyright_text = excluded.footer_copyright_text,
         currency = excluded.currency,
         tax_rate_percent = excluded.tax_rate_percent,
         support_email = excluded.support_email,
@@ -77,6 +79,7 @@ export class D1SettingsRepository implements ISettingsRepository {
       .bind(
         snapshot.id,
         snapshot.storeName,
+        snapshot.footerCopyrightText,
         snapshot.currency,
         snapshot.taxRatePercent,
         snapshot.supportEmail,

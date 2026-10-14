@@ -16,6 +16,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `settings__0002_company_tax_fields.sql` | v2 | Local (Miniflare) | 2026-10-12 | 9a0a0c4 | ✅ Verificada y retrocompatible |
 | `settings__0003_storefront_contact_social.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con runner Wrangler; expansión aditiva, país Colombia solo en valores vacíos |
 | `settings__0003_storefront_contact_social.sql` | v3 | Local | 2026-10-14 | trabajo actual | ✅ Fuentes y copias generadas; consistencia verificada |
+| `settings__0004_footer_copyright.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con runner Wrangler; columna aditiva y texto inicial |
 
 ---
 

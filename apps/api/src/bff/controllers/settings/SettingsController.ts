@@ -6,6 +6,7 @@ import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
 const updateSettingsSchema = z.object({
   storeName: z.string().min(1).max(100).optional(),
+  footerCopyrightText: z.string().max(160).optional(),
   currency: z.string().length(3).optional(),
   taxRatePercent: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),

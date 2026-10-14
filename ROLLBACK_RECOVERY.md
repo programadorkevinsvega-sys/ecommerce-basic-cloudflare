@@ -266,6 +266,8 @@ Los controles no aplicables todavía (por ejemplo, `credit` o Durable Objects an
 
 `settings__0003_storefront_contact_social.sql` agrega de forma nullable ciudad, país y URLs de Instagram, TikTok y Facebook a `settings_store`. Completa `company_country='Colombia'` únicamente cuando el campo está vacío, conforme al storefront colombiano existente; no modifica pedidos ni facturas. Aplicar antes de desplegar código que lea estas columnas. Para recuperar, revertir el Worker conservando columnas y valores; no borrar campos ni restaurar un snapshot. Los enlaces sociales son opcionales y deben configurarse desde Admin → Configuración. Dirección, NIT y ciudad permanecen vacíos hasta ser ingresados por el administrador.
 
+`settings__0004_footer_copyright.sql` agrega `footer_copyright_text` y carga el texto inicial “Todos los derechos reservados.” para la configuración existente. Es una expansión; al revertir el Worker, conservar la columna y su contenido. El nombre comercial y el año se renderizan dinámicamente, y el texto legal es editable en Admin → Configuración.
+
 ### Páginas institucionales CMS (2026-10-14)
 
 `cms__0002_institutional_pages.sql` agrega las páginas institucionales que no existían, en estado `draft`, y conserva intactas las páginas previas. Es una migración de contenido sin DDL. Un rollback del Worker no requiere revertir ni borrar estas filas; las versiones actuales de CMS continúan pudiendo leerlas. Si la migración no se completa, revisar `cms_pages` por slug y `cms_page_versions` por ID/versión antes de reintentar. La operación es idempotente y no elimina contenido. Publicar cada borrador solo después de validar los datos comerciales o legales correspondientes.

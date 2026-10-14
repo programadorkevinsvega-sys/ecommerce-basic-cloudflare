@@ -1,6 +1,7 @@
 export interface StoreSettingsDTO {
   id: string;
   storeName: string;
+  footerCopyrightText: string;
   currency: string;
   taxRatePercent: number;
   supportEmail: string;

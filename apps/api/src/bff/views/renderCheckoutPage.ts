@@ -38,7 +38,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
       <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">${initialPaymentMethod === 'wompi' ? `Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}` : initialPaymentMethod === 'cash_on_delivery' ? 'Confirmar pedido' : 'Selecciona un método de pago'}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
     </form>
     ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion, initialPaymentMethod === 'wompi')}
-    </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()}</span>${renderCheckoutStoreDetails(footerStoreProfile)}${renderStoreSocialLinks(footerStoreProfile)}<span>Compra segura · Precios en COP</span></footer>
+    </div><footer class="checkout-footer"><span><strong>${escapeHtml(footerStoreProfile?.storeName || 'Vega Store')}</strong> · © ${new Date().getFullYear()}${footerStoreProfile?.footerCopyrightText ? ` ${escapeHtml(footerStoreProfile.footerCopyrightText)}` : ''}</span>${renderCheckoutStoreDetails(footerStoreProfile)}${renderStoreSocialLinks(footerStoreProfile)}<span>Compra segura · Precios en COP</span></footer>
   </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion)}${getCheckoutDraftScript()}`;
 }
 

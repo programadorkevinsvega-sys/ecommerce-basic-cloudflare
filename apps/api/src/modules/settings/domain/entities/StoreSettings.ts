@@ -1,6 +1,7 @@
 export interface StoreSettingsProps {
   id: string;
   storeName: string;
+  footerCopyrightText: string;
   currency: string;
   taxRatePercent: number;
   supportEmail: string;
@@ -36,6 +37,7 @@ export class StoreSettings {
 
   public get id(): string { return this.props.id; }
   public get storeName(): string { return this.props.storeName; }
+  public get footerCopyrightText(): string { return this.props.footerCopyrightText; }
   public get currency(): string { return this.props.currency; }
   public get taxRatePercent(): number { return this.props.taxRatePercent; }
   public get supportEmail(): string { return this.props.supportEmail; }
@@ -57,6 +59,10 @@ export class StoreSettings {
         throw new Error('El nombre de la tienda no puede estar vacío');
       }
       this.props.storeName = params.storeName.trim();
+    }
+    if (params.footerCopyrightText !== undefined) {
+      if (params.footerCopyrightText.length > 160) throw new Error('El texto de derechos reservados no puede superar 160 caracteres');
+      this.props.footerCopyrightText = params.footerCopyrightText.trim();
     }
     if (params.currency !== undefined) {
       this.props.currency = params.currency.toUpperCase();

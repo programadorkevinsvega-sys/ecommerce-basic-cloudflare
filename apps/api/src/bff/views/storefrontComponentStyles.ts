@@ -80,6 +80,8 @@ export const storefrontComponentStyles = String.raw`
     .site-footer { margin-top: 4rem; padding: 3rem max(1.25rem, calc((100vw - var(--content-width)) / 2)) 1.5rem; text-align: left; }
     .footer-inner { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.25fr; gap: 2rem; max-width: var(--content-width); margin: 0 auto 2rem; }
     .footer-brand p { max-width: 260px; margin: .7rem 0 1rem; }
+    .footer-brand .brand-link { display:inline-block; color:#edf7dc; text-decoration:none; }
+    .footer-legal-identity { display:grid; gap:.2rem; margin-top:.55rem; color:#bfcdbd; font-size:.78rem; line-height:1.45; }
     .footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
     .footer-column h2 { margin: 0 0 .25rem; color: #fff; font-size: .9rem; letter-spacing: 0; }
     .footer-column a { color: #bfcdbd; font-size: .82rem; }

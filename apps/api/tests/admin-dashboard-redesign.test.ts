@@ -6,7 +6,7 @@ const props: AdminDashboardProps = {
   products: [], categories: [], brands: [], attributes: [], banners: [], announcements: [],
   cmsPages: [], promotionRules: [], coupons: [], shippingZones: [], divipolaLocations: [],
   settings: {
-    id: 'settings', storeName: 'Vega Store', currency: 'COP', taxRatePercent: 19,
+    id: 'settings', storeName: 'Vega Store', footerCopyrightText: 'Todos los derechos reservados.', currency: 'COP', taxRatePercent: 19,
     supportEmail: 'soporte@example.com', requireCodVerification: false, updatedAt: '2026-01-01',
   },
   adminEmail: 'admin@example.com',

@@ -64,6 +64,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
         <form id="settingsForm">
           <div class="form-grid">
             <div><label>Nombre Comercial</label><input type="text" id="sName" value="${escapeHtml(props.settings.storeName)}" required /></div>
+            <div><label>Texto de derechos reservados</label><input type="text" id="sFooterCopyright" maxlength="160" placeholder="Todos los derechos reservados." value="${escapeHtml(props.settings.footerCopyrightText || 'Todos los derechos reservados.')}" /><small>El año del footer se actualiza automáticamente.</small></div>
             <div><label>Moneda</label><input type="text" id="sCurrency" value="${escapeHtml(props.settings.currency)}" readonly style="opacity:0.6;" /></div>
             <div><label>NIT / Cédula Fiscal</label><input type="text" id="sNit" placeholder="Ej: 900.123.456-7" value="${escapeHtml(props.settings.companyNit || '')}" /></div>
             <div><label>Razón Social / Propietario</label><input type="text" id="sLegal" placeholder="Ej: JNM Tortas S.A.S." value="${escapeHtml(props.settings.companyLegalName || '')}" /></div>

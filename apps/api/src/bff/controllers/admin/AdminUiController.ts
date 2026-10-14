@@ -121,5 +121,5 @@ function hasPermission(permissions: string[], required: string): boolean {
 }
 
 function emptySettings(): StoreSettingsResponse {
-  return { id: '', storeName: 'Vega Store', currency: 'COP', taxRatePercent: 0, supportEmail: '', requireCodVerification: false, updatedAt: '' };
+  return { id: '', storeName: 'Vega Store', footerCopyrightText: 'Todos los derechos reservados.', currency: 'COP', taxRatePercent: 0, supportEmail: '', requireCodVerification: false, updatedAt: '' };
 }

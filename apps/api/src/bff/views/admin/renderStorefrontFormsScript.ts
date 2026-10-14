@@ -139,6 +139,7 @@ export function renderStorefrontFormsScript(): string {
       const button = e.currentTarget.querySelector('button[type="submit"]');
       const payload = {
         storeName: document.getElementById('sName').value,
+        footerCopyrightText: document.getElementById('sFooterCopyright')?.value || '',
         companyNit: document.getElementById('sNit')?.value || undefined,
         companyLegalName: document.getElementById('sLegal')?.value || undefined,
         companyAddress: document.getElementById('sAddress')?.value || undefined,

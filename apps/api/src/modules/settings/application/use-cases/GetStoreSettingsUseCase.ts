@@ -18,6 +18,7 @@ export class GetStoreSettingsUseCase {
       settings = StoreSettings.create({
         id: 'default',
         storeName: 'Mi Tienda Cloudflare',
+        footerCopyrightText: 'Todos los derechos reservados.',
         currency: 'COP',
         taxRatePercent: 19,
         supportEmail: 'contacto@tienda.com',
