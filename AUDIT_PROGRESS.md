@@ -272,3 +272,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Los valores se guardan dentro de `specifications` usando el código del atributo, aparecen al editar el producto y continúan visibles en sus especificaciones públicas. No requiere cambio de esquema ni migración.
 - La entidad independiente de variantes (combinaciones con SKU/stock/precio propios) no existe en el modelo actual; esta corrección asigna valores de atributos al producto existente y no simula una tabla de variantes.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice verificación visual en navegador.
+
+### Rediseño de administración de Productos (2026-10-14)
+
+- Productos abre con una lista diseñada al estilo de Inventario/Pedidos: resumen de catálogo, búsqueda, filtros por publicación, tabla y acción principal “Crear producto”.
+- El formulario existente se presenta en un modal accesible para creación y edición, con cierre por botón, fondo o Escape, foco inicial y retorno de foco. Se conserva la lógica actual de precios, medios de pago, atributos, imágenes, envío, SEO y publicación.
+- La herramienta de conversión de precios históricos continúa disponible en el listado. El cambio es de frontend y no requiere migraciones ni cambios de API.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice revisión visual en navegador.

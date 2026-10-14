@@ -3,6 +3,7 @@ import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderInventoryDashboardCss } from './renderInventoryDashboardCss.js';
 import { renderPaymentsDashboardCss } from './renderPaymentsDashboardCss.js';
 import { renderShippingInvoicesDashboardCss } from './renderShippingInvoicesDashboardCss.js';
+import { renderProductsDashboardCss } from './renderProductsDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
 import { renderAdminSidebar } from './renderAdminSidebar.js';
 import { renderAdminSummarySection } from './renderAdminSummarySection.js';
@@ -11,6 +12,7 @@ import { renderAdminLegacyTabs } from './renderAdminLegacyTabs.js';
 import { renderCopInputScript } from './renderCopInputScript.js';
 import { renderStorefrontActionsScript } from './renderStorefrontActionsScript.js';
 import { renderProductFormsScript } from './renderProductFormsScript.js';
+import { renderProductListScript } from './renderProductListScript.js';
 import { renderProductPricingScript } from './renderProductPricingScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
 import { renderCmsFormsScript } from './renderCmsFormsScript.js';
@@ -30,7 +32,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
@@ -62,6 +64,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderAdminSummaryScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>
+  ${renderProductListScript()}
   <script>${renderProductPriceMigrationScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>

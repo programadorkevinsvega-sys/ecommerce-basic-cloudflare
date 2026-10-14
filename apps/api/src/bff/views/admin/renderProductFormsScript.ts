@@ -1,7 +1,6 @@
 export function renderProductFormsScript(): string {
   return `
     window.currentProductMediaIds = [];
-
     window.setProductAttributeValues = (specifications = {}) => {
       document.querySelectorAll('[data-product-attribute]').forEach((field) => {
         field.value = specifications[field.dataset.productAttribute] ?? '';

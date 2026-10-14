@@ -20,14 +20,11 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
   }).join('');
 
   return `
-    <div class="card" style="margin-bottom:1rem;">
-      <h2>Actualizar precios históricos a precio final</h2>
-      <p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p>
-      <button type="button" class="btn-action" onclick="previewLegacyPriceMigration()">Previsualizar conversión</button>
-      <div id="legacy-price-preview" aria-live="polite"></div>
-    </div>
-    <div class="card">
-      <h2 id="pFormTitle">Crear Nuevo Producto</h2>
+    <div id="product-modal" class="product-modal" hidden>
+      <button class="product-modal-backdrop" type="button" onclick="closeProductModal()" aria-label="Cerrar formulario"></button>
+      <section class="product-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pFormTitle" tabindex="-1">
+        <header class="product-modal-heading"><div><h2 id="pFormTitle">Crear Nuevo Producto</h2><p>Completa la información del producto y sus opciones de venta.</p></div><button class="product-modal-close" type="button" onclick="closeProductModal()" aria-label="Cerrar">×</button></header>
+        <div class="product-modal-body"><div class="card">
       <form id="newProductForm">
         <input type="hidden" id="pEditId" value="" />
         <input type="hidden" id="productTaxRate" value="${taxRatePercent}" />
@@ -140,6 +137,8 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div id="pMsg" class="msg"></div>
         </div>
       </form>
+        </div></div>
+      </section>
     </div>
   `;
 }

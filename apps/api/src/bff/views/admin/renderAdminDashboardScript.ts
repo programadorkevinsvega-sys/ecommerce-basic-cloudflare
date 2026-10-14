@@ -22,6 +22,8 @@ export function renderAdminDashboardScript(): string {
       document.querySelector('.admin-main')?.classList.toggle('shipping-page-active', tabId === 'shipping');
       legacy?.classList.toggle('invoices-mode', tabId === 'invoices');
       document.querySelector('.admin-main')?.classList.toggle('invoices-page-active', tabId === 'invoices');
+      legacy?.classList.toggle('products-mode', tabId === 'products');
+      document.querySelector('.admin-main')?.classList.toggle('products-page-active', tabId === 'products');
       if (tabId === 'payments' && !navButton && typeof window.showAdminPaymentPage === 'function') window.showAdminPaymentPage('collections');
       if (tabId === 'shipping' && !navButton && typeof window.showAdminShippingPage === 'function') window.showAdminShippingPage('zones');
       if (tabId === 'summary') {
@@ -165,6 +167,7 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSubmitBtn').textContent = 'Guardar Cambios';
         document.getElementById('pCancelBtn').style.display = 'inline-block';
         updateSerpPreview();
+      window.openProductModal?.();
         document.getElementById('newProductForm').scrollIntoView({ behavior: 'smooth' });
       } catch (err) {
         console.error('No fue posible cargar el producto para editar');
@@ -188,6 +191,7 @@ export function renderAdminDashboardScript(): string {
       document.getElementById('pSubmitBtn').textContent = 'Guardar Producto';
       document.getElementById('pCancelBtn').style.display = 'none';
       updateSerpPreview();
+      window.closeProductModal?.();
     }
 
     async function deleteCategory(id) {
