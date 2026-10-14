@@ -2,7 +2,7 @@ import { Collection, CollectionProps } from '../../../../domain/entities/Collect
 import { ICollectionRepository } from '../../../../domain/ports/ICollectionRepository.js';
 import { CatalogPageQuery } from '../../../../domain/ports/CatalogPageQuery.js';
 
-interface CollectionRow { id:string; name:string; slug:string; description:string; status:'active'|'inactive'; seo_title:string|null; seo_description:string|null; created_at:string; updated_at:string; }
+interface CollectionRow { id:string; name:string; slug:string; description:string; image_media_id:string|null; status:'active'|'inactive'; seo_title:string|null; seo_description:string|null; created_at:string; updated_at:string; }
 
 export class D1CollectionRepository implements ICollectionRepository {
   public constructor(private readonly db: D1Database) {}
@@ -26,8 +26,8 @@ export class D1CollectionRepository implements ICollectionRepository {
   public async save(collection: Collection): Promise<void> {
     const p = collection.toPrimitives();
     await this.db.batch([
-      this.db.prepare(`INSERT INTO catalog_collections (id,name,slug,description,status,seo_title,seo_description,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,description=excluded.description,status=excluded.status,seo_title=excluded.seo_title,seo_description=excluded.seo_description,updated_at=excluded.updated_at`)
-        .bind(p.id,p.name,p.slug,p.description,p.status,p.seoTitle ?? null,p.seoDescription ?? null,p.createdAt,p.updatedAt),
+      this.db.prepare(`INSERT INTO catalog_collections (id,name,slug,description,image_media_id,status,seo_title,seo_description,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,description=excluded.description,image_media_id=excluded.image_media_id,status=excluded.status,seo_title=excluded.seo_title,seo_description=excluded.seo_description,updated_at=excluded.updated_at`)
+        .bind(p.id,p.name,p.slug,p.description,p.imageMediaId ?? null,p.status,p.seoTitle ?? null,p.seoDescription ?? null,p.createdAt,p.updatedAt),
       this.db.prepare('DELETE FROM catalog_collection_products WHERE collection_id = ?').bind(p.id),
       ...p.productIds.map((productId, index) => this.db.prepare('INSERT INTO catalog_collection_products (collection_id,product_id,sort_order) VALUES (?,?,?)').bind(p.id,productId,index)),
     ]);
@@ -37,7 +37,7 @@ export class D1CollectionRepository implements ICollectionRepository {
   }
   private async hydrate(row: CollectionRow): Promise<Collection> {
     const { results = [] } = await this.db.prepare('SELECT product_id FROM catalog_collection_products WHERE collection_id = ? ORDER BY sort_order').bind(row.id).all<{product_id:string}>();
-    const props: CollectionProps = { id:row.id,name:row.name,slug:row.slug,description:row.description,productIds:results.map((item)=>item.product_id),status:row.status,seoTitle:row.seo_title ?? undefined,seoDescription:row.seo_description ?? undefined,createdAt:row.created_at,updatedAt:row.updated_at };
+    const props: CollectionProps = { id:row.id,name:row.name,slug:row.slug,description:row.description,imageMediaId:row.image_media_id ?? undefined,productIds:results.map((item)=>item.product_id),status:row.status,seoTitle:row.seo_title ?? undefined,seoDescription:row.seo_description ?? undefined,createdAt:row.created_at,updatedAt:row.updated_at };
     return new Collection(props);
   }
 }

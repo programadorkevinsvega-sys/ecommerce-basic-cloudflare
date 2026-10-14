@@ -3,6 +3,7 @@ export interface CollectionProps {
   name: string;
   slug: string;
   description: string;
+  imageMediaId?: string;
   productIds: string[];
   status: 'active' | 'inactive';
   seoTitle?: string;

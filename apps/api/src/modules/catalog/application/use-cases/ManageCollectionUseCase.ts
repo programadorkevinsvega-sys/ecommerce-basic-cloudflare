@@ -5,7 +5,7 @@ import { CatalogPageQuery } from '../../domain/ports/CatalogPageQuery.js';
 import { CollectionNotFoundError } from './CollectionNotFoundError.js';
 
 export type CollectionInput = Pick<CollectionProps, 'name' | 'slug' | 'description' | 'productIds' | 'status'> &
-  Partial<Pick<CollectionProps, 'seoTitle' | 'seoDescription'>>;
+  Partial<Pick<CollectionProps, 'seoTitle' | 'seoDescription'>> & { imageMediaId?: string | null };
 
 export class ManageCollectionUseCase {
   public constructor(private readonly collections: ICollectionRepository, private readonly products: IProductRepository) {}
@@ -38,7 +38,7 @@ export class ManageCollectionUseCase {
     if (id && !current) throw new CollectionNotFoundError();
     const previous = current?.toPrimitives();
     const now = new Date().toISOString();
-    const collection = new Collection({ id: id || crypto.randomUUID(), ...input, productIds,
+    const collection = new Collection({ id: id || crypto.randomUUID(), ...input, imageMediaId: input.imageMediaId || undefined, productIds,
       createdAt: previous?.createdAt || now, updatedAt: now });
     await this.collections.save(collection);
     return collection;

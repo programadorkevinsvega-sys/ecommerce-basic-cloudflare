@@ -56,6 +56,20 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-fields .collection-products-field select { min-height:220px; padding:7px!important; }
     .taxonomy-fields .collection-products-field option { padding:7px 9px; }
     .taxonomy-fields .collection-products-field small { color:#737b89; font-size:11px; font-weight:400; }
+    .collection-image-field>label { margin-bottom:7px; color:#283142; font-size:12px; font-weight:650; }
+    .collection-image-preview { display:flex; min-height:150px; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #cbd1db; border-radius:10px; background:#f8f9fb; color:#737b89; font-size:12px; }
+    .collection-image-preview img { width:100%; max-height:280px; object-fit:contain; }
+    .collection-image-field>p,.collection-products-field>p { min-height:16px; margin:5px 0; color:#636b7b; font-size:11px; }
+    .collection-image-field>button[hidden],.collection-image-preview [hidden] { display:none; }
+    .collection-product-results { display:grid; max-height:230px; overflow:auto; gap:5px; padding:7px; border:1px solid #e3e6ec; border-radius:9px; }
+    .taxonomy-fields .collection-product-result { display:flex; min-height:42px; flex-direction:row; align-items:center; gap:10px; padding:7px 9px; border-radius:7px; background:#f8f9fb; color:#283142; font-size:12px; }
+    .taxonomy-fields .collection-product-result input { width:17px; min-height:17px; height:17px; flex:none; accent-color:#24583e; }
+    .collection-product-result span,.collection-product-result small { display:block; }
+    .collection-product-result small { margin-top:3px; color:#737b89; font-size:10px; font-weight:500; }
+    .collection-selected-products { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+    .collection-selected-product { display:flex; align-items:center; gap:7px; border:1px solid #dce3dc; border-radius:8px; padding:6px 9px; background:#f2f6f1; color:#344738; font-size:11px; }
+    .collection-selected-product button { width:24px; height:24px; border:0; border-radius:6px; background:#fff; color:#5f3934; cursor:pointer; }
+    .collection-row-image { width:44px; height:36px; margin:0 10px 0 0; border-radius:5px; object-fit:cover; vertical-align:middle; }
     .taxonomy-fields input,.taxonomy-fields select,.taxonomy-fields textarea { width:100%; min-height:44px; border:1px solid #cbd1db!important; border-radius:8px!important; padding:9px 11px!important; background:#fff!important; color:#151a23!important; font:inherit; font-size:13px!important; box-shadow:none!important; }
     .taxonomy-fields textarea { min-height:78px; resize:vertical; }
     .taxonomy-fields input:focus,.taxonomy-fields select:focus,.taxonomy-fields textarea:focus { border-color:#7296f4!important; box-shadow:0 0 0 3px #dce6fb!important; outline:0; }

@@ -4,12 +4,26 @@ import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
 
-const inputSchema = z.object({ name:z.string().trim().min(1).max(120),slug:z.string().trim().min(1).max(140).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),description:z.string().max(2000),productIds:z.array(z.string().uuid()).max(100),status:z.enum(['active','inactive']),seoTitle:z.string().max(70).optional(),seoDescription:z.string().max(160).optional() }).strict();
+const inputSchema = z.object({ name:z.string().trim().min(1).max(120),slug:z.string().trim().min(1).max(140).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),description:z.string().max(2000),imageMediaId:z.string().uuid().nullable().optional(),productIds:z.array(z.string().uuid()).max(100),status:z.enum(['active','inactive']),seoTitle:z.string().max(70).optional(),seoDescription:z.string().max(160).optional() }).strict();
 
 export class CollectionAdminController {
   public static createRoutes(catalog:CatalogGateway,identity:IdentityGateway,audit:AuditGateway):Hono {
     const router = new Hono();
+    router.get('/admin/collection-products',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
+      const ids=(c.req.query('ids')||'').split(',').filter(Boolean);
+      const query=c.req.query('q')?.trim()||'';
+      if(ids.length>100||ids.some((id)=>!z.string().uuid().safeParse(id).success)||query.length>120)return c.json({error:'Búsqueda inválida'},400);
+      try {
+        const searchQuery=query.split(/[^\p{L}\p{N}]+/u).filter(Boolean).join(' ');
+        const rows=ids.length
+          ? await Promise.all(ids.map((id)=>catalog.getProductById(id).catch(()=>null)))
+          : await catalog.listProducts({limit:30,offset:0,status:'published',searchQuery:searchQuery||undefined});
+        const data=rows.filter((row):row is CatalogProductDto=>row !== null && row.status==='published').map(({id,name,sku})=>({id,name,sku}));
+        return c.json({data});
+      } catch { return c.json({error:'No fue posible buscar productos'},400); }
+    });
     router.get('/admin/collections',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
       const page=Number(c.req.query('page')||1);
       if(!Number.isSafeInteger(page)||page<1||page>1000000)return c.json({error:'Página inválida'},400);

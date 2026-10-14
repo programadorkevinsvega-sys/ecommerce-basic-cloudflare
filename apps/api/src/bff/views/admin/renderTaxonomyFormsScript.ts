@@ -8,8 +8,7 @@ export function renderTaxonomyFormsScript(): string {
       variants:['Variantes','Administra SKU, opciones, precio y stock por variante.'],
       collections:['Colecciones','Organiza productos publicados en páginas con dirección propia.']
     };
-    const taxonomyPages = Object.create(null);
-    const taxonomyEndpoints = { categories:'categories',brands:'brands',providers:'suppliers',attributes:'attributes',variants:'product-variants',collections:'collections' };
+    const taxonomyPages = Object.create(null), taxonomyEndpoints = { categories:'categories',brands:'brands',providers:'suppliers',attributes:'attributes',variants:'product-variants',collections:'collections' };
     window.showCatalogPage = (key, navButton) => {
       document.querySelectorAll('[data-taxonomy-page]').forEach((page) => { page.hidden = page.dataset.taxonomyPage !== key; });
       document.querySelectorAll('.admin-nav-link[data-tab="taxonomies"]').forEach((button) => {
@@ -24,11 +23,9 @@ export function renderTaxonomyFormsScript(): string {
     };
     async function loadCatalogPage(key, page) {
       const body = document.getElementById('taxonomy-body-' + key);
-      if (!body) return;
-      body.innerHTML = '<tr><td colspan="8" class="taxonomy-empty">Cargando registros…</td></tr>';
+      if (!body) return; body.innerHTML = '<tr><td colspan="8" class="taxonomy-empty">Cargando registros…</td></tr>';
       try {
-        const response = await fetch('/api/v1/admin/' + taxonomyEndpoints[key] + '?page=' + page, { headers: adminHeaders() });
-        const result = await response.json();
+        const response = await fetch('/api/v1/admin/' + taxonomyEndpoints[key] + '?page=' + page, { headers: adminHeaders() }); const result = await response.json();
         if (!response.ok || !result.success || !Array.isArray(result.data)) throw new Error(result.error || 'No fue posible cargar esta página.');
         taxonomyPages[key] = { page: result.page, hasMore: result.hasMore, records: result.data };
         if (!result.data.length && result.page > 1) return loadCatalogPage(key, result.page - 1);
@@ -52,7 +49,7 @@ export function renderTaxonomyFormsScript(): string {
       if (key === 'brands') return '<tr><td><strong>' + e(item.name) + '</strong></td><td><code>' + e(item.slug) + '</code></td><td>' + e(item.description || '—') + '</td><td>' + e(item.websiteUrl || '—') + '</td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id) + '</td></tr>';
       if (key === 'providers') return '<tr><td><strong>' + e(item.name) + '</strong><small>' + e(item.notes || '') + '</small></td><td>' + e(item.taxId || '—') + '</td><td>' + e([item.email,item.phone].filter(Boolean).join(' · ') || '—') + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id, item.status) + '</td></tr>';
       if (key === 'attributes') return '<tr><td><strong>' + e(item.name) + '</strong></td><td><code>' + e(item.code) + '</code></td><td>' + e(item.type) + '</td><td>' + e((item.options || []).join(', ') || '—') + '</td><td>' + e(item.status || 'active') + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id) + '</td></tr>';
-      if (key === 'collections') return '<tr><td><strong>' + e(item.name) + '</strong><small>/colecciones/' + e(item.slug) + '</small></td><td>' + Number(item.productIds?.length||0) + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key,item.id,item.status) + '</td></tr>';
+      if (key === 'collections') return '<tr><td>' + (item.imageMediaId ? '<img class="collection-row-image" src="/media/' + e(item.imageMediaId) + '" alt="" loading="lazy">' : '') + '<strong>' + e(item.name) + '</strong><small>/colecciones/' + e(item.slug) + '</small></td><td>' + Number(item.productIds?.length||0) + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key,item.id,item.status) + '</td></tr>';
       return '<tr><td><strong>' + e(item.name) + '</strong><small>' + e(JSON.stringify(item.options || {})) + '</small></td><td><code>' + e(item.productId) + '</code></td><td><code>' + e(item.sku) + '</code></td><td>' + e(item.priceInCents == null ? 'Heredado' : '$ ' + (item.priceInCents / 100).toLocaleString('es-CO')) + '</td><td>' + Number(item.stockQuantity) + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id, item.status) + '</td></tr>';
     }
     function taxonomyRowActions(key, id, status) {
@@ -68,8 +65,7 @@ export function renderTaxonomyFormsScript(): string {
       if (taxonomyAction === 'status') window.setTaxonomyStatus(taxonomyId,taxonomyKey,taxonomyStatus);
       if (taxonomyAction === 'delete') window.deleteTaxonomyItem(taxonomyId,taxonomyKey);
     });
-    window.loadCatalogPage = loadCatalogPage;
-    window.viewTaxonomyItem = (id, key) => {
+    window.loadCatalogPage = loadCatalogPage; window.viewTaxonomyItem = (id, key) => {
       const item = taxonomyPages[key]?.records?.find((record) => record.id === id);
       if (!item) return;
       let dialog = document.getElementById('taxonomy-view-dialog');
@@ -105,16 +101,17 @@ export function renderTaxonomyFormsScript(): string {
     };
     window.showCatalogPage('categories',document.querySelector('.admin-nav-link[data-tab="taxonomies"]'));
 
-    let taxonomyFocus = null;
-    let taxonomyEditing = null;
+    let taxonomyFocus = null, taxonomyEditing = null;
     window.openTaxonomyModal = (key, item) => {
       const modal = document.getElementById('taxonomy-modal-' + key);
       if (!modal) return;
       taxonomyEditing = item ? { key, id:item.id } : null;
       modal.querySelector('h2').textContent = item ? 'Editar ' + (catalogPageCopy[key]?.[0] || 'registro').toLowerCase() : modal.dataset.createTitle;
       modal.querySelector('form')?.reset();
+      if (key === 'collections') window.resetCollectionFormControls();
       modal.querySelectorAll('input[id$="Slug"]').forEach((field) => { delete field.dataset.edited; if (item) field.dataset.edited = 'true'; });
       if (item) fillTaxonomyForm(key, item);
+      if (key === 'collections' && !item) window.openCollectionProductPicker();
       taxonomyFocus = document.activeElement;
       modal.hidden = false;
       modal.querySelector('.taxonomy-modal-dialog')?.focus();
@@ -130,11 +127,11 @@ export function renderTaxonomyFormsScript(): string {
       }[key] || {};
       Object.entries(fields).forEach(([id,value]) => { const field = document.getElementById(id); if (field) field.value = value ?? ''; });
       if (key === 'variants') window.setCopInputValue('variantPrice', item.priceInCents == null ? '' : Math.round(item.priceInCents / 100));
-      if (key === 'collections') { const select=document.getElementById('collectionProducts'); [...select.options].forEach((option)=>option.selected=(item.productIds||[]).includes(option.value)); }
+      if (key === 'collections') { window.setCollectionProducts(item.productIds || []); window.setCollectionImage(item.imageMediaId || ''); }
     }
     window.closeTaxonomyModal = (key) => {
       const modal = document.getElementById('taxonomy-modal-' + key);
-      if (modal) { modal.hidden = true; modal.querySelector('form')?.reset(); modal.querySelector('h2').textContent = modal.dataset.createTitle; }
+      if (modal) { modal.hidden = true; modal.querySelector('form')?.reset(); modal.querySelector('h2').textContent = modal.dataset.createTitle; if (key === 'collections') window.resetCollectionFormControls(); }
       taxonomyEditing = null;
       taxonomyFocus?.focus?.();
     };
@@ -197,8 +194,7 @@ export function renderTaxonomyFormsScript(): string {
       const options = JSON.parse(document.getElementById('variantOptions').value || '{}');
       return {productId:document.getElementById('variantProduct').value,name:document.getElementById('variantName').value.trim(),sku:document.getElementById('variantSku').value.trim(),options,priceInCents:price,stockQuantity:Number(document.getElementById('variantStock').value),status:document.getElementById('variantStatus').value};
     }));
-    document.getElementById('newCollectionForm')?.addEventListener('submit',(event)=>submitCatalogForm(event,'collections','/api/v1/admin/collections',()=>({name:document.getElementById('collectionName').value.trim(),slug:document.getElementById('collectionSlug').value.trim(),description:document.getElementById('collectionDescription').value.trim(),status:document.getElementById('collectionStatus').value,productIds:[...document.getElementById('collectionProducts').selectedOptions].map((option)=>option.value),seoTitle:optional('collectionSeoTitle'),seoDescription:optional('collectionSeoDescription')})));
-
+    document.getElementById('newCollectionForm')?.addEventListener('submit',(event)=>submitCatalogForm(event,'collections','/api/v1/admin/collections',()=>({name:document.getElementById('collectionName').value.trim(),slug:document.getElementById('collectionSlug').value.trim(),description:document.getElementById('collectionDescription').value.trim(),imageMediaId:optional('collectionImageId')||null,status:document.getElementById('collectionStatus').value,productIds:window.getCollectionProductIds(),seoTitle:optional('collectionSeoTitle'),seoDescription:optional('collectionSeoDescription')})));
     function optional(id) { return document.getElementById(id).value.trim() || undefined; }
   `;
 }

@@ -24,6 +24,7 @@ import { renderShippingFormsScript } from './renderShippingFormsScript.js';
 import { renderCmsEditorToolbarScript } from './renderCmsEditorToolbarScript.js';
 import { renderShippingHandlersScript } from './renderShippingHandlersScript.js';
 import { renderTaxonomyFormsScript } from './renderTaxonomyFormsScript.js';
+import { renderCollectionFormScript } from './renderCollectionFormScript.js';
 import { renderPhase8AdminScript } from './renderPhase8AdminScript.js';
 import { renderProductPriceMigrationScript } from './renderProductPriceMigrationScript.js';
 import { renderMarketingNavigationScript } from './renderMarketingNavigationScript.js';
@@ -76,6 +77,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   ${renderProductListScript()}
   <script>${renderProductPriceMigrationScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
+  <script>${renderCollectionFormScript()}</script>
   <script>${renderMarketingNavigationScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
   <script>${renderCmsEditorToolbarScript()}</script>

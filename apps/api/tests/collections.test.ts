@@ -4,6 +4,7 @@ import { Collection } from '../src/modules/catalog/domain/entities/Collection.js
 import { renderCollectionDirectoryPage } from '../src/bff/views/renderCollectionDirectoryPage.js';
 import { CollectionAdminController } from '../src/bff/controllers/catalog/CollectionAdminController.js';
 import { SeoController } from '../src/bff/controllers/seo/SeoController.js';
+import { renderCollectionDetailPage } from '../src/bff/views/renderCollectionDetailPage.js';
 
 function setup(status: string = 'published') {
   const items = new Map<string, Collection>();
@@ -42,12 +43,15 @@ describe('Colecciones', () => {
 
   it('renderiza tarjetas escapadas con rutas propias y controles paginados', () => {
     const html = renderCollectionDirectoryPage([{
-      id: '1', name: '<script>alert(1)</script>', slug: 'verano', description: 'Selección', productIds: [], status: 'active', createdAt: 'now', updatedAt: 'now',
+      id: '1', name: '<script>alert(1)</script>', slug: 'verano', description: 'Selección', imageMediaId: 'fddf0f53-cbe2-4f8f-8a29-596b86741b26', productIds: [], status: 'active', createdAt: 'now', updatedAt: 'now',
     }], 2, true);
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(html).toContain('href="/colecciones/verano"');
     expect(html).toContain('/colecciones?page=1');
     expect(html).toContain('/colecciones?page=3');
+    expect(html).toContain('/media/fddf0f53-cbe2-4f8f-8a29-596b86741b26');
+    const detail = renderCollectionDetailPage({ id:'1',name:'Verano',slug:'verano',description:'Selección',imageMediaId:'fddf0f53-cbe2-4f8f-8a29-596b86741b26',productIds:[],status:'active',createdAt:'now',updatedAt:'now' },[]);
+    expect(detail).toContain('alt="Imagen de Verano"');
   });
 
   it('protege la administración de colecciones con sesión MFA y permiso de catálogo', async () => {
@@ -66,6 +70,16 @@ describe('Colecciones', () => {
     });
     expect(response.status).toBe(403);
     expect(catalog.listCollections).not.toHaveBeenCalled();
+  });
+
+  it('busca solamente productos publicados por nombre o SKU con permiso de catálogo', async () => {
+    const catalog = { listProducts: vi.fn().mockResolvedValue([{ id:'p1', name:'Gafas', sku:'SUN-1', status:'published' }, { id:'p2', name:'Borrador', sku:'DRAFT', status:'draft' }]) };
+    const identity = { validateSession: vi.fn().mockResolvedValue({ actorId:'admin-1', actorType:'admin', permissions:['catalog:read'], mfaEnabled:true }) };
+    const app = CollectionAdminController.createRoutes(catalog as never, identity as never, { record:vi.fn() } as never);
+    const response = await app.request('/admin/collection-products?q=SUN-1', { headers:{ Authorization:'Bearer admin-session' } });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ data:[{ id:'p1', name:'Gafas', sku:'SUN-1' }] });
+    expect(catalog.listProducts).toHaveBeenCalledWith({ limit:30, offset:0, status:'published', searchQuery:'SUN 1' });
   });
 
   it('incluye solo las colecciones públicas en el sitemap de páginas', async () => {

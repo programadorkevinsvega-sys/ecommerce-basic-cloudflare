@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderAdminDashboardPage } from '../src/bff/views/admin/renderAdminDashboardPage.js';
+import { renderCollectionFormScript } from '../src/bff/views/admin/renderCollectionFormScript.js';
 import type { AdminDashboardProps } from '../src/bff/views/admin/AdminDashboardProps.js';
 
 const props: AdminDashboardProps = {
@@ -29,7 +30,9 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('id="settingsForm"');
     expect(html).toContain('data-taxonomy-page="collections"');
     expect(html).toContain("collections:'collections'");
-    expect(html).toContain('collectionProducts');
+    expect(html).toContain('collectionSelectedProducts');
+    expect(html).toContain('collectionProductSearch');
+    expect(html).toContain('collectionImageFile');
     expect(html.indexOf("showCatalogPage('collections', this)")).toBeLessThan(html.indexOf("showCatalogPage('categories', this)"));
     expect(html).toContain('function switchTab(tabId, navButton)');
     expect(html).toContain("fetch('/api/v1/admin/orders'");
@@ -41,5 +44,9 @@ describe('admin dashboard presentation', () => {
     const html = renderAdminDashboardPage({ ...props, adminEmail: '<script>alert(1)</script>' });
     expect(html).not.toContain('<script>alert(1)</script>');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+  });
+
+  it('renders valid collection picker and image-upload browser code', () => {
+    expect(() => new Function(renderCollectionFormScript())).not.toThrow();
   });
 });

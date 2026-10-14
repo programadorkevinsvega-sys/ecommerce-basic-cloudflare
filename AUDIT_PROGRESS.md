@@ -422,3 +422,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - Amplié el diálogo a 900 px en escritorio, reservé una fila completa para productos publicados y mejoré el alto, espaciado y texto de ayuda del selector múltiple. En móvil conserva el diseño de una columna.
 - `git diff --check` aprobado. No se ejecutaron pruebas automatizadas para este ajuste visual.
+
+### Imagen opcional y búsqueda de productos en colecciones (2026-10-14)
+
+- Añadí la imagen opcional con carga validada por el flujo existente de `media`/R2 y guardado del ID de medio en `catalog_collections.image_media_id`. La imagen aparece en el listado administrativo, el directorio público y el encabezado de detalle. No se borra el objeto de R2 al quitar una referencia.
+- Reemplacé el selector múltiple extenso por búsqueda administrativa con debounce por nombre/SKU, casillas accesibles, chips removibles y resultados limitados a 30 productos publicados. El endpoint exige sesión MFA y `catalog:read`; al editar, resuelve hasta 100 IDs de productos seleccionados.
+- Migración aditiva `catalog__0009_collection_image.sql`. Producción se inspeccionó antes: 42 migraciones presentes y columna ausente. Time Travel previo `00000280-000002fd-00005104-e018d5e33f828ecca78c8afdb001111a`; se aplicó solo v9 con el runner y se confirmó ledger más columna nullable. Bookmark posterior `00000280-00000309-00005104-56d328364235248d062a98edf7b30396`.
+- Verificaciones aprobadas: typecheck; lint de arquitectura; `pnpm test` (44 archivos, 123 pruebas); `pnpm test:workers` (5 archivos, 14 pruebas); `pnpm db:test-migrations`; `pnpm test:isolation`; `pnpm db:check-migrations`; `git diff --check`.
+- Pendiente al cerrar esta entrada: push y confirmar despliegue automático/health. No hice inspección visual en navegador. El rollback conserva la columna y las imágenes, y la versión anterior ignora el campo nuevo.

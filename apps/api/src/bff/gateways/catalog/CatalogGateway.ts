@@ -2,8 +2,8 @@ import { LegacyPriceMigrationPreview } from '../../../modules/catalog/applicatio
 import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
 
-export interface CatalogCollectionDto { id:string; name:string; slug:string; description:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; createdAt:string; updatedAt:string; }
-export interface CatalogCollectionInput { name:string; slug:string; description:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; }
+export interface CatalogCollectionDto { id:string; name:string; slug:string; description:string; imageMediaId?:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; createdAt:string; updatedAt:string; }
+export interface CatalogCollectionInput { name:string; slug:string; description:string; imageMediaId?:string | null; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; }
 
 export interface CreateProductGatewayRequest {
   name: string;
