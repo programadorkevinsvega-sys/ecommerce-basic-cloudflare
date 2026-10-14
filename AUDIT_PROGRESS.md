@@ -151,3 +151,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Separé el contenido existente en tres páginas internas accesibles desde Pagos: Recaudos contra entrega, Conciliar liquidación Wompi y Transacciones recientes. Los formularios conservan sus IDs, validación, endpoints y llamadas actuales; no se alteró backend ni el flujo financiero.
 - Pagos permanece como una única opción del menú lateral. Se añadió navegación interna con estado seleccionado, paneles exclusivos y adaptación móvil.
 - Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este cambio visual.
+- Commit `bb0d753` enviado a `main`; publiqué el Worker `fc1c3e42-964e-4c08-ad2a-3b6af9b45897` para asegurar la actualización. `/health` devolvió `healthy` con D1/KV/Queue/R2 en `ok`.
