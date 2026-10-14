@@ -80,7 +80,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `cms__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `cms__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
-| `cms__0002_institutional_pages.sql` | v2 | Producción (`ecommerce-vega-production`) | Pendiente | trabajo actual | ⏳ Por aplicar; agrega nueve páginas faltantes como borradores, sin modificar términos existentes |
+| `cms__0002_institutional_pages.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `7125966` | ✅ Aplicada por el runner; consulta posterior confirmó las nueve páginas en borrador y la página de términos publicada |
 | `cms__0002_institutional_pages.sql` | v2 | Local | Pendiente | trabajo actual | ⏳ Por aplicar; la inserción está condicionada por slug/ID y versión |
 
 `cms__0002_institutional_pages.sql` es una migración de contenido aditiva: inserta solo cuando el slug no existe, crea versión 1 únicamente para los IDs de página sembrados y deja cada página en `draft`. No cambia tablas ni elimina datos. La reversión del Worker conserva estas páginas; no borrar las filas para volver a una versión anterior. Los borradores se publican desde Administración → Páginas CMS después de completar y revisar su contenido.
