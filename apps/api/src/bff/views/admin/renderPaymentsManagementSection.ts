@@ -21,8 +21,9 @@ export function renderPaymentsManagementSection(): string {
         <div class="card payments-page-card">
           <h2 id="payments-page-transactions">Transacciones recientes</h2>
           <p>Movimientos de Wompi y pagos contra entrega.</p>
-          <div class="payments-table-scroll"><table class="payments-table"><thead><tr><th>Referencia</th><th>ID pedido</th><th>Método</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
-            <tbody id="payments-table-body"><tr><td colspan="6">Cargando transacciones…</td></tr></tbody></table></div>
+          <label class="payments-search-label" for="payments-search">Buscar por referencia, factura, pedido, cliente o monto</label><input id="payments-search" class="payments-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" oninput="filterPaymentTransactions()" />
+          <div class="payments-table-scroll"><table class="payments-table payments-transactions-table"><thead><tr><th>Referencia transacción</th><th>Factura</th><th>ID pedido</th><th>Cliente</th><th>Método</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody id="payments-table-body"><tr><td colspan="8">Cargando transacciones…</td></tr></tbody></table></div>
         </div>
       </section>
       <div id="cod-collection-modal" class="payments-modal" hidden>

@@ -200,3 +200,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La página municipal ahora diferencia zona local/metropolitana de cobertura nacional, permite iniciar una zona local aunque el municipio tenga respaldo nacional y explica que el catálogo es parcial. La lista de zonas identifica explícitamente los municipios resumidos como `+N municipios`.
 - Validaciones: consulta D1 remota sin escrituras, `pnpm typecheck`, `pnpm lint`, `git diff --check` y dry-run de Wrangler pasaron. No se ejecutó prueba automatizada ni se añadieron registros/migraciones.
 - Commit `fef04dc` enviado a `main`; Wrangler registró los deployments `e35012cd-5002-4c56-a022-1db65d46ab40` y `f0527ed2-49ba-47aa-b8cc-f48a552c8bde` tras el push. `/health` respondió `healthy` con D1/KV/Queue/R2 `ok`.
+
+### Búsqueda y contexto de transacciones/facturas (2026-10-14)
+
+- Transacciones muestra referencia de factura, nombre y correo del cliente junto a la referencia de pago, pedido, método, monto, estado y fecha. El frontend cruza las respuestas existentes de pagos, pedidos y facturas; cada API conserva su autorización y, si falta permiso de pedidos/facturas, esos datos quedan vacíos.
+- Añadí búsqueda en transacciones por referencia, factura, pedido, nombre/correo y monto; y en Facturación por número de factura, pedido, cliente y total. Los COP se muestran en pesos enteros; la búsqueda reconoce también fracciones de montos históricos.
+- Sin cambios de endpoints, permisos, backend de negocio o D1. Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y dry-run de Wrangler pasaron. No ejecuté pruebas automatizadas ni visuales de navegador.
+- Commit/push, deployment y `/health` pendientes.

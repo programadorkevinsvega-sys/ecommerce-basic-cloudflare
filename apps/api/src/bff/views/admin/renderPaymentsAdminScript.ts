@@ -1,5 +1,9 @@
 export function renderPaymentsAdminScript(): string {
   return `
+    let _adminPaymentTransactions = [];
+    let _adminPaymentOrders = new Map();
+    let _adminPaymentInvoices = new Map();
+
     async function loadAdminPayments() {
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
@@ -7,18 +11,15 @@ export function renderPaymentsAdminScript(): string {
         const res = await fetch('/api/v1/admin/payments', { headers: adminHeaders() });
         const data = await res.json();
         if (!data.success) throw new Error('No se pudieron cargar pagos');
-        if (!data.transactions || data.transactions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem; text-align:center; color:var(--muted);">No hay transacciones registradas</td></tr>';
-        } else tbody.innerHTML = data.transactions.map(t => \`
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.75rem;"><code>\${escapeHtml(t.reference)}</code></td>
-            <td style="padding:0.75rem;"><code>\${escapeHtml(t.orderId?.slice(0,12) || '')}…</code></td>
-            <td style="padding:0.75rem;">\${escapeHtml(t.paymentMethod)}</td>
-            <td style="padding:0.75rem; font-weight:700;">$\${(Number(t.amountInCents)/100).toLocaleString('es-CO')}</td>
-            <td style="padding:0.75rem;"><span class="tag">\${escapeHtml(t.status)}</span></td>
-            <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(t.createdAt).toLocaleString('es-CO'))}</td>
-          </tr>
-        \`).join('');
+        _adminPaymentTransactions = data.transactions || [];
+        const [orders, invoices] = await Promise.all([
+          loadAdminPaymentLookup('/api/v1/admin/orders', 'orders'),
+          loadAdminPaymentLookup('/api/v1/admin/invoices', 'invoices'),
+        ]);
+        _adminPaymentOrders = new Map(orders.map(order => [order.id, order]));
+        _adminPaymentInvoices = new Map();
+        invoices.forEach(invoice => { if (!_adminPaymentInvoices.has(invoice.orderId)) _adminPaymentInvoices.set(invoice.orderId, invoice); });
+        renderAdminPaymentTransactions();
         const collectionsBody = document.getElementById('cod-collections-table-body');
         if (collectionsBody) collectionsBody.innerHTML = (data.collections || []).length
           ? data.collections.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td></tr>\`).join('')
@@ -28,9 +29,45 @@ export function renderPaymentsAdminScript(): string {
           ? data.settlementCosts.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td></tr>\`).join('')
           : '<tr><td colspan="5" class="payments-empty-row">Aún no hay conciliaciones registradas</td></tr>';
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
     }
+
+    async function loadAdminPaymentLookup(url, key) {
+      try {
+        const response = await fetch(url, { headers: adminHeaders() });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data[key]) ? data[key] : [];
+      } catch { return []; }
+    }
+
+    function renderAdminPaymentTransactions() {
+      const tbody = document.getElementById('payments-table-body');
+      if (!tbody) return;
+      const query = normalizePaymentSearch(document.getElementById('payments-search')?.value || '');
+      const digits = query.replace(/\\D/g, '');
+      const rows = _adminPaymentTransactions.filter(transaction => {
+        const order = _adminPaymentOrders.get(transaction.orderId) || {};
+        const invoice = _adminPaymentInvoices.get(transaction.orderId) || {};
+        const amount = Math.round(Number(transaction.amountInCents || 0) / 100);
+        const exactAmount = (Number(transaction.amountInCents || 0) / 100).toLocaleString('es-CO', { maximumFractionDigits: 2 });
+        const haystack = normalizePaymentSearch([transaction.reference, transaction.orderId, invoice.invoiceNumber, order.customerName, order.customerEmail, amount.toLocaleString('es-CO'), exactAmount].join(' '));
+        return !query || haystack.includes(query) || (digits.length > 0 && (String(amount).includes(digits) || exactAmount.replace(/\\D/g, '').includes(digits)));
+      });
+      tbody.innerHTML = rows.length ? rows.map(transaction => {
+        const order = _adminPaymentOrders.get(transaction.orderId) || {};
+        const invoice = _adminPaymentInvoices.get(transaction.orderId) || {};
+        const amount = Math.round(Number(transaction.amountInCents || 0) / 100);
+        return \`<tr><td><code>\${escapeHtml(transaction.reference || '—')}</code></td><td><strong class="invoice-number">\${escapeHtml(invoice.invoiceNumber || '—')}</strong></td><td><code>\${escapeHtml(transaction.orderId || '—')}</code></td><td><div class="invoice-client"><strong>\${escapeHtml(order.customerName || invoice.customerName || '—')}</strong><small>\${escapeHtml(order.customerEmail || invoice.customerEmail || '')}</small></div></td><td>\${escapeHtml(transaction.paymentMethod || '—')}</td><td class="payments-amount">$\${amount.toLocaleString('es-CO')}</td><td><span class="tag">\${escapeHtml(transaction.status || '—')}</span></td><td>\${escapeHtml(new Date(transaction.createdAt).toLocaleString('es-CO'))}</td></tr>\`;
+      }).join('') : '<tr><td colspan="8" class="payments-empty-row">No hay transacciones que coincidan con la búsqueda</td></tr>';
+    }
+
+    function normalizePaymentSearch(value) {
+      return String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function filterPaymentTransactions() { renderAdminPaymentTransactions(); }
 
     async function submitCodCollection() {
       const orderId = document.getElementById('cod-order-id').value.trim();
@@ -85,6 +122,7 @@ export function renderPaymentsAdminScript(): string {
     function closeSettlementForm() { closePaymentsModal('settlement-modal'); }
 
     window.loadAdminPayments = loadAdminPayments;
+    window.filterPaymentTransactions = filterPaymentTransactions;
     window.submitCodCollection = submitCodCollection;
     window.submitSettlementCost = submitSettlementCost;
     window.openCodCollectionForm = openCodCollectionForm;

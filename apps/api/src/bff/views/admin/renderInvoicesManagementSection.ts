@@ -3,6 +3,7 @@ export function renderInvoicesManagementSection(): string {
     <header class="invoices-heading"><div><h1 id="invoices-title">Facturación</h1><p>Consulta documentos comerciales inmutables emitidos para tus pedidos.</p></div><button class="btn-primary" type="button" onclick="loadAdminInvoices()">Actualizar facturas</button></header>
     <section class="card invoices-list-card" aria-labelledby="invoices-list-title">
       <div class="invoices-section-heading"><div><h2 id="invoices-list-title">Facturas emitidas</h2><p>Numeración consecutiva y documentos almacenados de forma segura.</p></div></div>
+      <label class="invoice-search-label" for="invoices-search">Buscar por factura, pedido, cliente o total</label><input id="invoices-search" class="invoice-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" oninput="filterAdminInvoices()" />
       <div class="invoices-table-scroll"><table class="invoices-table"><thead><tr><th>Factura</th><th>Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
         <tbody id="invoices-table-body"><tr><td colspan="7" class="invoices-empty">Cargando facturas…</td></tr></tbody></table></div>
     </section>
