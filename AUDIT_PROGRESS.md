@@ -315,3 +315,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Los formularios existentes de banners promocionales e informativos, anuncios, reglas promocionales y cupones se abren en modales accesibles con botones Crear y Cancelar. Editar abre el modal existente con los datos cargados; al cerrar o cancelar se restablece el formulario.
 - Se conservaron filtros, vista previa, carga a R2, publicar/desactivar, duplicar, eliminar, edición y endpoints existentes. Sin cambios de API ni D1.
 - Typecheck, lint de arquitectura y `git diff --check` pasaron; no ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+### Alineación de acciones de Marketing y páginas de Auditoría/Configuración (2026-10-14)
+
+- Los cinco botones de creación de Marketing ahora se agrupan en una barra alineada a la derecha, siguiendo el patrón de acciones principales del resto de páginas. Se mantienen sus formularios y flujos actuales.
+- Auditoría y Configuración adoptan encabezados, tarjetas, tablas y formularios claros, con ajuste móvil y controles coherentes con las páginas renovadas.
+- Auditoría pagina los resultados desde el endpoint: 10 por página, con `Anterior`/`Siguiente`; el servidor consulta 11 para detectar si existe la página siguiente y valida el parámetro de página. No se carga toda la bitácora para paginar en el navegador.
+- Sin cambios de dominio, D1 ni migraciones. Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.

@@ -40,7 +40,10 @@ export function renderMarketingNavigationScript(): string {
         create.className = 'marketing-create-button btn-primary';
         create.textContent = '+ ' + action;
         create.addEventListener('click', () => window.openMarketingModal(key));
-        page.insertBefore(create, form);
+        const toolbar = document.createElement('div');
+        toolbar.className = 'marketing-page-toolbar';
+        toolbar.append(create);
+        page.insertBefore(toolbar, page.firstChild);
 
         const dialog = document.createElement('dialog');
         dialog.className = 'marketing-modal';

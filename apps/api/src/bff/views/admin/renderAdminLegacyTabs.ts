@@ -61,8 +61,10 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-settings" class="tab-content">
-      <div class="card">
-        <h2>Configuración de la Tienda</h2>
+      <section class="settings-screen">
+        <header class="settings-heading"><span class="settings-eyebrow">SISTEMA</span><h1>Configuración</h1><p>Administra la identidad, contacto y datos comerciales de tu tienda.</p></header>
+        <div class="settings-card">
+        <div class="settings-card-heading"><h2>Datos de la tienda</h2><p>Estos datos se muestran en el sitio y en los documentos comerciales.</p></div>
         <form id="settingsForm">
           <div class="form-grid">
             <div><label>Nombre Comercial</label><input type="text" id="sName" value="${escapeHtml(props.settings.storeName)}" required /></div>
@@ -80,11 +82,12 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
             <div><label>TikTok (URL)</label><input type="url" id="sTiktok" placeholder="https://www.tiktok.com/@tu_tienda" value="${escapeHtml(props.settings.socialTiktokUrl || '')}" /></div>
             <div><label>Facebook (URL)</label><input type="url" id="sFacebook" placeholder="https://www.facebook.com/tu_tienda" value="${escapeHtml(props.settings.socialFacebookUrl || '')}" /></div>
           </div>
-          <p style="color:#94a3b8;font-size:.8rem;">Los enlaces sociales deben ser HTTPS y pertenecer a Instagram, TikTok o Facebook. Déjalos vacíos para ocultar sus iconos.</p>
-          <button type="submit" class="btn-primary">Guardar Configuración</button>
+          <p class="settings-help">Los enlaces sociales deben ser HTTPS y pertenecer a Instagram, TikTok o Facebook. Déjalos vacíos para ocultar sus iconos.</p>
+          <div class="settings-actions"><button type="submit" class="btn-primary">Guardar Configuración</button></div>
           <div id="sMsg" class="msg"></div>
         </form>
-      </div>
+        </div>
+      </section>
     </div>`;
 }
 

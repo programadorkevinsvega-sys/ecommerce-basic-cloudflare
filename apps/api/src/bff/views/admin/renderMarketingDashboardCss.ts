@@ -24,7 +24,8 @@ export function renderMarketingDashboardCss(): string {
     .storefront-mode .btn-action-delete,.promotions-mode .btn-action-delete { border-color:#efcfcc!important; background:#fff0ef!important; color:#a8231b!important; }
     .storefront-mode .badge-published,.promotions-mode .badge-published { border-radius:999px; padding:5px 9px; background:#e6f4ec; color:#136b3e; }
     .storefront-mode .badge-draft,.promotions-mode .badge-draft { border-radius:999px; padding:5px 9px; background:#eef0f4; color:#505969; }
-    .marketing-create-button { display:inline-flex; min-height:44px; align-items:center; margin:8px 0 16px; border:0; border-radius:8px; padding:0 16px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
+    .marketing-page-toolbar { display:flex; justify-content:flex-end; align-items:center; margin:0 0 14px; }
+    .marketing-create-button { display:inline-flex; min-height:44px; align-items:center; margin:0; border:0; border-radius:8px; padding:0 16px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
     .marketing-modal { width:min(100% - 32px,920px); max-width:920px; max-height:calc(100vh - 32px); overflow:auto; border:1px solid #e3e6ec; border-radius:15px; padding:0; background:#fff; color:#151a23; box-shadow:0 24px 64px #151a2347; }
     .marketing-modal::backdrop { background:rgba(21,26,35,.58); }
     .marketing-modal-heading { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:14px; border-bottom:1px solid #e8eaf0; padding:17px 22px; background:#fff; }

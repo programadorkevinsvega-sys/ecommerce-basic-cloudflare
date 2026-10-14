@@ -26,8 +26,19 @@ export class AuditController {
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
       if (!adminRes.permissions.some((permission) => permission === '*' || permission === 'audit:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
-      const logs = await auditGateway.list({ limit: 100 });
-      return c.json({ success: true, logs: logs.map((l) => l.toJSON()) });
+      const page = Number(c.req.query('page') || '1');
+      if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000) {
+        return c.json({ error: 'Página inválida' }, 400);
+      }
+      const pageSize = 10;
+      const logs = await auditGateway.list({ limit: pageSize + 1, offset: (page - 1) * pageSize });
+      return c.json({
+        success: true,
+        page,
+        pageSize,
+        hasMore: logs.length > pageSize,
+        logs: logs.slice(0, pageSize).map((log) => log.toJSON()),
+      });
     });
 
     return app;

@@ -1,29 +1,22 @@
 export function renderAuditManagementSection(): string {
   return `
-    <div class="card" style="margin-bottom: 2rem;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <div>
-          <h2>Bitácora de Auditoría</h2>
-          <p style="color:var(--muted); font-size:0.85rem; margin-top:0.25rem;">Registro inmutable de todas las mutaciones administrativas y eventos críticos del sistema.</p>
-        </div>
-        <button class="btn-primary" onclick="loadAdminAudit()" style="padding:0.4rem 0.8rem; font-size:0.85rem;">🔄 Actualizar</button>
+    <section class="audit-screen">
+      <header class="audit-heading">
+        <div><span class="audit-eyebrow">SISTEMA</span><h1>Auditoría</h1>
+          <p>Consulta el registro de acciones administrativas y eventos críticos.</p></div>
+        <button class="btn-primary" onclick="loadAdminAudit()">Actualizar</button>
+      </header>
+      <div class="audit-card">
+        <div class="audit-table-scroll"><table class="audit-table">
+          <thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Entidad</th><th>Detalles</th></tr></thead>
+          <tbody id="audit-table-body"><tr><td colspan="5" class="audit-empty">Cargando auditorías…</td></tr></tbody>
+        </table></div>
+        <footer class="audit-pagination" aria-label="Paginación de auditorías">
+          <button id="audit-page-previous" class="audit-page-button" onclick="changeAuditPage(-1)" disabled>Anterior</button>
+          <span id="audit-page-label" aria-live="polite">Página 1</span>
+          <button id="audit-page-next" class="audit-page-button" onclick="changeAuditPage(1)" disabled>Siguiente</button>
+        </footer>
       </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; text-align:left;">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border); font-size:0.85rem; text-transform:uppercase; color:var(--muted);">
-              <th style="padding:0.75rem;">Fecha</th>
-              <th style="padding:0.75rem;">Actor</th>
-              <th style="padding:0.75rem;">Acción</th>
-              <th style="padding:0.75rem;">Entidad</th>
-              <th style="padding:0.75rem;">Detalles</th>
-            </tr>
-          </thead>
-          <tbody id="audit-table-body">
-            <tr><td colspan="5" style="padding:1.5rem; text-align:center; color:var(--muted);">Cargando registros de auditoría...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </section>
   `;
 }
