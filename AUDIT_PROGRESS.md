@@ -360,3 +360,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La tabla mostraba el JSON completo en cada celda de Detalles, forzando que el texto ocupara demasiado espacio y deformara la lectura de la tabla.
 - La celda ahora limita la vista previa a tres líneas y ofrece “Ver detalle”. El diálogo muestra el JSON formateado en un área desplazable, asignándolo como texto para evitar interpretar contenido como HTML. La tabla usa columnas de ancho controlado y mantiene el desplazamiento horizontal solo en pantallas estrechas.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual con navegador.
+
+### Alineación cromática de Pedidos (2026-10-14)
+
+- La vista de Pedidos conservaba acentos azules en la pestaña activa, el enlace del pedido y el estado Confirmado. El selector de estado heredaba el fondo oscuro global del panel.
+- Unifiqué esos acentos con el verde del resto de las páginas y forcé el selector a conservar fondo blanco y texto oscuro dentro de Pedidos. Sin cambios de lógica o backend.
+- Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual en navegador.

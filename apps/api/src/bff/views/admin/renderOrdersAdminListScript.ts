@@ -2,8 +2,8 @@ export function renderOrdersAdminListScript(): string {
   return `
     let activeOrderStatus = 'all';
     const orderStates = {
-      placed: ['Recibido', '#eef0f4', '#3e4656'], confirmed: ['Confirmado', '#eaf0fd', '#1c3fa8'],
-      shipped: ['Enviado', '#e3f1f6', '#0b566f'], delivered: ['Entregado', '#e6f4ec', '#136b3e'],
+      placed: ['Recibido', '#eef0f4', '#3e4656'], confirmed: ['Confirmado', '#e9efe9', '#315b43'],
+      shipped: ['Enviado', '#e8f2ed', '#315b43'], delivered: ['Entregado', '#e6f4ec', '#136b3e'],
       cancelled: ['Cancelado', '#fbe9e7', '#a8231b'],
     };
     const paymentStates = {
