@@ -233,3 +233,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Migración aditiva `settings__0003_storefront_contact_social.sql` aplicada a producción con el runner Wrangler autorizado; el esquema remoto indicó 37 migraciones conocidas y al día. Se registró en `docs/migrations/manifest.md` y `ROLLBACK_RECOVERY.md`.
 - Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm db:check-migrations` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador para este cambio.
 - Pendiente: publicar el Worker con los cambios de UI/renderizado y que el administrador complete los nuevos campos de ciudad, dirección, NIT y perfiles sociales donde falten.
+
+### Errores al guardar Configuración (2026-10-14)
+
+- El formulario no mostraba ningún mensaje cuando PATCH `/api/v1/settings` fallaba; por eso los errores de validación/autorización parecían un botón que no respondía. Ahora muestra estado de guardado, errores del servidor (incluidos los campos rechazados), errores de red y restaura el botón al terminar.
+- Verificaciones: `pnpm typecheck`, `pnpm lint`, dry-run de Wrangler y `git diff --check`. No ejecuté pruebas automatizadas ni modifiqué la validación de dominios sociales o el backend.

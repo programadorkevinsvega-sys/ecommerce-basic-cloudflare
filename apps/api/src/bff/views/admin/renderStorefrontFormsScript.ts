@@ -136,6 +136,7 @@ export function renderStorefrontFormsScript(): string {
     document.getElementById('settingsForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('sMsg');
+      const button = e.currentTarget.querySelector('button[type="submit"]');
       const payload = {
         storeName: document.getElementById('sName').value,
         companyNit: document.getElementById('sNit')?.value || undefined,
@@ -150,15 +151,36 @@ export function renderStorefrontFormsScript(): string {
         socialTiktokUrl: document.getElementById('sTiktok')?.value || '',
         socialFacebookUrl: document.getElementById('sFacebook')?.value || ''
       };
-      const res = await fetch('/api/v1/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        msg.textContent = '✅ Configuración actualizada con éxito';
-        msg.style.background = '#065f46';
+      if (button) button.disabled = true;
+      if (msg) {
+        msg.textContent = 'Guardando configuración…';
+        msg.style.background = '#334155';
         msg.style.display = 'block';
+      }
+      try {
+        const res = await fetch('/api/v1/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const details = Array.isArray(data.details)
+            ? data.details.map((issue) => [issue.path?.join('.'), issue.message].filter(Boolean).join(': ')).join(' · ')
+            : '';
+          throw new Error([data.error || 'Error al guardar configuración', details].filter(Boolean).join(': '));
+        }
+        if (msg) {
+          msg.textContent = '✅ Configuración actualizada con éxito';
+          msg.style.background = '#065f46';
+        }
+      } catch (error) {
+        if (msg) {
+          msg.textContent = '❌ ' + (error.message || 'No se pudo guardar la configuración');
+          msg.style.background = '#7f1d1d';
+        }
+      } finally {
+        if (button) button.disabled = false;
       }
     });
   `;
