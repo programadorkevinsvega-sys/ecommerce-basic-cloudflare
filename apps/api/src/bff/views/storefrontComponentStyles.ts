@@ -67,15 +67,15 @@ export const storefrontComponentStyles = String.raw`
     .section-heading p { margin: .5rem 0 0; color: var(--muted); }
     .section-heading > a { flex: 0 0 auto; color: #1f4d3a; font-size: .9rem; font-weight: 750; text-decoration: none; }
     .brand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-    .brand-tile { display: flex; min-height: 150px; flex-direction: column; justify-content: space-between; padding: 1.2rem; border: 1px solid #e1e5de; border-radius: 16px; background: #fff; text-decoration: none; transition: transform .2s ease, border-color .2s ease; }
+    .brand-tile { display:grid; height:250px; min-height:250px; grid-template-rows:96px 2.6em minmax(0,1fr) auto; gap:.55rem; overflow:hidden; padding:1rem 1.2rem; border:1px solid #e1e5de; border-radius:16px; background:#fff; text-decoration:none; transition:transform .2s ease,border-color .2s ease; }
     .brand-tile:hover { transform: translateY(-3px); border-color: #a9b8a8; }
-    .brand-tile > span:first-child { color: #799276; font-size: 1.25rem; }
-    .brand-image-frame { display:flex; min-height:74px; align-items:center; justify-content:flex-start; }
-    .brand-image-frame img { width:min(100%,150px); height:74px; object-fit:contain; object-position:left center; }
+    .brand-fallback,.brand-image-frame { display:flex; width:100%; height:96px; min-width:0; align-items:center; justify-content:flex-start; overflow:hidden; color:#799276; font-size:1.5rem; }
+    .brand-image-frame img { display:block; width:100%; max-width:100%; height:100%; object-fit:contain; object-position:left center; }
     .brand-detail-heading { display:flex; align-items:center; gap:1.5rem; }
     .brand-detail-heading>img { width:150px; height:120px; object-fit:contain; }
-    .brand-tile strong { font-size: 1.1rem; }
-    .brand-tile > span:last-child { color: var(--muted); font-size: .8rem; }
+    .brand-card-name { display:-webkit-box; max-width:100%; overflow:hidden; margin:0; font-size:1.05rem; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+    .brand-card-description { display:-webkit-box; max-width:100%; overflow:hidden; color:var(--muted); font-size:.82rem; line-height:1.4; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
+    .brand-card-action { align-self:end; color:var(--muted); font-size:.8rem; }
     .benefits-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 3rem; padding: 1.6rem; border: 1px solid #e1e5de; border-radius: 18px; background: #fff; }
     .benefits-strip article { display: flex; align-items: flex-start; gap: .85rem; padding: .3rem .8rem; }
     .benefits-strip article > span { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 2.5rem; place-items: center; border-radius: 50%; background: #edf2e8; color: #1f4d3a; font-size: 1.2rem; }
@@ -151,7 +151,8 @@ export const storefrontComponentStyles = String.raw`
       .container form { padding: 1rem !important; }
       .site-footer { padding: 2.25rem 1rem 1.5rem; }
       .brand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
-      .brand-tile { min-height: 125px; padding: .9rem; }
+      .brand-tile { height:220px; min-height:220px; grid-template-rows:82px 2.6em minmax(0,1fr) auto; padding:.8rem; }
+      .brand-fallback,.brand-image-frame { height:82px; }
       .brand-detail-heading>img { width:90px; height:90px; }
       .benefits-strip { grid-template-columns: 1fr; padding: 1rem; gap: .55rem; }
       .benefits-strip article { padding: .35rem; }

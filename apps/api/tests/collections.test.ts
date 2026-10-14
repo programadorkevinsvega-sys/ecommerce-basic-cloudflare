@@ -50,6 +50,8 @@ describe('Colecciones', () => {
     expect(html).toContain('/colecciones?page=1');
     expect(html).toContain('/colecciones?page=3');
     expect(html).toContain('/media/fddf0f53-cbe2-4f8f-8a29-596b86741b26');
+    expect(html).toContain('class="collection-card-image"');
+    expect(html).toContain('class="collection-card-copy"');
     const detail = renderCollectionDetailPage({ id:'1',name:'Verano',slug:'verano',description:'Selección',imageMediaId:'fddf0f53-cbe2-4f8f-8a29-596b86741b26',productIds:[],status:'active',createdAt:'now',updatedAt:'now' },[]);
     expect(detail).toContain('alt="Imagen de Verano"');
   });

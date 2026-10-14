@@ -3,9 +3,9 @@ import { BrandDto } from '../gateways/catalog/CatalogGateway.js';
 export function renderBrandDirectoryPage(brands: BrandDto[]): string {
   const cards = brands.map((brand) => `
     <a class="brand-tile" href="/marcas/${encodeURIComponent(brand.slug)}">
-      ${brand.imageMediaId ? `<span class="brand-image-frame"><img src="/media/${encodeURIComponent(brand.imageMediaId)}" alt="${escapeHtml(brand.name)}" loading="lazy"></span>` : '<span aria-hidden="true">✳</span>'}<strong>${escapeHtml(brand.name)}</strong>
-      <span>${escapeHtml(brand.description || 'Conoce los productos de esta marca.')}</span>
-      <span>Ver marca <span aria-hidden="true">→</span></span>
+      ${brand.imageMediaId ? `<span class="brand-image-frame"><img src="/media/${encodeURIComponent(brand.imageMediaId)}" alt="${escapeHtml(brand.name)}" loading="lazy"></span>` : '<span class="brand-fallback" aria-hidden="true">✳</span>'}<strong class="brand-card-name">${escapeHtml(brand.name)}</strong>
+      <span class="brand-card-description">${escapeHtml(brand.description || 'Conoce los productos de esta marca.')}</span>
+      <span class="brand-card-action">Ver marca <b aria-hidden="true">→</b></span>
     </a>`).join('');
   return `<main class="brand-directory">
     <nav class="catalog-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Marcas</span></nav>

@@ -8,11 +8,14 @@ export const storefrontNotFoundStyles = String.raw`
   .not-found-links a:first-child { border-color:var(--primary); background:var(--primary); color:#fff; }
   .not-found-links a:hover { filter:brightness(.94); }
   .collection-directory-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
-  .collection-directory-card { display:flex; min-height:220px; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:.65rem; overflow:hidden; padding:1.5rem; border:1px solid var(--border); border-radius:var(--radius-lg); background:linear-gradient(145deg,#fff,#f1f4ec); color:var(--text); text-decoration:none; box-shadow:var(--shadow-soft); }
-  .collection-directory-card img { width:calc(100% + 3rem); height:180px; margin:-1.5rem -1.5rem .5rem; object-fit:cover; }
-  .collection-directory-card h2 { margin:0; font-size:1.5rem; }
-  .collection-directory-card p { margin:0; color:var(--muted); line-height:1.5; }
-  .collection-directory-card>span:last-child { margin-top:.5rem; font-weight:750; }
+  .collection-directory-card { display:grid; height:390px; min-height:390px; grid-template-rows:180px minmax(0,1fr); overflow:hidden; border:1px solid var(--border); border-radius:var(--radius-lg); background:linear-gradient(145deg,#fff,#f1f4ec); color:var(--text); text-decoration:none; box-shadow:var(--shadow-soft); }
+  .collection-card-image { display:grid; width:100%; height:180px; overflow:hidden; place-items:center; background:#e9eee3; color:#66806b; font-size:2rem; }
+  .collection-card-image img { display:block; width:100%; max-width:none; height:100%; object-fit:cover; object-position:center; }
+  .collection-card-copy { display:flex; min-width:0; min-height:0; flex-direction:column; align-items:flex-start; gap:.55rem; overflow:hidden; padding:1.2rem 1.4rem 1.3rem; }
+  .collection-card-copy .eyebrow { flex:none; }
+  .collection-card-copy h2 { display:-webkit-box; max-width:100%; overflow:hidden; margin:0; font-size:1.35rem; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+  .collection-card-description { display:-webkit-box; max-width:100%; overflow:hidden; color:var(--muted); line-height:1.45; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+  .collection-card-action { margin-top:auto; font-weight:750; }
   .collection-directory-card:hover { border-color:#aab99b; transform:translateY(-2px); }
   .collection-pagination { display:flex; justify-content:center; align-items:center; gap:1rem; margin:1.5rem 0; }
   .collection-pagination a { padding:.7rem 1rem; border:1px solid var(--border); border-radius:9px; color:var(--text); text-decoration:none; }
@@ -23,6 +26,6 @@ export const storefrontNotFoundStyles = String.raw`
   .collection-detail-hero p { max-width:65ch; margin:0; color:var(--muted); line-height:1.65; }
   .collection-products-empty { padding:2rem; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--card); text-align:center; color:var(--muted); }
   @media(max-width:760px) { .collection-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media(max-width:650px) { .collection-detail-hero { grid-template-columns:1fr; gap:1rem; }.collection-detail-hero img { max-height:240px; } }
+  @media(max-width:650px) { .collection-detail-hero { grid-template-columns:1fr; gap:1rem; }.collection-detail-hero img { max-height:240px; }.collection-directory-card { height:370px; min-height:370px; grid-template-rows:165px minmax(0,1fr); }.collection-card-image { height:165px; }.collection-card-copy { padding:1rem; } }
   @media(max-width:520px) { .collection-directory-grid { grid-template-columns:1fr; } }
 `;

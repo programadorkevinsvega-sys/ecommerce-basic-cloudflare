@@ -34,6 +34,7 @@ describe('storefront presentation', () => {
     const home = renderProductList([product], undefined, undefined, undefined, new Map([['casa verde','/marcas/casa-verde']]), [brand]);
     expect(home).toContain('src="/media/brand-media-1"');
     expect(home).toContain('href="/marcas/casa-verde"');
+    expect(renderBaseLayout({ title:'Marcas', description:'Directorio', bodyHtml:home })).toContain('.brand-tile { display:grid; height:250px;');
     expect(renderBrandDirectoryPage([brand])).toContain('alt="Casa Verde"');
     const nav = await getStorefrontNavMenus({ getMenuByCode: async (code: string) => code === 'header' ? { items:[{title:'Inicio',url:'/'},{title:'Catálogo',url:'/productos'}] } : null, listPages:async()=>[] } as never, { getSettings:async()=>({}) } as never);
     expect(nav.headerMenuItems.filter((item) => item.url === '/marcas')).toEqual([{ title:'Marcas', url:'/marcas' }]);
