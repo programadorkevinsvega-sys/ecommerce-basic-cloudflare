@@ -1,0 +1,49 @@
+export function renderAdminSidebar(adminLabel: string): string {
+  return `<aside class="admin-sidebar" aria-label="Panel de administración">
+    <a class="admin-brand" href="/admin" aria-label="Vega Store, resumen">
+      <span class="admin-brand-mark" aria-hidden="true">V</span><span><strong>Vega Store</strong><small>Panel de control</small></span>
+    </a>
+    <nav class="admin-nav" aria-label="Principal">
+      <section class="admin-nav-group"><h2>Operación</h2><ul>
+        ${navItem('summary', 'Resumen', 'switchTab(\'summary\')', true)}
+        ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();")}
+        ${navItem('inventory', 'Inventario', "switchTab('inventory'); loadAdminInventory();")}
+        ${navItem('payments', 'Pagos y recaudos', "switchTab('payments'); loadAdminPayments();")}
+        ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping')")}
+        ${navItem('invoices', 'Facturación', "switchTab('invoices'); loadAdminInvoices();")}
+      </ul></section>
+      <section class="admin-nav-group"><h2>Catálogo</h2><ul>
+        ${navItem('products', 'Catálogo y productos', "switchTab('products')")}
+        ${navItem('taxonomies', 'Categorías y marcas', "switchTab('taxonomies')")}
+      </ul></section>
+      <section class="admin-nav-group"><h2>Marketing</h2><ul>
+        ${navItem('storefront', 'Banners y anuncios', "switchTab('storefront')")}
+        ${navItem('promotions', 'Promociones y cupones', "switchTab('promotions')")}
+        ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
+      </ul></section>
+      <section class="admin-nav-group"><h2>Sistema</h2><ul>
+        ${navItem('audit', 'Auditoría', "switchTab('audit'); loadAdminAudit();")}
+        ${navItem('settings', 'Configuración', "switchTab('settings')")}
+      </ul></section>
+    </nav>
+    <div class="admin-sidebar-user"><span class="admin-avatar" aria-hidden="true">${escapeHtml(initials(adminLabel))}</span>
+      <span class="admin-user-label"><strong>${escapeHtml(adminLabel)}</strong><small>Sesión de administrador</small></span>
+      <button class="btn-logout" id="logoutBtn" type="button">Cerrar sesión</button>
+    </div>
+  </aside>`;
+}
+
+function navItem(id: string, label: string, action: string, current = false): string {
+  return `<li><button type="button" class="tab-btn admin-nav-link${current ? ' active' : ''}" data-tab="${id}" onclick="${action}"${current ? ' aria-current="page"' : ''}>${escapeHtml(label)}</button></li>`;
+}
+
+function initials(label: string): string {
+  const words = label.trim().split(/[\s@._-]+/).filter(Boolean);
+  const first = words[0] || 'A';
+  const second = words[1];
+  return (second ? first.charAt(0) + second.charAt(0) : first.slice(0, 2)).toUpperCase();
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}

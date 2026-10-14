@@ -105,3 +105,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Agregadas regresiones para lista vacía heredada, checkout COD-only y creación autoritativa del pedido sin comisión Wompi.
 - Verificaciones: `pnpm test` (40 archivos, 110 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm lint`, `pnpm typecheck`, `git diff --check`, Wrangler deploy dry-run. Sin cambios de esquema ni escrituras en D1.
 - Commit `65a74ba` enviado a `main`; Worker publicado como `bc8dfab4-ae53-4f3f-9fea-ec690388e284`. `/health` posterior respondió `healthy` con D1/KV/Queue/R2 en `ok`. No se tocaron migraciones ni datos de producción.
+
+### Rediseño del resumen del panel administrativo (2026-10-13)
+
+- Se aplicó la referencia de `Resumen-html.zip` al marco del panel: navegación lateral adaptable, cabecera, tipografía, paleta clara y tarjetas de resumen. El resumen usa conteos ya cargados del catálogo y banners; los pedidos recientes vienen de `/api/v1/admin/orders`, que mantiene la autorización existente.
+- La vista anterior de cada módulo quedó dentro del panel de administración con sus identificadores, campos, formularios, acciones y scripts existentes. No se modificaron controladores, casos de uso, gateways, D1 ni reglas de negocio.
+- Se añadió prueba de renderizado para la vista nueva, la presencia de controles legacy y el escape de la etiqueta administrativa.
+- Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm test` (41 archivos, 112 pruebas), `pnpm test:workers` (4 archivos, 13 pruebas), build Worker `wrangler deploy --dry-run` y `git diff --check`. No se efectuaron cambios de esquema ni escrituras de producción.
+- No se hizo comprobación visual en navegador; la evidencia de esta pasada es el renderizado de servidor, las pruebas automatizadas y el bundle de Worker.

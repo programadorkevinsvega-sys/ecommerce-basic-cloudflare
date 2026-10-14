@@ -1,10 +1,24 @@
 export function renderAdminDashboardScript(): string {
   return `
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.removeAttribute('aria-current');
+      });
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('tab-' + tabId).classList.add('active');
+      const selected = document.querySelector('[data-tab="' + tabId + '"]');
+      selected?.classList.add('active');
+      selected?.setAttribute('aria-current', 'page');
+      const summary = document.getElementById('tab-summary');
+      const legacy = document.getElementById('admin-legacy-tabs');
+      const section = document.getElementById('tab-' + tabId);
+      if (tabId === 'summary') {
+        summary?.classList.add('active');
+        if (legacy) legacy.hidden = true;
+      } else if (section) {
+        section.classList.add('active');
+        if (legacy) legacy.hidden = false;
+      }
     }
 
     function updateSerpPreview() {
