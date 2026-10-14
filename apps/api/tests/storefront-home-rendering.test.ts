@@ -8,6 +8,8 @@ import { renderStorefrontBanners } from '../src/bff/views/renderStorefrontBanner
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 import { renderBrandDirectoryPage } from '../src/bff/views/renderBrandDirectoryPage.js';
 import { getStorefrontNavMenus } from '../src/bff/controllers/storefront/StorefrontNavigationHelper.js';
+import { renderCollectionDirectoryPage } from '../src/bff/views/renderCollectionDirectoryPage.js';
+import { renderBlogIndexPage } from '../src/bff/views/renderBlogIndexPage.js';
 
 const product: CatalogProductDto = {
   id: 'product-1', name: 'Lámpara de lectura', slug: 'lampara-lectura', description: 'Luz cálida',
@@ -139,6 +141,31 @@ describe('storefront presentation', () => {
     expect(empty).toContain('No encontramos resultados');
     expect(empty).toContain('inexistente');
     expect(empty).toContain('Ver todo el catálogo');
+  });
+
+  it('shows clear previous/next controls for server-paginated storefront listings', () => {
+    const home = renderProductList([product], undefined, undefined, undefined, undefined, [], { page: 1, hasNext: true });
+    expect(home).toContain('aria-label="Paginación de productos destacados"');
+    expect(home).toContain('href="/?products_page=2#products-title"');
+    expect(home).toContain('aria-disabled="true">Anterior');
+
+    const catalog = renderCatalogPage([product], undefined, [], undefined, { page: 2, previousHref: '/productos?page=1', nextHref: '/productos?page=3' });
+    expect(catalog).toContain('href="/productos?page=1"');
+    expect(catalog).toContain('href="/productos?page=3"');
+
+    const brands = renderBrandDirectoryPage([{ id: 'b1', name: 'Casa Verde', slug: 'casa-verde', status: 'active' }], 1, true);
+    expect(brands).toContain('aria-label="Paginación de marcas"');
+    expect(brands).toContain('href="/marcas?page=2"');
+
+    const collection = { id: 'c1', name: 'Verano', slug: 'verano', description: '', productIds: [], status: 'active' as const, createdAt: 'now', updatedAt: 'now' };
+    const collections = renderCollectionDirectoryPage([collection], 1, false);
+    expect(collections).toContain('aria-label="Paginación de colecciones"');
+    expect(collections).toContain('aria-disabled="true">Siguiente');
+
+    const blog = renderBlogIndexPage([], [], 1, 0, 9);
+    expect(blog).toContain('aria-label="Paginación de artículos"');
+    expect(blog).toContain('Mostrando 0–0 de 0 · Página 1 de 1');
+    expect(blog.match(/aria-disabled="true"/g)).toHaveLength(2);
   });
 
   it('keeps catalog search and filtering in presentation while sorting actual loaded cards', () => {

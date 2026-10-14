@@ -24,8 +24,9 @@ export class CollectionPagesController {
         getStorefrontNavMenus(cms, settings),
       ]);
       const page=Number(c.req.query('page')||1);
-      if(!Number.isSafeInteger(page)||page<1||page>1000000)return c.redirect('/colecciones',302);
+      if(!Number.isSafeInteger(page)||page<1||page>1000)return c.redirect('/colecciones',302);
       const [records,marketing]=await Promise.all([catalog.listCollections({limit:13,offset:(page-1)*12}),getPageMarketingContent(storefront,'collections','Colecciones destacadas')]);
+      if(records.length===0&&page>1)return c.redirect('/colecciones',302);
       const collections=records.slice(0,12);
       return c.html(renderBaseLayout({
         title: 'Colecciones',

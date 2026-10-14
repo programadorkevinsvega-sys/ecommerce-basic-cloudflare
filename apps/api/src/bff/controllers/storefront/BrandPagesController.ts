@@ -17,9 +17,13 @@ export class BrandPagesController {
   public static createRoutes(catalog: CatalogGateway, identity: IdentityGateway, cms: CmsGateway, settings: SettingsGateway, promotions: PromotionsGateway, storefront: StorefrontGateway): Hono {
     const router = new Hono();
     router.get('/marcas', async (c) => {
-      const [brands, nav, marketing] = await Promise.all([catalog.listBrands(), getStorefrontNavMenus(cms, settings), getPageMarketingContent(storefront, 'brands', 'Marcas destacadas')]);
+      const page = Number(c.req.query('page') || 1);
+      if (!Number.isSafeInteger(page) || page < 1 || page > 1000) return c.redirect('/marcas', 302);
+      const [brandRecords, nav, marketing] = await Promise.all([catalog.listBrands({ limit: 13, offset: (page - 1) * 12 }), getStorefrontNavMenus(cms, settings), getPageMarketingContent(storefront, 'brands', 'Marcas destacadas')]);
+      if (brandRecords.length === 0 && page > 1) return c.redirect('/marcas', 302);
+      const brands = brandRecords.slice(0, 12);
       const customerEmail = await getCustomerEmail(c, identity);
-      return c.html(renderBaseLayout({ title: 'Marcas | Vega Store', description: 'Conoce las marcas disponibles y explora sus productos.', canonicalUrl: 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/marcas', bodyHtml: marketing.bannersHtml + renderBrandDirectoryPage(brands), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementMessage: marketing.announcementMessage, announcementLink: marketing.announcementLink }));
+      return c.html(renderBaseLayout({ title: 'Marcas | Vega Store', description: 'Conoce las marcas disponibles y explora sus productos.', canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/marcas${page > 1 ? `?page=${page}` : ''}`, bodyHtml: marketing.bannersHtml + renderBrandDirectoryPage(brands, page, brandRecords.length > 12), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementMessage: marketing.announcementMessage, announcementLink: marketing.announcementLink }));
     });
     router.get('/marcas/:slug', async (c) => {
       const [brands, nav] = await Promise.all([catalog.listBrands(), getStorefrontNavMenus(cms, settings)]);

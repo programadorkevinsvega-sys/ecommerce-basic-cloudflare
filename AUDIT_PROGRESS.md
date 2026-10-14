@@ -483,3 +483,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - No cambié el alcance de promociones y cupones: esos campos determinan productos/categorías elegibles para descuentos, no rutas donde mostrar contenido.
 - Corregí validación de ubicación al editar banners y el wiring de StorefrontGateway en colecciones. Sin migraciones SQL.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `pnpm test` (46 archivos, 132 pruebas) aprobados; `git diff --check` limpio; `wrangler deploy --dry-run` correcto. Commit `4c6d851` en `main`; versión desplegada `51bc1d09-8127-43cb-8890-26bb268dcde7`. `/health`, `/productos`, `/marcas`, `/colecciones`, `/blog` y `/p/politica-de-envios` devolvieron HTTP 200. No hice verificación visual autenticada del panel ni creé contenido de prueba en producción.
+
+### Paginación de la tienda pública (2026-10-14)
+
+- Implementé paginación SSR desde BFF para `/productos` (24 productos por página), `/marcas` (12 marcas), la sección “Descubre nuestros productos” en `/` (12 productos) y límites seguros de página. Usa lookahead de un registro para determinar si existe siguiente página; no descarga el catálogo completo.
+- Homogenicé los controles accesibles en catálogo, marcas, colecciones y blog. Colecciones ya consultaba 12 por página y Blog ya consultaba 9 con total; ahora muestran rango, página actual y controles anterior/siguiente deshabilitados cuando corresponde.
+- Sin cambios SQL. Verificaciones: `pnpm test` (46 archivos, 133 pruebas), `pnpm typecheck`, `pnpm lint`, `git diff --check` y Wrangler dry-run aprobados. Despliegue y smoke HTTP pendientes.

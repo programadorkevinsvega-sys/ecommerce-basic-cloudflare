@@ -45,18 +45,22 @@ export class StorefrontController {
 
     router.get('/', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [products, homeContent, nav, brands, homeAnnouncements] = await Promise.all([
-        catalogGateway.listProducts({ limit: 12, status: 'published' }),
+      const productsPage = Number(c.req.query('products_page') || 1);
+      if (!Number.isSafeInteger(productsPage) || productsPage < 1 || productsPage > 1000) return c.redirect('/#products-title', 302);
+      const [productRecords, homeContent, nav, brands, homeAnnouncements] = await Promise.all([
+        catalogGateway.listProducts({ limit: 13, offset: (productsPage - 1) * 12, status: 'published' }),
         storefrontGateway.getHomeContent(),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
         catalogGateway.listBrands(),
         storefrontGateway.getPublicAnnouncements('home'),
       ]);
 
+      if (productRecords.length === 0 && productsPage > 1) return c.redirect('/#products-title', 302);
+      const products = productRecords.slice(0, 12);
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
       const activeAnnouncement = homeAnnouncements[0] || homeContent.announcements[0];
       const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
-      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands);
+      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands, { page: productsPage, hasNext: productRecords.length > 12 });
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');
@@ -65,7 +69,7 @@ export class StorefrontController {
       const html = renderBaseLayout({
         title: 'Tienda Oficial - Alta Calidad y Confianza',
         description: 'Compra online con envíos locales y nacionales, y opción de pago contra entrega en Colombia.',
-        canonicalUrl: `${storeUrl}/`,
+        canonicalUrl: productsPage > 1 ? `${storeUrl}/?products_page=${productsPage}` : `${storeUrl}/`,
         jsonLd: `[${webSiteJsonLd}, ${orgJsonLd}]`,
         bodyHtml,
         customerEmail,
@@ -82,15 +86,30 @@ export class StorefrontController {
     router.get('/productos', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const query = c.req.query('q');
+      const page = Number(c.req.query('page') || 1);
+      if (!Number.isSafeInteger(page) || page < 1 || page > 1000) return c.redirect('/productos', 302);
       const placement = c.req.query('category') ? 'category' : 'catalog';
-      const [products, nav, banners] = await Promise.all([
-        catalogGateway.listProducts({ limit: 24, status: 'published', searchQuery: query }),
+      const [productRecords, nav, banners] = await Promise.all([
+        catalogGateway.listProducts({ limit: 25, offset: (page - 1) * 24, status: 'published', searchQuery: query }),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
         getPageMarketingContent(storefrontGateway, placement, 'Contenido destacado', placement === 'catalog' ? ['products'] : []),
       ]);
 
+      const products = productRecords.slice(0, 24);
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
-      const bodyHtml = renderCatalogPage(products, query, banners.banners, discountMap);
+      const pageHref = (targetPage: number) => {
+        const params = new URLSearchParams();
+        if (query) params.set('q', query);
+        const category = c.req.query('category');
+        if (category) params.set('category', category);
+        params.set('page', String(targetPage));
+        return `/productos?${params.toString()}#catalog-product-grid`;
+      };
+      const bodyHtml = renderCatalogPage(products, query, banners.banners, discountMap, {
+        page,
+        previousHref: page > 1 ? pageHref(page - 1) : undefined,
+        nextHref: productRecords.length > 24 ? pageHref(page + 1) : undefined,
+      });
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
@@ -100,7 +119,7 @@ export class StorefrontController {
       const html = renderBaseLayout({
         title: query ? `Búsqueda: ${query}` : 'Catálogo de Productos',
         description: 'Explora nuestra variedad de productos con garantía de satisfacción.',
-        canonicalUrl: `${storeUrl}/productos`,
+        canonicalUrl: `${storeUrl}/productos${page > 1 ? `?page=${page}` : ''}`,
         noindex: Boolean(query && query.trim().length > 0),
         jsonLd: itemListJsonLd,
         bodyHtml,

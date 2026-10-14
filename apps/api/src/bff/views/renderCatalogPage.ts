@@ -4,8 +4,11 @@ import { BannerItem } from './renderProductList.js';
 import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
 import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
 import { renderStorefrontBanners } from './renderStorefrontBanners.js';
+import { renderStorefrontPagination } from './renderStorefrontPagination.js';
 
-export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>): string {
+export interface CatalogPagePagination { page: number; previousHref?: string; nextHref?: string; }
+
+export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination): string {
   const escape = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const effectivePrice = (product: CatalogProductDto): number => discounts?.get(product.id)?.hasDiscount ? discounts.get(product.id)!.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -82,5 +85,10 @@ export function renderCatalogPage(products: CatalogProductDto[], query?: string,
     applyCatalogFilters();
   </script>` : '';
   const catalogBody = products.length ? `<div class="catalog-layout">${filterPanel}<section class="catalog-main">${content}${empty}</section></div>` : empty;
-  return `<nav class="catalog-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Catálogo</span></nav>${renderStorefrontBanners(banners, 'Contenido destacado')}${catalogBody}${filtersScript}${products.length ? renderProductCardActionsScript : ''}`;
+  const currentPage = pagination?.page || 1;
+  const firstItem = products.length ? (currentPage - 1) * 24 + 1 : 0;
+  const lastItem = products.length ? firstItem + products.length - 1 : 0;
+  const pageStatus = pagination ? `Mostrando ${firstItem}–${lastItem} productos · Página ${pagination.page}` : '';
+  const pager = pagination ? renderStorefrontPagination('Paginación del catálogo', pageStatus, pagination.previousHref, pagination.nextHref) : '';
+  return `<nav class="catalog-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Catálogo</span></nav>${renderStorefrontBanners(banners, 'Contenido destacado')}${catalogBody}${pager}${filtersScript}${products.length ? renderProductCardActionsScript : ''}`;
 }

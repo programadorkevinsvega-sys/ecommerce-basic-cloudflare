@@ -4,6 +4,9 @@ import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
 import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
 import { renderStorefrontCarouselScript } from './renderStorefrontCarouselScript.js';
 import { BrandDto } from '../gateways/catalog/CatalogGateway.js';
+import { renderStorefrontPagination } from './renderStorefrontPagination.js';
+
+export interface ProductListPagination { page: number; hasNext: boolean; }
 
 export interface BannerItem {
   id: string;
@@ -22,7 +25,8 @@ export function renderProductList(
   banner?: BannerItem | BannerItem[],
   discountMap?: Map<string, ProductDiscountDto>,
   brandLinks: Map<string, string> = new Map(),
-  brandAssets: BrandDto[] = []
+  brandAssets: BrandDto[] = [],
+  pagination?: ProductListPagination
 ): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
   const banners = (Array.isArray(banner) ? banner : banner ? [banner] : []).filter(Boolean);
@@ -70,7 +74,8 @@ export function renderProductList(
 
   html += '<p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p><div class="grid">';
   for (const product of products) html += renderStorefrontProductCard(product, discountMap?.get(product.id));
-  html += `</div></section>
+  const pageStatus = pagination ? `Mostrando ${(pagination.page - 1) * 12 + 1}–${(pagination.page - 1) * 12 + products.length} productos · Página ${pagination.page}` : '';
+  html += `</div>${pagination ? renderStorefrontPagination('Paginación de productos destacados', pageStatus, pagination.page > 1 ? `/?products_page=${pagination.page - 1}#products-title` : undefined, pagination.hasNext ? `/?products_page=${pagination.page + 1}#products-title` : undefined) : ''}</section>
   <section class="benefits-strip" aria-label="Información de compra"><article><span aria-hidden="true">↗</span><div><strong>Envíos locales y nacionales</strong><p>La cobertura se indica en cada producto.</p></div></article><article><span aria-hidden="true">⌂</span><div><strong>Opciones de pago</strong><p>Consulta las alternativas disponibles al comprar.</p></div></article><article><span aria-hidden="true">✓</span><div><strong>Compra con confianza</strong><p>Revisa los detalles y políticas de cada producto.</p></div></article></section>
   ${banners.length > 1 ? renderStorefrontCarouselScript('heroCarousel') : ''}${renderProductCardActionsScript}`;
   return html;
