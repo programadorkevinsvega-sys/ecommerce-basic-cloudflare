@@ -367,6 +367,13 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Unifiqué esos acentos con el verde del resto de las páginas y forcé el selector a conservar fondo blanco y texto oscuro dentro de Pedidos. Sin cambios de lógica o backend.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual en navegador.
 
+### Alineación visual del Resumen administrativo (2026-10-14)
+
+- Reorganicé el Resumen para seguir la referencia: encabezado con búsqueda/rango/notificaciones/exportación, cuatro KPI, gráfico de ventas, distribución por estado, pedidos recientes y bloque de atención.
+- Los KPI y el gráfico se calculan con pedidos reales devueltos por la API administrativa (máximo 100). La conversión no se inventa: se muestra proporción de pagos aprobados. Inventario, conciliaciones y banners alimentan las alertas cuando sus endpoints/datos están disponibles.
+- El rango de 7/30/90 días filtra la muestra disponible y la exportación genera CSV local. La búsqueda filtra pedidos recientes. La paginación completa del análisis requeriría soporte de consultas agregadas, que no forma parte de este cambio de interfaz.
+- Se comprobó la sintaxis del JavaScript generado y el HTML de la sección. Typecheck, lint de arquitectura y `git diff --check` pendientes de repetición tras el último ajuste; no hay navegador disponible para inspección visual.
+
 
 ### Rediseño y versionado del PDF de facturas (2026-10-14)
 

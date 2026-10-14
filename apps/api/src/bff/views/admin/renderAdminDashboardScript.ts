@@ -14,6 +14,7 @@ export function renderAdminDashboardScript(): string {
       const section = document.getElementById('tab-' + tabId);
       legacy?.classList.toggle('orders-mode', tabId === 'orders');
       document.querySelector('.admin-main')?.classList.toggle('orders-page-active', tabId === 'orders');
+      document.querySelector('.admin-main')?.classList.toggle('summary-page-active', tabId === 'summary');
       legacy?.classList.toggle('inventory-mode', tabId === 'inventory');
       document.querySelector('.admin-main')?.classList.toggle('inventory-page-active', tabId === 'inventory');
       legacy?.classList.toggle('payments-mode', tabId === 'payments');

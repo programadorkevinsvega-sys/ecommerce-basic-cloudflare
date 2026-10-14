@@ -9,39 +9,42 @@ interface AdminSummaryProps {
 }
 
 export function renderAdminSummarySection(props: AdminSummaryProps): string {
-  const published = props.products.filter((product) => product.status === 'published').length;
-  const liveBanners = props.banners.filter(isBannerLive).length;
-  const liveAnnouncements = props.announcements.filter((item) => item.isActive).length;
-  const metrics = [
-    ['Productos consultados', props.products.length, 'Datos cargados para este panel'],
-    ['Productos publicados', published, 'Dentro de la lista consultada'],
-    ['Categorías', props.categories.length, 'Disponibles en esta vista'],
-    ['Banners y avisos activos', liveBanners + liveAnnouncements, 'Según su estado y vigencia'],
-  ];
+  const expiringBanners = props.banners.filter((banner) => isBannerLive(banner) && banner.endsAt && Date.parse(banner.endsAt) < Date.now() + 3 * 86400000).length;
   return `<section id="tab-summary" class="tab-content admin-summary active" aria-labelledby="summary-title">
-    <header class="summary-heading"><div><p class="summary-eyebrow">VEGA STORE · ADMINISTRACIÓN</p><h1 id="summary-title">Resumen</h1><p>Vista general del catálogo y la operación de tu tienda.</p></div>
-      <button class="summary-icon-button" type="button" aria-label="Notificaciones" onclick="switchTab('orders'); loadAdminOrders()"><span aria-hidden="true">♧</span><span id="notification-bell-badge" class="notification-badge" style="display:none">0</span></button>
+    <header class="summary-heading"><div class="summary-title-group"><h1 id="summary-title">Resumen</h1><span class="summary-sample-label">Datos operativos</span><p id="summary-date-caption">Pedidos disponibles · últimos 30 días</p></div>
+      <div class="summary-toolbar"><label class="summary-search"><span class="sr-only">Buscar pedido, cliente o SKU</span><input id="summary-search" type="search" placeholder="Buscar pedido, cliente o SKU" oninput="filterAdminSummary()" /></label>
+        <label class="summary-range-label"><span class="sr-only">Rango del resumen</span><select id="summary-range" onchange="filterAdminSummary()"><option value="30">Últimos 30 días</option><option value="7">Últimos 7 días</option><option value="90">Últimos 90 días</option></select></label>
+        <button class="summary-icon-button" type="button" aria-label="Notificaciones" onclick="switchTab('orders'); loadAdminOrders()"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="notification-bell-badge" class="notification-badge" style="display:none">0</span></button>
+        <button class="summary-export-button" type="button" onclick="exportAdminSummary()">Exportar informe</button>
+      </div>
     </header>
-    <section class="summary-metrics" aria-label="Indicadores del panel">${metrics.map(([label, value, note]) => metricCard(String(label), Number(value), String(note))).join('')}</section>
-    <div class="summary-columns">
+    <section class="summary-metrics" aria-label="Indicadores de ventas">
+      ${metricCard('Ventas pagadas (COP)', 'summary-sales', 'Suma de pedidos pagados en la muestra')}
+      ${metricCard('Pedidos', 'summary-orders-count', 'Pedidos dentro del periodo seleccionado')}
+      ${metricCard('Ticket promedio (COP)', 'summary-average-ticket', 'Promedio de pedidos con pago aprobado')}
+      ${metricCard('Pagos aprobados', 'summary-paid-rate', 'Proporción de pedidos pagados en la muestra')}
+    </section>
+    <div class="summary-analytics-grid">
+      <section class="summary-panel summary-chart-panel" aria-labelledby="summary-chart-title">
+        <div class="summary-panel-heading"><div><h2 id="summary-chart-title">Ventas diarias</h2><p>Pesos colombianos (COP), por día</p></div><strong id="summary-daily-average" class="summary-chart-average">—</strong></div>
+        <div id="summary-chart" class="summary-chart" role="img" aria-label="Gráfico de ventas por día"><p class="summary-empty">Cargando ventas…</p></div>
+      </section>
+      <section class="summary-panel summary-status-panel" aria-labelledby="summary-status-title"><h2 id="summary-status-title">Pedidos por estado</h2><p id="summary-status-total" class="summary-status-caption">En el periodo</p><div id="summary-status-list" class="summary-status-list"></div></section>
+    </div>
+    <div class="summary-bottom-grid">
       <section class="summary-panel summary-orders" aria-labelledby="summary-orders-title">
-        <div class="summary-panel-heading"><div><h2 id="summary-orders-title">Pedidos recientes</h2><p>Últimos pedidos disponibles para tu cuenta.</p></div><button type="button" class="summary-link-button" onclick="switchTab('orders'); loadAdminOrders()">Ver todos <span aria-hidden="true">→</span></button></div>
-        <div class="summary-table-scroll"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Ciudad</th><th>Pago</th><th>Total</th><th>Estado</th></tr></thead>
+        <div class="summary-panel-heading"><div><h2 id="summary-orders-title">Pedidos recientes</h2><p>Pedidos disponibles para tu cuenta · máximo 100</p></div><button type="button" class="summary-link-button" onclick="switchTab('orders'); loadAdminOrders()">Ver todos <span aria-hidden="true">→</span></button></div>
+        <div class="summary-table-scroll"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Ciudad</th><th>Medio de pago</th><th>Total</th><th>Estado</th></tr></thead>
           <tbody id="summary-orders-body"><tr><td colspan="6" class="summary-empty">Cargando pedidos autorizados…</td></tr></tbody></table></div>
       </section>
-      <aside class="summary-panel summary-shortcuts" aria-labelledby="summary-shortcuts-title"><h2 id="summary-shortcuts-title">Accesos rápidos</h2><p>Continúa con las tareas habituales.</p>
-        ${shortcut('＋', 'Crear o editar productos', 'products')}${shortcut('▦', 'Revisar inventario', 'inventory', 'loadAdminInventory()')}${shortcut('◇', 'Gestionar pagos', 'payments', 'loadAdminPayments()')}${shortcut('▧', 'Administrar banners', 'storefront')}
+      <aside class="summary-panel summary-attention" aria-labelledby="summary-attention-title"><h2 id="summary-attention-title">Requiere atención</h2><p>Elementos que puedes revisar ahora.</p><div id="summary-attention-list" data-expiring-banners="${expiringBanners}"><p class="summary-empty">Cargando alertas…</p></div>
       </aside>
     </div>
   </section>`;
 }
 
-function metricCard(label: string, value: number, note: string): string {
-  return `<article class="summary-metric"><p>${escapeHtml(label)}</p><strong>${value.toLocaleString('es-CO')}</strong><small>${escapeHtml(note)}</small></article>`;
-}
-
-function shortcut(icon: string, label: string, tab: string, extra = ''): string {
-  return `<button type="button" class="summary-shortcut" onclick="switchTab('${tab}')${extra ? `; ${extra}` : ''}"><span aria-hidden="true">${icon}</span><strong>${escapeHtml(label)}</strong><span aria-hidden="true">→</span></button>`;
+function metricCard(label: string, valueId: string, note: string): string {
+  return `<article class="summary-metric"><p>${escapeHtml(label)}</p><strong id="${valueId}">—</strong><small>${escapeHtml(note)}</small></article>`;
 }
 
 function isBannerLive(banner: BannerItemDto): boolean {
