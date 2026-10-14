@@ -18,6 +18,12 @@ import { CreateAttributeUseCase } from './application/use-cases/CreateAttributeU
 import { ListAttributesUseCase } from './application/use-cases/ListAttributesUseCase.js';
 import { MigrateLegacyProductPricesUseCase } from './application/use-cases/MigrateLegacyProductPricesUseCase.js';
 import { UpdateBrandDescriptionUseCase } from './application/use-cases/UpdateBrandDescriptionUseCase.js';
+import { D1SupplierRepository } from './infrastructure/persistence/d1/repositories/D1SupplierRepository.js';
+import { D1ProductVariantRepository } from './infrastructure/persistence/d1/repositories/D1ProductVariantRepository.js';
+import { CreateSupplierUseCase } from './application/use-cases/CreateSupplierUseCase.js';
+import { ListSuppliersUseCase } from './application/use-cases/ListSuppliersUseCase.js';
+import { CreateProductVariantUseCase } from './application/use-cases/CreateProductVariantUseCase.js';
+import { ListProductVariantsUseCase } from './application/use-cases/ListProductVariantsUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -35,6 +41,10 @@ export interface CatalogModuleContainer {
   createAttributeUseCase: CreateAttributeUseCase;
   listAttributesUseCase: ListAttributesUseCase;
   migrateLegacyProductPricesUseCase: MigrateLegacyProductPricesUseCase;
+  createSupplierUseCase: CreateSupplierUseCase;
+  listSuppliersUseCase: ListSuppliersUseCase;
+  createProductVariantUseCase: CreateProductVariantUseCase;
+  listProductVariantsUseCase: ListProductVariantsUseCase;
 }
 
 export function createCatalogModule(env: Env): CatalogModuleContainer {
@@ -42,6 +52,8 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
   const categoryRepo = new D1CategoryRepository(env.DB);
   const brandRepo = new D1BrandRepository(env.DB);
   const attributeRepo = new D1AttributeRepository(env.DB);
+  const supplierRepo = new D1SupplierRepository(env.DB);
+  const variantRepo = new D1ProductVariantRepository(env.DB);
 
   return {
     createProductUseCase: new CreateProductUseCase(productRepo),
@@ -59,5 +71,9 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     createAttributeUseCase: new CreateAttributeUseCase(attributeRepo),
     listAttributesUseCase: new ListAttributesUseCase(attributeRepo),
     migrateLegacyProductPricesUseCase: new MigrateLegacyProductPricesUseCase(productRepo),
+    createSupplierUseCase: new CreateSupplierUseCase(supplierRepo),
+    listSuppliersUseCase: new ListSuppliersUseCase(supplierRepo),
+    createProductVariantUseCase: new CreateProductVariantUseCase(variantRepo, productRepo),
+    listProductVariantsUseCase: new ListProductVariantsUseCase(variantRepo),
   };
 }

@@ -6,6 +6,8 @@ import {
   CategoryDto,
   BrandDto,
   AttributeDto,
+  SupplierDto,
+  ProductVariantDto,
 } from './CatalogGateway.js';
 import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
 
@@ -101,6 +103,22 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public async listAttributes(): Promise<AttributeDto[]> {
     const attributes = await this.publicApi.listAttributes();
     return attributes.map((a) => a.toPrimitives());
+  }
+
+  public async createSupplier(request: Omit<SupplierDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupplierDto> {
+    return (await this.publicApi.createSupplier(request)).toPrimitives();
+  }
+
+  public async listSuppliers(): Promise<SupplierDto[]> {
+    return (await this.publicApi.listSuppliers()).map((supplier) => supplier.toPrimitives());
+  }
+
+  public async createProductVariant(request: Omit<ProductVariantDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariantDto> {
+    return (await this.publicApi.createProductVariant(request)).toPrimitives();
+  }
+
+  public async listProductVariants(): Promise<ProductVariantDto[]> {
+    return (await this.publicApi.listProductVariants()).map((variant) => variant.toPrimitives());
   }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number) {

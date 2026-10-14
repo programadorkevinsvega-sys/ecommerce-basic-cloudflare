@@ -180,7 +180,7 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 | Módulo | Responsabilidad | Tablas principales (D1) |
 |---|---|---|
 | `identity` | Clientes, administradores, roles/permisos (RBAC), sesiones, recuperación de contraseña, direcciones | `identity_customers`, `identity_admins`, `identity_roles`, `identity_role_permissions`, `identity_sessions`, `identity_password_resets`, `identity_addresses` |
-| `catalog` | Productos, variantes, categorías, marcas, atributos, búsqueda | `catalog_products`, `catalog_variants`, `catalog_categories`, `catalog_brands`, `catalog_product_categories`, `catalog_product_images`, `catalog_attributes`, `catalog_product_coverage`, `catalog_products_fts` |
+| `catalog` | Productos, variantes, categorías, marcas, proveedores, atributos, búsqueda | `catalog_products`, `catalog_product_variants`, `catalog_categories`, `catalog_brands`, `catalog_suppliers`, `catalog_product_categories`, `catalog_product_images`, `catalog_attributes`, `catalog_product_coverage`, `catalog_products_fts` |
 | `media` | Biblioteca de archivos en R2, carpetas, metadatos y alt text | `media_assets`, `media_folders` |
 | `inventory` | Stock, movimientos, reservas | `inventory_stock`, `inventory_movements`, `inventory_reservations` |
 | `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items` |

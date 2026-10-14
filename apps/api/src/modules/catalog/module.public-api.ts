@@ -10,6 +10,10 @@ import { Category } from './domain/entities/Category.js';
 import { Brand } from './domain/entities/Brand.js';
 import { Attribute } from './domain/entities/Attribute.js';
 import { LegacyPriceMigrationPreview } from './application/use-cases/MigrateLegacyProductPricesUseCase.js';
+import { CreateSupplierInput } from './application/use-cases/CreateSupplierUseCase.js';
+import { CreateProductVariantInput } from './application/use-cases/CreateProductVariantUseCase.js';
+import { Supplier } from './domain/entities/Supplier.js';
+import { ProductVariant } from './domain/entities/ProductVariant.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -26,6 +30,10 @@ export interface ICatalogPublicApi {
   updateBrandDescription(id: string, description: string): Promise<Brand>;
   createAttribute(input: CreateAttributeInput): Promise<Attribute>;
   listAttributes(): Promise<Attribute[]>;
+  createSupplier(input: CreateSupplierInput): Promise<Supplier>;
+  listSuppliers(): Promise<Supplier[]>;
+  createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant>;
+  listProductVariants(): Promise<ProductVariant[]>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
@@ -117,6 +125,22 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     const res = await this.container.listAttributesUseCase.execute();
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public createSupplier(input: CreateSupplierInput): Promise<Supplier> {
+    return this.container.createSupplierUseCase.execute(input);
+  }
+
+  public listSuppliers(): Promise<Supplier[]> {
+    return this.container.listSuppliersUseCase.execute();
+  }
+
+  public createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant> {
+    return this.container.createProductVariantUseCase.execute(input);
+  }
+
+  public listProductVariants(): Promise<ProductVariant[]> {
+    return this.container.listProductVariantsUseCase.execute();
   }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {

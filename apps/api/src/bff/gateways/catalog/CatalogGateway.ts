@@ -131,6 +131,18 @@ export interface AttributeDto {
   options: string[];
 }
 
+export interface SupplierDto {
+  id: string; name: string; taxId?: string; email?: string; phone?: string;
+  websiteUrl?: string; notes?: string; status: 'active' | 'inactive';
+  createdAt: string; updatedAt: string;
+}
+
+export interface ProductVariantDto {
+  id: string; productId: string; name: string; sku: string; options: Record<string, string>;
+  priceInCents?: number; stockQuantity: number; status: 'active' | 'inactive';
+  createdAt: string; updatedAt: string;
+}
+
 export interface CatalogGateway {
   createProduct(request: CreateProductGatewayRequest): Promise<CatalogProductDto>;
   updateProduct(request: UpdateProductGatewayRequest): Promise<CatalogProductDto>;
@@ -146,6 +158,10 @@ export interface CatalogGateway {
   updateBrandDescription(id: string, description: string): Promise<BrandDto>;
   createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;
   listAttributes(): Promise<AttributeDto[]>;
+  createSupplier(request: Omit<SupplierDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupplierDto>;
+  listSuppliers(): Promise<SupplierDto[]>;
+  createProductVariant(request: Omit<ProductVariantDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariantDto>;
+  listProductVariants(): Promise<ProductVariantDto[]>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }

@@ -75,7 +75,7 @@ export const createBrandSchema = z.object({
   name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
   description: z.string().max(500).optional(),
-  websiteUrl: z.string().url().optional(),
+  websiteUrl: z.string().url().refine((url) => url.startsWith('https://'), 'El sitio debe usar HTTPS').optional(),
 }).strict();
 
 export const updateBrandDescriptionSchema = z.object({

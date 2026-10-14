@@ -3,7 +3,7 @@ import { renderAdminDashboardPage } from '../src/bff/views/admin/renderAdminDash
 import type { AdminDashboardProps } from '../src/bff/views/admin/AdminDashboardProps.js';
 
 const props: AdminDashboardProps = {
-  products: [], categories: [], brands: [], attributes: [], banners: [], announcements: [],
+  products: [], categories: [], brands: [], attributes: [], suppliers: [], variants: [], banners: [], announcements: [],
   cmsPages: [], promotionRules: [], coupons: [], shippingZones: [], divipolaLocations: [],
   settings: {
     id: 'settings', storeName: 'Vega Store', footerCopyrightText: 'Todos los derechos reservados.', currency: 'COP', taxRatePercent: 19,
