@@ -1,8 +1,15 @@
+import { LegacyPriceMigrationPreview } from '../../../modules/catalog/application/use-cases/MigrateLegacyProductPricesUseCase.js';
+
 export interface CreateProductGatewayRequest {
   name: string;
   slug?: string;
   description: string;
   priceInCents: number;
+  supplierCostCents?: number;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  taxRateBasisPoints?: number;
+  transactionShippingCents?: number;
   sku: string;
   stockQuantity: number;
   status?: 'draft' | 'published' | 'archived';
@@ -31,6 +38,11 @@ export interface UpdateProductGatewayRequest {
   slug?: string;
   description?: string;
   priceInCents?: number;
+  supplierCostCents?: number | null;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  taxRateBasisPoints?: number;
+  transactionShippingCents?: number;
   sku?: string;
   stockQuantity?: number;
   status?: 'draft' | 'published' | 'archived';
@@ -59,6 +71,10 @@ export interface CatalogProductDto {
   slug: string;
   description: string;
   priceInCents: number;
+  supplierCostCents?: number | null;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  pricingVersion?: number;
   sku: string;
   stockQuantity: number;
   status: string;
@@ -123,4 +139,6 @@ export interface CatalogGateway {
   listBrands(): Promise<BrandDto[]>;
   createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;
   listAttributes(): Promise<AttributeDto[]>;
+  previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
+  migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }

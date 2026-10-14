@@ -19,6 +19,7 @@ import { renderTaxonomyFormsScript } from './renderTaxonomyFormsScript.js';
 import { renderPhase8AdminScript } from './renderPhase8AdminScript.js';
 import { renderCatalogManagementSection } from './renderCatalogManagementSection.js';
 import { renderProductFormCard } from './renderProductFormCard.js';
+import { renderProductPriceMigrationScript } from './renderProductPriceMigrationScript.js';
 import { renderProductTable } from './renderProductTable.js';
 import { renderStorefrontManagementSection } from './renderStorefrontManagementSection.js';
 import { renderCmsManagementSection } from './renderCmsManagementSection.js';
@@ -83,7 +84,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-products" class="tab-content active">
-      ${renderProductFormCard(props.shippingZones)}
+      ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent)}
       ${renderProductTable(props.products)}
     </div>
 
@@ -162,6 +163,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderAdminDashboardScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>
+  <script>${renderProductPriceMigrationScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
   <script>${renderCmsEditorToolbarScript()}</script>

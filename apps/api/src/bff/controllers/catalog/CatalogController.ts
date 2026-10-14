@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
+import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import {
   createProductSchema,
@@ -11,7 +14,7 @@ import {
 } from './catalogSchemas.js';
 
 export class CatalogController {
-  public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway): Hono {
+  public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, auditGateway: AuditGateway, shippingGateway: ShippingGateway): Hono {
     const router = new Hono();
 
     // 1. Productos (Público)
@@ -81,6 +84,27 @@ export class CatalogController {
       }
     );
 
+    router.post('/admin/products/pricing-migration/preview', createAuthMiddleware(identityGateway, 'admin', 'catalog:edit'), async (c) => {
+      const settings = await settingsGateway.getSettings();
+      const preview = await catalogGateway.previewLegacyPriceMigration(Math.round(settings.taxRatePercent * 100));
+      return c.json({ data: preview });
+    });
+
+    router.post('/admin/products/pricing-migration/apply', createAuthMiddleware(identityGateway, 'admin', 'catalog:edit'), async (c) => {
+      let body: { expectedCount?: unknown; fingerprint?: unknown };
+      try { body = await c.req.json(); } catch { return c.json({ error: 'Confirmación inválida' }, 400); }
+      if (!Number.isSafeInteger(body.expectedCount) || Number(body.expectedCount) < 0 || typeof body.fingerprint !== 'string') return c.json({ error: 'Vista previa requerida' }, 400);
+      const settings = await settingsGateway.getSettings();
+      try {
+        const migratedCount = await catalogGateway.migrateLegacyPrices(Math.round(settings.taxRatePercent * 100), Number(body.expectedCount), body.fingerprint);
+        const actorId = (c as any).get('actorId') as string;
+        await auditGateway.record({ actorId, actorType: 'admin', action: 'catalog.pricing.legacy_migration', entityType: 'catalog_products', entityId: 'bulk', changes: { migratedCount, taxRateBasisPoints: Math.round(settings.taxRatePercent * 100), previousPricingVersion: 1, newPricingVersion: 2 } });
+        return c.json({ success: true, migratedCount });
+      } catch (error) {
+        return c.json({ error: error instanceof Error ? error.message : 'No fue posible migrar precios' }, 409);
+      }
+    });
+
     // 3. Marcas / Proveedores (Público y Admin)
     router.get('/brands', async (c) => {
       const brands = await catalogGateway.listBrands();
@@ -137,7 +161,10 @@ export class CatalogController {
           const parsed = createProductSchema.safeParse(body);
           if (!parsed.success) return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
 
-          const product = await catalogGateway.createProduct(parsed.data);
+          const taxRate = (await settingsGateway.getSettings()).taxRatePercent;
+          const zones = await shippingGateway.listZones(true);
+          const transactionShippingCents = Math.max(0, ...zones.map((zone) => zone.priceInCents));
+          const product = await catalogGateway.createProduct({ ...parsed.data, taxRateBasisPoints: Math.round(taxRate * 100), transactionShippingCents });
           return c.json({ data: product }, 201);
         } catch {
           return c.json({ error: 'No fue posible crear el producto' }, 400);
@@ -154,7 +181,10 @@ export class CatalogController {
           const parsed = updateProductSchema.safeParse(body);
           if (!parsed.success) return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
 
-          const product = await catalogGateway.updateProduct({ id: c.req.param('id'), ...parsed.data });
+          const taxRate = (await settingsGateway.getSettings()).taxRatePercent;
+          const zones = await shippingGateway.listZones(true);
+          const transactionShippingCents = Math.max(0, ...zones.map((zone) => zone.priceInCents));
+          const product = await catalogGateway.updateProduct({ id: c.req.param('id'), ...parsed.data, taxRateBasisPoints: Math.round(taxRate * 100), transactionShippingCents });
           return c.json({ data: product });
         } catch {
           return c.json({ error: 'No fue posible actualizar el producto' }, 400);

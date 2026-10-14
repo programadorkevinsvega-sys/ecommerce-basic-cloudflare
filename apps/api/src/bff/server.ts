@@ -114,7 +114,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1/admin/auth', AdminAuthController.createRoutes(cRoot.identityGateway));
   app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway, cRoot.identityGateway));
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
-  app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
+  app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.auditGateway, cRoot.shippingGateway));
 
   app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));
   app.onError((err, c) => {

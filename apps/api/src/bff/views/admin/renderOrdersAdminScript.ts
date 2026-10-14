@@ -129,8 +129,10 @@ export function renderOrdersAdminScript(): string {
       } else {
         discRow.style.display = 'none';
       }
-      const taxCents = Number(order.totalCents) - Number(order.subtotalCents) - Number(order.shippingCostCents) + Number(disc);
+      const taxCents = Number(order.pricingVersion) === 2 ? Number(order.taxCents || 0) : Number(order.totalCents) - Number(order.subtotalCents) - Number(order.shippingCostCents) + Number(disc);
       document.getElementById('modal-tax').innerText = '$' + (taxCents / 100).toLocaleString('es-CO');
+      document.getElementById('modal-transaction-fee').innerText = '$' + (Number(order.transactionFeeCents || 0) / 100).toLocaleString('es-CO');
+      document.getElementById('modal-payment-fee').innerText = '$' + (Number(order.estimatedPaymentFeeCents || 0) / 100).toLocaleString('es-CO') + ' (estimada)';
       document.getElementById('modal-shipping-cost').innerText = '$' + (order.shippingCostCents / 100).toLocaleString('es-CO');
       document.getElementById('modal-total').innerText = '$' + (order.totalCents / 100).toLocaleString('es-CO');
 

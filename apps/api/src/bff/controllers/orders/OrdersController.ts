@@ -11,12 +11,11 @@ import { NotificationsGateway } from '../../gateways/notifications/Notifications
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { notifyCodOrderPlaced } from './notifyCodOrderPlaced.js';
-import { notifyOrderStatusChanged } from './notifyOrderStatusChanged.js';
 import { normalizeShippingAddress } from './normalizeShippingAddress.js';
-import { extractAdminToken } from './extractAdminToken.js';
 import { calculateOrderPricing } from './calculateOrderPricing.js';
 import { validateOrderPolicy } from './validateOrderPolicy.js';
 import { hashGuestCartId } from '../../security/GuestCartCapability.js';
+import { registerAdminOrderRoutes } from './registerAdminOrderRoutes.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -57,6 +56,7 @@ export class OrdersController {
             allowsCashOnDelivery: prod?.salePolicy?.allowsCashOnDelivery ?? true,
             shippingScope: (prod?.salePolicy?.shippingScope as 'national' | 'local') ?? 'national',
             localCoverageZones: prod?.salePolicy?.localCoverageZones ?? [],
+            allowedPaymentMethods: prod?.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'],
           },
           quantity: it.quantity,
         };
@@ -89,8 +89,7 @@ export class OrdersController {
         return c.json({ error: 'Se requiere al menos una línea de pedido' }, 400);
       }
 
-      const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
+      const auth = c.req.header('Authorization'); const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
       let customerId: string | null = null;
       if (token) {
         try {
@@ -106,7 +105,7 @@ export class OrdersController {
       if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
       const shippingCostCents = zone.priceInCents;
       let pricing;
-      try { pricing = await calculateOrderPricing(catalogGateway, promotionsGateway, settingsGateway, body.lines, body.couponCode, customerId, shippingCostCents); }
+      try { pricing = await calculateOrderPricing(catalogGateway, promotionsGateway, settingsGateway, body.lines, body.couponCode, customerId, shippingCostCents, body.paymentMethod); }
       catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
 
       // Normalizar shippingAddress al esquema del dominio
@@ -129,6 +128,10 @@ export class OrdersController {
           discountCents: pricing.discountCents,
           couponCode: pricing.couponCode,
           totalCents: pricing.totalCents,
+          taxCents: pricing.taxCents,
+          pricingVersion: pricing.pricingVersion,
+          estimatedPaymentFeeCents: pricing.estimatedPaymentFeeCents,
+          transactionFeeCents: pricing.transactionFeeCents,
           paymentMethod:    body.paymentMethod,
           lines: pricing.lines,
         });
@@ -176,15 +179,13 @@ export class OrdersController {
 
     // GET /api/v1/orders/:orderId
     app.get('/api/v1/orders/:orderId', async (c) => {
-      const orderId = c.req.param('orderId');
-      const authHeader = c.req.header('Authorization');
+      const orderId = c.req.param('orderId'); const authHeader = c.req.header('Authorization');
       const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : getCookie(c, '__Host-session');
       if (!token) return c.json({ error: 'Pedido no encontrado' }, 404);
       let session;
       try { session = await identityGateway.validateSession(token); }
       catch { return c.json({ error: 'Pedido no encontrado' }, 404); }
-      const order = await ordersGateway.getOrder(orderId);
-      if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
+      const order = await ordersGateway.getOrder(orderId); if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
       if (session.actorType === 'admin') {
         if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) {
           return c.json({ error: 'Pedido no encontrado' }, 404);
@@ -195,39 +196,7 @@ export class OrdersController {
       return c.json({ success: true, order: order.toJSON() });
     });
 
-    // GET /api/v1/admin/orders
-    app.get('/api/v1/admin/orders', async (c) => {
-      const token = extractAdminToken(c);
-      if (!token) return c.json({ error: 'No autorizado' }, 401);
-      const res = await identityGateway.validateSession(token);
-      if (res?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
-      if (!res.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-
-      const orders = await ordersGateway.listOrders({ limit: 100 });
-      return c.json({ success: true, orders: orders.map((o) => o.toJSON()) });
-    });
-
-    // PATCH /api/v1/admin/orders/:orderId/status
-    app.patch('/api/v1/admin/orders/:orderId/status', async (c) => {
-      const token = extractAdminToken(c);
-      if (!token) return c.json({ error: 'No autorizado' }, 401);
-      const res = await identityGateway.validateSession(token);
-      if (res?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
-      if (!res.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:edit')) return c.json({ error: 'Permiso insuficiente' }, 403);
-
-      const orderId = c.req.param('orderId');
-      const body = await c.req.json();
-      const updated = await ordersGateway.updateOrderStatus({
-        orderId,
-        status: body.status,
-        note: body.note,
-        actor: res.actorId,
-      });
-
-      await notifyOrderStatusChanged(updated, body.status, body.note, notificationsGateway, (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown');
-
-      return c.json({ success: true, order: updated.toJSON() });
-    });
+    registerAdminOrderRoutes(app, ordersGateway, identityGateway, notificationsGateway);
 
     return app;
   }

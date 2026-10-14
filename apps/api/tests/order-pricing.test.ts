@@ -21,7 +21,8 @@ describe('calculateOrderPricing', () => {
       [{ productId: 'p1', quantity: 2, unitPriceCents: 1, totalCents: 2 }], 0 as never, null, 500);
     expect(result.lines[0]?.unitPriceCents).toBe(12000);
     expect(result.subtotalCents).toBe(24000);
-    expect(result.totalCents).toBe(29060);
+    expect(result.totalCents).toBe(99060);
+    expect(result.transactionFeeCents).toBe(70000);
   });
 
   it('rechaza productos no publicados, cantidades inválidas y stock insuficiente', async () => {
@@ -30,5 +31,30 @@ describe('calculateOrderPricing', () => {
     const published = gateways();
     await expect(calculateOrderPricing(published.catalog as never, published.promotions as never, published.settings as never, [{ productId: 'p1', quantity: 0 }], null, null, 0)).rejects.toThrow('Producto o cantidad inválida');
     await expect(calculateOrderPricing(published.catalog as never, published.promotions as never, published.settings as never, [{ productId: 'p1', quantity: 5 }], null, null, 0)).rejects.toThrow('Inventario insuficiente');
+  });
+
+  it('mantiene IVA dentro del precio nuevo, cuenta envío aparte y aplica tarifa Wompi una vez por pedido', async () => {
+    const modern = { ...product, priceInCents: 11900, pricingVersion: 2, allowedPaymentMethods: ['wompi'] };
+    const g = gateways({ catalog: { listProducts: async () => [modern] } });
+    const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 2 }], null, null, 900, 'wompi');
+    expect(result.totalCents).toBe(94700);
+    expect(result.transactionFeeCents).toBe(70000);
+    expect(result.taxCents).toBe(3800);
+    expect(result.estimatedPaymentFeeCents).toBeGreaterThan(700);
+    expect(result.pricingVersion).toBe(2);
+    await expect(calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 1 }], null, null, 0, 'cash_on_delivery')).rejects.toThrow('no está habilitado');
+  });
+
+  it('cobra una sola tarifa fija de $700 por Wompi y ninguna por contra entrega', async () => {
+    const g = gateways();
+    const online = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 1 }], null, null, 500, 'wompi');
+    const cod = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 1 }], null, null, 500, 'cash_on_delivery');
+    expect(online.transactionFeeCents).toBe(70000);
+    expect(online.totalCents - cod.totalCents).toBe(70000);
+    expect(cod.transactionFeeCents).toBe(0);
   });
 });

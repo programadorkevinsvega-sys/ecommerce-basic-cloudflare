@@ -6,11 +6,10 @@ export function renderPaymentsAdminScript(): string {
       try {
         const res = await fetch('/api/v1/admin/payments', { headers: adminHeaders() });
         const data = await res.json();
-        if (!data.success || !data.transactions || data.transactions.length === 0) {
+        if (!data.success) throw new Error('No se pudieron cargar pagos');
+        if (!data.transactions || data.transactions.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem; text-align:center; color:var(--muted);">No hay transacciones registradas</td></tr>';
-          return;
-        }
-        tbody.innerHTML = data.transactions.map(t => \`
+        } else tbody.innerHTML = data.transactions.map(t => \`
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:0.75rem;"><code>\${escapeHtml(t.reference)}</code></td>
             <td style="padding:0.75rem;"><code>\${escapeHtml(t.orderId?.slice(0,12) || '')}…</code></td>
@@ -20,6 +19,8 @@ export function renderPaymentsAdminScript(): string {
             <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(t.createdAt).toLocaleString('es-CO'))}</td>
           </tr>
         \`).join('');
+        const settlementBody = document.getElementById('settlement-table-body');
+        settlementBody.innerHTML = (data.settlementCosts || []).map(row => \`<tr><td>\${escapeHtml(row.orderId)}</td><td>$\${(row.estimatedFeeCents / 100).toLocaleString('es-CO')}</td><td>$\${(row.actualFeeCents / 100).toLocaleString('es-CO')}</td><td>$\${(row.varianceCents / 100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference)}</td></tr>\`).join('');
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
@@ -47,8 +48,22 @@ export function renderPaymentsAdminScript(): string {
       }
     }
 
+    async function submitSettlementCost() {
+      const orderId = document.getElementById('settlement-order-id').value.trim();
+      const actualFeeCents = Number(document.getElementById('settlement-fee').value);
+      const reportReference = document.getElementById('settlement-report-ref').value.trim();
+      if (!orderId || !Number.isSafeInteger(actualFeeCents) || actualFeeCents < 0 || !reportReference) return alert('Ingresa pedido, comisión real y referencia del reporte.');
+      const response = await fetch('/api/v1/admin/payments/' + encodeURIComponent(orderId) + '/settlement', { method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ actualFeeCents, reportReference }) });
+      if (!response.ok) return alert('No fue posible guardar la liquidación. Verifica el pedido y el permiso payments:edit.');
+      document.getElementById('settlement-order-id').value = '';
+      document.getElementById('settlement-fee').value = '';
+      document.getElementById('settlement-report-ref').value = '';
+      await loadAdminPayments();
+    }
+
     window.loadAdminPayments = loadAdminPayments;
     window.submitCodCollection = submitCodCollection;
+    window.submitSettlementCost = submitSettlementCost;
 
     let lastNotificationTime = new Date().toISOString();
     async function pollRealtimeNotifications() {

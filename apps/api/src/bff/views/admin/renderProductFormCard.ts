@@ -1,21 +1,32 @@
 import { ShippingZoneDto } from '../../gateways/shipping/ShippingGateway.js';
 
-export function renderProductFormCard(shippingZones: ShippingZoneDto[] = []): string {
+export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national');
   const zoneOptions = localZones.map((z) =>
     `<option value="${escapeHtml(z.id)}">${escapeHtml(z.name)} (${escapeHtml(z.type)})</option>`
   ).join('');
 
   return `
+    <div class="card" style="margin-bottom:1rem;">
+      <h2>Actualizar precios históricos a precio final</h2>
+      <p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p>
+      <button type="button" class="btn-action" onclick="previewLegacyPriceMigration()">Previsualizar conversión</button>
+      <div id="legacy-price-preview" aria-live="polite"></div>
+    </div>
     <div class="card">
       <h2 id="pFormTitle">Crear Nuevo Producto</h2>
       <form id="newProductForm">
         <input type="hidden" id="pEditId" value="" />
+        <input type="hidden" id="productTaxRate" value="${taxRatePercent}" />
+        <input type="hidden" id="transactionShippingCents" value="${Math.max(0, ...shippingZones.map((zone) => zone.priceInCents))}" />
         <div class="form-grid">
           <div><label>Nombre</label><input type="text" id="pName" required placeholder="Ej. Camiseta Negra" /></div>
           <div><label>Slug / Handle</label><input type="text" id="pSlug" required placeholder="camiseta-negra" /></div>
           <div><label>SKU</label><input type="text" id="pSku" required placeholder="TSHIRT-001" /></div>
-          <div><label>Precio en COP</label><input type="number" id="pPrice" required placeholder="80000" /></div>
+          <div><label>Costo del proveedor (COP)</label><input type="number" id="pCost" min="0" required placeholder="1200000" /></div>
+          <div><label>Margen objetivo sobre la venta neta (%)</label><input type="number" id="pMargin" min="0.01" max="99.99" step="0.01" value="20" required /><small>Es margen sobre venta sin IVA, no recargo sobre costo. Se calcula antes de descuentos o promociones.</small></div>
+          <div><label>Precio recomendado con IVA incluido (COP)</label><input type="number" id="pPrice" readonly required /><small id="pPriceBreakdown" aria-live="polite">El precio contempla la comisión porcentual estimada de Wompi y el mayor envío configurado; los $700 fijos aparecen como costo de transacción en el checkout.</small></div>
+          <div class="form-field-full"><label>Medios de pago habilitados</label><label><input type="checkbox" id="pPayWompi" checked /> Wompi (comisión estimada incluida en el precio)</label><label><input type="checkbox" id="pPayCod" checked /> Contra entrega</label><small>Mercado Pago no está disponible hasta integrar y verificar su flujo de pago.</small></div>
           <div><label>Stock</label><input type="number" id="pStock" required value="10" /></div>
           <div>
             <label>Condición</label>

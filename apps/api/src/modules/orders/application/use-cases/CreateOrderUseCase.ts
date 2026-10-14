@@ -25,6 +25,10 @@ export interface CreateOrderCommand {
   discountCents?: number;
   couponCode?: string | null;
   totalCents: number;
+  taxCents?: number;
+  pricingVersion?: number;
+  estimatedPaymentFeeCents?: number;
+  transactionFeeCents?: number;
   paymentMethod: 'wompi' | 'cash_on_delivery';
   lines: CreateOrderLineInput[];
 }
@@ -70,6 +74,10 @@ export class CreateOrderUseCase {
       discountCents: cmd.discountCents || 0,
       couponCode: cmd.couponCode,
       totalCents: cmd.totalCents,
+      taxCents: cmd.taxCents,
+      pricingVersion: cmd.pricingVersion,
+      estimatedPaymentFeeCents: cmd.estimatedPaymentFeeCents,
+      transactionFeeCents: cmd.transactionFeeCents,
       paymentMethod: cmd.paymentMethod,
       status: 'placed',
       paymentStatus: 'pending',

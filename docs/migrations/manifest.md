@@ -45,6 +45,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `catalog__0002_product_seo_fields.sql` | v2 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `catalog__0003_brands_attributes.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `catalog__0003_brands_attributes.sql` | v3 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+| `catalog__0004_product_pricing.sql` | v4 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aditiva; metadata nueva, precios previos intactos; prueba de actualización agregada |
+| `catalog__0004_product_pricing.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; 8 productos siguen v1, sin conversión de precios |
 
 ---
 
@@ -125,6 +127,10 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `orders__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `orders__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `orders__0002_guest_cart_capability.sql` | v2 | `ecommerce-vega-production` y Local | 2026-10-12 | `3c33f1c` | ✅ Aplicada por runner y verificada en D1 remota; columna nullable, sin pérdida de datos. |
+| `orders__0003_pricing_snapshots.sql` | v3 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aditiva; tax, versión fiscal y comisión estimada congeladas en pedido |
+| `orders__0003_pricing_snapshots.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; pedidos históricos conservaron default v1 |
+| `orders__0004_checkout_transaction_fee.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Expand-only aplicada y verificada; columna `transaction_fee_cents` default 0, 12 pedidos previos intactos |
+| `orders__0004_checkout_transaction_fee.sql` | v4 | D1 temporal / Workers | 2026-10-13 | trabajo actual | ✅ Aplicación vacía y repetición idempotente verificadas |
 
 ---
 
@@ -153,6 +159,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
 | `invoicing__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (secuencias, facturas, notas crédito, outbox) |
+| `invoicing__0002_tax_included.sql` | v2 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aditiva; conserva documentos previos y marca IVA incluido |
+| `invoicing__0002_tax_included.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; facturas previas conservan `tax_included=0` |
 
 ---
 
@@ -177,6 +185,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | Archivo | Versión | Entorno | Estado | Motivo / compatibilidad |
 |---|---|---|---|---|
 | `payments__0003_cod_collection_receipts.sql` | v3 | `ecommerce-vega-production` | Aplicada con Wrangler; verificada | Añade `receipt_number`, `created_at`, backfill desde `collected_at` e índice; esquema consultado después de aplicar. |
+| `payments__0004_settlement_costs.sql` | v4 | Local temporal | 2026-10-13 | trabajo actual | ✅ Tabla aditiva de comisiones reales reportadas, estimación congelada y referencia de liquidación |
+| `payments__0004_settlement_costs.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; tabla creada vacía |
 | `realtime__0003_preserve_read_state.sql` | v3 | `ecommerce-vega-production` | SQL aplicado y ledger reconciliado | Copia `is_read` a `read`; consulta posterior confirmó 0 discrepancias. |
 
 ## Reconciliación remota de auditoría (2026-10-12)
@@ -193,6 +203,15 @@ La fuente canónica es `apps/api/src/modules/<módulo>/infrastructure/persistenc
 
 Time-travel bookmarks para inventory v2: anterior `000001d5-000000ba-00005103-eb91d48b70aea4fec605c7d2d20c96ad`; posterior `000001d5-000000c8-00005103-d2640c92983f646d012ce00d26d099ca`. Verificado después de aplicar: entrada en `d1_migrations`, tabla presente y vacía. No se ejecutaron escrituras funcionales ni datos de prueba en producción.
 
+### Precios, snapshots fiscales y conciliación (2026-10-13)
+
+Se consultó el ledger remoto y solo aparecían pendientes `catalog__0004_product_pricing.sql`, `invoicing__0002_tax_included.sql`, `orders__0003_pricing_snapshots.sql` y `payments__0004_settlement_costs.sql`. Wrangler aplicó las cuatro con el runner. Una interrupción de red ocurrió después de las dos primeras; la lectura posterior confirmó exactamente esas dos en ledger/esquema y las otras dos pendientes. Se reintentó el runner, que aplicó las restantes. La consulta posterior confirmó las cuatro entradas, columnas/tablas, `settings_store.tax_rate_percent=19`, ocho productos aún con `pricing_version=1` y cero filas en `payments_settlement_costs`. Las migraciones solo añadieron esquema y no cambiaron precios, pedidos, facturas ni pagos.
+
+Time-travel bookmark anterior: `00000266-000000e0-00005104-627c6de1a2d6f60d6b950aef18301ef6`. Bookmark posterior: `00000266-00000106-00005104-619b6cb14d8e3317ab1bc3e062828c78`. No se desplegó el Worker en esta etapa; verificar `/health` y deployments después del push integrado.
+
 El inventario estático de tablas, columnas, restricciones, índices y referencias TypeScript está en [schema-audit.md](./schema-audit.md). La lista de fuentes y copias se conserva en esos dos directorios; la auditoría no eliminó históricos.
 
 
+
+
+La migración adicional `orders__0004_checkout_transaction_fee.sql` se aplicó a producción después de consultar el ledger y `PRAGMA table_info(orders_orders)`: agregó la columna con default cero. La lectura posterior confirmó el ledger, la columna y 12 pedidos previos con suma de cargos cero. No se modificaron pedidos existentes.

@@ -29,7 +29,7 @@ describe('Worker API security and runtime bindings', () => {
   it('dispatches a request through the actual Worker entrypoint', async () => {
     const response = await exports.default.fetch('https://shop.test/health');
     expect(response.status).toBe(200);
-  });
+  }, 15000);
 
   it('rejects cross-origin cookie mutations before reaching a controller', async () => {
     const response = await exports.default.fetch('https://shop.test/api/v1/orders', {

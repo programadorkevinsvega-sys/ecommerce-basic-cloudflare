@@ -1,7 +1,10 @@
+import { getCheckoutSubmitOrderScript } from './getCheckoutSubmitOrderScript.js';
+
 export function getCheckoutScript(
   cartItemsJson: string,
   subtotalCents: number,
-  taxRatePercent: number
+  taxRatePercent: number,
+  pricingVersion = 1
 ): string {
   const safeCartItemsJson = cartItemsJson.replace(/[<>&\u2028\u2029]/g, (character) => ({ '<': '\\u003c', '>': '\\u003e', '&': '\\u0026', '\u2028': '\\u2028', '\u2029': '\\u2029' })[character] || character);
   const safeSubtotalCents = Number.isSafeInteger(subtotalCents) ? subtotalCents : 0;
@@ -11,6 +14,7 @@ export function getCheckoutScript(
       const cartItems = ${safeCartItemsJson};
       const subtotalCents = ${safeSubtotalCents};
       const TAX_RATE = ${safeTaxRatePercent} / 100;
+      const TAX_INCLUDED = ${pricingVersion === 2};
       let shippingCostCents = 0;
       let zonePolicyAllowsOrder = false;
       const checkoutStatus = document.getElementById('policy-alert');
@@ -21,12 +25,13 @@ export function getCheckoutScript(
       }
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
       function updateCheckoutCta() {
-        const total = subtotalCents + calcTax(subtotalCents) + shippingCostCents;
-        const format = value => '$' + (value / 100).toLocaleString('es-CO');
         const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
+        const transactionFeeCents = online ? 70000 : 0;
+        const total = subtotalCents + (TAX_INCLUDED ? 0 : calcTax(subtotalCents)) + shippingCostCents + transactionFeeCents;
+        const format = value => '$' + (value / 100).toLocaleString('es-CO');
         document.getElementById('checkout-cta-label').textContent = online ? 'Pagar ' + format(total) : 'Confirmar pedido';
         document.getElementById('checkout-submit-note').textContent = online
-          ? 'Te llevaremos a Wompi para completar el pago.'
+          ? 'Incluye $700 por costo de transacción. Te llevaremos a Wompi para pagar.'
           : 'Pagarás en efectivo cuando recibas tu pedido.';
       }
       function setCheckoutStatus(message, state) {
@@ -38,6 +43,7 @@ export function getCheckoutScript(
         const opt = sel.options[sel.selectedIndex];
         const zoneId = sel.value;
         const codRadio = document.getElementById('radio-cod');
+      const wompiRadio = document.getElementById('radio-wompi');
         const btn = document.getElementById('btn-submit-order');
         if (!zoneId) {
           shippingCostCents = 0;
@@ -71,6 +77,13 @@ export function getCheckoutScript(
               setCheckoutStatus('No hay cobertura para este pedido: ' + p.blockingReasons.join(' · '), 'error');
               btn.disabled = true;
             } else {
+              wompiRadio.disabled = !p.allowedPaymentMethods.includes('wompi');
+              codRadio.disabled = !p.allowedPaymentMethods.includes('cash_on_delivery');
+              if (!p.allowedPaymentMethods.includes(wompiRadio.checked ? 'wompi' : 'cash_on_delivery')) {
+                const fallback = p.allowedPaymentMethods[0];
+                if (fallback) document.querySelector('input[value="' + fallback + '"]').checked = true;
+              }
+              if (p.allowedPaymentMethods.length === 0) throw new Error('Ningún medio de pago está habilitado para todos los productos.');
               zonePolicyAllowsOrder = true;
               updateSubmitAvailability();
               const minDays = Number(opt.dataset.minDays || 0);
@@ -83,7 +96,7 @@ export function getCheckoutScript(
                 document.querySelector('input[value="wompi"]').checked = true;
               } else {
                 setCheckoutStatus('Cobertura disponible.' + delivery, 'success');
-                codRadio.disabled = false;
+                codRadio.disabled = !p.allowedPaymentMethods.includes('cash_on_delivery');
               }
               updateCheckoutCta();
             }
@@ -95,107 +108,23 @@ export function getCheckoutScript(
         }
       }
       function updateTotals() {
-        const taxCents = calcTax(subtotalCents);
-        const total = subtotalCents + taxCents + shippingCostCents;
+        const taxCents = TAX_INCLUDED ? Math.round(subtotalCents * TAX_RATE / (1 + TAX_RATE)) : calcTax(subtotalCents);
+        const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
+        const transactionFeeCents = online ? 70000 : 0;
+        const total = subtotalCents + (TAX_INCLUDED ? 0 : taxCents) + shippingCostCents + transactionFeeCents;
         const fmt = v => '$' + (v / 100).toLocaleString('es-CO');
         document.getElementById('txt-subtotal').innerText = fmt(subtotalCents);
-        document.getElementById('txt-tax').innerText      = fmt(taxCents);
+        if (document.getElementById('txt-tax')) document.getElementById('txt-tax').innerText = fmt(taxCents);
         document.getElementById('txt-shipping').innerText = fmt(shippingCostCents);
+        const transactionFeeRow = document.getElementById('checkout-transaction-fee-row');
+        if (transactionFeeRow) transactionFeeRow.style.display = online ? 'flex' : 'none';
+        if (document.getElementById('txt-transaction-fee')) document.getElementById('txt-transaction-fee').innerText = fmt(transactionFeeCents);
         document.getElementById('txt-total').innerText    = fmt(total);
         updateCheckoutCta();
       }
-      async function submitOrder() {
-        const btn = document.getElementById('btn-submit-order');
-        const zoneSel = document.getElementById('dest-zone');
-        checkoutError.hidden = true;
-        if (!document.getElementById('checkout-form').checkValidity()) {
-          document.getElementById('checkout-form').reportValidity();
-          return;
-        }
-        const name  = document.getElementById('cust-name').value.trim();
-        const phone = document.getElementById('cust-phone').value.trim();
-        const email = document.getElementById('cust-email').value.trim();
-        const taxId = document.getElementById('cust-tax-id')?.value.trim() || '';
-        const dept  = document.getElementById('addr-dept').value.trim();
-        const city  = document.getElementById('addr-city').value.trim();
-        const daneCode = document.getElementById('addr-dane-code').value, municipality = document.getElementById('addr-municipality').value;
-        const line  = document.getElementById('addr-line').value.trim();
-        if (!name || !phone || !email || !taxId || !dept || !city || !daneCode || !municipality || !line) {
-          checkoutError.hidden = false;
-          checkoutError.textContent = 'Selecciona un municipio de las sugerencias para validar el código DANE y la cobertura.';
-          return;
-        }
-        const method     = document.querySelector('input[name="payment-method"]:checked').value;
-        const taxCents   = calcTax(subtotalCents);
-        const totalCents = subtotalCents + taxCents + shippingCostCents;
-        btn.disabled = true;
-        document.getElementById('checkout-cta-label').textContent = 'Procesando pedido…';
-        try {
-          const res = await fetch('/api/v1/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              customerName: name,
-              customerEmail: email,
-              customerPhone: phone,
-              customerTaxId: taxId,
-              shippingZoneId: zoneSel.value,
-              shippingCostCents: shippingCostCents,
-              subtotalCents: subtotalCents,
-              taxCents: taxCents,
-              discountCents: 0,
-              totalCents: totalCents,
-              paymentMethod: method,
-              shippingAddress: {
-                recipientName: name,
-                phone: phone,
-                department: dept,
-                city: municipality,
-                daneCode: daneCode,
-                addressLine: line,
-              },
-              lines: cartItems.map(i => ({
-                productId:     i.productId,
-                productName:   i.productName || 'Producto',
-                productSku:    i.productSku  || i.productId.slice(0,8),
-                quantity:      i.quantity,
-                unitPriceCents: i.unitPriceCents
-              }))
-            })
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Error al crear pedido');
-          const orderId = (window.clearCheckoutDraft?.(), data.order.id);
-          await fetch('/api/v1/cart/clear', { method: 'POST' });
-          if (method === 'wompi') {
-            document.getElementById('checkout-cta-label').textContent = 'Redirigiendo a Wompi…';
-            const payRes = await fetch('/api/v1/payments/wompi/init', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId })
-            });
-            const payData = await payRes.json();
-            // Redirigir al widget real de Wompi
-            const wompiUrl = payData.checkout?.wompiCheckoutUrl;
-            if (wompiUrl) {
-              window.location.href = wompiUrl;
-            } else {
-              // Fallback si no hay URL de Wompi configurada
-              window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=wompi_pending&ref=' + (payData.checkout?.reference || '');
-            }
-          } else {
-            window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=cod_placed';
-          }
-        } catch (e) {
-          checkoutError.hidden = false;
-          checkoutError.textContent = e.message || 'No se pudo procesar el pedido. Intenta de nuevo.';
-          updateSubmitAvailability();
-          updateCheckoutCta();
-        }
-      }
-      document.getElementById('dest-zone').addEventListener('change', handleZoneChange);
-      document.addEventListener('checkout-location-change', updateSubmitAvailability);
-      document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', updateCheckoutCta));
+      ${getCheckoutSubmitOrderScript()}
+      document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', updateSubmitAvailability);
+      document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', updateTotals));
       // Inicializar totales al cargar
       updateTotals();
     </script>

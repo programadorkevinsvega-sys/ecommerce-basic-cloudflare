@@ -1,0 +1,49 @@
+export interface RecommendedPriceInput {
+  supplierCostCents: number;
+  targetMarginBasisPoints: number;
+  taxRateBasisPoints: number;
+  includeWompi: boolean;
+  transactionShippingCents: number;
+}
+
+export interface RecommendedPrice {
+  priceInCents: number;
+  estimatedTaxCents: number;
+  estimatedPaymentFeeCents: number;
+  estimatedNetProfitCents: number;
+  estimatedMarginBasisPoints: number;
+}
+
+export function calculateRecommendedPrice(input: RecommendedPriceInput): RecommendedPrice {
+  const { supplierCostCents: cost, targetMarginBasisPoints: margin, taxRateBasisPoints: tax } = input;
+  if (![cost, margin, tax].every(Number.isSafeInteger) || cost < 0 || margin < 0 || margin >= 10000 || tax < 0) {
+    throw new Error('Parámetros de precio inválidos');
+  }
+  let low = cost;
+  let high = Math.max(cost + 100000, Math.ceil(cost * 4 + 100000));
+  while (!meetsTarget(high, input)) high *= 2;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (meetsTarget(mid, input)) high = mid;
+    else low = mid + 1;
+  }
+  const price = Math.ceil(low / 100) * 100;
+  const taxCents = Math.round(price * tax / (10000 + tax));
+  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
+  const netProfit = price - taxCents - cost - fee + (input.includeWompi ? 70000 : 0);
+  const netSales = price - taxCents;
+  return {
+    priceInCents: price,
+    estimatedTaxCents: taxCents,
+    estimatedPaymentFeeCents: fee,
+    estimatedNetProfitCents: netProfit,
+    estimatedMarginBasisPoints: netSales ? Math.floor(netProfit * 10000 / netSales) : 0,
+  };
+}
+
+function meetsTarget(price: number, input: RecommendedPriceInput): boolean {
+  const tax = Math.round(price * input.taxRateBasisPoints / (10000 + input.taxRateBasisPoints));
+  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
+  const netSales = price - tax;
+  return netSales - input.supplierCostCents - fee + (input.includeWompi ? 70000 : 0) >= netSales * input.targetMarginBasisPoints / 10000;
+}

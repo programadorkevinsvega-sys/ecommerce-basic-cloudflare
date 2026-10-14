@@ -49,6 +49,8 @@ export class OrderEmailTemplates {
           ${order.discountCents > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento:</span><span>-$${(order.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;"><span>IVA incluido:</span><span>$${taxFormatted}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>Envío:</span><span>$${shippingFormatted}</span></div>
+          ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
+          ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;border-top:2px solid #0284c7;font-size:1.1rem;font-weight:700;color:#0284c7;padding-top:0.5rem;margin-top:0.5rem;">
             <span>TOTAL PAGADO:</span><span>$${totalFormatted} COP</span>
           </div>

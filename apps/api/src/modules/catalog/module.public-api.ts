@@ -9,6 +9,7 @@ import { Product } from './domain/entities/Product.js';
 import { Category } from './domain/entities/Category.js';
 import { Brand } from './domain/entities/Brand.js';
 import { Attribute } from './domain/entities/Attribute.js';
+import { LegacyPriceMigrationPreview } from './application/use-cases/MigrateLegacyProductPricesUseCase.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -24,6 +25,8 @@ export interface ICatalogPublicApi {
   listBrands(): Promise<Brand[]>;
   createAttribute(input: CreateAttributeInput): Promise<Attribute>;
   listAttributes(): Promise<Attribute[]>;
+  previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
+  migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
 
 export class CatalogPublicApi implements ICatalogPublicApi {
@@ -107,5 +110,13 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     const res = await this.container.listAttributesUseCase.execute();
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {
+    return this.container.migrateLegacyProductPricesUseCase.preview(taxRateBasisPoints);
+  }
+
+  public async migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number> {
+    return this.container.migrateLegacyProductPricesUseCase.execute(taxRateBasisPoints, expectedCount, expectedFingerprint);
   }
 }

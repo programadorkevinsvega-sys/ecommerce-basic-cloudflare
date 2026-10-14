@@ -27,8 +27,8 @@ export class D1InvoiceRepository implements IInvoiceRepository {
         id, invoice_number, order_id, customer_id, customer_name, customer_email,
         customer_tax_id, customer_phone, subtotal_cents, tax_cents, shipping_cost_cents,
         discount_cents, total_cents, currency, payment_method, payment_reference,
-        status, pdf_r2_key, snapshot_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        status, pdf_r2_key, snapshot_json, created_at, updated_at, tax_included
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         status = excluded.status,
         pdf_r2_key = excluded.pdf_r2_key,
@@ -56,7 +56,8 @@ export class D1InvoiceRepository implements IInvoiceRepository {
       invoice.pdfR2Key,
       JSON.stringify(invoice.snapshot),
       invoice.createdAt,
-      invoice.updatedAt
+      invoice.updatedAt,
+      invoice.taxIncluded ? 1 : 0
     ).run();
   }
 
@@ -142,6 +143,7 @@ export class D1InvoiceRepository implements IInvoiceRepository {
       customerPhone: (r.customer_phone as string) || null,
       subtotalCents: r.subtotal_cents as number,
       taxCents: r.tax_cents as number,
+      taxIncluded: r.tax_included === 1,
       shippingCostCents: r.shipping_cost_cents as number,
       discountCents: (r.discount_cents as number) || 0,
       totalCents: r.total_cents as number,

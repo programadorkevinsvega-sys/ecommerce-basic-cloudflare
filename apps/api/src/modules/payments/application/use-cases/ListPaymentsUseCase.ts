@@ -12,4 +12,8 @@ export class ListPaymentsUseCase {
   public async listCodCollections(limit = 100): Promise<CodCollection[]> {
     return this.paymentRepo.listCodCollections(limit);
   }
+
+  public async listSettlementCosts(limit = 100) {
+    return this.paymentRepo.listSettlementCosts(limit);
+  }
 }

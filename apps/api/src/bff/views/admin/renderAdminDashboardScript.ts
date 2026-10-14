@@ -90,6 +90,11 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSlug').value = p.slug || '';
         document.getElementById('pSku').value = p.sku || '';
         document.getElementById('pPrice').value = Math.round((p.priceInCents || 0) / 100);
+        document.getElementById('pCost').value = p.supplierCostCents == null ? '' : Math.round(p.supplierCostCents / 100);
+        document.getElementById('pMargin').value = Number(p.targetMarginBasisPoints || 2000) / 100;
+        document.getElementById('pPayWompi').checked = (p.allowedPaymentMethods || ['wompi']).includes('wompi');
+        document.getElementById('pPayCod').checked = (p.allowedPaymentMethods || []).includes('cash_on_delivery');
+        window.updateRecommendedProductPrice?.();
         document.getElementById('pStock').value = p.stockQuantity ?? 10;
         document.getElementById('pCondition').value = p.condition || 'new';
         document.getElementById('pBrand').value = p.brand || '';

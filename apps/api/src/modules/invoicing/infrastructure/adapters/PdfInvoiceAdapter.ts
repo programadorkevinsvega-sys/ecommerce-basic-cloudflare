@@ -42,8 +42,9 @@ export class PdfInvoiceAdapter implements IInvoicePdfPort {
     add('DESGLOSE', true, 12);
     add(`Subtotal: ${money(invoice.subtotalCents)}`);
     if (invoice.discountCents > 0) add(`Descuento: -${money(invoice.discountCents)}`);
-    add(`IVA: ${money(invoice.taxCents)}`);
+    add(invoice.taxIncluded ? `IVA incluido en los precios: ${money(invoice.taxCents)}` : `IVA: ${money(invoice.taxCents)}`);
     add(`Envío: ${money(invoice.shippingCostCents)}`);
+    if (invoice.snapshot.transactionFeeCents) add(`Costo de transacción Wompi: ${money(invoice.snapshot.transactionFeeCents)}`);
     add(`TOTAL PAGADO: ${money(invoice.totalCents)} ${invoice.currency}`, true, 14);
     add('Documento generado por Vega Store. Este documento no constituye factura electrónica validada por la DIAN.');
 

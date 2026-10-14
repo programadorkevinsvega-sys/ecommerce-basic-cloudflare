@@ -112,12 +112,20 @@ export function renderOrdersManagementSection(): string {
               <span id="modal-discount" style="color:#ef4444;">-$0</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--muted, #94a3b8);">IVA incluido:</span>
+              <span style="color:var(--muted, #94a3b8);">IVA incluido / causado:</span>
               <span id="modal-tax">$0</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
               <span style="color:var(--muted, #94a3b8);">Envío:</span>
               <span id="modal-shipping-cost">$0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--muted, #94a3b8);">Costo de transacción Wompi cobrado:</span>
+              <span id="modal-transaction-fee">$0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--muted, #94a3b8);">Comisión Wompi estimada (comercio):</span>
+              <span id="modal-payment-fee">$0</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border, #334155); padding-top:0.4rem; font-size:1.05rem; margin-top:0.3rem;">
               <strong>Total a Pagar:</strong>

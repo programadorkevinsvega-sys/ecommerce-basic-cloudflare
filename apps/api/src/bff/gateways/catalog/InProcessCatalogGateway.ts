@@ -98,5 +98,13 @@ export class InProcessCatalogGateway implements CatalogGateway {
     const attributes = await this.publicApi.listAttributes();
     return attributes.map((a) => a.toPrimitives());
   }
+
+  public async previewLegacyPriceMigration(taxRateBasisPoints: number) {
+    return this.publicApi.previewLegacyPriceMigration(taxRateBasisPoints);
+  }
+
+  public async migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number> {
+    return this.publicApi.migrateLegacyPrices(taxRateBasisPoints, expectedCount, expectedFingerprint);
+  }
 }
 

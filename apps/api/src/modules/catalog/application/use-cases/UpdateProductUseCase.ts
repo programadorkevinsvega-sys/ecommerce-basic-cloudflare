@@ -2,6 +2,7 @@ import { Result } from '../../../../shared-kernel/Result.js';
 import { Product, ProductStatus, ProductCondition } from '../../domain/entities/Product.js';
 import { ProductSalePolicy, ShippingScope, SaleMode } from '../../domain/entities/ProductSalePolicy.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
+import { calculateRecommendedPrice } from '../../domain/services/CalculateRecommendedPrice.js';
 
 export interface UpdateProductInput {
   id: string;
@@ -9,6 +10,11 @@ export interface UpdateProductInput {
   slug?: string;
   description?: string;
   priceInCents?: number;
+  supplierCostCents?: number | null;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  taxRateBasisPoints?: number;
+  transactionShippingCents?: number;
   sku?: string;
   stockQuantity?: number;
   status?: ProductStatus;
@@ -69,6 +75,16 @@ export class UpdateProductUseCase {
 
       product.updateDetails({
         ...input,
+        ...(input.supplierCostCents !== undefined && input.supplierCostCents !== null ? {
+          priceInCents: calculateRecommendedPrice({
+            supplierCostCents: input.supplierCostCents,
+            targetMarginBasisPoints: input.targetMarginBasisPoints ?? product.targetMarginBasisPoints,
+            taxRateBasisPoints: input.taxRateBasisPoints ?? 1900,
+            includeWompi: (input.allowedPaymentMethods ?? product.allowedPaymentMethods).includes('wompi'),
+            transactionShippingCents: input.transactionShippingCents ?? 0,
+          }).priceInCents,
+          pricingVersion: 2,
+        } : {}),
         salePolicy,
       });
 

@@ -16,6 +16,7 @@ import { CreateBrandUseCase } from './application/use-cases/CreateBrandUseCase.j
 import { ListBrandsUseCase } from './application/use-cases/ListBrandsUseCase.js';
 import { CreateAttributeUseCase } from './application/use-cases/CreateAttributeUseCase.js';
 import { ListAttributesUseCase } from './application/use-cases/ListAttributesUseCase.js';
+import { MigrateLegacyProductPricesUseCase } from './application/use-cases/MigrateLegacyProductPricesUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -31,6 +32,7 @@ export interface CatalogModuleContainer {
   listBrandsUseCase: ListBrandsUseCase;
   createAttributeUseCase: CreateAttributeUseCase;
   listAttributesUseCase: ListAttributesUseCase;
+  migrateLegacyProductPricesUseCase: MigrateLegacyProductPricesUseCase;
 }
 
 export function createCatalogModule(env: Env): CatalogModuleContainer {
@@ -53,5 +55,6 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     listBrandsUseCase: new ListBrandsUseCase(brandRepo),
     createAttributeUseCase: new CreateAttributeUseCase(attributeRepo),
     listAttributesUseCase: new ListAttributesUseCase(attributeRepo),
+    migrateLegacyProductPricesUseCase: new MigrateLegacyProductPricesUseCase(productRepo),
   };
 }

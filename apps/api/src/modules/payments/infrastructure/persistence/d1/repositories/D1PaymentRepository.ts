@@ -129,6 +129,27 @@ export class D1PaymentRepository implements IPaymentRepository {
     }));
   }
 
+  public async recordSettlementCost(input: { orderId: string; actualFeeCents: number; estimatedFeeCents: number; reportReference: string; recordedBy: string; recordedAt: string }): Promise<void> {
+    await this.db.prepare(`INSERT INTO payments_settlement_costs (order_id,actual_fee_cents,estimated_fee_cents,report_reference,recorded_by,recorded_at)
+      VALUES (?,?,?,?,?,?) ON CONFLICT(order_id) DO UPDATE SET actual_fee_cents=excluded.actual_fee_cents, estimated_fee_cents=excluded.estimated_fee_cents,
+      report_reference=excluded.report_reference,recorded_by=excluded.recorded_by,recorded_at=excluded.recorded_at`)
+      .bind(input.orderId, input.actualFeeCents, input.estimatedFeeCents, input.reportReference, input.recordedBy, input.recordedAt).run();
+  }
+
+  public async listSettlementCosts(limit = 100): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string }>> {
+    const result = await this.db.prepare('SELECT * FROM payments_settlement_costs ORDER BY recorded_at DESC LIMIT ?')
+      .bind(limit).all<Record<string, unknown>>();
+    return (result.results || []).map((row) => ({
+      orderId: row.order_id as string,
+      actualFeeCents: row.actual_fee_cents as number,
+      estimatedFeeCents: row.estimated_fee_cents as number,
+      varianceCents: (row.actual_fee_cents as number) - (row.estimated_fee_cents as number),
+      reportReference: row.report_reference as string,
+      recordedBy: row.recorded_by as string,
+      recordedAt: row.recorded_at as string,
+    }));
+  }
+
   private mapToTransaction(r: Record<string, unknown>): PaymentTransaction {
     return new PaymentTransaction({
       id: r.id as string,

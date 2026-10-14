@@ -34,7 +34,9 @@ export interface InvoiceSnapshot {
   };
   subtotalCents: number;
   taxCents: number;
+  taxIncluded?: boolean;
   shippingCostCents: number;
+  transactionFeeCents?: number;
   discountCents: number;
   totalCents: number;
   currency: string;
@@ -53,6 +55,7 @@ export interface InvoiceProps {
   customerPhone?: string | null;
   subtotalCents: number;
   taxCents: number;
+  taxIncluded?: boolean;
   shippingCostCents: number;
   discountCents?: number;
   totalCents: number;
@@ -77,6 +80,7 @@ export class Invoice {
   public readonly customerPhone: string | null;
   public readonly subtotalCents: number;
   public readonly taxCents: number;
+  public readonly taxIncluded: boolean;
   public readonly shippingCostCents: number;
   public readonly discountCents: number;
   public readonly totalCents: number;
@@ -104,6 +108,7 @@ export class Invoice {
     this.customerPhone = props.customerPhone || null;
     this.subtotalCents = props.subtotalCents;
     this.taxCents = props.taxCents;
+    this.taxIncluded = props.taxIncluded ?? false;
     this.shippingCostCents = props.shippingCostCents;
     this.discountCents = props.discountCents || 0;
     this.totalCents = props.totalCents;
@@ -129,6 +134,7 @@ export class Invoice {
       customerPhone: this.customerPhone,
       subtotalCents: this.subtotalCents,
       taxCents: this.taxCents,
+      taxIncluded: this.taxIncluded,
       shippingCostCents: this.shippingCostCents,
       discountCents: this.discountCents,
       totalCents: this.totalCents,

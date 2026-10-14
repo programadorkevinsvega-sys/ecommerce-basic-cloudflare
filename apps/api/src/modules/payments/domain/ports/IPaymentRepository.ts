@@ -20,4 +20,6 @@ export interface IPaymentRepository {
   saveWebhookEvent(record: WebhookEventRecord): Promise<boolean>;
   saveCodCollection(cod: CodCollection): Promise<void>;
   listCodCollections(limit?: number): Promise<CodCollection[]>;
+  recordSettlementCost(input: { orderId: string; actualFeeCents: number; estimatedFeeCents: number; reportReference: string; recordedBy: string; recordedAt: string }): Promise<void>;
+  listSettlementCosts(limit?: number): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string }>>;
 }

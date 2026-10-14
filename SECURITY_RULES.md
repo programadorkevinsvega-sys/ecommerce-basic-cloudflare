@@ -64,6 +64,8 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 ## 5. Integridad de pedidos y precios (ORD)
 
 - **SEC-ORD-01** El servidor **recalcula** precios, descuentos, cupones, impuestos, envío y elegibilidad de método de pago en cada paso del checkout. Los totales enviados por el cliente se ignoran.
+- **SEC-ORD-08** El checkout no agrega cargos de procesamiento al cliente. Las tarifas de pago se estiman para el comercio y se guardan en el snapshot del pedido; el servidor verifica que el método esté habilitado por todos los productos.
+- **SEC-CAT-09** El precio recomendado se calcula en servidor desde costo, margen sobre venta neta, impuesto configurado y tarifas internas; el precio sugerido enviado por el navegador no es autoritativo.
 - **SEC-ORD-02** El checkout usa una **clave de idempotencia**: un doble envío no crea dos pedidos ni dos cobros.
 - **SEC-ORD-03** Los *snapshots* de productos y precios en `orders_items` son inmutables tras crear el pedido.
 - **SEC-ORD-04** Las transiciones de estado (`placed → confirmed → shipped → …`) se validan en el **dominio** (máquina de estados) y solo por actores autorizados.

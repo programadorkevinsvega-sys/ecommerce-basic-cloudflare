@@ -8,6 +8,11 @@ interface ProductRow {
   slug: string;
   description: string;
   price_in_cents: number;
+  supplier_cost_cents: number | null;
+  target_margin_basis_points: number;
+  allowed_payment_methods: string;
+  pricing_version: number;
+  legacy_price_before_tax_cents: number | null;
   sku: string;
   stock_quantity: number;
   status: string;
@@ -53,16 +58,21 @@ export class D1ProductRepository implements IProductRepository {
     await this.db.batch([
       this.db.prepare(
         `INSERT INTO catalog_products (
-          id, name, slug, description, price_in_cents, sku, stock_quantity,
+          id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
           status, condition, specifications, brand, product_type, tags, barcode_gtin,
           seo_title, seo_description, canonical_url, og_image_id, noindex,
           allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
           description = excluded.description,
           price_in_cents = excluded.price_in_cents,
+          supplier_cost_cents = excluded.supplier_cost_cents,
+          target_margin_basis_points = excluded.target_margin_basis_points,
+          allowed_payment_methods = excluded.allowed_payment_methods,
+          pricing_version = excluded.pricing_version,
+          legacy_price_before_tax_cents = excluded.legacy_price_before_tax_cents,
           sku = excluded.sku,
           stock_quantity = excluded.stock_quantity,
           status = excluded.status,
@@ -82,7 +92,8 @@ export class D1ProductRepository implements IProductRepository {
           sale_mode = excluded.sale_mode,
           updated_at = excluded.updated_at`
       ).bind(
-        p.id, p.name, p.slug, p.description, p.priceInCents, p.sku, p.stockQuantity,
+        p.id, p.name, p.slug, p.description, p.priceInCents, p.supplierCostCents, p.targetMarginBasisPoints,
+        JSON.stringify(p.allowedPaymentMethods), p.pricingVersion, p.legacyPriceBeforeTaxCents, p.sku, p.stockQuantity,
         p.status, p.condition, JSON.stringify(p.specifications), p.brand ?? null,
         p.productType ?? null, JSON.stringify(p.tags), p.barcodeGtin ?? null,
         p.seoTitle ?? null, p.seoDescription ?? null, p.canonicalUrl ?? null,
@@ -165,6 +176,10 @@ export class D1ProductRepository implements IProductRepository {
       slug: row.slug,
       description: row.description,
       priceInCents: row.price_in_cents,
+      supplierCostCents: row.supplier_cost_cents, targetMarginBasisPoints: row.target_margin_basis_points,
+      allowedPaymentMethods: this.parsePaymentMethods(row.allowed_payment_methods),
+      pricingVersion: row.pricing_version,
+      legacyPriceBeforeTaxCents: row.legacy_price_before_tax_cents,
       sku: row.sku,
       stockQuantity: row.stock_quantity,
       status: row.status as ProductStatus,
@@ -190,5 +205,13 @@ export class D1ProductRepository implements IProductRepository {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     });
+  }
+
+  private parsePaymentMethods(value: string): Array<'wompi' | 'cash_on_delivery'> {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter((item): item is 'wompi' | 'cash_on_delivery' => item === 'wompi' || item === 'cash_on_delivery');
+    } catch { /* Backward-compatible fallback for rows created before payment metadata. */ }
+    return ['wompi', 'cash_on_delivery'];
   }
 }

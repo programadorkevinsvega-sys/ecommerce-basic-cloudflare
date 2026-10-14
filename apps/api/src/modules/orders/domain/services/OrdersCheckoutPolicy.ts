@@ -4,6 +4,7 @@ export interface CheckoutProductPolicyItem {
   allowsCashOnDelivery: boolean;
   shippingScope: 'national' | 'local';
   localCoverageZones: string[];
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
 }
 
 export interface CheckoutEvaluationInput {
@@ -25,6 +26,7 @@ export class OrdersCheckoutPolicy {
   public static evaluate(input: CheckoutEvaluationInput): CheckoutEvaluationResult {
     const blockingReasons: string[] = [];
     const codBlockingReasons: string[] = [];
+    let allowedByProducts: Array<'wompi' | 'cash_on_delivery'> = ['wompi', 'cash_on_delivery'];
 
     if (!input.isDestinationCovered) {
       blockingReasons.push('El destino seleccionado no cuenta con cobertura de envío activa.');
@@ -32,6 +34,8 @@ export class OrdersCheckoutPolicy {
 
     for (const item of input.items) {
       const p = item.product;
+      const productMethods = p.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'];
+      allowedByProducts = allowedByProducts.filter((method) => productMethods.includes(method));
 
       // 1. Cobertura de productos locales
       if (p.shippingScope === 'local') {
@@ -57,12 +61,8 @@ export class OrdersCheckoutPolicy {
     }
 
     const canProceed = blockingReasons.length === 0;
-    const allowsCod = canProceed && codBlockingReasons.length === 0;
-
-    const allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> = ['wompi'];
-    if (allowsCod) {
-      allowedPaymentMethods.push('cash_on_delivery');
-    }
+    const allowsCod = canProceed && codBlockingReasons.length === 0 && allowedByProducts.includes('cash_on_delivery');
+    const allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> = canProceed ? allowedByProducts.filter((method) => method !== 'cash_on_delivery' || allowsCod) : [];
 
     return {
       canProceed,

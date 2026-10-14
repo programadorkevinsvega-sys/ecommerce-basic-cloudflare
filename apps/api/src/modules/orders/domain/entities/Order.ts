@@ -26,6 +26,10 @@ export interface OrderProps {
   discountCents?: number;
   couponCode?: string | null;
   totalCents: number;
+  taxCents?: number;
+  pricingVersion?: number;
+  estimatedPaymentFeeCents?: number;
+  transactionFeeCents?: number;
   paymentMethod: 'wompi' | 'cash_on_delivery';
   status?: OrderStatus;
   paymentStatus?: OrderPaymentStatus;
@@ -49,6 +53,10 @@ export class Order {
   public readonly discountCents: number;
   public readonly couponCode: string | null;
   public readonly totalCents: number;
+  public readonly taxCents: number;
+  public readonly pricingVersion: number;
+  public readonly estimatedPaymentFeeCents: number;
+  public readonly transactionFeeCents: number;
   public readonly paymentMethod: 'wompi' | 'cash_on_delivery';
   public status: OrderStatus;
   public paymentStatus: OrderPaymentStatus;
@@ -74,6 +82,10 @@ export class Order {
     this.discountCents = props.discountCents || 0;
     this.couponCode = props.couponCode || null;
     this.totalCents = props.totalCents;
+    this.taxCents = props.taxCents ?? 0;
+    this.pricingVersion = props.pricingVersion ?? 1;
+    this.estimatedPaymentFeeCents = props.estimatedPaymentFeeCents ?? 0;
+    this.transactionFeeCents = props.transactionFeeCents ?? 0;
     this.paymentMethod = props.paymentMethod;
     this.status = props.status || 'placed';
     this.paymentStatus = props.paymentStatus || 'pending';
@@ -124,6 +136,10 @@ export class Order {
       discountCents: this.discountCents,
       couponCode: this.couponCode,
       totalCents: this.totalCents,
+      taxCents: this.taxCents,
+      pricingVersion: this.pricingVersion,
+      estimatedPaymentFeeCents: this.estimatedPaymentFeeCents,
+      transactionFeeCents: this.transactionFeeCents,
       paymentMethod: this.paymentMethod,
       status: this.status,
       paymentStatus: this.paymentStatus,

@@ -25,6 +25,18 @@ export function renderPaymentsManagementSection(): string {
         </div>
       </div>
 
+      <div style="margin-bottom:1.5rem; padding:1rem; background:var(--bg); border:1px solid var(--border); border-radius:6px;">
+        <h3 style="font-size:1rem; margin-bottom:.5rem;">Conciliar comisión liquidada por Wompi</h3>
+        <p>Registra el valor real y la referencia del reporte de liquidación del comercio. No uses el valor estimado como si fuera el real.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:.75rem; align-items:end;">
+          <label>Pedido Wompi aprobado<input id="settlement-order-id" /></label>
+          <label>Comisión real (centavos COP)<input id="settlement-fee" type="number" min="0" /></label>
+          <label>Referencia del reporte<input id="settlement-report-ref" maxlength="120" /></label>
+          <button type="button" class="btn-primary" onclick="submitSettlementCost()">Guardar</button>
+        </div>
+        <table style="width:100%; margin-top:1rem"><thead><tr><th>Pedido</th><th>Estimación</th><th>Liquidación real</th><th>Diferencia</th><th>Reporte</th></tr></thead><tbody id="settlement-table-body"></tbody></table>
+      </div>
+
       <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Transacciones Recientes (Wompi & COD)</h3>
       <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left;">

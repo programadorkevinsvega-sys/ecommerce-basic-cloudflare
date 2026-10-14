@@ -25,6 +25,7 @@ export function renderCheckoutResultPage(order: Order, ref?: string): string {
         <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Detalles del Envío</h3>
         <p style="margin-bottom: 0.4rem;">La información de entrega se envió al correo registrado en la compra.</p>
         <p style="margin-bottom: 0.4rem;"><strong>Método de Pago:</strong> ${isCod ? '💵 Pago Contra Entrega (Efectivo al recibir)' : '💳 Pago en línea (Wompi)'}</p>
+        ${order.transactionFeeCents ? `<p style="margin-bottom:0.4rem;"><strong>Costo de transacción Wompi:</strong> $${(order.transactionFeeCents / 100).toLocaleString('es-CO')} COP</p>` : ''}
         <p style="margin-bottom: 0; font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-top: 0.75rem;">
           Total a Pagar: ${totalFormatted}
         </p>

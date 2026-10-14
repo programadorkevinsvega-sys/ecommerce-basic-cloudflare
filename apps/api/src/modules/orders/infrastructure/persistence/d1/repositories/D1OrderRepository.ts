@@ -16,6 +16,10 @@ interface OrderRow {
   discount_cents: number;
   coupon_code: string | null;
   total_cents: number;
+  tax_cents: number;
+  pricing_version: number;
+  estimated_payment_fee_cents: number;
+  transaction_fee_cents: number;
   payment_method: string;
   status: string;
   payment_status: string;
@@ -60,8 +64,8 @@ export class D1OrderRepository implements IOrderRepository {
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
-         payment_method, status, payment_status, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
@@ -70,7 +74,8 @@ export class D1OrderRepository implements IOrderRepository {
       order.id, order.customerId, order.guestCartIdHash, order.customerEmail, order.customerName, order.customerPhone,
       JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
-      order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt
+      order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
+      order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents
     ).run();
 
     await this.db.prepare('DELETE FROM orders_lines WHERE order_id = ?').bind(order.id).run();
@@ -161,6 +166,10 @@ export class D1OrderRepository implements IOrderRepository {
       discountCents: row.discount_cents,
       couponCode: row.coupon_code,
       totalCents: row.total_cents,
+      taxCents: row.tax_cents ?? 0,
+      pricingVersion: row.pricing_version ?? 1,
+      estimatedPaymentFeeCents: row.estimated_payment_fee_cents ?? 0,
+      transactionFeeCents: row.transaction_fee_cents ?? 0,
       paymentMethod: row.payment_method as 'wompi' | 'cash_on_delivery',
       status: row.status as OrderStatus,
       paymentStatus: row.payment_status as OrderPaymentStatus,

@@ -15,7 +15,8 @@ function formatPrice(cents: number): string {
 
 export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19): string {
   const subtotalCents = cart.items.reduce((total, item) => total + item.subtotalCents, 0);
-  const taxCents = Math.round(subtotalCents * taxRatePercent / 100);
+  const pricingVersion = cart.items.every((item) => productsMap.get(item.productId)?.pricingVersion === 2) ? 2 : 1;
+  const taxCents = pricingVersion === 2 ? Math.round(subtotalCents * taxRatePercent / (100 + taxRatePercent)) : Math.round(subtotalCents * taxRatePercent / 100);
   const cartItems = cart.items.map((item) => {
     const product = productsMap.get(item.productId);
     return { productId: item.productId, productName: product?.name ?? 'Producto', productSku: product?.sku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents: item.unitPriceCents };
@@ -30,11 +31,11 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
       ${renderContactFields()}
       ${renderAddressFields(zoneOptions)}
       ${renderPaymentFields()}
-      <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">Pagar ${formatPrice(subtotalCents + taxCents)}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
+      <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
     </form>
-    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent)}
+    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion)}
     </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()} · Colombia</span><span>Compra segura · Precios en COP</span></footer>
-  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent)}${getCheckoutDraftScript()}`;
+  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion)}${getCheckoutDraftScript()}`;
 }
 
 function renderContactFields(): string {
@@ -67,8 +68,10 @@ function renderCheckoutItem(item: CartDto['items'][number], product?: CatalogPro
   return `<li class="checkout-item"><span class="checkout-item-image">${image}</span><span class="checkout-item-name">${escapeHtml(product?.name ?? 'Producto')}<small>Cantidad: ${item.quantity}</small></span><span class="checkout-item-price">${formatPrice(item.subtotalCents)}</span></li>`;
 }
 
-function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number): string {
+function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number): string {
+  const taxRow = version === 2 ? '' : `<div class="checkout-total-row"><dt>IVA (${taxRate}%)</dt><dd id="txt-tax">${formatPrice(tax)}</dd></div>`;
+  const initialTax = version === 2 ? 0 : tax;
   return `<aside class="checkout-summary" aria-labelledby="checkout-summary-title"><h2 id="checkout-summary-title">Resumen del pedido</h2><ul class="checkout-items">${rows}</ul><dl class="checkout-totals">
-    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div><div class="checkout-total-row"><dt>IVA (${taxRate}%)</dt><dd id="txt-tax">${formatPrice(tax)}</dd></div><div class="checkout-total-row"><dt>Envío</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + tax)}</dd></div>
-  </dl><p class="checkout-tax-note">Impuestos estimados según la configuración vigente.</p></aside>`;
+    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div>${taxRow}<div class="checkout-total-row"><dt>Envío</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-transaction-fee-row"><dt>Costo de transacción Wompi <small>Tarifa fija por procesar el pago en línea</small></dt><dd id="txt-transaction-fee">${formatPrice(70000)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + initialTax + 70000)}</dd></div>
+  </dl><p class="checkout-tax-note">${version === 2 ? `IVA (${taxRate}%) incluido en el precio de los productos.` : 'Impuestos estimados según la configuración vigente.'}</p></aside>`;
 }

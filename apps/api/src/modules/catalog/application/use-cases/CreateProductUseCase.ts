@@ -3,12 +3,18 @@ import { Product, ProductStatus, ProductCondition } from '../../domain/entities/
 import { ProductSalePolicy, ShippingScope, SaleMode } from '../../domain/entities/ProductSalePolicy.js';
 import { ProductSeoHelper } from '../../domain/services/ProductSeoHelper.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
+import { calculateRecommendedPrice } from '../../domain/services/CalculateRecommendedPrice.js';
 
 export interface CreateProductInput {
   name: string;
   slug?: string;
   description: string;
   priceInCents: number;
+  supplierCostCents?: number;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  taxRateBasisPoints?: number;
+  transactionShippingCents?: number;
   sku: string;
   stockQuantity: number;
   status?: ProductStatus;
@@ -57,12 +63,20 @@ export class CreateProductUseCase {
       });
 
       const now = new Date().toISOString();
+      const allowedPaymentMethods = input.allowedPaymentMethods || ['wompi', ...(input.allowsCashOnDelivery ? ['cash_on_delivery' as const] : [])];
+      const pricing = input.supplierCostCents !== undefined
+          ? calculateRecommendedPrice({ supplierCostCents: input.supplierCostCents, targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000, taxRateBasisPoints: input.taxRateBasisPoints ?? 1900, includeWompi: allowedPaymentMethods.includes('wompi'), transactionShippingCents: input.transactionShippingCents ?? 0 })
+        : null;
       const product = new Product({
         id: crypto.randomUUID(),
         name: input.name,
         slug: rawSlug,
         description: input.description,
-        priceInCents: input.priceInCents,
+        priceInCents: pricing?.priceInCents ?? input.priceInCents,
+        supplierCostCents: input.supplierCostCents ?? null,
+        targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000,
+        allowedPaymentMethods,
+        pricingVersion: pricing ? 2 : 1,
         sku: input.sku,
         stockQuantity: input.stockQuantity,
         status: input.status || 'draft',

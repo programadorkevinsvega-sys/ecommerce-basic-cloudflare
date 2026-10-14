@@ -15,13 +15,13 @@ describe('invoice PDF generation', () => {
     const invoice = new Invoice({
       id: 'invoice-1', invoiceNumber: 'FAC-000001', orderId: 'order-1', customerId: 'customer-1',
       customerName: 'Yesid Vega', customerEmail: 'buyer@example.test', subtotalCents: 93500,
-      taxCents: 17765, shippingCostCents: 9000, discountCents: 0, totalCents: 120265,
+      taxCents: 17765, shippingCostCents: 9000, discountCents: 0, totalCents: 190265,
       currency: 'COP', paymentMethod: 'wompi', snapshot: {
         orderId: 'order-1', lines: [{ productId: 'p', productName: 'Gafas de Sol', productSku: 'SKU-1', quantity: 1, unitPriceCents: 93500, totalCents: 93500 }],
         customer: { name: 'Yesid Vega', email: 'buyer@example.test' },
         shippingAddress: { addressLine: 'Calle 1', municipality: 'Cali', department: 'Valle' },
         subtotalCents: 93500, taxCents: 17765, shippingCostCents: 9000, discountCents: 0,
-        totalCents: 120265, currency: 'COP', paymentMethod: 'wompi',
+        transactionFeeCents: 70000, totalCents: 190265, currency: 'COP', paymentMethod: 'wompi',
       },
       createdAt: '2026-10-13T00:00:00.000Z', updatedAt: '2026-10-13T00:00:00.000Z',
     });

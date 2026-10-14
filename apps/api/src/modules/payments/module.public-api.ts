@@ -4,6 +4,7 @@ import { ProcessWompiWebhookCommand, ProcessWompiWebhookResult } from './applica
 import { RecordCodCollectionCommand } from './application/use-cases/RecordCodCollectionUseCase.js';
 import { PaymentTransaction } from './domain/entities/PaymentTransaction.js';
 import { CodCollection } from './domain/entities/CodCollection.js';
+import { RecordSettlementCostCommand } from './application/use-cases/RecordSettlementCostUseCase.js';
 
 export class PaymentsPublicApi {
   private readonly container: PaymentsModuleContainer;
@@ -30,5 +31,13 @@ export class PaymentsPublicApi {
 
   public async listCodCollections(limit?: number): Promise<CodCollection[]> {
     return this.container.listPaymentsUseCase.listCodCollections(limit);
+  }
+
+  public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
+    await this.container.recordSettlementCostUseCase.execute(command);
+  }
+
+  public async listSettlementCosts(limit?: number) {
+    return this.container.listPaymentsUseCase.listSettlementCosts(limit);
   }
 }

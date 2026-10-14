@@ -12,6 +12,7 @@ export interface IssueInvoiceCommand {
   customerPhone?: string | null;
   subtotalCents: number;
   taxCents: number;
+  taxIncluded?: boolean;
   shippingCostCents: number;
   discountCents?: number;
   totalCents: number;
@@ -36,7 +37,7 @@ export class IssueInvoiceUseCase {
     }
 
     // 2. Cuadre obligatorio: subtotal + tax + shipping - discount == total
-    const computedTotal = cmd.subtotalCents + cmd.taxCents + cmd.shippingCostCents - (cmd.discountCents || 0);
+    const computedTotal = cmd.subtotalCents + (cmd.taxIncluded ? 0 : cmd.taxCents) + cmd.shippingCostCents + (cmd.snapshot.transactionFeeCents || 0) - (cmd.discountCents || 0);
     if (computedTotal !== cmd.totalCents) {
       throw new Error(`Cuadre contable fallido: calculado ${computedTotal} != total ${cmd.totalCents}`);
     }
@@ -57,6 +58,7 @@ export class IssueInvoiceUseCase {
       customerPhone: cmd.customerPhone,
       subtotalCents: cmd.subtotalCents,
       taxCents: cmd.taxCents,
+      taxIncluded: cmd.taxIncluded,
       shippingCostCents: cmd.shippingCostCents,
       discountCents: cmd.discountCents,
       totalCents: cmd.totalCents,

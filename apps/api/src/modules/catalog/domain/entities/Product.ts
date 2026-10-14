@@ -9,6 +9,11 @@ export interface ProductProps {
   slug: string;
   description: string;
   priceInCents: number;
+  supplierCostCents?: number | null;
+  targetMarginBasisPoints?: number;
+  allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
+  pricingVersion?: number;
+  legacyPriceBeforeTaxCents?: number | null;
   sku: string;
   stockQuantity: number;
   status: ProductStatus;
@@ -45,6 +50,11 @@ export class Product {
   public get slug(): string { return this.props.slug; }
   public get description(): string { return this.props.description; }
   public get priceInCents(): number { return this.props.priceInCents; }
+  public get supplierCostCents(): number | null { return this.props.supplierCostCents ?? null; }
+  public get targetMarginBasisPoints(): number { return this.props.targetMarginBasisPoints ?? 2000; }
+  public get allowedPaymentMethods(): Array<'wompi' | 'cash_on_delivery'> { return [...(this.props.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'])]; }
+  public get pricingVersion(): number { return this.props.pricingVersion ?? 1; }
+  public get legacyPriceBeforeTaxCents(): number | null { return this.props.legacyPriceBeforeTaxCents ?? null; }
   public get sku(): string { return this.props.sku; }
   public get stockQuantity(): number { return this.props.stockQuantity; }
   public get status(): ProductStatus { return this.props.status; }
@@ -81,6 +91,11 @@ export class Product {
       }
       this.props.priceInCents = updates.priceInCents;
     }
+    if (updates.supplierCostCents !== undefined) this.props.supplierCostCents = updates.supplierCostCents;
+    if (updates.targetMarginBasisPoints !== undefined) this.props.targetMarginBasisPoints = updates.targetMarginBasisPoints;
+    if (updates.allowedPaymentMethods !== undefined) this.props.allowedPaymentMethods = [...updates.allowedPaymentMethods];
+    if (updates.pricingVersion !== undefined) this.props.pricingVersion = updates.pricingVersion;
+    if (updates.legacyPriceBeforeTaxCents !== undefined) this.props.legacyPriceBeforeTaxCents = updates.legacyPriceBeforeTaxCents;
     if (updates.sku !== undefined) this.props.sku = updates.sku.trim();
     if (updates.stockQuantity !== undefined) this.props.stockQuantity = updates.stockQuantity;
     if (updates.status !== undefined) this.props.status = updates.status;
@@ -109,6 +124,11 @@ export class Product {
   public toPrimitives(): Omit<ProductProps, 'salePolicy'> & { salePolicy: ProductSalePolicyProps } {
     return {
       ...this.props,
+      supplierCostCents: this.supplierCostCents,
+      targetMarginBasisPoints: this.targetMarginBasisPoints,
+      allowedPaymentMethods: this.allowedPaymentMethods,
+      pricingVersion: this.pricingVersion,
+      legacyPriceBeforeTaxCents: this.legacyPriceBeforeTaxCents,
       specifications: { ...this.props.specifications },
       tags: [...this.props.tags],
       categoryIds: [...this.props.categoryIds],

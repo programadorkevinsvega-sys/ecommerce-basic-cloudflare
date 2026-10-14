@@ -228,6 +228,14 @@ Cada producto declara su **política de venta**. Los datos viven en `catalog`; l
 | `og_image_id` | `string` (nullable) | Imagen personalizada para Open Graph / Twitter Cards |
 | `noindex` | `boolean` (default `false`) | Bandera para ocultar el producto de motores de búsqueda (`robots: noindex, nofollow`) |
 | `allows_cash_on_delivery` | `true` / `false` | Si el producto admite pago contra entrega |
+
+### Precio, IVA y costos de pago (ADR-0015)
+
+Los productos creados o editados con costo de proveedor guardan precio final con IVA incluido, costo del proveedor, margen objetivo en puntos básicos y medios permitidos. El margen es `(venta sin IVA - costo proveedor - costo de cobro estimado) / venta sin IVA`; no es recargo sobre costo. El precio recomendado usa el impuesto configurado en `settings` y el escenario Wompi conservador de 4,09% + $700 + IVA de la comisión, con el cargo fijo contado una vez por transacción y una unidad en el estimador. Para un carrito, `orders` recalcula sobre el monto total una sola vez; contra entrega no estima comisión Wompi.
+
+En pagos Wompi, el checkout agrega una sola línea de $700 por costo fijo de transacción y lo aclara al comprador; contra entrega no tiene este cargo. El precio recomendado absorbe la comisión porcentual estimada. El checkout no desglosa otra línea de IVA para los productos con precio final incluido; presenta envío y, para Wompi, el costo fijo explícito. Facturas y snapshots mantienen el IVA desglosado internamente; pedidos/facturas antiguos conservan su desglose e importes originales. Los productos históricos permanecen en `pricing_version=1` hasta que un administrador ingrese su costo y los recalcule; el checkout mantiene su comportamiento anterior para ellos durante la transición. Mercado Pago no se ofrece mientras no exista integración.
+
+La comisión del pedido queda guardada como estimación. En Pagos, un administrador con permiso `payments:edit` puede registrar el importe y la referencia de la liquidación del portal para un pedido aprobado; se muestra la variación frente a la estimación. El webhook no se trata como fuente de comisión real.
 | `shipping_scope` | `national` / `local` | Envío a todo el país o solo a zonas concretas |
 | `catalog_product_coverage` | lista de `zone_id` (`TEXT`, sin FK) | Zonas válidas cuando el alcance es `local` (ciudad o municipio) |
 | `sale_mode` | `cash` / `credit` / `both` | Venta de contado, a crédito o ambas *(ADR-0009)* |

@@ -37,8 +37,28 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
     if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-    const [transactions, collections] = await Promise.all([d.paymentsGateway.listTransactions(50), d.paymentsGateway.listCodCollections(50)]);
-    return c.json({ success: true, transactions: transactions.map((tx) => tx.toJSON()), collections: collections.map((row) => row.toJSON()) });
+    const [transactions, collections, settlementCosts] = await Promise.all([d.paymentsGateway.listTransactions(50), d.paymentsGateway.listCodCollections(50), d.paymentsGateway.listSettlementCosts(100)]);
+    return c.json({ success: true, transactions: transactions.map((tx) => tx.toJSON()), collections: collections.map((row) => row.toJSON()), settlementCosts });
+  });
+
+  app.post('/api/v1/admin/payments/:orderId/settlement', async (c) => {
+    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    if (!token) return c.json({ error: 'No autorizado' }, 401);
+    const admin = await d.identityGateway.validateSession(token);
+    if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+    if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:edit')) return c.json({ error: 'Permiso insuficiente' }, 403);
+    const orderId = c.req.param('orderId');
+    const order = await d.ordersGateway.getOrder(orderId);
+    if (!order || order.paymentMethod !== 'wompi' || order.paymentStatus !== 'approved') return c.json({ error: 'Pedido Wompi aprobado no encontrado' }, 404);
+    let body: Record<string, unknown>;
+    try { body = await c.req.json(); } catch { return c.json({ error: 'Datos de liquidación inválidos' }, 400); }
+    if (!Number.isSafeInteger(body.actualFeeCents) || typeof body.reportReference !== 'string') return c.json({ error: 'Importe y referencia del reporte son requeridos' }, 400);
+    try {
+      await d.paymentsGateway.recordSettlementCost({ orderId, actualFeeCents: body.actualFeeCents as number, estimatedFeeCents: order.estimatedPaymentFeeCents, reportReference: body.reportReference, recordedBy: admin.actorId });
+      const varianceCents = (body.actualFeeCents as number) - order.estimatedPaymentFeeCents;
+      await d.auditGateway.record({ actorId: admin.actorId, actorType: 'admin', action: 'payments.settlement_cost.recorded', entityType: 'order', entityId: orderId, changes: { actualFeeCents: body.actualFeeCents, estimateCents: order.estimatedPaymentFeeCents, varianceCents } });
+      return c.json({ success: true, estimateCents: order.estimatedPaymentFeeCents, actualFeeCents: body.actualFeeCents, varianceCents });
+    } catch { return c.json({ error: 'No fue posible registrar la liquidación' }, 400); }
   });
 }
 

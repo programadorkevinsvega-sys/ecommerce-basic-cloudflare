@@ -5,6 +5,7 @@ import { ProcessWompiWebhookCommand, ProcessWompiWebhookResult } from '../../../
 import { RecordCodCollectionCommand } from '../../../modules/payments/application/use-cases/RecordCodCollectionUseCase.js';
 import { PaymentTransaction } from '../../../modules/payments/domain/entities/PaymentTransaction.js';
 import { CodCollection } from '../../../modules/payments/domain/entities/CodCollection.js';
+import { RecordSettlementCostCommand } from '../../../modules/payments/application/use-cases/RecordSettlementCostUseCase.js';
 
 export class InProcessPaymentsGateway implements PaymentsGateway {
   private readonly publicApi: PaymentsPublicApi;
@@ -31,5 +32,13 @@ export class InProcessPaymentsGateway implements PaymentsGateway {
 
   public async listCodCollections(limit?: number): Promise<CodCollection[]> {
     return this.publicApi.listCodCollections(limit);
+  }
+
+  public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
+    return this.publicApi.recordSettlementCost(command);
+  }
+
+  public async listSettlementCosts(limit?: number) {
+    return this.publicApi.listSettlementCosts(limit);
   }
 }

@@ -1,116 +1,53 @@
-# Progreso de auditoría integral
-
-Actualizado: 2026-10-13 (hora Bogotá). Rama `main`. Se aplicaron migraciones aditivas remotas en fases previas; esta pasada no agrega migraciones ni modifica D1 de producción. El despliegue previo respondió `/health` correctamente; esta continuación publicará snapshots de auditoría y el ajuste visual del catálogo y volverá a verificar el rollout.
+# Progreso: precios, margen, IVA y costos de pago
 
 ## Fases
 
-| Fase | Estado | Evidencia / alcance |
-|---|---|---|
-| Diagnóstico SQL y arquitectura | Completada en los archivos revisados | Inventario actualizado a 87 SQL (29 fuentes y 58 copias) y matriz en `docs/migrations/schema-audit.md`; aislamiento y arquitectura pasan. |
-| Seguridad y operaciones | Gate MFA, auditoría de rutas y snapshots implementados; barrido modular restante | Sesiones HttpOnly, RBAC por ruta y datos SSR, ownership por cookie hasheada, CSRF/rate-limit, errores redactados y snapshots de campos para cambios con entidad resoluble. El escaneo cubrió todas las rutas mutables registradas (41 admin/privilegiadas). Aún falta revisar manualmente los 129 archivos de casos de uso/repositorios de los 17 bounded contexts; operaciones sin entidad durable registran actor/ruta/resultado. Las pruebas prueban delta persistido y bloqueo si falla el snapshot previo.
-| Migraciones | Runner y reproducción local/remota completados | Runner ordena módulo/versión. D1 vacía: 29 migraciones, segunda pasada idempotente, settings v1 antes de v2. `orders__0002` e `inventory__0002` se aplicaron y verificaron en producción con Wrangler 4. |
-| Wompi / pagos | Firma y API real verificadas; pruebas de comercio sin conciliar | El usuario confirma que los 4 intentos pendientes de 2 pedidos son transacciones de prueba propias; no corresponden a clientes y no requieren conciliación operativa. El endpoint oficial de seguimiento consulta por ID, ausente en esos registros. El webhook histórico firmado y la autenticación a API real fueron verificados en producción. |
-| MFA administrativo | Gate y enrolamiento implementados; cuenta por enrolar | El admin con `mfa_enabled=0` recibe únicamente sesión restringida al flujo protegido de setup. API y dashboard bloqueados hasta reautenticación y confirmación TOTP. No se mutó producción; el propietario debe completar enrolamiento tras el despliegue. |
-| Media / R2 | Decodificación real y GC seguro implementados | Parser estructural más binding `IMAGES` para decode/re-encode WebP y descarte de metadatos. Preview remoto aislado rechazó PNG con flujo de píxeles corrupto y convirtió PNG válido a WebP. Smoke R2 de put/get/byte-compare/delete remoto pasó sobre clave temporal propia; un reintento falló por red. Cron sigue sin ejecutarse como limpieza de producción. |
-| Banners | Administración y presentación implementadas | Filtros aislados por búsqueda/estado/tipo/ubicación, duplicación inactiva, vista previa, validación URL, home/categoría/producto/checkout. Carrusel con controles de teclado y movimiento reducido; sin autoplay. Home/catálogo/login se inspeccionaron en Chromium; requiere el nuevo despliegue para repetir, y el panel autenticado requiere sesión del titular. |
-| Reserva / Workers | Pruebas locales completadas | Worker real local con D1 para concurrencia/idempotencia de consumo, reserva ausente, compatibilidad de ventas históricas, fallo de reserva desde OrdersController y webhook Wompi con llamada HTTP simulada. |
-| Documentación / CI | Actualizada | README, seguridad, recuperación, manifiesto, workflow y este registro. |
+1. **Diagnóstico y compatibilidad — completada.** Confirmado que el catálogo v1 guardaba precios antes de IVA, checkout lo añadía, la factura lo reconstruía y los snapshots de pedidos/facturas eran inmutables. En producción la tasa configurada leída fue 19%.
+2. **Dominio y persistencia — completada.** Precio proveedor, margen objetivo, métodos permitidos, versión de precio y precio anterior; snapshot de IVA y estimación por pedido; flag fiscal de factura; ledger de costos de liquidación.
+3. **Cálculo y checkout — implementada.** Precio recomendado calculado en servidor para margen sobre venta neta; cargo fijo Wompi de $700 explícito una vez por pedido online; IVA incluido para productos v2; métodos de pago intersectados por todas las líneas; el checkout informa el cargo Wompi y no calcula IVA en línea aparte para producto v2.
+4. **Transición y conciliación — implementada con paso administrativo.** Vista previa con fingerprint y confirmación para convertir productos v1, conservando el precio anterior. Los costos reales pueden registrarse con referencia de reporte para pedidos Wompi aprobados y compararse con estimación.
+5. **Documentación y validación — completada en local.** ADR, reglas, rollback, manifiesto, tests y este registro actualizados.
 
-## Cambios destacados de esta pasada
+## Migraciones D1
 
-- Wompi: referencia estable por pedido para reutilizar transacciones pendientes; verifica firma del formato Wompi, entorno, secreto, tiempo, y reconcilia contra su API autenticada. Aplicación de webhook monotónica; los estados finales no se revierten y la salida se recupera de forma idempotente.
-- Inventario/pagos: reserva D1 condicional, revisión de existencia y expiración de reservas activas antes del inicio del pago y recaudo; el fallo de reserva cancela pedido y devuelve conflicto.
-- Seguridad BFF: middleware de CSRF basado en `Origin`/`Sec-Fetch-Site` y rate limits de Cloudflare para autenticación, checkout/pago y mutaciones; autenticación, ownership y permisos en rutas de facturación, inventario y auditoría revisadas.
-- Sesiones: login de admin y cliente ya no retorna el token por JSON; se elimina su inyección en HTML/localStorage. El carrito y la cuenta leen la cookie `__Host-session` real. El panel no precarga settings/promos/envíos sin permiso.
-- Pedidos invitados: `orders__0002_guest_cart_capability.sql` guarda hash de `vega_cart_id`; el pago y la página resultado requieren el cookie coincidente. D1 conserva null en pedidos anteriores. Se identificaron 8 pedidos guest pendientes (3 Wompi y 5 COD); conciliar Wompi y resolver el manejo de pedidos legacy antes del deploy. El hash se omite de `Order.toJSON()`.
-- Privacidad: los errores BFF no devuelven mensajes internos; `JsonLogger` redacciona campos personales, arrays, payloads y detalles de excepciones. Resend sin clave informa fallo en vez de simular entrega y no registra destinatarios.
-- Carrusel/filtros: los filtros ahora consultan su contenedor explícito (antes tomaban inputs de los formularios de creación); los carruseles tienen botones accesibles y respetan `prefers-reduced-motion`.
-- Media: el nombre del cliente no determina la clave R2. Si el guardado D1 falla, se elimina únicamente el objeto de clave aleatoria recién creado.
-- Wrangler: se actualizó Wrangler 4 y el plugin Workers/Vitest mantenido; el runner ordenado evita la ejecución de `settings__0002` antes de `settings__0001` detectada con Wrangler 3.
+- `catalog__0004_product_pricing.sql` — aplicada y verificada en producción; esquema aditivo, no convierte productos automáticamente.
+- `orders__0003_pricing_snapshots.sql` — aplicada y verificada en producción.
+- `invoicing__0002_tax_included.sql` — aplicada y verificada en producción.
+- `payments__0004_settlement_costs.sql` — aplicada y verificada en producción; tabla vacía.
+- Bookmark anterior: `00000266-000000e0-00005104-627c6de1a2d6f60d6b950aef18301ef6`.
+- Bookmark posterior: `00000266-00000106-00005104-619b6cb14d8e3317ab1bc3e062828c78`.
+- Producción: 8 productos permanecen en v1. Ningún precio, pedido, factura ni pago fue modificado.
 
-## SQL
+## Archivos modificados y creados
 
-- Inventario registrado: 29 migraciones fuente y 58 copias generadas bajo `migrations/` y `apps/api/migrations/`.
-- `orders__0002_guest_cart_capability.sql` agrega una columna nullable, solo dentro del prefijo de orders; no se modifican migraciones históricas.
-- `inventory__0002_idempotent_order_consumption.sql` agrega la tabla con PK `(order_id, product_id)` y un índice; no modifica existencias existentes y los errores de reserva no crean consumos. Aplicada remotamente; tabla verificada vacía al aplicar.
-- Reconciliación de ventas antiguas: el código reconoce reservas confirmadas junto con movimientos `sale` coincidentes y crea una marca de idempotencia sin modificar existencias; replay local cubierto por prueba Worker.
-- Upgrade SQLite: esquema completo y fixture legado pasan, incluyendo COD, realtime, storefront y pedido invitado previo preservado con capability NULL.
-- Wrangler 4 temporal aplicó 29 archivos desde vacío y la segunda pasada fue idempotente. Producción: las migraciones de orders v2 e inventory v2 se aplicaron con el runner y se confirmaron en el ledger. La consulta posterior confirmó `guest_cart_id_hash`, la tabla de consumos vacía y las 8 órdenes guest pendientes sin cambios.
+Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR-0015-precio-final-margen-y-costo-de-pago.md`, `docs/migrations/manifest.md`, módulos `catalog`, `orders`, `invoicing`, `payments`, vistas/controladores/gateways del BFF, migraciones fuente y copias generadas, tests unitarios/Workers y `scripts/verify-migration-upgrades.py`.
 
-## Verificaciones con resultado real
+## Pruebas ejecutadas
 
-- `node_modules/.bin/tsc --noEmit -p apps/api/tsconfig.json` — pasó.
-- `./node_modules/.bin/vitest run --config vitest.config.ts` desde `apps/api/` — 18 archivos, 46 pruebas pasaron después de añadir parsing de imágenes, límite de body, verificación `R2.head()` y autorización de sincronización de inventario.
-- `./node_modules/.bin/vitest run --config vitest.workers.config.ts` desde `apps/api/` — 3 archivos, 12 pruebas pasaron con D1/Worker local, incluyendo webhook aprobado reejecutado, consumo único, rechazo por falta de reserva, venta legacy y persistencia/lectura de medios con el binding R2 local. Requirió ejecución fuera del sandbox porque Miniflare abre localhost.
-- `node apps/api/scripts/check-architecture.js` — pasó, máximo 200 líneas y capas/imports.
-- `node apps/api/scripts/check-table-isolation.js` — pasó.
-- `node scripts/check-migration-consistency.js` — copias coinciden.
-- `python3 scripts/verify-migration-upgrades.py` — esquema nuevo y upgrade previo pasaron, incluida preservación de existencias al aplicar inventory v2; 68 tablas.
-- `node_modules/.bin/wrangler deploy --dry-run --config apps/api/wrangler.jsonc` — build/bindings pasó; no desplegó.
-- `node apps/api/scripts/test-empty-d1-migrations.js` — pasó fuera del sandbox: 29 migraciones desde D1 vacía, `settings__0001` antes de `settings__0002`, tabla de consumos y segunda pasada idempotente.
-- Wrangler remoto `d1 info`, `d1 time-travel info`, lectura de ledger/schema/orders agregada, `apply-migrations.js --remote` y verificación posterior — orders v2 e inventory v2 aplicadas y confirmadas. Orders bookmark previo/posterior: `000001d5-00000096-00005103-6f289f94e530fd566d8b691355450464` / `000001d5-000000a6-00005103-a4dfd09e2d19e6db5e71c647017dbae2`. Inventory bookmark previo/posterior: `000001d5-000000ba-00005103-eb91d48b70aea4fec605c7d2d20c96ad` / `000001d5-000000c8-00005103-d2640c92983f646d012ce00d26d099ca`.
-- Los comandos `pnpm ...` no iniciaron por `ERR_PNPM_STORE_DIR_OPEN_OPERATION_LOCK` en una ruta de store de solo lectura; se ejecutaron directamente los binarios disponibles. Vitest no está enlazado en el `.bin` raíz, por eso se invocó desde `apps/api`.
-- Prueba puntual tras corregir replay de Wompi: `vitest run tests/payment-idempotency.test.ts` — 2 pruebas pasaron, incluida la no emisión de outbox para un pago ya aprobado. `tsc --noEmit -p tsconfig.json`, arquitectura y `git diff --check` pasaron para el cambio.
-- R2 remoto: Wrangler 4 subió `audit-smoke/<id>.png` al bucket configurado, lo descargó y `cmp` confirmó igualdad byte por byte; se borró solo esa clave aleatoria y un GET posterior confirmó que ya no existe. No se tocaron otros objetos.
-- Producción SSR: `/`, `/productos`, `/admin/login` y `/health` devolvieron HTTP 200. Es verificación HTTP/HTML; no equivale a inspección visual en navegador.
-- Auditoría de inventario: `GET /api/v1/admin/inventory` ahora es de solo lectura; inicializar artículos ausentes pasó a `POST /api/v1/admin/inventory/sync`, con permiso `inventory:adjust` y registro por artículo en audit. Prueba cubre anónimo, permiso de lectura, denegación de escritura y evento auditado.
-- Wrangler producción consultó solo el agregado de MFA (sin leer emails ni secretos): `identity_admins` tiene 1 administrador con `mfa_enabled=0`; el login actual permite autenticarse sin TOTP para esa cuenta. Requiere enrolamiento y política de obligatoriedad antes de certificar seguridad administrativa.
-- Despliegue integrado: commit `4743bc1` apareció en Wrangler como versión `89aa891e-569b-4739-ba0b-b3961eb63160`. `GET /api/v1/admin/inventory` y `POST /api/v1/admin/inventory/sync` sin sesión respondieron 401; `/health` reportó D1/KV/Queue/R2 saludables.
-- Sin decodificador visual disponible: no hay Chromium, Playwright ni Puppeteer instalados en el entorno, por lo que no se certificaron el diseño visual ni los estados admin autenticados en navegador.
+- `pnpm typecheck` — aprobado.
+- `pnpm lint` — aprobado; arquitectura e imports limpios, límite 200 líneas.
+- `pnpm test` — 36 archivos, 92 pruebas aprobadas.
+- `pnpm test:workers` — 3 archivos, 12 pruebas aprobadas.
+- `pnpm db:test-migrations` — esquema vacío y upgrades previos aprobados; comprobó preservación de precios v1 y snapshots históricos.
+- `pnpm db:test-wrangler-migrations` — 34 migraciones aplicadas en D1 local desde cero y segunda pasada idempotente.
+- `pnpm db:check-migrations` — fuentes y copias coinciden.
+- `pnpm test:isolation` — aprobado.
+- Wrangler D1 remoto — ledger y esquema verificados tras aplicar las cuatro migraciones.
 
-## Pendientes que impiden certificar producción
+## Pendientes
 
-- Quedan 4 transacciones Wompi pendientes en datos de prueba propios según confirmación del usuario. No se modificaron ni se intentaron cargos/reconciliaciones. No se consideran evidencia de pagos de clientes.
-- Aunque los secretos `WOMPI_*` existen en Cloudflare, sus valores no son recuperables por Wrangler. Se verificó un webhook histórico firmado en producción y la llamada autenticada a la API de Wompi; todavía falta una transacción sandbox nueva de extremo a extremo. La repetición creó una fila `payments_outbox_events` pendiente aunque el pago no cambió. Esa fila se conserva para auditoría; el outbox de pagos no está conectado al relay cron actual y el código corregido ya no emitirá filas redundantes en replays posteriores.
-- El despliegue se activó automáticamente con el push a `main` (Cloudflare); GitHub Actions en este repositorio ejecuta verificaciones, no contiene un paso `wrangler deploy`. Revisar la versión y salud tras cada push.
-- Las 8 órdenes invitadas antiguas sin capability son datos de prueba propios según la aclaración del usuario; siguen sin acceso por capability. No se modificaron.
-- MFA, procesamiento de imágenes, GC seguro, bitácora de mutaciones y teclado del carrusel se implementaron en esta pasada; los resultados nuevos están en «Cierre de pendientes (2026-10-13)» abajo. La cuenta productiva solo quedará certificada después de que su dueño termine el enrolamiento desde `/admin/mfa-setup` tras el despliegue.
-- Confirmar evento Wompi de sandbox con una transacción nueva; integración Worker local usa API HTTP simulada. El webhook histórico real verificó la firma y API autenticada, pero no reemplaza una transacción sandbox de extremo a extremo.
-- La revisión de rutas BFF cubrió todos los controladores/rutas registrados con `rg` y confirmó gate MFA global y RBAC por ruta; la revisión de cada use case/repositorio de cada bounded context no puede certificarse como completa en esta pasada. Pendiente continuo: revisión módulo por módulo con alcance y evidencia trazables.
-- Continúan pendientes: reautenticación de acciones críticas distintas al enrolamiento, rate limits por actor/pedido, Turnstile (requiere site key/secret configurados), pruebas de carga y análisis visual automatizado de XSS/CSRF en navegador.
-- El carrusel ya responde a botones y flechas, anuncia el área/diapositivas y respeta movimiento reducido; falta inspección con lector de pantalla y navegador real en la tienda desplegada.
-- No se inspeccionó el panel autenticado porque requiere la sesión del propietario; no se hizo instalación limpia de dependencias ni prueba sandbox de pago end-to-end. Los pushes activan despliegue integrado, pero no se ejecutó `wrangler deploy` manualmente. `orders__0002` e `inventory__0002` sí se aplicaron remotamente y se verificaron.
+- Hacer commit y push; el push integrado iniciará el despliegue automático. Después comprobar `wrangler deployments list` y `/health`.
+- Revisar y aplicar la vista previa administrativa para convertir los ocho productos históricos. Esto cambia precios publicados (conserva el importe previo como base y suma IVA configurado); no se ha ejecutado en producción.
+- Cargar costos de proveedor reales para los ocho productos para que el panel pueda recomendar precios con margen del 20%; no se inventaron costos.
+- Registrar comisiones liquidadas usando referencias de reportes reales de Wompi cuando existan. La tabla está vacía; no se simuló una liquidación.
+- No existe integración Mercado Pago; no se ofrece como método habilitable.
+- La tarifa Wompi (4,09% + $700 + IVA de comisión como escenario conservador) es configuración de código y requiere revisión cuando cambie el contrato comercial.
 
-## Cierre de pendientes (2026-10-13)
 
-- MFA: nuevo flujo admin `login → setup-only session → reauth password → seed/otpauth → verify TOTP → full admin`. Middleware global bloquea cualquier otra ruta `/api/v1/admin/*` hasta activar MFA; `createAuthMiddleware` también deniega sesiones admin sin MFA. El login muestra un campo TOTP tras enrolamiento. Prueba cubre setup-only, bloqueo de lectura, ruta exclusiva de setup, fallo cerrado de auditoría, reautenticación y confirmación TOTP. No hay migración; la semilla pendiente reutiliza `mfa_secret` mientras `mfa_enabled=0`. En producción no se leyó ni modificó contraseña/semilla. La cuenta permanece pendiente de enrolamiento humano después del deploy.
-- Incidente de MFA UI: se corrigió el `</title>` ausente en `/admin/mfa-setup`, que hacía que el navegador tratara el resto del HTML como título y mostrara una página aparentemente vacía. La página ahora reporta errores de conexión y aclara que el TOTP se genera en una app autenticadora y no se envía por email. Prueba de markup y flujo: `admin-mfa-setup-page` y `admin-mfa-gate`, 3 pruebas pasaron. Consulta remota de solo lectura confirmó la cuenta configurada activa, rol `Superadmin`, `permissions=["*"]`; no se requirió modificar producción. `mfa_enabled=0` hasta que el titular complete el enrolamiento. Commit `98dab1c` desplegado por integración como version `e10e0988-b416-4ec2-98f0-0c33fe6de5b1` (100%); `/health` healthy y la ruta sin sesión redirige a login.
-- Credenciales configurables: `ADMIN_EMAIL` se lee del entorno Cloudflare y `ADMIN_PASSWORD` del secret homónimo. Los valores no se persisten en Git. Con ambos configurados, el login sincroniza correo/hash PBKDF2 en la única cuenta Superadmin activa, sin cambiar MFA ni privilegios; la sincronización genera eventos de auditoría antes/después sin guardar valores sensibles y falla sin mutar si no puede auditar el estado previo. Las pruebas verifican login, sincronización, rechazo de contraseña incorrecta, compatibilidad transitoria y fallo cerrado de auditoría. El titular aún debe configurar las variables/secrets en Cloudflare; hasta entonces sigue activa la compatibilidad temporal con el login D1 previo. No se cambió ninguna fila de producción.
-- Imágenes: `CloudflareImageProcessor` usa binding `IMAGES.info()` para validar decodificación/dimensiones y `input().output({format:'image/webp', anim:false})` para forzar decode/re-encode a WebP. Así se rechazan datos de píxel corruptos y se descartan metadatos de origen. Se mantienen las cotas existentes: 10 MiB, 16.384 px por lado y 40 MP. Hay salida WebP declarada en D1/R2; no se editó contenido anterior. El binding está en ambos Wrangler configs y el chequeo de consistencia lo exige. La función de transformación es de pago según la facturación de Cloudflare Images.
-- GC R2: `media/` público, >7 días, sin coincidencia de `storage_key` en `media_assets`, máximo 100 por página/1.000 por ejecución diaria con continuación KV. Prefijos privados, facturas/documentos y otras claves quedan fuera. Fallo de R2/D1 no cambia referencias y el borrado exacto es repetible. No se ejecutó GC contra producción ni se borró ningún objeto remoto.
-- Auditoría: middleware registra actor, IP, método y ruta antes del handler y estado persistido después. Para entidades con snapshot compara valores antes/después de campos permitidos y limita arrays a 20 deltas; texto libre, PII y URLs se resumen como cambio booleano o se omiten. No lee ni escribe secretos. Si la auditoría o snapshot previo falla, bloquea con 503. Cubre `/api/v1/admin/*`, settings, media upload y notificaciones. La nota de crédito dejó de guardar su motivo libre; solo registra presencia/longitud.
-- Facturación: `InvoicingController` ya no accede a `MEDIA_BUCKET`; la descarga se resuelve por el gateway público del módulo `invoicing`. Se detectó y corrigió inyección HTML almacenada en facturas escapando los campos del cliente, empresa y productos. Prueba específica verifica valores `<script>`/event handlers.
-- Auditoría adicional de medios encontró que `ResolveMediaUrlUseCase` podía exponer metadatos de assets privados; ahora responde como no encontrado. La carga de medios entra al rate limit `API_WRITE_LIMITER` además del límite de tamaño.
-- Auditoría ampliada de BFF corrigió precios de carrito aceptados desde el navegador (ahora CatalogGateway recupera precio publicado en servidor), filtrado de productos no publicados en evaluación pública de checkout y JSON embebido seguro en el script del checkout. Se reemplazó `innerHTML` para contenido de cobertura y se escaparon campos no confiables en tablas de pedidos, pagos, auditoría, facturas, promociones y zonas de envío; el documento HTML de factura también escapa datos persistidos.
-- Carrusel: arreglado el markup de un único slide de Home; controles semánticos, flechas izquierda/derecha al enfocar el carrusel, `aria-live` para navegación manual y `prefers-reduced-motion`.
-- Verificación visual: Chromium capturó Home, catálogo escritorio/móvil y login admin. La primera captura reveló que el stock se pegaba al precio en desktop; se corrigió con bloque a ancho completo y se confirmó visualmente separado en ambos tamaños tras el deploy. La inspección autenticada del panel requiere la sesión del propietario.
-- Pruebas ejecutadas en esta continuación: suite API 26 archivos/60 pruebas; Workers 3 archivos/12 pruebas; typecheck; lint/arquitectura; aislamiento; consistencia de migraciones; bindings; esquema fresco/upgrades legacy; R2 remoto aislado; `IMAGES` remoto real con PNG válida y PNG pixel-corrupta. No hay migración nueva. Capturas Chromium anteriores detectaron solapamiento de precio/stock; el cambio local ya corregido se volverá a revisar tras deploy.
-- Pendientes: no se ejecutó Cron GC contra producción; el smoke R2 remoto requirió una segunda corrida por falla de red, aunque la primera completó y borró la clave temporal; no se probó un JPEG con GPS EXIF de extremo a extremo; quedan los 129 archivos de use cases/repositorios por revisar módulo a módulo.
-- Despliegue de esta continuación: commits `cc8669f` y `2fd4a93` publicados en `origin/main`; Wrangler reportó version `6663d158-e6d0-4999-b906-ceb84afe655e` al 100%. `GET /health` devolvió healthy con D1/KV/Queue/R2 `ok`; `/admin/login` 200 y `/admin/mfa-setup` sin sesión redirigió a login con 302. Home, catálogo y login admin devolvieron 200 en Chromium. MFA productivo todavía requiere enrolamiento del propietario.
+## Actualización de cargo transaccional checkout
 
-## Git
-
-Commits `4a25cae`, `e4e15bd`, `c5c1ace`, `4ed8cfe`, `cc8669f`, `2fd4a93`, `c3d85b7`, `19f48be`, `735141d` y `3fbab07` están publicados en `origin/main`. El workflow de GitHub no contiene deploy; las correcciones MFA se desplegaron con Wrangler con la autorización del usuario. No se incluyeron `.dev.vars`, contraseñas ni secretos TOTP en Git.
-
-### 2026-10-13 — Corrección de reautenticación al enrolar MFA
-
-- Hallazgo: el login podía validar la contraseña `ADMIN_PASSWORD` del entorno y sincronizar su hash en D1, pero el endpoint de enrolamiento validaba exclusivamente contra el hash D1. Una divergencia entre la credencial configurada y el hash persistido producía el error genérico de inicio de enrolamiento.
-- Cambio: `BeginAdminMfaEnrollmentUseCase` valida con `ADMIN_EMAIL` + `ADMIN_PASSWORD` cuando ambas variables existen, restringiendo esa vía a la cuenta Superadmin configurada; conserva la verificación PBKDF2 de D1 como compatibilidad cuando no existe el par configurado.
-- Prueba añadida: enrolamiento con credencial Cloudflare correcta y hash D1 anterior distinto; contraseña anterior rechazada.
-- Estado: probado localmente; sin cambios en D1. Se desplegó primero en la versión `2bbfe964-6e71-48f2-b594-cbc2a0514932`; el hardening posterior quedó incluido en la versión `9cf3dcec-039e-48c3-850d-52f703aeb1f2`.
-- Hallazgo operativo confirmado: `ADMIN_PASSWORD` existe como secret remoto, pero `ADMIN_EMAIL` no estaba en el Worker. Wrangler borraba por defecto variables añadidas solo en Dashboard al desplegar. Se configuró `ADMIN_EMAIL` como variable remota (sin guardarla en Git), se publicó la versión `2bbfe964-6e71-48f2-b594-cbc2a0514932` y se estableció `keep_vars: true` en ambas configuraciones Wrangler para conservar variables de Dashboard en futuros despliegues. `/health` remoto devolvió `healthy` con D1/KV/Queue/R2 en `ok`. Para el enrolamiento, la sesión actual se acepta si pertenece al único Superadmin activo y la contraseña coincide con el secret; no se leyó ni cambió el valor de `ADMIN_PASSWORD`.
-- Endurecimiento adicional: el enrolamiento verifica el ID de la sesión contra `findSoleActiveSuperadmin`, además del rol y el secret configurado. Esto permite una sesión existente aunque el correo almacenado aún sea el anterior y rechaza a cualquier otro administrador. Se añadió una prueba cruzada de ese rechazo.
-
-### 2026-10-13 — QR local para enrolamiento TOTP
-
-- Se añadió generación de QR SVG en el Worker con `qrcode-svg`; el URI y el secreto no se envían a un servicio externo. El endpoint de enrolamiento mantiene `Cache-Control: no-store`.
-- La página presenta el QR, una alternativa manual plegable y aclara que escanearlo desde otro dispositivo funciona mejor. La etiqueta TOTP usa `ADMIN_EMAIL` configurado, no el correo D1 previo.
-- Volver a generar reemplaza el secreto pendiente que se compartió en la conversación. Pruebas: UI accesible, QR SVG/no-store, reautenticación, typecheck, lint, suite API (29 archivos, 68 pruebas) y Wrangler dry-run.
-- Desplegado en producción; la versión activa verificada fue `6226057b-d4fc-4daa-8cd1-8dbd90a51e08`; `/health` responde `healthy` (D1/KV/Queue/R2 en `ok`).
-### 2026-10-13 — Desglose de IVA y factura PDF
-
-- El panel de pedidos y el correo de pago ahora desglosan el IVA a partir del total autoritativo del pedido, restando subtotal, envío y sumando el descuento; el desglose reconcilia con el monto efectivamente cobrado.
-- Las facturas nuevas se generan como PDF real en R2 con `pdf-lib`, se pueden visualizar o descargar desde cuenta y panel, y se adjuntan al correo de confirmación de cliente y administración vía Resend. Las facturas históricas que apuntaban a HTML se convierten a PDF en el primer acceso, sin eliminar el original de R2.
-- Pruebas añadidas: validez del PDF, desglose de impuestos y payload de adjunto Resend.
-- Validación: typecheck, lint de arquitectura, suite API (33 archivos, 85 tests) y Wrangler dry-run pasaron. `test:workers` sigue fallando en el timeout fijo de 5 s del request real a `/health` (1 fallo; otros 11 tests pasan); no modifiqué el timeout ni oculté el fallo.
-- No se ejecutó envío de correo real, se aplicaron migraciones ni se usaron datos de producción durante las pruebas.
+- El pago Wompi suma $700 COP por pedido como cargo explícito, autoritativo en servidor; contra entrega suma $0.
+- Se añadió `transaction_fee_cents` a la orden vía `orders__0004_checkout_transaction_fee.sql`, aplicada y verificada en D1 producción (12 pedidos previos, todos con cargo cero).
+- El precio recomendado ahora estima porcentaje Wompi sobre producto + envío y reconoce que los $700 fijos se muestran al comprador; estima IVA de la comisión.
+- El checkout actualiza total y etiqueta del cargo al cambiar medio de pago. El snapshot se imprime en el PDF y correo de factura, y aparece en panel y resultado de compra.
+- Verificación de migrations local vacío e idempotente aprobada (34); Workers 12/12; unit tests 92/92; aislamiento y consistencia de migraciones aprobados.

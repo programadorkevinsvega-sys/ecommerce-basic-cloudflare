@@ -6,12 +6,14 @@ import { CreateWompiTransactionUseCase } from './application/use-cases/CreateWom
 import { ProcessWompiWebhookUseCase } from './application/use-cases/ProcessWompiWebhookUseCase.js';
 import { RecordCodCollectionUseCase } from './application/use-cases/RecordCodCollectionUseCase.js';
 import { ListPaymentsUseCase } from './application/use-cases/ListPaymentsUseCase.js';
+import { RecordSettlementCostUseCase } from './application/use-cases/RecordSettlementCostUseCase.js';
 
 export interface PaymentsModuleContainer {
   createWompiTransactionUseCase: CreateWompiTransactionUseCase;
   processWompiWebhookUseCase: ProcessWompiWebhookUseCase;
   recordCodCollectionUseCase: RecordCodCollectionUseCase;
   listPaymentsUseCase: ListPaymentsUseCase;
+  recordSettlementCostUseCase: RecordSettlementCostUseCase;
 }
 
 export function createPaymentsModule(env: Env): PaymentsModuleContainer {
@@ -24,5 +26,6 @@ export function createPaymentsModule(env: Env): PaymentsModuleContainer {
     processWompiWebhookUseCase: new ProcessWompiWebhookUseCase(repo, outbox),
     recordCodCollectionUseCase: new RecordCodCollectionUseCase(repo, outbox),
     listPaymentsUseCase: new ListPaymentsUseCase(repo),
+    recordSettlementCostUseCase: new RecordSettlementCostUseCase(repo),
   };
 }
