@@ -183,6 +183,7 @@ Siempre que se revierta el Worker de forma que afecte a `orders`, `payments`, `i
 - Si hace falta migrar objetos, hacerlo por etapas, idempotente y con plan de reintento.
 - No borrar objetos ni ejecutar limpiezas masivas como respuesta automática a un rollback.
 - Verificar consistencia entre metadatos D1 (`media_assets`) y objetos R2 antes de reanudar operaciones críticas (SEC-R2-08).
+- Las facturas con documento histórico conservan su objeto original. La presentación actual genera una copia PDF versionada `-v2.pdf` desde el snapshot inmutable y la reutiliza; un rollback de Worker vuelve a poder leer la clave original. No borrar ni reemplazar los objetos originales durante recuperación.
 
 ### Procesamiento seguro y recolección de medios
 

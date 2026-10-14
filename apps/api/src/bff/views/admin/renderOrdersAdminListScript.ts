@@ -7,7 +7,7 @@ export function renderOrdersAdminListScript(): string {
       cancelled: ['Cancelado', '#fbe9e7', '#a8231b'],
     };
     const paymentStates = {
-      approved: ['Aprobado', '#e6f4ec', '#136b3e'], pending: ['Pendiente', '#fcf1dc', '#7a4f00'],
+      approved: ['Aprobado', '#e9efe9', '#315b43'], pending: ['Pendiente', '#fcf1dc', '#7a4f00'],
       collected: ['Recaudado', '#e6f4ec', '#136b3e'], failed: ['Fallido', '#fbe9e7', '#a8231b'],
     };
 

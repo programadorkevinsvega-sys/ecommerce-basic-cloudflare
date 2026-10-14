@@ -366,3 +366,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La vista de Pedidos conservaba acentos azules en la pestaña activa, el enlace del pedido y el estado Confirmado. El selector de estado heredaba el fondo oscuro global del panel.
 - Unifiqué esos acentos con el verde del resto de las páginas y forcé el selector a conservar fondo blanco y texto oscuro dentro de Pedidos. Sin cambios de lógica o backend.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+
+### Rediseño y versionado del PDF de facturas (2026-10-14)
+
+- Rediseñé el documento generado con encabezado de marca, número y fecha destacados, bloques separados para comercio/cliente/entrega, tabla de productos, desglose legible y total resaltado. Eliminé el `COP` duplicado del total.
+- Los PDFs históricos permanecen intactos en R2. Al consultar una factura antigua, se crea y reutiliza una representación `-v2.pdf` desde el snapshot inmutable; el PDF original sigue disponible y un rollback del Worker continúa leyendo la clave original. Las nuevas facturas se guardan directamente en la ruta versionada.
+- Aprobado y Confirmado en Pedidos usan el mismo tono verde de la interfaz; la verificación de despliegue anterior seguía mostrando el estilo anterior en esa captura.
+- Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni inspección visual del PDF en navegador.
