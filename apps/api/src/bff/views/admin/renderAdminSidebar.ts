@@ -9,7 +9,6 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();", false, 'orders-pending-count', 'por atender')}
         ${navItem('inventory', 'Inventario', "switchTab('inventory'); loadAdminInventory();", false, 'inventory-alert-count', 'con stock bajo o agotados')}
         ${navItem('payments', 'Pagos', "switchTab('payments'); loadAdminPayments();")}
-        ${navItem('payments', 'Recaudos', "switchTab('payments', this); loadAdminPayments(); document.getElementById('cod-collection-section')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
         ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping')")}
         ${navItem('invoices', 'Facturación', "switchTab('invoices'); loadAdminInvoices();")}
       </ul></section>

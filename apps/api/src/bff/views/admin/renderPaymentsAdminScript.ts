@@ -65,6 +65,17 @@ export function renderPaymentsAdminScript(): string {
     window.submitCodCollection = submitCodCollection;
     window.submitSettlementCost = submitSettlementCost;
 
+    document.querySelectorAll('[data-payment-page]').forEach(button => button.addEventListener('click', () => {
+      const page = button.dataset.paymentPage;
+      document.querySelectorAll('[data-payment-page]').forEach(tab => {
+        const selected = tab === button;
+        tab.classList.toggle('selected', selected);
+        if (selected) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+      });
+      document.querySelectorAll('[data-payment-panel]').forEach(panel => { panel.hidden = panel.dataset.paymentPanel !== page; });
+    }));
+
     let lastNotificationTime = new Date().toISOString();
     async function pollRealtimeNotifications() {
       try {
