@@ -19,11 +19,11 @@ export function renderAdminSidebar(adminLabel: string): string {
       </ul></section>
       <section class="admin-nav-group"><h2>Catálogo</h2><ul>
         ${navItem('products', 'Productos', "switchTab('products')")}
-        ${navItem('taxonomies', 'Categorías', "switchTab('taxonomies', this); document.getElementById('taxonomy-categories')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Marcas', "switchTab('taxonomies', this); document.getElementById('taxonomy-brands')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Proveedores', "switchTab('taxonomies', this); document.getElementById('taxonomy-brands')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Atributos', "switchTab('taxonomies', this); document.getElementById('taxonomy-attributes')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Variantes', "switchTab('taxonomies', this); document.getElementById('taxonomy-attributes')?.scrollIntoView({behavior:'smooth',block:'start'})", false, undefined, undefined, true)}
+        ${navItem('taxonomies', 'Categorías', "switchTab('taxonomies', this); showCatalogPage('categories', this)", false, undefined, undefined, true)}
+        ${navItem('taxonomies', 'Marcas', "switchTab('taxonomies', this); showCatalogPage('brands', this)", false, undefined, undefined, true)}
+        ${navItem('taxonomies', 'Proveedores', "switchTab('taxonomies', this); showCatalogPage('providers', this)", false, undefined, undefined, true)}
+        ${navItem('taxonomies', 'Atributos', "switchTab('taxonomies', this); showCatalogPage('attributes', this)", false, undefined, undefined, true)}
+        ${navItem('taxonomies', 'Variantes', "switchTab('taxonomies', this); showCatalogPage('variants', this)", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Marketing</h2><ul>
         ${navItem('storefront', 'Banners y anuncios', "switchTab('storefront')")}

@@ -1,5 +1,25 @@
 export function renderTaxonomyFormsScript(): string {
   return `
+    const catalogPageCopy = {
+      categories: ['Categorías', 'Organiza los productos en categorías independientes.'],
+      brands: ['Marcas', 'Administra marcas y su información pública.'],
+      providers: ['Proveedores', 'Consulta proveedores registrados.'],
+      attributes: ['Atributos', 'Define características disponibles para asignar a productos.'],
+      variants: ['Variantes', 'Consulta variantes registradas en el catálogo.']
+    };
+    window.showCatalogPage = (key, navButton) => {
+      document.querySelectorAll('[data-taxonomy-page]').forEach((page) => { page.hidden = page.dataset.taxonomyPage !== key; });
+      document.querySelectorAll('.admin-nav-link[data-tab="taxonomies"]').forEach((button) => {
+        const selected = button === navButton;
+        button.classList.toggle('active', selected);
+        if (selected) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
+      });
+      const copy = catalogPageCopy[key] || catalogPageCopy.categories;
+      document.getElementById('taxonomy-page-title').textContent = copy[0];
+      document.getElementById('taxonomy-page-description').textContent = document.querySelector('[data-taxonomy-page="' + key + '"]')?.dataset.taxonomyDescription || copy[1];
+    };
+    window.showCatalogPage('categories', document.querySelector('.admin-nav-link[data-tab="taxonomies"]'));
+
     const brandNameInput = document.getElementById('brandName');
     const brandSlugInput = document.getElementById('brandSlug');
     const createBrandSlug = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');

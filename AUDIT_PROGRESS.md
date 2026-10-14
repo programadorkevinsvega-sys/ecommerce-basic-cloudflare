@@ -284,3 +284,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - Reemplacé los acentos azules heredados en filtros/acciones de Productos, foco de inputs, vista previa SEO y estado de imagen principal por tonos verdes y neutros del diseño actualizado. Sin cambios de lógica o API.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice revisión visual en navegador.
+
+### Vistas independientes de taxonomías del catálogo (2026-10-14)
+
+- Categorías, Marcas, Proveedores, Atributos y Variantes ahora abren vistas independientes desde la navegación y cada vista tiene su propia tabla, encabezado y formulario cuando hay operaciones existentes.
+- Categorías, marcas y atributos muestran sus registros reales. El proyecto no tiene una entidad D1/API independiente para proveedores ni variantes con SKU/precio/stock propios; sus tablas muestran el estado vacío y explican esta limitación, sin copiar marcas ni inventar variantes.
+- Sin cambios de backend o base de datos. Pendiente typecheck/lint y revisión visual; no se ejecutan pruebas automatizadas por instrucción vigente.
