@@ -15,4 +15,9 @@ describe('Blog admin presentation and actions', () => {
     const action = script.slice(script.indexOf('window.blogNewPost=()=>'));
     expect(action.indexOf(".showModal()")).toBeLessThan(action.indexOf('blogLoadTaxonomies().catch'));
   });
+
+  it('renders syntactically valid JavaScript for the admin controls', () => {
+    const script = renderBlogAdminScript();
+    expect(() => new Function(script)).not.toThrow();
+  });
 });
