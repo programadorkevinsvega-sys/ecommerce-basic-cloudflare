@@ -19,7 +19,7 @@ export function renderCatalogManagementSection(
     <tr>
       <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(b.name)}</td>
       <td style="padding:0.6rem; border-bottom:1px solid #334155; font-family:monospace;">${escapeHtml(b.slug)}</td>
-      <td style="padding:0.6rem; border-bottom:1px solid #334155;">${b.websiteUrl ? `<a href="${escapeHtml(b.websiteUrl)}" target="_blank" style="color:#38bdf8;">Web</a>` : '-'}</td>
+      <td style="padding:0.6rem; border-bottom:1px solid #334155;"><textarea id="brand-description-${escapeHtml(b.id)}" maxlength="500" aria-label="Descripción de ${escapeHtml(b.name)}">${escapeHtml(b.description || '')}</textarea><button type="button" class="btn-action" onclick="saveBrandDescription('${escapeHtml(b.id)}')">Guardar descripción</button></td>
     </tr>
   `).join('');
 
@@ -58,13 +58,14 @@ export function renderCatalogManagementSection(
         <div class="form-grid">
           <div><label>Nombre de Marca / Proveedor</label><input type="text" id="brandName" required placeholder="Ej. Nike, Vega Basic" /></div>
           <div><label>Slug</label><input type="text" id="brandSlug" placeholder="Se genera automáticamente" /><small>Se completa desde el nombre y puedes editarlo.</small></div>
+          <div><label>Descripción</label><textarea id="brandDescription" maxlength="500" placeholder="Describe esta marca para su página pública"></textarea></div>
           <div><label>Sitio Web Oficial</label><input type="url" id="brandWeb" placeholder="https://..." /></div>
         </div>
         <button type="submit" class="btn-primary">Guardar Marca / Proveedor</button>
         <div id="brandMsg" class="msg"></div>
       </form>
       <table>
-        <thead><tr><th>Marca</th><th>Slug</th><th>Sitio Web</th></tr></thead>
+        <thead><tr><th>Marca</th><th>Slug</th><th>Descripción pública</th></tr></thead>
         <tbody>${brandRows || '<tr><td colspan="3" style="text-align:center; padding:1rem; color:#94a3b8;">No hay marcas registradas</td></tr>'}</tbody>
       </table>
     </div>

@@ -84,6 +84,10 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return brands.map((b) => b.toPrimitives());
   }
 
+  public async updateBrandDescription(id: string, description: string): Promise<BrandDto> {
+    return (await this.publicApi.updateBrandDescription(id, description)).toPrimitives();
+  }
+
   public async createAttribute(request: {
     name: string;
     code: string;

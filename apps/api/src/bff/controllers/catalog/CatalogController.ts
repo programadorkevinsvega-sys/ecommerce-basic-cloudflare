@@ -9,7 +9,6 @@ import {
   createProductSchema,
   updateProductSchema,
   createCategorySchema,
-  createBrandSchema,
   createAttributeSchema,
 } from './catalogSchemas.js';
 
@@ -111,22 +110,6 @@ export class CatalogController {
       return c.json({ data: brands });
     });
 
-    router.post(
-      '/admin/brands',
-      createAuthMiddleware(identityGateway, 'admin', 'catalog:create'),
-      async (c) => {
-        try {
-          const body = await c.req.json();
-          const parsed = createBrandSchema.safeParse(body);
-          if (!parsed.success) return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
-
-          const brand = await catalogGateway.createBrand(parsed.data);
-          return c.json({ data: brand }, 201);
-        } catch {
-          return c.json({ error: 'No fue posible crear la marca' }, 400);
-        }
-      }
-    );
 
     // 4. Atributos: Tallas, Dimensiones, Colores (Público y Admin)
     router.get('/attributes', async (c) => {

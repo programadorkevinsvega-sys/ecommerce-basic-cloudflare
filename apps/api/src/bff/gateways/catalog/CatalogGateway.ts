@@ -143,6 +143,7 @@ export interface CatalogGateway {
   deleteCategory(id: string): Promise<void>;
   createBrand(request: { name: string; slug?: string; description?: string; websiteUrl?: string }): Promise<BrandDto>;
   listBrands(): Promise<BrandDto[]>;
+  updateBrandDescription(id: string, description: string): Promise<BrandDto>;
   createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;
   listAttributes(): Promise<AttributeDto[]>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;

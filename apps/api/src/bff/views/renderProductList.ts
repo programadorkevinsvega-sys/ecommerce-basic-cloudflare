@@ -19,7 +19,8 @@ export function renderProductList(
   products: CatalogProductDto[],
   searchQuery?: string,
   banner?: BannerItem | BannerItem[],
-  discountMap?: Map<string, ProductDiscountDto>
+  discountMap?: Map<string, ProductDiscountDto>,
+  brandLinks: Map<string, string> = new Map()
 ): string {
   const queryVal = searchQuery ? escapeHtml(searchQuery) : '';
   const banners = (Array.isArray(banner) ? banner : banner ? [banner] : []).filter(Boolean);
@@ -48,7 +49,7 @@ export function renderProductList(
         : '';
 
   const brands = [...new Set(products.map((product) => product.brand?.trim()).filter((brand): brand is string => Boolean(brand)))].slice(0, 4);
-  const brandSection = brands.length ? `<section class="brand-section" aria-labelledby="brand-title"><div class="section-heading"><div><span class="eyebrow">Encuentra lo que buscas</span><h2 id="brand-title">Compra por línea</h2></div><a href="/productos">Ver catálogo <span aria-hidden="true">↗</span></a></div><div class="brand-grid">${brands.map((brand) => `<a class="brand-tile" href="/productos?q=${encodeURIComponent(brand)}"><span aria-hidden="true">✳</span><strong>${escapeHtml(brand)}</strong><span>Ver productos <span aria-hidden="true">→</span></span></a>`).join('')}</div></section>` : '';
+  const brandSection = brands.length ? `<section class="brand-section" aria-labelledby="brand-title"><div class="section-heading"><div><span class="eyebrow">Encuentra lo que buscas</span><h2 id="brand-title">Compra por línea</h2></div><a href="/marcas">Ver marcas <span aria-hidden="true">↗</span></a></div><div class="brand-grid">${brands.map((brand) => `<a class="brand-tile" href="${brandLinks.get(brand.toLocaleLowerCase()) || `/productos?q=${encodeURIComponent(brand)}`}"><span aria-hidden="true">✳</span><strong>${escapeHtml(brand)}</strong><span>Ver productos <span aria-hidden="true">→</span></span></a>`).join('')}</div></section>` : '';
   const searchForm = searchQuery ? `<form class="search-bar" action="/productos" method="GET" role="search" aria-label="Buscar productos">
       <label class="search-label" for="store-search">Buscar</label>
       <input id="store-search" type="search" name="q" placeholder="¿Qué estás buscando hoy?" value="${queryVal}" required />

@@ -43,15 +43,17 @@ export class StorefrontController {
 
     router.get('/', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [products, homeContent, nav] = await Promise.all([
+      const [products, homeContent, nav, brands] = await Promise.all([
         catalogGateway.listProducts({ limit: 12, status: 'published' }),
         storefrontGateway.getHomeContent(),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
+        catalogGateway.listBrands(),
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
       const activeAnnouncement = homeContent.announcements[0];
-      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap);
+      const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
+      const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');

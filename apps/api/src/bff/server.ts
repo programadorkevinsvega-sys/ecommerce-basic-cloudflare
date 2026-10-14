@@ -8,6 +8,8 @@ import { CustomerAuthController } from './controllers/auth/CustomerAuthControlle
 import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
+import { CatalogBrandAdminController } from './controllers/catalog/CatalogBrandAdminController.js';
+import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { StorefrontAdminController } from './controllers/storefront/StorefrontAdminController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
@@ -108,6 +110,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.promotionsGateway,
     cRoot.settingsGateway
   ));
+  app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway));
 
   // Infra y Auth
   app.route('/health', HealthController.createRoutes());
@@ -116,6 +119,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway, cRoot.identityGateway));
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.auditGateway, cRoot.shippingGateway));
+  app.route('/api/v1', CatalogBrandAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
 
   app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));
   app.onError((err, c) => {

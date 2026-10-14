@@ -258,3 +258,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El formulario de producto ahora selecciona marcas registradas; ofrece valores históricos ya usados para no perder marcas al editar productos antiguos. El alta de marca genera slug mientras se escribe y permite editarlo; el servidor normaliza acentos también.
 - La búsqueda incluye coincidencias de marca y aplica `status=published` a búsquedas públicas. No requiere migración: mantiene la columna de texto y el índice existentes.
 - Una consulta D1 remota de solo lectura reprodujo la causa: FTS devolvió 0 filas para “Vega Eyewear”, mientras la consulta por `brand` encontró el producto publicado. Pendiente validación visual del flujo en navegador. No ejecuté pruebas automatizadas.
+
+### Directorio y páginas públicas de marcas (2026-10-14)
+
+- El CTA “Ver catálogo” en “Compra por línea” ahora lleva a `/marcas`. El directorio lista todas las marcas registradas y muestra nombre y descripción; cada marca abre `/marcas/:slug` con descripción y productos publicados que coinciden con esa marca.
+- La administración de Catálogo permite guardar descripción al crear una marca y editar la descripción de marcas existentes. El endpoint de actualización requiere `catalog:edit` y registra la mutación en auditoría. Se reutiliza la columna `catalog_brands.description`; no requiere migración.
+- Las tarjetas de marcas en Inicio enlazan a la página individual cuando la marca está registrada; los nombres históricos sin entidad conservan búsqueda de productos.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador. Pendiente confirmar las páginas en el despliegue.

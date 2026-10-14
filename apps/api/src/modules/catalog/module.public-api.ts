@@ -23,6 +23,7 @@ export interface ICatalogPublicApi {
   deleteCategory(id: string): Promise<void>;
   createBrand(input: CreateBrandInput): Promise<Brand>;
   listBrands(): Promise<Brand[]>;
+  updateBrandDescription(id: string, description: string): Promise<Brand>;
   createAttribute(input: CreateAttributeInput): Promise<Attribute>;
   listAttributes(): Promise<Attribute[]>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
@@ -96,6 +97,12 @@ export class CatalogPublicApi implements ICatalogPublicApi {
 
   public async listBrands(): Promise<Brand[]> {
     const res = await this.container.listBrandsUseCase.execute();
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async updateBrandDescription(id: string, description: string): Promise<Brand> {
+    const res = await this.container.updateBrandDescriptionUseCase.execute(id, description);
     if (res.isFail()) throw res.error;
     return res.value;
   }

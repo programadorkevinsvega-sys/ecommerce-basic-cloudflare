@@ -78,6 +78,10 @@ export const createBrandSchema = z.object({
   websiteUrl: z.string().url().optional(),
 }).strict();
 
+export const updateBrandDescriptionSchema = z.object({
+  description: z.string().max(500),
+}).strict();
+
 export const createAttributeSchema = z.object({
   name: z.string().min(1).max(100),
   code: z.string().min(1).max(50).regex(/^[a-z0-9_]+$/),

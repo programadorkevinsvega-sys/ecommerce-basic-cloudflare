@@ -38,6 +38,7 @@ export function renderTaxonomyFormsScript(): string {
       const payload = {
         name: document.getElementById('brandName').value,
         slug: document.getElementById('brandSlug').value || undefined,
+        description: document.getElementById('brandDescription').value || undefined,
         websiteUrl: document.getElementById('brandWeb').value || undefined
       };
       const res = await fetch('/api/v1/admin/brands', {
@@ -52,6 +53,15 @@ export function renderTaxonomyFormsScript(): string {
         setTimeout(() => window.location.reload(), 800);
       }
     });
+
+    window.saveBrandDescription = async (id) => {
+      const description = document.getElementById('brand-description-' + id)?.value || '';
+      const res = await fetch('/api/v1/admin/brands/' + encodeURIComponent(id) + '/description', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ description })
+      });
+      if (res.ok) window.location.reload();
+      else window.alert('No se pudo guardar la descripción de la marca.');
+    };
 
     document.getElementById('newAttributeForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
