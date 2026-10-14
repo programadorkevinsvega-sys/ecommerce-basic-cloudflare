@@ -6,44 +6,28 @@ export function renderInvoicingAdminScript(): string {
       const tbody = document.getElementById('invoices-table-body');
       if (!tbody) return;
       try {
-        const res = await fetch('/api/v1/admin/invoices', { headers: adminHeaders() });
-        const data = await res.json();
-        if (!data.success || !data.invoices || data.invoices.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="padding:1.5rem; text-align:center; color:var(--muted);">No hay facturas emitidas</td></tr>';
+        const response = await fetch('/api/v1/admin/invoices', { headers: adminHeaders() });
+        const data = await response.json();
+        if (!data.success || !Array.isArray(data.invoices) || data.invoices.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty">No hay facturas emitidas.</td></tr>';
           return;
         }
-
-        tbody.innerHTML = data.invoices.map(inv => \`
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.75rem;"><strong style="color:#38bdf8;">\${escapeHtml(inv.invoiceNumber)}</strong></td>
-            <td style="padding:0.75rem;"><code>#\${escapeHtml(inv.orderId.replace('ord-', ''))}</code></td>
-            <td style="padding:0.75rem;"><strong>\${escapeHtml(inv.customerName)}</strong><br><small style="color:var(--muted);">\${escapeHtml(inv.customerEmail)}</small></td>
-            <td style="padding:0.75rem; font-weight:700;">$\${(Number(inv.totalCents)/100).toLocaleString('es-CO')}</td>
-            <td style="padding:0.75rem;"><span class="tag" style="background:\${inv.status === 'issued' ? '#14532d' : '#7f1d1d'}; color:#fff;">\${escapeHtml(inv.status)}</span></td>
-            <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(inv.createdAt).toLocaleString('es-CO'))}</td>
-            <td style="padding:0.75rem; text-align:center;">
-              <div style="display:flex; gap:0.4rem; justify-content:center;">
-                <a href="/api/v1/invoices/\${encodeURIComponent(inv.id)}/document?view=1" target="_blank" rel="noopener noreferrer"
-                  style="display:inline-block; padding:0.35rem 0.65rem; background:#0284c7; color:#fff; border-radius:5px; text-decoration:none; font-size:0.8rem; font-weight:600;">
-                  👁️ Ver PDF
-                </a>
-                <a href="/api/v1/invoices/\${encodeURIComponent(inv.id)}/document"
-                  style="display:inline-block; padding:0.35rem 0.65rem; background:#475569; color:#fff; border-radius:5px; text-decoration:none; font-size:0.8rem; font-weight:600;">
-                  Descargar
-                </a>
-                \${inv.status === 'issued' ? \`
-                  <button onclick="openCreditNoteModal(\${escapeHtml(JSON.stringify(String(inv.id)))}, \${escapeHtml(JSON.stringify(String(inv.invoiceNumber)))}, \${Number(inv.totalCents)})"
-                    style="padding:0.35rem 0.65rem; background:#7f1d1d; border:none; border-radius:5px; color:#fff; font-size:0.8rem; cursor:pointer; font-weight:600;">
-                    Nota Crédito
-                  </button>
-                \` : ''}
-              </div>
-            </td>
-          </tr>
-        \`).join('');
-      } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar facturas</td></tr>';
+        tbody.innerHTML = data.invoices.map(renderInvoiceRow).join('');
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty error">Error al cargar facturas.</td></tr>';
       }
+    }
+
+    function renderInvoiceRow(invoice) {
+      const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF</a>' +
+        '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">Descargar</a>' +
+        (invoice.status === 'issued' ? '<button class="invoice-action danger" onclick="openCreditNoteModal(' + escapeHtml(JSON.stringify(String(invoice.id))) + ', ' + escapeHtml(JSON.stringify(String(invoice.invoiceNumber))) + ', ' + Number(invoice.totalCents) + ')">Nota crédito</button>' : '');
+      return '<tr><td><strong class="invoice-number">' + escapeHtml(invoice.invoiceNumber) + '</strong></td>' +
+        '<td><code>#' + escapeHtml(invoice.orderId.replace('ord-', '')) + '</code></td>' +
+        '<td><div class="invoice-client"><strong>' + escapeHtml(invoice.customerName) + '</strong><small>' + escapeHtml(invoice.customerEmail) + '</small></div></td>' +
+        '<td><strong class="invoice-total">$' + (Number(invoice.totalCents) / 100).toLocaleString('es-CO') + '</strong></td>' +
+        '<td><span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span></td>' +
+        '<td>' + escapeHtml(new Date(invoice.createdAt).toLocaleString('es-CO')) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
     }
 
     function openCreditNoteModal(invoiceId, invoiceNumber, totalCents) {
@@ -63,24 +47,17 @@ export function renderInvoicingAdminScript(): string {
       if (!_activeCnInvoiceId) return;
       const reason = document.getElementById('cn-reason').value.trim();
       const amountInCents = window.copPesosToCents('cn-amount');
-      if (!reason || !Number.isSafeInteger(amountInCents) || amountInCents <= 0) {
-        alert('Por favor indica motivo y monto válido');
-        return;
-      }
-
-      const res = await fetch('/api/v1/admin/invoices/' + _activeCnInvoiceId + '/credit-notes', {
-        method: 'POST',
-        headers: adminHeaders(true),
-        body: JSON.stringify({ reason, amountInCents })
+      if (!reason || !Number.isSafeInteger(amountInCents) || amountInCents <= 0) return alert('Por favor indica motivo y monto válido');
+      const response = await fetch('/api/v1/admin/invoices/' + _activeCnInvoiceId + '/credit-notes', {
+        method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ reason, amountInCents }),
       });
-
-      if (res.ok) {
+      if (response.ok) {
         alert('¡Nota crédito emitida con éxito!');
         closeCreditNoteModal();
         loadAdminInvoices();
       } else {
-        const err = await res.json().catch(() => ({}));
-        alert('Error: ' + (err.error || 'No se pudo emitir la nota crédito'));
+        const error = await response.json().catch(() => ({}));
+        alert('Error: ' + (error.error || 'No se pudo emitir la nota crédito'));
       }
     }
 

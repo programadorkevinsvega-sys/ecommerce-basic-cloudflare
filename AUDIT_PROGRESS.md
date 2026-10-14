@@ -152,3 +152,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Pagos permanece como una única opción del menú lateral. Se añadió navegación interna con estado seleccionado, paneles exclusivos y adaptación móvil.
 - Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este cambio visual.
 - Commit `bb0d753` enviado a `main`; publiqué el Worker `fc1c3e42-964e-4c08-ad2a-3b6af9b45897` para asegurar la actualización. `/health` devolvió `healthy` con D1/KV/Queue/R2 en `ok`.
+
+### Rediseño de Pagos, Envíos y Facturación (2026-10-13)
+
+- Pagos conserva las tres vistas internas (recaudos, conciliación y transacciones) con estilos coherentes con las tarjetas y tablas nuevas del panel.
+- Envíos y cobertura ahora presenta cabecera, formulario agrupado, selección DANE, tabla compacta de zonas y modal de detalle con estilo claro. Se conservaron los mismos controles, IDs, mensajes, acciones, datos DANE, y formularios de creación/edición.
+- Facturación ahora tiene cabecera y tabla adaptable; mantiene consulta, ver/descargar PDF y emisión de notas crédito con los mismos endpoints, IDs y validaciones.
+- Cambios solo de BFF/presentación y CSS; sin modificaciones de dominio, permisos, endpoints, D1 o datos. Diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para el cambio de interfaz.
