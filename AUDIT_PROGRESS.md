@@ -322,3 +322,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Auditoría y Configuración adoptan encabezados, tarjetas, tablas y formularios claros, con ajuste móvil y controles coherentes con las páginas renovadas.
 - Auditoría pagina los resultados desde el endpoint: 10 por página, con `Anterior`/`Siguiente`; el servidor consulta 11 para detectar si existe la página siguiente y valida el parámetro de página. No se carga toda la bitácora para paginar en el navegador.
 - Sin cambios de dominio, D1 ni migraciones. Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+### Paginación en listados del panel (2026-10-14)
+
+- Añadí controles accesibles y consistentes de 10 filas por página a Pedidos, Inventario, Transacciones, Recaudos contra entrega, Conciliaciones, Facturación, Productos, las cinco tablas de Catálogo y los listados de Banners Hero Promocionales/Informativos, Anuncios, Reglas de Promoción y Cupones.
+- La paginación reutilizable conserva las acciones de cada fila; los filtros de Pedidos, Productos, Transacciones y banners reinician en la página 1. Las listas con filas SSR guardan una copia de las filas originales para que filtrar banners siga funcionando al cambiar de página.
+- Se conserva el origen actual de datos y sus límites de respuesta existentes; esta mejora pagina los resultados actualmente entregados al panel, no amplía los límites de consulta de las API.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.

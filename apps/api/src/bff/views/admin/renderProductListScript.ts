@@ -38,17 +38,18 @@ export function renderProductListScript(): string {
     });
     let activeProductFilter = 'all';
     const productSearch = document.getElementById('products-search');
+    const allProductRows = Array.from(document.querySelectorAll('#products-table-body .products-row'));
     function filterProductList() {
+      window.resetAdminTablePage('products');
       const query = (productSearch?.value || '').trim().toLocaleLowerCase();
-      const rows = Array.from(document.querySelectorAll('#products-table-body .products-row'));
-      let visible = 0;
-      rows.forEach((row) => {
+      const rows = allProductRows.filter((row) => {
         const matches = (!query || row.dataset.search.includes(query)) && (activeProductFilter === 'all' || row.dataset.status === activeProductFilter);
-        row.hidden = !matches;
-        if (matches) visible++;
+        return matches;
       });
       const empty = document.getElementById('products-no-results');
-      if (empty) empty.hidden = visible > 0 || rows.length === 0;
+      if (empty) empty.hidden = true;
+      const visible = rows.length;
+      window.paginateAdminTable('products', document.getElementById('products-table-body'), rows, (row) => row.outerHTML, 7, 'No hay productos que coincidan con la búsqueda.');
       const count = document.getElementById('products-visible-count');
       if (count) count.textContent = 'Mostrando ' + visible + ' de ' + rows.length + ' productos';
       const result = document.getElementById('products-results-count');
@@ -57,6 +58,7 @@ export function renderProductListScript(): string {
     productSearch?.addEventListener('input', filterProductList);
     document.querySelectorAll('[data-product-filter]').forEach((button) => button.addEventListener('click', () => {
       activeProductFilter = button.dataset.productFilter || 'all';
+      window.resetAdminTablePage('products');
       document.querySelectorAll('[data-product-filter]').forEach((item) => {
         const selected = item === button;
         item.classList.toggle('selected', selected);
@@ -64,5 +66,6 @@ export function renderProductListScript(): string {
       });
       filterProductList();
     }));
+    filterProductList();
   </script>`;
 }

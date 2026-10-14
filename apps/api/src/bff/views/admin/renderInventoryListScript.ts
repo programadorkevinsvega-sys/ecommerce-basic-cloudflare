@@ -35,7 +35,7 @@ export function renderInventoryListScript(): string {
       const empty = document.getElementById('inventory-empty');
       region.hidden = visible.length === 0;
       empty.hidden = visible.length !== 0;
-      body.innerHTML = visible.map(renderInventoryRow).join('');
+      window.paginateAdminTable('inventory', body, visible, renderInventoryRow, 5, 'No hay productos de inventario que coincidan.');
       document.getElementById('inventory-summary').textContent = 'Mostrando ' + visible.length + ' de ' + items.length + ' productos cargados.';
     }
 
@@ -73,6 +73,7 @@ export function renderInventoryListScript(): string {
 
     document.querySelectorAll('[data-inventory-level]').forEach(button => button.addEventListener('click', () => {
       activeInventoryLevel = button.dataset.inventoryLevel;
+      window.resetAdminTablePage('inventory');
       document.querySelectorAll('[data-inventory-level]').forEach(tab => {
         const selected = tab === button;
         tab.classList.toggle('selected', selected);
@@ -80,7 +81,7 @@ export function renderInventoryListScript(): string {
       });
       renderAdminInventoryView();
     }));
-    document.getElementById('inventory-search')?.addEventListener('input', renderAdminInventoryView);
+    document.getElementById('inventory-search')?.addEventListener('input', () => { window.resetAdminTablePage('inventory'); renderAdminInventoryView(); });
     document.getElementById('inventory-reset')?.addEventListener('click', () => {
       activeInventoryLevel = 'all';
       document.getElementById('inventory-search').value = '';

@@ -39,9 +39,9 @@ export function renderOrdersAdminListScript(): string {
       if (!body || !region || !empty) return;
       region.hidden = visible.length === 0;
       empty.hidden = visible.length !== 0;
-      body.innerHTML = visible.map(renderAdminOrderRow).join('');
+      window.paginateAdminTable('orders', body, visible, renderAdminOrderRow, 7, 'No hay pedidos que coincidan con los filtros.');
       const sum = visible.reduce((total, order) => total + Number(order.totalCents || 0), 0);
-      document.getElementById('orders-summary').innerHTML = '<span>Mostrando ' + visible.length + ' de ' + orders.length + ' pedidos cargados</span>' +
+      document.getElementById('orders-summary').innerHTML = '<span>' + visible.length + ' pedidos coinciden · ' + orders.length + ' cargados</span>' +
         '<span>Total mostrado <strong>' + orderMoney(sum) + '</strong></span>';
     }
 
@@ -93,6 +93,7 @@ export function renderOrdersAdminListScript(): string {
 
     document.querySelectorAll('[data-orders-status]').forEach(button => button.addEventListener('click', () => {
       activeOrderStatus = button.dataset.ordersStatus;
+      window.resetAdminTablePage('orders');
       document.querySelectorAll('[data-orders-status]').forEach(tab => {
         const selected = tab === button;
         tab.classList.toggle('selected', selected);
@@ -101,8 +102,8 @@ export function renderOrdersAdminListScript(): string {
       renderAdminOrdersTable();
     }));
     ['orders-search', 'orders-method-filter', 'orders-payment-filter'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input', renderAdminOrdersTable);
-      document.getElementById(id)?.addEventListener('change', renderAdminOrdersTable);
+      document.getElementById(id)?.addEventListener('input', () => { window.resetAdminTablePage('orders'); renderAdminOrdersTable(); });
+      document.getElementById(id)?.addEventListener('change', () => { window.resetAdminTablePage('orders'); renderAdminOrdersTable(); });
     });
     document.getElementById('orders-refresh')?.addEventListener('click', loadAdminOrders);
     document.getElementById('orders-export')?.addEventListener('click', exportFilteredAdminOrders);

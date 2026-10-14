@@ -27,11 +27,20 @@ export function renderStorefrontActionsScript(): string {
 
     function filterBanners(card) {
       const [search, placement, state, type] = card.querySelector('.banner-filters').querySelectorAll('input, select');
-      card.querySelectorAll('[data-banner-row="1"]').forEach((row) => {
+      const body = card.querySelector('tbody');
+      const matchesFilter = (row) => {
         const matches = row.dataset.title.includes(search.value.toLowerCase()) &&
           (!placement.value || row.dataset.placement === placement.value) && (!state.value || row.dataset.active === state.value) && (!type.value || row.dataset.type === type.value);
-        row.hidden = !matches;
+        return matches;
+      };
+      const template = document.createElement('template');
+      const rows = window.getStaticAdminTableRows(body).filter((markup) => {
+        template.innerHTML = markup;
+        return template.content.firstElementChild?.matches('[data-banner-row="1"]') && matchesFilter(template.content.firstElementChild);
       });
+      const key = body?.dataset.paginationKey;
+      window.resetAdminTablePage(key);
+      window.paginateAdminTable(key, body, rows, (markup) => markup, 4, 'No hay banners que coincidan con los filtros.');
     }
 
     function previewBanner(prefix, bannerType) {

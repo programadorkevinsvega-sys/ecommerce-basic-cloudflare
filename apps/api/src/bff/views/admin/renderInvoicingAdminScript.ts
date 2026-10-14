@@ -18,6 +18,7 @@ export function renderInvoicingAdminScript(): string {
     }
 
     function filterAdminInvoices() {
+      window.resetAdminTablePage('invoices');
       const tbody = document.getElementById('invoices-table-body');
       if (!tbody) return;
       const query = normalizeInvoiceSearch(document.getElementById('invoices-search')?.value || '');
@@ -28,9 +29,7 @@ export function renderInvoicingAdminScript(): string {
         const haystack = normalizeInvoiceSearch([invoice.invoiceNumber, invoice.orderId, invoice.customerName, invoice.customerEmail, total.toLocaleString('es-CO'), exactTotal].join(' '));
         return !query || haystack.includes(query) || (digits.length > 0 && (String(total).includes(digits) || exactTotal.replace(/\\D/g, '').includes(digits)));
       });
-      tbody.innerHTML = invoices.length
-        ? invoices.map(renderInvoiceRow).join('')
-        : '<tr><td colspan="7" class="invoices-empty">No hay facturas que coincidan con la búsqueda.</td></tr>';
+      window.paginateAdminTable('invoices', tbody, invoices, renderInvoiceRow, 7, 'No hay facturas que coincidan con la búsqueda.');
     }
 
     function normalizeInvoiceSearch(value) {

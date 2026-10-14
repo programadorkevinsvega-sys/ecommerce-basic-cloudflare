@@ -29,6 +29,8 @@ import { renderMarketingNavigationScript } from './renderMarketingNavigationScri
 import { renderAdminActionTokensCss } from './renderAdminActionTokensCss.js';
 import { renderMarketingDashboardCss } from './renderMarketingDashboardCss.js';
 import { renderSystemDashboardCss } from './renderSystemDashboardCss.js';
+import { renderAdminPaginationCss } from './renderAdminPaginationCss.js';
+import { renderAdminPaginationScript } from './renderAdminPaginationScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -37,7 +39,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderAdminActionTokensCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderAdminActionTokensCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
@@ -63,6 +65,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     }
     window.escapeHtml = escapeHtml;
   </script>
+  <script>${renderAdminPaginationScript()}</script>
   <script>${renderCopInputScript()}</script>
   <script>${renderProductPricingScript()}</script>
   <script>${renderAdminDashboardScript()}</script>
