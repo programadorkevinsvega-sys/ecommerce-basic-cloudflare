@@ -5,6 +5,7 @@ import { storefrontDetailStyles } from './storefrontDetailStyles.js';
 import { storefrontCartStyles } from './storefrontCartStyles.js';
 import { storefrontCatalogStyles } from './storefrontCatalogStyles.js';
 import { storefrontCheckoutStyles } from './storefrontCheckoutStyles.js';
+import { storefrontCmsStyles } from './storefrontCmsStyles.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -74,7 +75,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}</style>
 </head>
 <body class="${props.checkoutMode ? 'checkout-mode' : ''}">
   ${props.checkoutMode ? '' : topBarHtml}

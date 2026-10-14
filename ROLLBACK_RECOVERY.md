@@ -262,6 +262,10 @@ Los controles no aplicables todavía (por ejemplo, `credit` o Durable Objects an
 
 ## Auditoría de migraciones correctivas (2026-10-12)
 
+### Páginas institucionales CMS (2026-10-14)
+
+`cms__0002_institutional_pages.sql` agrega las páginas institucionales que no existían, en estado `draft`, y conserva intactas las páginas previas. Es una migración de contenido sin DDL. Un rollback del Worker no requiere revertir ni borrar estas filas; las versiones actuales de CMS continúan pudiendo leerlas. Si la migración no se completa, revisar `cms_pages` por slug y `cms_page_versions` por ID/versión antes de reintentar. La operación es idempotente y no elimina contenido. Publicar cada borrador solo después de validar los datos comerciales o legales correspondientes.
+
 Se añadieron `payments__0003_cod_collection_receipts.sql` y `realtime__0003_preserve_read_state.sql` como migraciones expand-only. La primera agrega columnas nullable y rellena `created_at` desde `collected_at`; la segunda sincroniza `read` con `is_read`. Ambas se probaron en SQLite temporal desde una base nueva y con filas de fixture del esquema anterior. Con autorización del usuario, pagos v3 se aplicó con Wrangler al D1 remoto; realtime se ejecutó durante reconciliación del ledger. No se desplegó el Worker.
 
 Para recuperar: conservar las columnas añadidas y filas, y corregir hacia delante. Los bookmarks previos y posteriores a la reconciliación constan en `docs/migrations/manifest.md`. No hay reversión automática probada. No eliminar columnas ni restaurar un snapshot sin evaluar escrituras posteriores.

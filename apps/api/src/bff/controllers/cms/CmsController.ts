@@ -1,17 +1,16 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
-import { renderCmsBlocks } from '../../views/renderCmsBlocks.js';
+import { renderCmsPage } from '../../views/renderCmsPage.js';
+import { CMS_INSTITUTIONAL_PAGE_ROUTES } from '../../cms/CmsInstitutionalPageRoutes.js';
 
 export class CmsController {
   public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
-    // Visualización pública SSR de páginas institucionales /p/:slug
-    router.get('/p/:slug', async (c) => {
-      const slug = c.req.param('slug');
+    const showPublishedPage = async (c: Context, slug: string, requestedPath: string) => {
       const [headerMenu, footerMenu] = await Promise.all([
         cmsGateway.getMenuByCode('header').catch(() => null),
         cmsGateway.getMenuByCode('footer').catch(() => null),
@@ -21,26 +20,15 @@ export class CmsController {
 
       try {
         const page = await cmsGateway.getPageBySlug(slug);
-        const blocksHtml = renderCmsBlocks(page.blocks);
-
-        const bodyHtml = `
-          <div style="max-width: 800px; margin: 0 auto; padding: 2rem 0;">
-            <nav aria-label="Breadcrumb" style="margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--muted);">
-              <a href="/" style="color: var(--accent); text-decoration: none;">Inicio</a> &gt;
-              <span>${escapeHtml(page.title)}</span>
-            </nav>
-            <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--primary);">${escapeHtml(page.title)}</h1>
-            <div class="cms-page-content">${blocksHtml}</div>
-          </div>
-        `;
-
-        const canonical = `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/p/${page.slug}`;
+        if (page.status !== 'published') throw new Error('Página no publicada');
+        const rendered = renderCmsPage(page);
+        const canonical = `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev${requestedPath}`;
 
         const html = renderBaseLayout({
-          title: page.seoTitle || page.title,
-          description: page.seoDescription || `Página oficial de ${page.title} en Vega Store.`,
+          title: rendered.title,
+          description: rendered.description,
           canonicalUrl: canonical,
-          bodyHtml,
+          bodyHtml: rendered.bodyHtml,
           headerMenuItems,
           footerMenuItems,
         });
@@ -56,6 +44,16 @@ export class CmsController {
         });
         return c.html(notFoundHtml, 404);
       }
+    };
+
+    // Las rutas limpias son canónicas. /p/:slug se conserva para enlaces históricos.
+    for (const route of CMS_INSTITUTIONAL_PAGE_ROUTES) {
+      router.get(route.path, (c) => showPublishedPage(c, route.slug, route.path));
+    }
+    router.get('/p/:slug', (c) => {
+      const slug = c.req.param('slug');
+      const route = CMS_INSTITUTIONAL_PAGE_ROUTES.find((item) => item.slug === slug);
+      return showPublishedPage(c, slug, route?.path ?? `/p/${slug}`);
     });
 
     // Menús anidados públicos por código (ej. header, footer)
@@ -131,8 +129,4 @@ export class CmsController {
 
     return router;
   }
-}
-
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }

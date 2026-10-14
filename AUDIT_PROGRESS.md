@@ -207,3 +207,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Añadí búsqueda en transacciones por referencia, factura, pedido, nombre/correo y monto; y en Facturación por número de factura, pedido, cliente y total. Los COP se muestran en pesos enteros; la búsqueda reconoce también fracciones de montos históricos.
 - Sin cambios de endpoints, permisos, backend de negocio o D1. Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y dry-run de Wrangler pasaron. No ejecuté pruebas automatizadas ni visuales de navegador.
 - Commit `3b3d871` enviado a `main`; Wrangler registró los deployments `a883b629-8a7b-431b-9a1e-4ab66401e172` y `9e760915-5351-4704-bce4-3c370373bfab` después del push. `/health` respondió `healthy` con D1/KV/Queue/R2 `ok`.
+### Páginas institucionales CMS y rutas canónicas (2026-10-14)
+
+- Consulta D1 remota de solo lectura: entre las diez rutas solicitadas, solo existe `terminos-y-condiciones` y está publicada. Esa página y su contenido no se modifican.
+- Añadí una migración `cms__0002_institutional_pages.sql` para las nueve páginas ausentes, con borradores editables CMS. Los textos legales y de contacto quedan pendientes de completar/verificar; no se publican afirmaciones jurídicas ni canales inventados.
+- Añadí rutas limpias canónicas, conservé `/p/:slug` y cambié la representación SSR a tarjetas/jerarquía visual del storefront actual. La ruta pública devuelve 404 para páginas CMS que no estén publicadas.
+- Validaciones ejecutadas: `pnpm typecheck`, `pnpm lint`, `node scripts/check-migration-consistency.js` y `git diff --check`, todas correctas. No ejecuté pruebas automatizadas ni validación visual en navegador.
+- Migración todavía pendiente de aplicar; su estado se confirmará después de publicar la versión que oculta borradores.

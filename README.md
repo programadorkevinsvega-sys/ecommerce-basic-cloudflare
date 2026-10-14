@@ -414,7 +414,10 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/categorias/:slug`, `/marcas/:slug` | Listados por categoría / marca |
 | `/buscar?q=` | Búsqueda |
 | `/promociones` | Promociones vigentes |
-| `/p/:slug` | Páginas del CMS (nosotros, términos, contacto, etc.) |
+| `/sobre-nosotros`, `/contacto`, `/preguntas-frecuentes` | Páginas informativas editables desde CMS |
+| `/politica-de-envios`, `/devoluciones`, `/garantias` | Información de envíos y posventa editable desde CMS |
+| `/terminos-y-condiciones`, `/politica-de-privacidad`, `/politica-de-cookies`, `/tratamiento-de-datos` | Páginas legales editables desde CMS |
+| `/p/:slug` | Ruta histórica del CMS; se conserva por compatibilidad |
 | `/carrito`, `/checkout` | Compra |
 | `/login`, `/registro`, `/recuperar` | Acceso de clientes |
 | `/cuenta`, `/cuenta/pedidos`, `/cuenta/direcciones`, `/cuenta/facturas` | Área del cliente |
