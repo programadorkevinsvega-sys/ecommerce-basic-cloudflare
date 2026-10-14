@@ -22,6 +22,8 @@ export function renderAdminDashboardScript(): string {
       document.querySelector('.admin-main')?.classList.toggle('shipping-page-active', tabId === 'shipping');
       legacy?.classList.toggle('invoices-mode', tabId === 'invoices');
       document.querySelector('.admin-main')?.classList.toggle('invoices-page-active', tabId === 'invoices');
+      legacy?.classList.toggle('taxonomies-mode', tabId === 'taxonomies');
+      document.querySelector('.admin-main')?.classList.toggle('taxonomies-page-active', tabId === 'taxonomies');
       legacy?.classList.toggle('products-mode', tabId === 'products');
       document.querySelector('.admin-main')?.classList.toggle('products-page-active', tabId === 'products');
       if (tabId === 'payments' && !navButton && typeof window.showAdminPaymentPage === 'function') window.showAdminPaymentPage('collections');

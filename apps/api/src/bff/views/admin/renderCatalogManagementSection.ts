@@ -2,7 +2,7 @@ import type { AttributeDto, BrandDto, CategoryDto, CatalogProductDto, ProductVar
 
 export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: CatalogProductDto[]): string {
   return `<section class="taxonomy-screen" aria-label="Gestión del catálogo">
-    <header class="taxonomy-heading"><div><span>CATÁLOGO</span><h1 id="taxonomy-page-title">Categorías</h1><p id="taxonomy-page-description">Organiza los productos en categorías independientes.</p></div></header>
+    <header class="taxonomy-heading"><div><h1 id="taxonomy-page-title">Categorías</h1><p id="taxonomy-page-description">Organiza los productos en categorías independientes.</p></div></header>
     ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products)}
   </section>`;
 }
