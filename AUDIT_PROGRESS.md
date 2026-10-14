@@ -417,3 +417,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Moví Colecciones al primer lugar de Catálogo, justo debajo de Productos, porque el menú es alto y su barra de desplazamiento permanece oculta; al estar al final era difícil encontrar la gestión.
 - Añadí una regresión que verifica el orden del enlace de Colecciones antes de Categorías.
 - Typecheck, lint de arquitectura, prueba `admin-dashboard-redesign.test.ts` (2 pruebas) y `git diff --check` aprobados. Sin cambios de backend o migraciones.
+
+### Ajuste del modal de colecciones (2026-10-14)
+
+- Amplié el diálogo a 900 px en escritorio, reservé una fila completa para productos publicados y mejoré el alto, espaciado y texto de ayuda del selector múltiple. En móvil conserva el diseño de una columna.
+- `git diff --check` aprobado. No se ejecutaron pruebas automatizadas para este ajuste visual.

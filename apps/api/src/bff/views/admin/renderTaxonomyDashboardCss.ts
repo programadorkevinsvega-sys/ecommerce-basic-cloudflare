@@ -44,6 +44,7 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-modal { position:fixed; inset:0; z-index:1900; display:flex; align-items:center; justify-content:center; padding:22px; }
     .taxonomy-modal-backdrop { position:absolute; inset:0; border:0; background:#1821198c; }
     .taxonomy-modal-dialog { position:relative; display:flex; width:min(100%,640px); max-height:calc(100vh - 44px); flex-direction:column; overflow:hidden; border:1px solid #e3e6ec; border-radius:15px; background:#fff; color:#151a23; box-shadow:0 24px 64px #151a2347; }
+    .taxonomy-page[data-taxonomy-page="collections"] .taxonomy-modal-dialog { width:min(100%,900px); }
     .taxonomy-modal-dialog>header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border-bottom:1px solid #e8eaf0; padding:19px 22px; }
     .taxonomy-modal-dialog h2 { margin:0; font-size:19px; }
     .taxonomy-modal-dialog header p { margin:5px 0 0; color:#636b7b; font-size:12px; }
@@ -52,6 +53,9 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
     .taxonomy-fields label { display:flex; min-width:0; flex-direction:column; gap:6px; color:#283142; font-size:12px; font-weight:650; }
     .taxonomy-fields .wide { grid-column:1/-1; }
+    .taxonomy-fields .collection-products-field select { min-height:220px; padding:7px!important; }
+    .taxonomy-fields .collection-products-field option { padding:7px 9px; }
+    .taxonomy-fields .collection-products-field small { color:#737b89; font-size:11px; font-weight:400; }
     .taxonomy-fields input,.taxonomy-fields select,.taxonomy-fields textarea { width:100%; min-height:44px; border:1px solid #cbd1db!important; border-radius:8px!important; padding:9px 11px!important; background:#fff!important; color:#151a23!important; font:inherit; font-size:13px!important; box-shadow:none!important; }
     .taxonomy-fields textarea { min-height:78px; resize:vertical; }
     .taxonomy-fields input:focus,.taxonomy-fields select:focus,.taxonomy-fields textarea:focus { border-color:#7296f4!important; box-shadow:0 0 0 3px #dce6fb!important; outline:0; }
