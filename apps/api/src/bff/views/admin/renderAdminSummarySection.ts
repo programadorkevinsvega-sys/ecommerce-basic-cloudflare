@@ -22,7 +22,7 @@ export function renderAdminSummarySection(props: AdminSummaryProps): string {
       ${metricCard('Ventas pagadas (COP)', 'summary-sales', 'Suma de pedidos pagados en la muestra')}
       ${metricCard('Pedidos', 'summary-orders-count', 'Pedidos dentro del periodo seleccionado')}
       ${metricCard('Ticket promedio (COP)', 'summary-average-ticket', 'Promedio de pedidos con pago aprobado')}
-      ${metricCard('Pagos aprobados', 'summary-paid-rate', 'Proporción de pedidos pagados en la muestra')}
+      ${metricCard('Pedidos pagados', 'summary-paid-rate', 'Con pago aprobado o recaudo confirmado')}
     </section>
     <div class="summary-analytics-grid">
       <section class="summary-panel summary-chart-panel" aria-labelledby="summary-chart-title">
