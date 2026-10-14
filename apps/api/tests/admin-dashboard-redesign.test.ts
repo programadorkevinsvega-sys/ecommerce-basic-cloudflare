@@ -30,6 +30,7 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('data-taxonomy-page="collections"');
     expect(html).toContain("collections:'collections'");
     expect(html).toContain('collectionProducts');
+    expect(html.indexOf("showCatalogPage('collections', this)")).toBeLessThan(html.indexOf("showCatalogPage('categories', this)"));
     expect(html).toContain('function switchTab(tabId, navButton)');
     expect(html).toContain("fetch('/api/v1/admin/orders'");
     expect(html).toContain('VEGA STORE');

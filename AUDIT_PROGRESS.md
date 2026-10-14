@@ -411,3 +411,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Pruebas añadidas para publicación, unicidad de slug, asociación solo de productos publicados, escape HTML, paginación y persistencia D1 real. Migración `catalog__0008_collections.sql` aditiva y aplicada tras consultar las 41 entradas previas; confirmados ledger, tablas y columnas en D1 productiva. No se insertó contenido de tienda.
 - Pruebas unitarias: 44 archivos / 121 pruebas aprobados. Workers/Miniflare: 5 archivos / 14 pruebas aprobados; una primera ejecución paralela agotó timeout en `/health`, y la ejecución aislada pasó. Verificadas migraciones desde cero y actualizaciones legacy, tipos, lint, aislamiento, arquitectura y consistencia de copias.
 - Commits `4255fe5` (implementación) y `45a7639` (título de colección) enviados a `main`. Cloudflare desplegó automáticamente el código; deployment `3397e239-b37a-4624-8982-e862d221ce15`, versión `ebc94fcf-be85-4d5e-b44c-4ba8f2919e80`, 100% activo a las 09:48 UTC. `/health` devolvió HTTP 200 con D1/KV/Queue/R2 `ok`; `/colecciones` devolvió HTTP 200 y `<title>Colecciones | Vega Store</title>`. No se hizo inspección visual en navegador.
+
+### Visibilidad de Colecciones en navegación administrativa (2026-10-14)
+
+- Moví Colecciones al primer lugar de Catálogo, justo debajo de Productos, porque el menú es alto y su barra de desplazamiento permanece oculta; al estar al final era difícil encontrar la gestión.
+- Añadí una regresión que verifica el orden del enlace de Colecciones antes de Categorías.
+- Typecheck, lint de arquitectura, prueba `admin-dashboard-redesign.test.ts` (2 pruebas) y `git diff --check` aprobados. Sin cambios de backend o migraciones.
