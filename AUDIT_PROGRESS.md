@@ -279,3 +279,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El formulario existente se presenta en un modal accesible para creación y edición, con cierre por botón, fondo o Escape, foco inicial y retorno de foco. Se conserva la lógica actual de precios, medios de pago, atributos, imágenes, envío, SEO y publicación.
 - La herramienta de conversión de precios históricos continúa disponible en el listado. El cambio es de frontend y no requiere migraciones ni cambios de API.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice revisión visual en navegador.
+
+### Ajuste de acentos heredados del modal de Productos (2026-10-14)
+
+- Reemplacé los acentos azules heredados en filtros/acciones de Productos, foco de inputs, vista previa SEO y estado de imagen principal por tonos verdes y neutros del diseño actualizado. Sin cambios de lógica o API.
+- Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni hice revisión visual en navegador.

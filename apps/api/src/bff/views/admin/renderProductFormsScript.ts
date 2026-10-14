@@ -20,9 +20,9 @@ export function renderProductFormsScript(): string {
       }
       list.forEach((mId, index) => {
         const item = document.createElement('div');
-        item.style.cssText = 'position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:2px solid ' + (index === 0 ? '#38bdf8' : '#334155') + '; background:#1e293b;';
+        item.style.cssText = 'position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:2px solid ' + (index === 0 ? '#315b43' : '#d8ded8') + '; background:#f3f5f2;';
         item.innerHTML = '<img src="/media/' + mId + '" style="width:100%; height:100%; object-fit:cover;" />' +
-          (index === 0 ? '<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(14,165,233,0.9); color:#fff; font-size:0.6rem; text-align:center; font-weight:bold; padding:2px 0;">Principal</span>' : '') +
+          (index === 0 ? '<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(49,91,67,0.92); color:#fff; font-size:0.6rem; text-align:center; font-weight:bold; padding:2px 0;">Principal</span>' : '') +
           '<button type="button" onclick="removeProductMedia(' + index + ')" style="position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); color:#fff; border:none; cursor:pointer; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>';
         grid.appendChild(item);
       });
@@ -144,7 +144,7 @@ export function renderProductFormsScript(): string {
       const statusSpan = document.getElementById('pImageUploadStatus');
       if (statusSpan) {
         statusSpan.textContent = '⏳ Subiendo ' + filesToUpload.length + ' imagen(es) a R2...';
-        statusSpan.style.color = '#38bdf8';
+        statusSpan.style.color = '#56675b';
       }
       for (const file of filesToUpload) {
         const formData = new FormData();
@@ -164,7 +164,7 @@ export function renderProductFormsScript(): string {
       input.value = '';
       if (statusSpan) {
         statusSpan.textContent = '✅ Imágenes listas (' + window.currentProductMediaIds.length + '/5)';
-        statusSpan.style.color = '#34d399';
+        statusSpan.style.color = '#18764b';
       }
     }
 
