@@ -348,3 +348,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Se encontró un error de sintaxis confirmado en el JavaScript generado para las acciones de filas: las comillas de los `onclick` hacían inválido todo el bloque del Catálogo, por lo que sus páginas quedaban ocultas y el encabezado no cambiaba.
 - Reemplacé los manejadores inline por atributos de datos y un listener delegado para Ver, Editar, Ocultar/Mostrar y Eliminar. Verifiqué que el JavaScript renderizado pase `node --check`.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual con navegador.
+
+### Consistencia de botones de acciones del panel (2026-10-14)
+
+- Centralicé el estilo de acciones de filas en Productos, Pedidos, Inventario, Envíos, Facturación, Catálogo, CMS y Marketing: altura de 34 px, tipografía de 12 px, padding, borde, radio, foco accesible y estados hover compartidos.
+- Las acciones neutrales, principales, de publicación/ocultamiento y destructivas mantienen colores semánticos uniformes. Los botones principales de encabezado y formularios conservan su tamaño mayor.
+- TypeScript, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.

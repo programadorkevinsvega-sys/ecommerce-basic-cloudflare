@@ -39,7 +39,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderAdminActionTokensCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
