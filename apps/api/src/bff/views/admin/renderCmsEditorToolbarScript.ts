@@ -31,6 +31,7 @@ export function renderCmsEditorToolbarScript(): string {
     function loadCmsTemplate(key) {
       const t = window.__CMS_TEMPLATES ? window.__CMS_TEMPLATES[key] : null;
       if (!t) return;
+      if (document.getElementById('newCmsPageForm').hidden) window.startCmsPage();
       if (document.getElementById('cmsTitle').value && !confirm('¿Deseas cargar la plantilla ' + t.name + '?')) return;
       document.getElementById('cmsTitle').value = t.title;
       const slugInput = document.getElementById('cmsSlug');

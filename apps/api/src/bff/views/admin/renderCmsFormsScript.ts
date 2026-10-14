@@ -99,7 +99,17 @@ export function renderCmsFormsScript(): string {
       updateCmsSeoCounters();
       document.getElementById('cmsSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('cmsCancelBtn').style.display = 'inline-block';
+      document.getElementById('newCmsPageForm').hidden = false;
+      document.getElementById('cms-editor-heading').textContent = 'Editar página';
       document.getElementById('newCmsPageForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function startCmsPage() {
+      resetCmsForm();
+      document.getElementById('newCmsPageForm').hidden = false;
+      document.getElementById('cms-editor-heading').textContent = 'Nueva página';
+      document.getElementById('newCmsPageForm').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('cmsTitle').focus();
     }
 
     function resetCmsForm() {
@@ -110,6 +120,8 @@ export function renderCmsFormsScript(): string {
       if (slugInput) delete slugInput.dataset.manual;
       document.getElementById('cmsSubmitBtn').textContent = 'Publicar Página CMS';
       document.getElementById('cmsCancelBtn').style.display = 'none';
+      document.getElementById('newCmsPageForm').hidden = true;
+      document.getElementById('cms-editor-heading').textContent = 'Nueva página';
       updateCmsSeoCounters();
     }
 
@@ -152,6 +164,7 @@ export function renderCmsFormsScript(): string {
     }
 
     window.editCmsPage = editCmsPage;
+    window.startCmsPage = startCmsPage;
     window.resetCmsForm = resetCmsForm;
     window.toggleCmsPageStatus = toggleCmsPageStatus;
     window.deleteCmsPage = deleteCmsPage;

@@ -15,8 +15,8 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-list-heading h2 { margin:0; color:#151a23; font-size:17px; }
     .taxonomy-list-heading p { margin:5px 0 0; color:#737b89; font-size:12px; }
     .taxonomy-primary,.taxonomy-secondary,.taxonomy-danger { display:inline-flex; min-height:42px; align-items:center; justify-content:center; gap:7px; border:1px solid transparent; border-radius:9px; padding:0 15px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; transition:background .16s ease,border-color .16s ease; }
-    .taxonomy-primary { background:#20563d; color:#fff; }
-    .taxonomy-primary:hover { background:#17452f; }
+    .taxonomy-primary { background:#151a23; color:#fff; }
+    .taxonomy-primary:hover { background:#303744; }
     .taxonomy-secondary { border-color:#d5dae3; background:#fff; color:#394253; }
     .taxonomy-secondary:hover { background:#f4f6fa; }
     .taxonomy-danger { min-height:34px; border-color:#edd8d4; background:#fff; color:#99483e; font-size:12px; }
@@ -40,7 +40,7 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-empty { padding:52px 20px!important; color:#636b7b!important; text-align:center; }
     .taxonomy-chip { display:inline-flex; margin:2px; border-radius:999px; padding:5px 9px; background:#eef0f4; color:#4a5262; font-size:11px; }
     .taxonomy-status { display:inline-flex; border-radius:999px; padding:5px 9px; background:#eef0f4; color:#505969; font-size:11px; font-weight:600; }
-    .taxonomy-status.active { background:#e6f4ec; color:#136b3e; }
+    .taxonomy-status.active { background:#edf3ef; color:#24583e; }
     .taxonomy-modal { position:fixed; inset:0; z-index:1900; display:flex; align-items:center; justify-content:center; padding:22px; }
     .taxonomy-modal-backdrop { position:absolute; inset:0; border:0; background:#1821198c; }
     .taxonomy-modal-dialog { position:relative; display:flex; width:min(100%,640px); max-height:calc(100vh - 44px); flex-direction:column; overflow:hidden; border:1px solid #e3e6ec; border-radius:15px; background:#fff; color:#151a23; box-shadow:0 24px 64px #151a2347; }
@@ -58,6 +58,14 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-form-message { min-height:18px; margin:12px 0 0; color:#9a4239; font-size:12px; }
     .taxonomy-form footer { display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #e8eaf0; padding-top:16px; }
     @media(max-width:680px) { .taxonomy-heading h1 { font-size:22px; }.taxonomy-list-heading { align-items:flex-start; padding:16px; }.taxonomy-list-heading .taxonomy-primary { flex:none; }.taxonomy-table th,.taxonomy-table td { padding:12px; }.taxonomy-modal { align-items:flex-end; padding:0; }.taxonomy-modal-dialog { max-height:93vh; border-radius:15px 15px 0 0; }.taxonomy-modal-dialog>header,.taxonomy-form { padding:17px; }.taxonomy-fields { grid-template-columns:1fr; gap:12px; }.taxonomy-fields .wide { grid-column:auto; }.taxonomy-form footer { flex-direction:column-reverse; }.taxonomy-form footer button { width:100%; } }
+    .taxonomy-row-actions { min-width:300px; }
+    .taxonomy-row-actions .taxonomy-secondary,.taxonomy-row-actions .taxonomy-danger { min-height:34px; margin:2px; border-radius:7px; padding:0 10px; font-size:11px; }
+    .taxonomy-table a { color:#303744; text-decoration:underline; text-underline-offset:3px; }
+    .taxonomy-table textarea:focus { border-color:#788293; outline:0; box-shadow:0 0 0 3px #e3e6ec; }
+    .taxonomy-chip { background:#f1f2f4; color:#394253; }
+    .taxonomy-modal-backdrop { background:#151a238c; }
+    .taxonomy-fields input:focus,.taxonomy-fields select:focus,.taxonomy-fields textarea:focus { border-color:#788293!important; box-shadow:0 0 0 3px #e3e6ec!important; }
+    .taxonomy-screen button:focus-visible,.taxonomy-modal button:focus-visible,.taxonomy-modal input:focus-visible,.taxonomy-modal select:focus-visible,.taxonomy-modal textarea:focus-visible { outline-color:#788293; }
     @media(prefers-reduced-motion:reduce) { .taxonomy-primary,.taxonomy-secondary,.taxonomy-danger { transition:none; } }
   `;
 }

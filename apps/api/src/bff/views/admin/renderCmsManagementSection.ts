@@ -16,17 +16,17 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
 
     return `
       <tr>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
+        <td class="cms-page-title-cell">
           ${escapeHtml(p.title)}
-          <div style="font-size:0.75rem; color:#94a3b8;">/p/${escapeHtml(p.slug)} (v${p.currentVersion})</div>
+          <div class="cms-page-url">/p/${escapeHtml(p.slug)} · v${p.currentVersion}</div>
         </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">
+        <td>
           ${isPub ? '<span class="badge badge-published">Publicado</span>' : '<span class="badge badge-draft">Borrador</span>'}
         </td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155;">${escapeHtml(p.updatedAt.substring(0, 10))}</td>
-        <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
+        <td>${escapeHtml(p.updatedAt.substring(0, 10))}</td>
+        <td class="cms-page-actions">
           <a class="btn-action btn-action-view" href="/p/${escapeHtml(p.slug)}" target="_blank">Ver</a>
-          <button class="btn-action" style="background:#475569; color:#fff;" onclick="editCmsPage('${p.id}', '${escapeJs(p.title)}', '${escapeJs(p.slug)}', '${p.status}', '${escapeJs(p.seoTitle || '')}', '${escapeJs(p.seoDescription || '')}', '${escapeJs(bodyContent)}')">Editar</button>
+          <button class="btn-action" onclick="editCmsPage('${p.id}', '${escapeJs(p.title)}', '${escapeJs(p.slug)}', '${p.status}', '${escapeJs(p.seoTitle || '')}', '${escapeJs(p.seoDescription || '')}', '${escapeJs(bodyContent)}')">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteCmsPage('${p.id}')">Eliminar</button>
         </td>
@@ -35,12 +35,11 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
   }).join('');
 
   return `
-    <div class="card">
-      <h2>Páginas de Contenido Institucional CMS (${pages.length})</h2>
-      <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
+    <section class="cms-screen">
+      <header class="cms-heading"><div><span class="cms-eyebrow">MARKETING</span><h1>Páginas CMS</h1><p>
         Crea y gestiona páginas como Términos y Condiciones, Políticas de Privacidad, Preguntas Frecuentes, etc.
-      </p>
-      <div style="background:#1e293b; border:1px solid #334155; border-radius:8px; padding:1rem; margin-bottom:1.5rem;">
+      </p></div><button type="button" class="cms-primary" onclick="startCmsPage()">+ Nueva página</button></header>
+      <section class="cms-template-card">
         <label style="font-weight:700; margin-bottom:0.5rem; display:block;">📋 Cargar Plantilla Legal para Colombia:</label>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
           <button type="button" class="btn-action" onclick="loadCmsTemplate('terminos')" style="background:#334155; color:#fff;">Términos y Condiciones</button>
@@ -48,9 +47,11 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           <button type="button" class="btn-action" onclick="loadCmsTemplate('devoluciones')" style="background:#334155; color:#fff;">Devoluciones y Retracto</button>
           <button type="button" class="btn-action" onclick="loadCmsTemplate('pqrs')" style="background:#334155; color:#fff;">Atención PQRS</button>
         </div>
-      </div>
-      <form id="newCmsPageForm" style="margin-bottom: 1.5rem;">
+      </section>
+      <section class="cms-list-card"><div class="cms-list-heading"><div><h2>Páginas</h2><p>${pages.length} páginas registradas</p></div></div>
+      <div class="cms-table-scroll"><form id="newCmsPageForm" class="cms-editor-form" hidden>
         <input type="hidden" id="cmsEditId" value="" />
+        <header class="cms-editor-heading"><div><h2 id="cms-editor-heading">Nueva página</h2><p>Configura el contenido, estado y metadatos SEO.</p></div><button type="button" class="cms-secondary" onclick="resetCmsForm()">Cerrar</button></header>
         <div class="form-grid">
           <div><label>Título de la Página</label><input type="text" id="cmsTitle" required placeholder="Ej. Políticas de Devolución" /></div>
           <div><label>Slug URL (/p/...)</label><input type="text" id="cmsSlug" required placeholder="politicas-de-devolucion" /></div>
@@ -129,10 +130,10 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
         <button type="button" class="btn-action" id="cmsCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetCmsForm()">Cancelar</button>
         <div id="cmsMsg" class="msg"></div>
       </form>
-      <table>
+      <table class="cms-table">
         <thead><tr><th>Título y URL</th><th>Estado</th><th>Última Actualización</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody>${pageRows || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay páginas CMS creadas</td></tr>'}</tbody>
-      </table>
+      </table></div></section>
 
       <!-- Modal de Confirmación para Eliminar Página -->
       <div id="cmsDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
@@ -145,7 +146,7 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   `;
 }
 
