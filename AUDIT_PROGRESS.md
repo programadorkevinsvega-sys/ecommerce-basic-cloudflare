@@ -144,3 +144,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - La barra lateral mantiene todos los grupos en una sola columna en escritorio y móvil. Eliminé el desbordamiento con scroll propio vertical, el carrusel horizontal responsive y el desplazamiento horizontal de grupos. Los enlaces se compactaron para acercarse a la referencia; el contenido que exceda la ventana usa el desplazamiento normal de la página.
 - Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este cambio CSS.
+- Commit `5c3ce27` enviado a `main`; el push generó la versión Cloudflare `230de625-c3f7-431f-bea1-29fdf67027e6`. `/health` confirmó `healthy` con D1/KV/Queue/R2 `ok`.
