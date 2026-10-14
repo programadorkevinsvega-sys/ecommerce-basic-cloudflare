@@ -22,6 +22,9 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('id="tab-orders"');
     expect(html).toContain('id="orders-title">Pedidos</h1>');
     expect(html).toContain('id="orders-table-body"');
+    expect(html).toContain('id="inventory-table-body"');
+    expect(html).toContain('id="inv-adjust-modal"');
+    expect(html).toContain('inventory-page-active');
     expect(html).toContain('id="newProductForm"');
     expect(html).toContain('id="settingsForm"');
     expect(html).toContain('function switchTab(tabId)');

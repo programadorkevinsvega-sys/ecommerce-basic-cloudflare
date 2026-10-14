@@ -123,3 +123,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm test` (42 archivos, 114 pruebas), `pnpm test:workers` (4 archivos, 13 pruebas), `wrangler deploy --dry-run` y `git diff --check`.
 - Commit `d96e27c` enviado a `main`. El push no produjo un deployment; se publicó explícitamente el Worker `b0a93065-1030-4d2f-bf80-17c07f644c92`.
 - `/health` posterior respondió `healthy` con D1, KV, Queue y R2 en `ok`. No se hizo comprobación visual automatizada: no hay Chromium instalado en el entorno.
+
+### Rediseño de Inventario administrativo (2026-10-13)
+
+- Se adaptó Inventario a la referencia visual: métricas de stock total/disponible/reservado y alertas, filtros por nivel, búsqueda, exportación CSV y panel de movimientos recientes. La tabla conserva la cantidad total, reservada y disponible; los ejemplos estáticos del ZIP no se copiaron.
+- Se rehízo el modal de ajuste con entrada, salida y corrección, motivo, nota, vista previa del total, validación de enteros, límites del endpoint y foco/teclado accesibles. Por compatibilidad con la ruta existente, el frontend convierte el movimiento a stock total y lo envía en `deltaQuantity`, nombre heredado del contrato actual; no se cambió API ni backend.
+- El historial se lee de la bitácora administrativa autorizada y solo muestra mutaciones de ajuste completadas. Cuando la sesión carece de `audit:read`, el panel informa que el historial no está disponible. Sin nuevas rutas ni cambios de permisos.
+- Pruebas: presentación/render y sintaxis del script; `pnpm typecheck`, `pnpm lint`, `pnpm test` (43 archivos, 116 pruebas al momento de esa ejecución), `pnpm test:workers` (4 archivos, 13 pruebas), `pnpm test:architecture`, `wrangler deploy --dry-run`, `git diff --check`. Se añadió una aserción adicional del panel general después de correr la suite completa; se reejecutará el test afectado antes del commit.
+- No se modificó dominio, controlador, repositorio, esquema ni datos. Sin comprobación visual de navegador automatizada porque Chromium no está instalado en este entorno.
