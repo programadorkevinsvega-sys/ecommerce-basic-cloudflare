@@ -225,3 +225,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - Quité la columna “Tienda” del footer y filtré sus enlaces de Inicio, Catálogo y Carrito del menú CMS del footer. La navegación de cabecera no cambia.
 - Verificación de código y despliegue registrada después de ejecutar typecheck, lint y smoke test del Home.
+
+### Datos de tienda en el footer (2026-10-14)
+
+- Configuración ahora administra correo de soporte, NIT, razón social, dirección, ciudad, país y URLs de Instagram, TikTok y Facebook. Las redes se validan en servidor como HTTPS y solo aceptan dominios de su plataforma; sus iconos accesibles aparecen únicamente si hay URL configurada.
+- El footer público y el footer del checkout leen el perfil persistido de Settings. Se muestran correo, teléfono si no es el valor de ejemplo, identificación tributaria, dirección y ubicación; no se inventan NIT, dirección, ciudad ni URLs. País queda inicializado como Colombia donde estaba vacío.
+- Migración aditiva `settings__0003_storefront_contact_social.sql` aplicada a producción con el runner Wrangler autorizado; el esquema remoto indicó 37 migraciones conocidas y al día. Se registró en `docs/migrations/manifest.md` y `ROLLBACK_RECOVERY.md`.
+- Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm db:check-migrations` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador para este cambio.
+- Pendiente: publicar el Worker con los cambios de UI/renderizado y que el administrador complete los nuevos campos de ciudad, dirección, NIT y perfiles sociales donde falten.

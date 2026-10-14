@@ -51,7 +51,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
-  app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
+  app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
@@ -105,7 +105,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.storefrontGateway,
     cRoot.seoGateway,
     cRoot.cmsGateway,
-    cRoot.promotionsGateway
+    cRoot.promotionsGateway,
+    cRoot.settingsGateway
   ));
 
   // Infra y Auth

@@ -5,6 +5,7 @@ import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.j
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
@@ -22,7 +23,8 @@ export class StorefrontController {
     storefrontGateway: StorefrontGateway,
     seoGateway: SeoGateway,
     cmsGateway: CmsGateway,
-    promotionsGateway: PromotionsGateway
+    promotionsGateway: PromotionsGateway,
+    settingsGateway: SettingsGateway
   ): Hono {
     const router = new Hono();
 
@@ -44,7 +46,7 @@ export class StorefrontController {
       const [products, homeContent, nav] = await Promise.all([
         catalogGateway.listProducts({ limit: 12, status: 'published' }),
         storefrontGateway.getHomeContent(),
-        getStorefrontNavMenus(cmsGateway),
+        getStorefrontNavMenus(cmsGateway, settingsGateway),
       ]);
 
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
@@ -66,6 +68,7 @@ export class StorefrontController {
         announcementLink: activeAnnouncement?.linkUrl,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
       });
 
       return c.html(html);
@@ -77,7 +80,7 @@ export class StorefrontController {
       const placement = c.req.query('category') ? 'category' as const : null;
       const [products, nav, banners] = await Promise.all([
         catalogGateway.listProducts({ limit: 24, status: 'published', searchQuery: query }),
-        getStorefrontNavMenus(cmsGateway),
+        getStorefrontNavMenus(cmsGateway, settingsGateway),
         placement ? storefrontGateway.getPublicBanners(placement) : Promise.resolve([]),
       ]);
 
@@ -99,6 +102,7 @@ export class StorefrontController {
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
       });
 
       return c.html(html);
@@ -107,7 +111,7 @@ export class StorefrontController {
     router.get('/productos/:slug', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const slug = c.req.param('slug');
-      const nav = await getStorefrontNavMenus(cmsGateway);
+      const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       try {
         const product = await catalogGateway.getProductBySlug(slug);
         const discount = await promotionsGateway.evaluateProductDiscount({
@@ -148,6 +152,7 @@ export class StorefrontController {
           customerEmail,
           headerMenuItems: nav.headerMenuItems,
           footerMenuItems: nav.footerMenuItems,
+          footerStoreProfile: nav.footerStoreProfile,
         });
 
         return c.html(html);
@@ -159,19 +164,21 @@ export class StorefrontController {
           customerEmail,
           headerMenuItems: nav.headerMenuItems,
           footerMenuItems: nav.footerMenuItems,
+          footerStoreProfile: nav.footerStoreProfile,
         });
         return c.html(notFoundHtml, 404);
       }
     });
 
     router.get('/auth/login', async (c) => {
-      const nav = await getStorefrontNavMenus(cmsGateway);
+      const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       const html = renderBaseLayout({
         title: 'Iniciar Sesión',
         description: 'Accede a tu cuenta de cliente en Vega Store.',
         bodyHtml: renderAuthPage(),
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
       });
       return c.html(html);
     });

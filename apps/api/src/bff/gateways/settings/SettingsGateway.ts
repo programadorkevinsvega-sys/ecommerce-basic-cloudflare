@@ -8,6 +8,11 @@ export interface StoreSettingsResponse {
   companyNit?: string;
   companyLegalName?: string;
   companyAddress?: string;
+  companyCity?: string;
+  companyCountry?: string;
+  socialInstagramUrl?: string;
+  socialTiktokUrl?: string;
+  socialFacebookUrl?: string;
   requireCodVerification: boolean;
   updatedAt: string;
 }
@@ -21,6 +26,11 @@ export interface UpdateStoreSettingsRequest {
   companyNit?: string;
   companyLegalName?: string;
   companyAddress?: string;
+  companyCity?: string;
+  companyCountry?: string;
+  socialInstagramUrl?: string;
+  socialTiktokUrl?: string;
+  socialFacebookUrl?: string;
   requireCodVerification?: boolean;
 }
 

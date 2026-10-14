@@ -2,6 +2,7 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CmsGateway, CmsMenuItemDto } from '../../gateways/cms/CmsGateway.js';
 import { LayoutMenuItem } from '../../views/renderBaseLayout.js';
 import { mergeInstitutionalFooterLinks } from '../../cms/mergeInstitutionalFooterLinks.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 
 export async function getCustomerEmail(
   c: { req: { header: (k: string) => string | undefined } },
@@ -23,15 +24,17 @@ export async function getCustomerEmail(
   return undefined;
 }
 
-export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
+export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGateway: SettingsGateway): Promise<{
   headerMenuItems: LayoutMenuItem[];
   footerMenuItems: LayoutMenuItem[];
+  footerStoreProfile?: Awaited<ReturnType<SettingsGateway['getSettings']>>;
 }> {
   try {
-    const [headerMenu, footerMenu, pages] = await Promise.all([
+    const [headerMenu, footerMenu, pages, footerStoreProfile] = await Promise.all([
       cmsGateway.getMenuByCode('header').catch(() => null),
       cmsGateway.getMenuByCode('footer').catch(() => null),
       cmsGateway.listPages(50, 0).catch(() => []),
+      settingsGateway.getSettings().catch(() => undefined),
     ]);
 
     const headerMenuItems: LayoutMenuItem[] = headerMenu?.items && headerMenu.items.length > 0
@@ -70,6 +73,7 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
     return {
       headerMenuItems: cleanHeaderMenuItems,
       footerMenuItems: mergeInstitutionalFooterLinks(cleanFooterItems, pages),
+      footerStoreProfile,
     };
   } catch {
     return {
@@ -80,6 +84,7 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
       footerMenuItems: [
         { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
       ],
+      footerStoreProfile: undefined,
     };
   }
 }

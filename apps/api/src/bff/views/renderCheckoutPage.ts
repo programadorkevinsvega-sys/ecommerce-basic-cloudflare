@@ -4,6 +4,8 @@ import { ShippingZoneDto } from '../gateways/shipping/ShippingGateway.js';
 import { getCheckoutScript } from './getCheckoutScript.js';
 import { getCheckoutLocationScript } from './getCheckoutLocationScript.js';
 import { getCheckoutDraftScript } from './getCheckoutDraftScript.js';
+import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
+import { renderCheckoutStoreDetails, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -13,7 +15,7 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 }
 
-export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19): string {
+export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19, footerStoreProfile?: StorefrontStoreProfile): string {
   const subtotalCents = cart.items.reduce((total, item) => total + item.subtotalCents, 0);
   const productPaymentMethods = getProductPaymentMethods(cart.items, productsMap);
   const initialPaymentMethod = productPaymentMethods.wompi ? 'wompi' : productPaymentMethods.cashOnDelivery ? 'cash_on_delivery' : null;
@@ -36,7 +38,7 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
       <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">${initialPaymentMethod === 'wompi' ? `Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}` : initialPaymentMethod === 'cash_on_delivery' ? 'Confirmar pedido' : 'Selecciona un método de pago'}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
     </form>
     ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion, initialPaymentMethod === 'wompi')}
-    </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()} · Colombia</span><span>Compra segura · Precios en COP</span></footer>
+    </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()}</span>${renderCheckoutStoreDetails(footerStoreProfile)}${renderStoreSocialLinks(footerStoreProfile)}<span>Compra segura · Precios en COP</span></footer>
   </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion)}${getCheckoutDraftScript()}`;
 }
 

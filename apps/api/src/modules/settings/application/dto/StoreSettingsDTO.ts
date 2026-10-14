@@ -8,6 +8,11 @@ export interface StoreSettingsDTO {
   companyNit?: string;
   companyLegalName?: string;
   companyAddress?: string;
+  companyCity?: string;
+  companyCountry?: string;
+  socialInstagramUrl?: string;
+  socialTiktokUrl?: string;
+  socialFacebookUrl?: string;
   requireCodVerification: boolean;
   updatedAt: string;
 }

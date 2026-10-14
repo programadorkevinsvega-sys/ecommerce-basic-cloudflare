@@ -6,13 +6,14 @@ import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderCmsPage } from '../../views/renderCmsPage.js';
 import { CMS_INSTITUTIONAL_PAGE_ROUTES } from '../../cms/CmsInstitutionalPageRoutes.js';
 import { getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
+import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 
 export class CmsController {
-  public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway): Hono {
+  public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway): Hono {
     const router = new Hono();
 
     const showPublishedPage = async (c: Context, slug: string, requestedPath: string) => {
-      const { headerMenuItems, footerMenuItems } = await getStorefrontNavMenus(cmsGateway);
+      const { headerMenuItems, footerMenuItems, footerStoreProfile } = await getStorefrontNavMenus(cmsGateway, settingsGateway);
 
       try {
         const page = await cmsGateway.getPageBySlug(slug);
@@ -27,6 +28,7 @@ export class CmsController {
           bodyHtml: rendered.bodyHtml,
           headerMenuItems,
           footerMenuItems,
+          footerStoreProfile,
         });
 
         return c.html(html);
@@ -37,6 +39,7 @@ export class CmsController {
           bodyHtml: '<div style="text-align:center; padding:4rem;"><h2>404 - Página no encontrada</h2><p><a href="/">Volver al inicio</a></p></div>',
           headerMenuItems,
           footerMenuItems,
+          footerStoreProfile,
         });
         return c.html(notFoundHtml, 404);
       }

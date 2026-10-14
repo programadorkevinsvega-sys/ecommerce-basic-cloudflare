@@ -13,6 +13,11 @@ const updateSettingsSchema = z.object({
   companyNit: z.string().max(50).optional(),
   companyLegalName: z.string().max(100).optional(),
   companyAddress: z.string().max(200).optional(),
+  companyCity: z.string().max(100).optional(),
+  companyCountry: z.string().max(100).optional(),
+  socialInstagramUrl: socialUrlSchema('instagram.com'),
+  socialTiktokUrl: socialUrlSchema('tiktok.com'),
+  socialFacebookUrl: socialUrlSchema('facebook.com'),
   requireCodVerification: z.boolean().optional(),
 }).strict();
 
@@ -47,4 +52,15 @@ export class SettingsController {
 
     return router;
   }
+}
+
+function socialUrlSchema(domain: string) {
+  return z.string().max(200).refine((value) => {
+    if (!value.trim()) return true;
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && (url.hostname === domain || url.hostname.endsWith(`.${domain}`))
+        && !url.username && !url.password && !url.port;
+    } catch { return false; }
+  }, `Usa una URL HTTPS de ${domain}`).optional();
 }

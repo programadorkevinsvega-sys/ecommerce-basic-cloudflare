@@ -67,11 +67,17 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
             <div><label>Moneda</label><input type="text" id="sCurrency" value="${escapeHtml(props.settings.currency)}" readonly style="opacity:0.6;" /></div>
             <div><label>NIT / Cédula Fiscal</label><input type="text" id="sNit" placeholder="Ej: 900.123.456-7" value="${escapeHtml(props.settings.companyNit || '')}" /></div>
             <div><label>Razón Social / Propietario</label><input type="text" id="sLegal" placeholder="Ej: JNM Tortas S.A.S." value="${escapeHtml(props.settings.companyLegalName || '')}" /></div>
-            <div><label>Dirección / Ciudad</label><input type="text" id="sAddress" placeholder="Ej: Calle 123, Medellín, Colombia" value="${escapeHtml(props.settings.companyAddress || '')}" /></div>
+            <div><label>Dirección</label><input type="text" id="sAddress" placeholder="Ej: Calle 123 #45-67, local 2" value="${escapeHtml(props.settings.companyAddress || '')}" /></div>
+            <div><label>Ciudad de la tienda</label><input type="text" id="sCity" placeholder="Ej: Medellín" value="${escapeHtml(props.settings.companyCity || '')}" /></div>
+            <div><label>País</label><input type="text" id="sCountry" placeholder="Ej: Colombia" value="${escapeHtml(props.settings.companyCountry || '')}" /></div>
             <div><label>IVA (%)</label><input type="number" id="sTax" value="${props.settings.taxRatePercent}" required /></div>
             <div><label>Email de Soporte</label><input type="email" id="sEmail" value="${escapeHtml(props.settings.supportEmail || '')}" /></div>
             <div><label>Teléfono / WhatsApp</label><input type="text" id="sPhone" value="${escapeHtml(props.settings.supportPhone || '')}" /></div>
+            <div><label>Instagram (URL)</label><input type="url" id="sInstagram" placeholder="https://www.instagram.com/tu_tienda/" value="${escapeHtml(props.settings.socialInstagramUrl || '')}" /></div>
+            <div><label>TikTok (URL)</label><input type="url" id="sTiktok" placeholder="https://www.tiktok.com/@tu_tienda" value="${escapeHtml(props.settings.socialTiktokUrl || '')}" /></div>
+            <div><label>Facebook (URL)</label><input type="url" id="sFacebook" placeholder="https://www.facebook.com/tu_tienda" value="${escapeHtml(props.settings.socialFacebookUrl || '')}" /></div>
           </div>
+          <p style="color:#94a3b8;font-size:.8rem;">Los enlaces sociales deben ser HTTPS y pertenecer a Instagram, TikTok o Facebook. Déjalos vacíos para ocultar sus iconos.</p>
           <button type="submit" class="btn-primary">Guardar Configuración</button>
           <div id="sMsg" class="msg"></div>
         </form>

@@ -141,9 +141,14 @@ export function renderStorefrontFormsScript(): string {
         companyNit: document.getElementById('sNit')?.value || undefined,
         companyLegalName: document.getElementById('sLegal')?.value || undefined,
         companyAddress: document.getElementById('sAddress')?.value || undefined,
+        companyCity: document.getElementById('sCity')?.value || '',
+        companyCountry: document.getElementById('sCountry')?.value || '',
         taxRatePercent: Number(document.getElementById('sTax').value),
         supportEmail: document.getElementById('sEmail').value || undefined,
-        supportPhone: document.getElementById('sPhone').value || undefined
+        supportPhone: document.getElementById('sPhone').value || undefined,
+        socialInstagramUrl: document.getElementById('sInstagram')?.value || '',
+        socialTiktokUrl: document.getElementById('sTiktok')?.value || '',
+        socialFacebookUrl: document.getElementById('sFacebook')?.value || ''
       };
       const res = await fetch('/api/v1/settings', {
         method: 'PATCH',

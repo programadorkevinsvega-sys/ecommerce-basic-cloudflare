@@ -50,7 +50,7 @@ export class StorefrontCheckoutController {
       const customerEmail = await getCustomerEmail(c, identityGateway);
       const [cart, nav, allProducts] = await Promise.all([
         cartGateway.getCart(cartId),
-        getStorefrontNavMenus(cmsGateway),
+        getStorefrontNavMenus(cmsGateway, settingsGateway),
         catalogGateway.listProducts({ limit: 100 }),
       ]);
 
@@ -65,6 +65,7 @@ export class StorefrontCheckoutController {
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
       });
 
       return c.html(html);
@@ -77,7 +78,7 @@ export class StorefrontCheckoutController {
       const [cart, zones, nav, allProducts, settings] = await Promise.all([
         cartGateway.getCart(cartId),
         shippingGateway.listZones(true),
-        getStorefrontNavMenus(cmsGateway),
+        getStorefrontNavMenus(cmsGateway, settingsGateway),
         catalogGateway.listProducts({ limit: 100 }),
         settingsGateway.getSettings(),
       ]);
@@ -91,7 +92,7 @@ export class StorefrontCheckoutController {
 
       const taxRate = settings?.taxRatePercent ?? 19;
       const banners = await storefrontGateway.getPublicBanners('checkout');
-      const bodyHtml = `${renderStorefrontBanners(banners, 'Información para tu compra')}${renderCheckoutPage(cart, productsMap, zones, taxRate)}`;
+      const bodyHtml = `${renderStorefrontBanners(banners, 'Información para tu compra')}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile)}`;
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',
@@ -99,6 +100,7 @@ export class StorefrontCheckoutController {
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
         checkoutMode: true,
       });
 
@@ -110,7 +112,7 @@ export class StorefrontCheckoutController {
       const orderId = c.req.query('orderId');
       const ref = c.req.query('ref');
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const nav = await getStorefrontNavMenus(cmsGateway);
+      const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
 
       if (!orderId) {
         return c.redirect('/', 302);
@@ -142,6 +144,7 @@ export class StorefrontCheckoutController {
         customerEmail,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
       });
 
       c.header('Cache-Control', 'private, no-store');

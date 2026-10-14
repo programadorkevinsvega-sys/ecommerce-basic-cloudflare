@@ -8,6 +8,11 @@ export interface StoreSettingsProps {
   companyNit?: string;
   companyLegalName?: string;
   companyAddress?: string;
+  companyCity?: string;
+  companyCountry?: string;
+  socialInstagramUrl?: string;
+  socialTiktokUrl?: string;
+  socialFacebookUrl?: string;
   requireCodVerification: boolean;
   updatedAt: string;
 }
@@ -38,6 +43,11 @@ export class StoreSettings {
   public get companyNit(): string | undefined { return this.props.companyNit; }
   public get companyLegalName(): string | undefined { return this.props.companyLegalName; }
   public get companyAddress(): string | undefined { return this.props.companyAddress; }
+  public get companyCity(): string | undefined { return this.props.companyCity; }
+  public get companyCountry(): string | undefined { return this.props.companyCountry; }
+  public get socialInstagramUrl(): string | undefined { return this.props.socialInstagramUrl; }
+  public get socialTiktokUrl(): string | undefined { return this.props.socialTiktokUrl; }
+  public get socialFacebookUrl(): string | undefined { return this.props.socialFacebookUrl; }
   public get requireCodVerification(): boolean { return this.props.requireCodVerification; }
   public get updatedAt(): string { return this.props.updatedAt; }
 
@@ -72,6 +82,11 @@ export class StoreSettings {
     if (params.companyAddress !== undefined) {
       this.props.companyAddress = params.companyAddress.trim();
     }
+    if (params.companyCity !== undefined) this.props.companyCity = params.companyCity.trim();
+    if (params.companyCountry !== undefined) this.props.companyCountry = params.companyCountry.trim();
+    if (params.socialInstagramUrl !== undefined) this.props.socialInstagramUrl = validateSocialUrl(params.socialInstagramUrl, 'instagram.com');
+    if (params.socialTiktokUrl !== undefined) this.props.socialTiktokUrl = validateSocialUrl(params.socialTiktokUrl, 'tiktok.com');
+    if (params.socialFacebookUrl !== undefined) this.props.socialFacebookUrl = validateSocialUrl(params.socialFacebookUrl, 'facebook.com');
     if (params.requireCodVerification !== undefined) {
       this.props.requireCodVerification = params.requireCodVerification;
     }
@@ -81,4 +96,15 @@ export class StoreSettings {
   public toSnapshot(): StoreSettingsProps {
     return { ...this.props };
   }
+}
+
+function validateSocialUrl(value: string, domain: string): string {
+  const normalized = value.trim();
+  if (!normalized) return '';
+  let parsed: URL;
+  try { parsed = new URL(normalized); } catch { throw new Error('La URL de la red social no es válida'); }
+  if (parsed.protocol !== 'https:' || (parsed.hostname !== domain && !parsed.hostname.endsWith(`.${domain}`)) || parsed.username || parsed.password || parsed.port) {
+    throw new Error(`Usa una URL HTTPS de ${domain}`);
+  }
+  return parsed.toString();
 }

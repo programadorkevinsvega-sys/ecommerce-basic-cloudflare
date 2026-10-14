@@ -78,13 +78,18 @@ export const storefrontComponentStyles = String.raw`
     .benefits-strip strong { font-size: .92rem; }
     .benefits-strip p { margin: .2rem 0 0; color: var(--muted); font-size: .8rem; }
     .site-footer { margin-top: 4rem; padding: 3rem max(1.25rem, calc((100vw - var(--content-width)) / 2)) 1.5rem; text-align: left; }
-    .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; max-width: var(--content-width); margin: 0 auto 2rem; }
-    .footer-brand p { max-width: 260px; margin: .7rem 0; }
+    .footer-inner { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.25fr; gap: 2rem; max-width: var(--content-width); margin: 0 auto 2rem; }
+    .footer-brand p { max-width: 260px; margin: .7rem 0 1rem; }
     .footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
     .footer-column h2 { margin: 0 0 .25rem; color: #fff; font-size: .9rem; letter-spacing: 0; }
     .footer-column a { color: #bfcdbd; font-size: .82rem; }
     .footer-link-pending { display:flex; align-items:baseline; flex-wrap:wrap; gap:.35rem; color:#bfcdbd; font-size:.82rem; }
     .footer-link-pending small { color:#a8b9a7; font-size:.66rem; font-weight:650; }
+    .footer-contact address { color:#bfcdbd; font-size:.82rem; font-style:normal; line-height:1.65; }
+    .footer-social-links { display:flex; align-items:center; gap:.55rem; }
+    .footer-social-links a { display:grid; width:38px; height:38px; place-items:center; border:1px solid rgba(237,247,220,.28); border-radius:50%; color:#edf7dc; transition:background .16s ease,color .16s ease; }
+    .footer-social-links a:hover { background:#edf7dc; color:#1f4d3a; }
+    .footer-social-links svg { width:18px; height:18px; }
     .footer-links, .footer-legal-links { justify-content: flex-start; }
     .footer-copyright { max-width: var(--content-width); margin: 1rem auto 0 !important; padding-top: 1rem; border-top: 1px solid rgba(237,247,220,.2); }
     .campaign-copy { padding: clamp(1.8rem, 4.5vw, 3.2rem); align-self: center; z-index: 2; }

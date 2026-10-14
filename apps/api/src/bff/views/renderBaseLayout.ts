@@ -6,6 +6,8 @@ import { storefrontCartStyles } from './storefrontCartStyles.js';
 import { storefrontCatalogStyles } from './storefrontCatalogStyles.js';
 import { storefrontCheckoutStyles } from './storefrontCheckoutStyles.js';
 import { storefrontCmsStyles } from './storefrontCmsStyles.js';
+import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
+import { renderStoreFooterDetails, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -28,6 +30,7 @@ export interface LayoutProps {
   announcementLink?: string;
   headerMenuItems?: LayoutMenuItem[];
   footerMenuItems?: LayoutMenuItem[];
+  footerStoreProfile?: StorefrontStoreProfile;
   checkoutMode?: boolean;
 }
 
@@ -103,9 +106,10 @@ export function renderBaseLayout(props: LayoutProps): string {
   </main>
   <footer class="site-footer">
     <div class="footer-inner">
-      <div class="footer-brand"><a href="/" class="brand-link">VEGA <span>STORE</span></a><p>Productos seleccionados para acompañarte todos los días.</p></div>
+      <div class="footer-brand"><a href="/" class="brand-link">VEGA <span>STORE</span></a><p>Productos seleccionados para acompañarte todos los días.</p>${renderStoreSocialLinks(props.footerStoreProfile)}</div>
       <div class="footer-column"><h2>Ayuda</h2>${footerNavigation.map(renderFooterItem).join('')}</div>
       <div class="footer-column"><h2>Información</h2>${footerLegal.map(renderFooterItem).join('')}</div>
+      ${renderStoreFooterDetails(props.footerStoreProfile)}
     </div>
     <p class="footer-copyright">&copy; ${new Date().getFullYear()} Vega Store. Todos los derechos reservados.</p>
   </footer>

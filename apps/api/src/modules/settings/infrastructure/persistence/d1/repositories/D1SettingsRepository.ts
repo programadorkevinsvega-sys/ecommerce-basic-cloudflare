@@ -11,7 +11,8 @@ export class D1SettingsRepository implements ISettingsRepository {
   public async get(): Promise<StoreSettings | null> {
     const query = `
       SELECT id, store_name, currency, tax_rate_percent, support_email, support_phone,
-             company_nit, company_legal_name, company_address,
+             company_nit, company_legal_name, company_address, company_city, company_country,
+             social_instagram_url, social_tiktok_url, social_facebook_url,
              require_cod_verification, updated_at
       FROM settings_store
       WHERE id = 'default'
@@ -34,6 +35,11 @@ export class D1SettingsRepository implements ISettingsRepository {
       companyNit: (result.company_nit as string) || undefined,
       companyLegalName: (result.company_legal_name as string) || undefined,
       companyAddress: (result.company_address as string) || undefined,
+      companyCity: (result.company_city as string) || undefined,
+      companyCountry: (result.company_country as string) || undefined,
+      socialInstagramUrl: (result.social_instagram_url as string) || undefined,
+      socialTiktokUrl: (result.social_tiktok_url as string) || undefined,
+      socialFacebookUrl: (result.social_facebook_url as string) || undefined,
       requireCodVerification: Boolean(result.require_cod_verification),
       updatedAt: result.updated_at as string,
     });
@@ -44,9 +50,10 @@ export class D1SettingsRepository implements ISettingsRepository {
     const query = `
       INSERT INTO settings_store (
         id, store_name, currency, tax_rate_percent, support_email, support_phone,
-        company_nit, company_legal_name, company_address,
+        company_nit, company_legal_name, company_address, company_city, company_country,
+        social_instagram_url, social_tiktok_url, social_facebook_url,
         require_cod_verification, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         store_name = excluded.store_name,
         currency = excluded.currency,
@@ -56,6 +63,11 @@ export class D1SettingsRepository implements ISettingsRepository {
         company_nit = excluded.company_nit,
         company_legal_name = excluded.company_legal_name,
         company_address = excluded.company_address,
+        company_city = excluded.company_city,
+        company_country = excluded.company_country,
+        social_instagram_url = excluded.social_instagram_url,
+        social_tiktok_url = excluded.social_tiktok_url,
+        social_facebook_url = excluded.social_facebook_url,
         require_cod_verification = excluded.require_cod_verification,
         updated_at = excluded.updated_at
     `;
@@ -72,6 +84,11 @@ export class D1SettingsRepository implements ISettingsRepository {
         snapshot.companyNit || null,
         snapshot.companyLegalName || null,
         snapshot.companyAddress || null,
+        snapshot.companyCity || null,
+        snapshot.companyCountry || null,
+        snapshot.socialInstagramUrl || null,
+        snapshot.socialTiktokUrl || null,
+        snapshot.socialFacebookUrl || null,
         snapshot.requireCodVerification ? 1 : 0,
         snapshot.updatedAt
       )

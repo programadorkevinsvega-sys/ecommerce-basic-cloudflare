@@ -70,7 +70,9 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-total-final { align-items: baseline; padding-top: 1rem; border-top: 1px solid #e1e4da; color: #16201b; font-size: 1.15rem; font-weight: 700; }
     .checkout-total-final dd { font-size: 1.7rem; letter-spacing: -.03em; }
     .checkout-tax-note { margin: -.5rem 0 0; color: #5b675f; font-size: .78rem; }
-    .checkout-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .7rem 1.5rem; padding: 1.25rem 0; border-top: 1px solid #e1e4da; color: #424e47; font-size: .8rem; }
+    .checkout-footer { display: flex; flex-wrap: wrap; align-items:center; justify-content: space-between; gap: .7rem 1.5rem; padding: 1.25rem 0; border-top: 1px solid #e1e4da; color: #424e47; font-size: .8rem; }
+    .checkout-footer-store-details { display:flex; flex-wrap:wrap; gap:.25rem .8rem; }
+    .checkout-footer-store-details a { color:inherit; }
     @media (max-width: 700px) { .checkout-header-inner { min-height: 68px; } .checkout-secure { display: none; } .checkout-page { width: min(100% - 1.25rem, 1200px); padding-top: 1rem; } .checkout-columns { gap: 1rem; } .checkout-form { flex-basis: 100%; } .checkout-summary { flex-basis: 100%; order: 2; } .checkout-card, .checkout-summary { padding: 1rem; } .checkout-step-line { width: 15px; } }
     @media (prefers-reduced-motion: reduce) { .checkout-mode *, .checkout-mode *::before, .checkout-mode *::after { scroll-behavior: auto !important; transition: none !important; } }
 `;

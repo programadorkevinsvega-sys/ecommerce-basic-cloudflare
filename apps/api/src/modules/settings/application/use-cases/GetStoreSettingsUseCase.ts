@@ -22,6 +22,7 @@ export class GetStoreSettingsUseCase {
         taxRatePercent: 19,
         supportEmail: 'contacto@tienda.com',
         supportPhone: '+57 300 0000000',
+        companyCountry: 'Colombia',
         requireCodVerification: true,
         updatedAt: new Date().toISOString(),
       });
