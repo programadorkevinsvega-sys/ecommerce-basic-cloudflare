@@ -54,9 +54,18 @@ export function renderTaxonomyFormsScript(): string {
       return '<tr><td><strong>' + e(item.name) + '</strong><small>' + e(JSON.stringify(item.options || {})) + '</small></td><td><code>' + e(item.productId) + '</code></td><td><code>' + e(item.sku) + '</code></td><td>' + e(item.priceInCents == null ? 'Heredado' : '$ ' + (item.priceInCents / 100).toLocaleString('es-CO')) + '</td><td>' + Number(item.stockQuantity) + '</td><td>' + e(item.status) + '</td><td class="taxonomy-row-actions">' + taxonomyRowActions(key, item.id, item.status) + '</td></tr>';
     }
     function taxonomyRowActions(key, id, status) {
-      const safeId = escapeHtml(JSON.stringify(String(id)));
-      return '<button class="taxonomy-secondary" type="button" onclick="viewTaxonomyItem(' + safeId + ',\'' + key + '\')">Ver</button><button class="taxonomy-secondary" type="button" onclick="editTaxonomyItem(' + safeId + ',\'' + key + '\')">Editar</button><button class="taxonomy-secondary" type="button" onclick="setTaxonomyStatus(' + safeId + ',\'' + key + '\',\'' + (status === 'inactive' ? 'active' : 'inactive') + '\')">' + (status === 'inactive' ? 'Mostrar' : 'Ocultar') + '</button><button class="taxonomy-danger" type="button" onclick="deleteTaxonomyItem(' + safeId + ',\'' + key + '\')">Eliminar</button>';
+      const safeId = escapeHtml(String(id));
+      return '<button class="taxonomy-secondary" type="button" data-taxonomy-action="view" data-taxonomy-id="' + safeId + '" data-taxonomy-key="' + key + '">Ver</button><button class="taxonomy-secondary" type="button" data-taxonomy-action="edit" data-taxonomy-id="' + safeId + '" data-taxonomy-key="' + key + '">Editar</button><button class="taxonomy-secondary" type="button" data-taxonomy-action="status" data-taxonomy-id="' + safeId + '" data-taxonomy-key="' + key + '" data-taxonomy-status="' + (status === 'inactive' ? 'active' : 'inactive') + '">' + (status === 'inactive' ? 'Mostrar' : 'Ocultar') + '</button><button class="taxonomy-danger" type="button" data-taxonomy-action="delete" data-taxonomy-id="' + safeId + '" data-taxonomy-key="' + key + '">Eliminar</button>';
     }
+    document.addEventListener('click',(event) => {
+      const button = event.target.closest('[data-taxonomy-action]');
+      if (!button) return;
+      const { taxonomyAction, taxonomyId, taxonomyKey, taxonomyStatus } = button.dataset;
+      if (taxonomyAction === 'view') window.viewTaxonomyItem(taxonomyId,taxonomyKey);
+      if (taxonomyAction === 'edit') window.editTaxonomyItem(taxonomyId,taxonomyKey);
+      if (taxonomyAction === 'status') window.setTaxonomyStatus(taxonomyId,taxonomyKey,taxonomyStatus);
+      if (taxonomyAction === 'delete') window.deleteTaxonomyItem(taxonomyId,taxonomyKey);
+    });
     window.loadCatalogPage = loadCatalogPage;
     window.viewTaxonomyItem = (id, key) => {
       const item = taxonomyPages[key]?.records?.find((record) => record.id === id);

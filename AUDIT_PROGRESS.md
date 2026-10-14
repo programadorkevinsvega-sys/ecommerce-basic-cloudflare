@@ -342,3 +342,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Municipios DANE ahora consulta 10 filas por página en un endpoint BFF protegido, con búsqueda y conteo en D1. La búsqueda del directorio y el selector de municipios del modal dejaron de precargar el catálogo completo; la búsqueda pública también limita resultados.
 - Los paginadores genéricos se insertan junto a su tabla y dentro de la página correspondiente. Antes se insertaban después de la tarjeta, dejando visibles juntos los controles de banners promocionales, informativos y cupones aunque sus páginas estuvieran ocultas.
 - Sin cambios de esquema ni migraciones. Verificaciones: TypeScript, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni validación visual en navegador.
+
+### Corrección de páginas vacías del Catálogo (2026-10-14)
+
+- Se encontró un error de sintaxis confirmado en el JavaScript generado para las acciones de filas: las comillas de los `onclick` hacían inválido todo el bloque del Catálogo, por lo que sus páginas quedaban ocultas y el encabezado no cambiaba.
+- Reemplacé los manejadores inline por atributos de datos y un listener delegado para Ver, Editar, Ocultar/Mostrar y Eliminar. Verifiqué que el JavaScript renderizado pase `node --check`.
+- Verificaciones: typecheck, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual con navegador.
