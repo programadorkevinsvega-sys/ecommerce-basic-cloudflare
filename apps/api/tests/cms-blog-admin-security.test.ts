@@ -23,4 +23,19 @@ describe('blog admin authorization and pagination',()=>{
     expect(cms.listBlogPosts).toHaveBeenCalledWith({page:2,pageSize:10,status:undefined});
     expect((await app.request('/api/v1/admin/cms/blog/posts?page=0&pageSize=500',{headers:{Authorization:'Bearer editor'}})).status).toBe(400);
   });
+  it('requires cms:update for blog deletion and deletes only the requested article',async()=>{
+    const identity={validateSession:vi.fn().mockImplementation(async(token:string)=>({actorId:'admin-id',actorType:'admin',mfaEnabled:true,permissions:token==='editor'?['cms:read','cms:update']:['cms:read']}))} as unknown as IdentityGateway;
+    const cms={deleteBlogPost:vi.fn().mockResolvedValue(true)} as unknown as CmsGateway;
+    const app=CmsBlogAdminController.createRoutes(cms,identity,{} as any,{} as any);
+    expect((await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Authorization:'Bearer reader'}})).status).toBe(403);
+    const result=await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Authorization:'Bearer editor'}});
+    expect(result.status).toBe(200);expect(cms.deleteBlogPost).toHaveBeenCalledWith('post-id');
+  });
+  it('exposes individual author and category details for view/edit actions',async()=>{
+    const identity={validateSession:vi.fn().mockResolvedValue({actorId:'admin-id',actorType:'admin',mfaEnabled:true,permissions:['cms:read']})} as unknown as IdentityGateway;
+    const cms={getBlogAuthor:vi.fn().mockResolvedValue({id:'author-id'}),getBlogCategory:vi.fn().mockResolvedValue({id:'category-id'})} as unknown as CmsGateway;
+    const app=CmsBlogAdminController.createRoutes(cms,identity,{} as any,{} as any);
+    expect((await app.request('/api/v1/admin/cms/blog/authors/author-id',{headers:{Authorization:'Bearer editor'}})).status).toBe(200);
+    expect((await app.request('/api/v1/admin/cms/blog/categories/category-id',{headers:{Authorization:'Bearer editor'}})).status).toBe(200);
+  });
 });

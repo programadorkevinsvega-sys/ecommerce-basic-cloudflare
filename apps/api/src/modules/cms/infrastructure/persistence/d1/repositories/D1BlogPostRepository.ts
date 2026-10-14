@@ -17,6 +17,12 @@ export class D1BlogPostRepository implements IBlogRepository {
   }
 
   public async findPost(id: string): Promise<BlogPost | null> { const row = await this.db.prepare('SELECT * FROM cms_blog_posts WHERE id=?').bind(id).first<PostRow>(); return row ? this.hydrate(row) : null; }
+  public async deletePost(id:string):Promise<boolean>{
+    const post=await this.db.prepare('SELECT id FROM cms_blog_posts WHERE id=?').bind(id).first<{id:string}>();
+    if(!post)return false;
+    await this.db.batch([this.db.prepare('DELETE FROM cms_blog_post_categories WHERE post_id=?').bind(id),this.db.prepare('DELETE FROM cms_blog_posts WHERE id=?').bind(id)]);
+    return true;
+  }
   public async findPostBySlug(slug: string, publishedOnly = false): Promise<BlogPost | null> {
     const row = await this.db.prepare(`SELECT * FROM cms_blog_posts WHERE slug=?${publishedOnly ? " AND status='published'" : ''}`).bind(slug).first<PostRow>();
     if (!row || publishedOnly && row.status !== 'published') return null;
@@ -39,8 +45,12 @@ export class D1BlogPostRepository implements IBlogRepository {
   }
 
   public saveAuthor(input:BlogTaxonomyInput):Promise<BlogAuthor>{return this.taxonomies.saveAuthor(input);}
+  public findAuthor(id:string):Promise<BlogAuthor|null>{return this.taxonomies.findAuthor(id);}
+  public deleteAuthor(id:string):Promise<'deleted'|'in_use'|'not_found'>{return this.taxonomies.deleteAuthor(id);}
   public listAuthors(page:number,pageSize:number,activeOnly=false):Promise<{items:BlogAuthor[];total:number}>{return this.taxonomies.listAuthors(page,pageSize,activeOnly);}
   public saveCategory(input:BlogTaxonomyInput):Promise<BlogCategory>{return this.taxonomies.saveCategory(input);}
+  public findCategory(id:string):Promise<BlogCategory|null>{return this.taxonomies.findCategory(id);}
+  public deleteCategory(id:string):Promise<boolean>{return this.taxonomies.deleteCategory(id);}
   public listCategories(page:number,pageSize:number,activeOnly=false):Promise<{items:BlogCategory[];total:number}>{return this.taxonomies.listCategories(page,pageSize,activeOnly);}
   public publishScheduled(now:string,limit:number):Promise<string[]>{return this.taxonomies.publishScheduled(now,limit);}
 

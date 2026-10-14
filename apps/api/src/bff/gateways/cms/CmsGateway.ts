@@ -69,10 +69,15 @@ export interface CmsGateway {
   listBlogPosts(input:{page:number;pageSize:number;status?:BlogPostDto['status'];categorySlug?:string;publishedOnly?:boolean}):Promise<BlogPageDto<BlogPostDto>>;
   getBlogPostBySlug(slug:string,publishedOnly?:boolean):Promise<BlogPostDto|null>;
   getBlogPostById(id:string):Promise<BlogPostDto|null>;
+  deleteBlogPost(id:string):Promise<boolean>;
   listRelatedBlogPosts(postId:string,categoryIds:string[],limit?:number):Promise<BlogPostDto[]>;
   saveBlogAuthor(input:{id?:string;name:string;description?:string;imageMediaId?:string;active?:boolean}):Promise<BlogAuthorDto>;
+  getBlogAuthor(id:string):Promise<BlogAuthorDto|null>;
+  deleteBlogAuthor(id:string):Promise<'deleted'|'in_use'|'not_found'>;
   listBlogAuthors(page:number,pageSize:number,activeOnly?:boolean):Promise<BlogPageDto<BlogAuthorDto>>;
   saveBlogCategory(input:{id?:string;name:string;description?:string;active?:boolean}):Promise<BlogCategoryDto>;
+  getBlogCategory(id:string):Promise<BlogCategoryDto|null>;
+  deleteBlogCategory(id:string):Promise<boolean>;
   listBlogCategories(page:number,pageSize:number,activeOnly?:boolean):Promise<BlogPageDto<BlogCategoryDto>>;
   publishScheduledBlogPosts(now?:string,limit?:number):Promise<string[]>;
 }

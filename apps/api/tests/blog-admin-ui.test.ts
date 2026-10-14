@@ -15,6 +15,16 @@ describe('Blog admin presentation and actions', () => {
     expect(renderBlogDashboardCss()).toContain('.blog-row-actions{display:flex;flex-wrap:wrap');
     expect(renderBlogDashboardCss()).toContain('min-width:64px;min-height:34px');
   });
+  it('includes view, edit and delete actions for taxonomies and delete for every article status',()=>{
+    const script=renderBlogAdminScript();
+    expect(script).toContain('blogViewTaxonomy');expect(script).toContain('blogEditAuthor');expect(script).toContain('blogEditCategory');
+    expect(script).toContain('blogDeleteTaxonomy');expect(script).toContain('blogDeletePost');
+    expect(script).toContain("method:'DELETE'");
+  });
+  it('styles taxonomy tables and actions with the unified admin presentation',()=>{
+    const css=renderBlogDashboardCss();
+    expect(css).toContain('.blog-taxonomy-table');expect(css).toContain('.blog-row-action-delete');expect(css).toContain('.blog-view-content');
+  });
 
   it('opens the new article dialog without waiting for taxonomy requests', () => {
     const script = renderBlogAdminScript();

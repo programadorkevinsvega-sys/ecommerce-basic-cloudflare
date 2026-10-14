@@ -18,10 +18,15 @@ export interface ICmsPublicApi {
   listBlogPosts(input: { page:number; pageSize:number; status?:BlogPostStatus; categorySlug?:string; publishedOnly?:boolean }): Promise<{items:BlogPost[];total:number}>;
   getBlogPostBySlug(slug:string,publishedOnly?:boolean):Promise<BlogPost | null>;
   getBlogPostById(id:string):Promise<BlogPost | null>;
+  deleteBlogPost(id:string):Promise<boolean>;
   listRelatedBlogPosts(postId:string,categoryIds:string[],limit?:number):Promise<BlogPost[]>;
   saveBlogAuthor(input:BlogTaxonomyInput):Promise<BlogAuthor>;
+  getBlogAuthor(id:string):Promise<BlogAuthor|null>;
+  deleteBlogAuthor(id:string):Promise<'deleted'|'in_use'|'not_found'>;
   listBlogAuthors(page:number,pageSize:number,activeOnly?:boolean):Promise<{items:BlogAuthor[];total:number}>;
   saveBlogCategory(input:BlogTaxonomyInput):Promise<BlogCategory>;
+  getBlogCategory(id:string):Promise<BlogCategory|null>;
+  deleteBlogCategory(id:string):Promise<boolean>;
   listBlogCategories(page:number,pageSize:number,activeOnly?:boolean):Promise<{items:BlogCategory[];total:number}>;
   publishScheduledBlogPosts(now?:string,limit?:number):Promise<string[]>;
 }
@@ -72,10 +77,15 @@ export class CmsPublicApi implements ICmsPublicApi {
   public async listBlogPosts(input:{page:number;pageSize:number;status?:BlogPostStatus;categorySlug?:string;publishedOnly?:boolean}){return this.container.listBlogPostsUseCase.execute(input);}
   public async getBlogPostBySlug(slug:string,publishedOnly=true){return this.container.blogRepository.findPostBySlug(slug,publishedOnly);}
   public async getBlogPostById(id:string){return this.container.blogRepository.findPost(id);}
+  public async deleteBlogPost(id:string){return this.container.blogRepository.deletePost(id);}
   public async listRelatedBlogPosts(postId:string,categoryIds:string[],limit=4){return this.container.listBlogPostsUseCase.related(postId,categoryIds,limit);}
   public async saveBlogAuthor(input:BlogTaxonomyInput){return this.container.manageBlogTaxonomyUseCase.saveAuthor(input);}
+  public async getBlogAuthor(id:string){return this.container.blogRepository.findAuthor(id);}
+  public async deleteBlogAuthor(id:string){return this.container.blogRepository.deleteAuthor(id);}
   public async listBlogAuthors(page:number,pageSize:number,activeOnly=false){return this.container.manageBlogTaxonomyUseCase.listAuthors(page,pageSize,activeOnly);}
   public async saveBlogCategory(input:BlogTaxonomyInput){return this.container.manageBlogTaxonomyUseCase.saveCategory(input);}
+  public async getBlogCategory(id:string){return this.container.blogRepository.findCategory(id);}
+  public async deleteBlogCategory(id:string){return this.container.blogRepository.deleteCategory(id);}
   public async listBlogCategories(page:number,pageSize:number,activeOnly=false){return this.container.manageBlogTaxonomyUseCase.listCategories(page,pageSize,activeOnly);}
   public async publishScheduledBlogPosts(now?:string,limit=50){return this.container.publishScheduledBlogPostsUseCase.execute(now,limit);}
 }

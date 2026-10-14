@@ -23,8 +23,8 @@ export class AdminMutationSnapshotProvider {
       if (kind === 'announcements') return (await this.gateways.storefrontGateway.listAnnouncements()).find((item) => item.id === id) ?? null;
       if (kind === 'cms/pages') return (await this.gateways.cmsGateway.listPages(500)).find((item) => item.id === id) ?? null;
       if (kind === 'cms/blog/posts') return this.gateways.cmsGateway.getBlogPostById(id);
-      if (kind === 'cms/blog/authors') return (await this.gateways.cmsGateway.listBlogAuthors(1, 50)).items.find((item) => item.id === id) ?? null;
-      if (kind === 'cms/blog/categories') return (await this.gateways.cmsGateway.listBlogCategories(1, 50)).items.find((item) => item.id === id) ?? null;
+      if (kind === 'cms/blog/authors') return this.gateways.cmsGateway.getBlogAuthor(id);
+      if (kind === 'cms/blog/categories') return this.gateways.cmsGateway.getBlogCategory(id);
       if (kind === 'shipping/zones') return this.gateways.shippingGateway.getZone(id);
       if (kind === 'promotions/rules') return (await this.gateways.promotionsGateway.listPromotionRules()).find((item) => item.id === id) ?? null;
       if (kind === 'promotions/coupons') return (await this.gateways.promotionsGateway.listCoupons()).find((item) => item.id === id) ?? null;

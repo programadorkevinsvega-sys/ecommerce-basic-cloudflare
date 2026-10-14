@@ -489,3 +489,13 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Implementé paginación SSR desde BFF para `/productos` (24 productos por página), `/marcas` (12 marcas), la sección “Descubre nuestros productos” en `/` (12 productos) y límites seguros de página. Usa lookahead de un registro para determinar si existe siguiente página; no descarga el catálogo completo.
 - Homogenicé los controles accesibles en catálogo, marcas, colecciones y blog. Colecciones ya consultaba 12 por página y Blog ya consultaba 9 con total; ahora muestran rango, página actual y controles anterior/siguiente deshabilitados cuando corresponde.
 - Sin cambios SQL. Verificaciones: `pnpm test` (46 archivos, 133 pruebas), `pnpm typecheck`, `pnpm lint`, `git diff --check` y Wrangler dry-run aprobados. Commit `d66c02d` en `main`; Worker desplegado, versión `616a73a3-9121-4891-8ddd-a5d3e6855702`. `/`, `/productos`, `/marcas`, `/colecciones`, `/blog` y `/health` devolvieron HTTP 200 con sus controles en HTML. El catálogo actual tiene 8 productos, 2 marcas, 1 colección y 1 artículo; por eso aún no hay páginas siguientes habilitadas.
+
+### Acciones completas para artículos, autores y categorías del Blog (2026-10-14)
+
+- Añadí acciones consistentes por fila: artículos conservan Ver cuando están publicados y Editar/Ocultar según estado, y ahora todos los estados tienen Eliminar; autores y categorías tienen Ver, Editar y Eliminar.
+- Incorporé consultas individuales protegidas para ver y editar taxonomías, endpoints DELETE del CMS con sesión MFA y permiso `cms:update`, y registro mediante la auditoría administrativa existente.
+- Borrar un artículo elimina primero sus asociaciones de categorías dentro de la misma D1 del módulo. Borrar una categoría quita las asociaciones, conservando los artículos. No se permite borrar un autor asignado a artículos; se responde HTTP 409 indicando que primero deben reasignarse.
+- Apliqué estilos de tabla, estado, botones, formularios, acciones y modal de detalle coherentes con la superficie clara y los controles del panel. Los formularios de autor/categoría ahora tienen botón Cancelar.
+- Sin migraciones y sin cambios a datos existentes.
+- Pruebas: `pnpm test` (46 archivos/137 pruebas), `pnpm test:workers` (6 archivos/17 pruebas), `pnpm typecheck`, `pnpm lint`, `git diff --check` y `wrangler deploy --dry-run`, todos aprobados. Añadí cobertura RBAC/UI y una prueba D1 Worker para borrado y relaciones.
+- Commit/push y despliegue de esta versión pendientes de completar.

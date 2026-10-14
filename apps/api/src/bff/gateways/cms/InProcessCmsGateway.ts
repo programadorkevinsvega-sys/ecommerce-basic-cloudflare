@@ -64,10 +64,15 @@ export class InProcessCmsGateway implements CmsGateway {
   public async listBlogPosts(input:Parameters<CmsGateway['listBlogPosts']>[0]){const page=await this.publicApi.listBlogPosts(input);return {total:page.total,items:page.items.map((post)=>post.toPrimitives() as BlogPostDto)};}
   public async getBlogPostBySlug(slug:string,publishedOnly=true){const post=await this.publicApi.getBlogPostBySlug(slug,publishedOnly);return post?.toPrimitives() as BlogPostDto|null;}
   public async getBlogPostById(id:string){const post=await this.publicApi.getBlogPostById(id);return post?.toPrimitives() as BlogPostDto|null;}
+  public async deleteBlogPost(id:string){return this.publicApi.deleteBlogPost(id);}
   public async listRelatedBlogPosts(postId:string,categoryIds:string[],limit=4){return (await this.publicApi.listRelatedBlogPosts(postId,categoryIds,limit)).map((post)=>post.toPrimitives() as BlogPostDto);}
   public async saveBlogAuthor(input:Parameters<CmsGateway['saveBlogAuthor']>[0]){return await this.publicApi.saveBlogAuthor(input) as BlogAuthorDto;}
+  public async getBlogAuthor(id:string){return await this.publicApi.getBlogAuthor(id) as BlogAuthorDto|null;}
+  public async deleteBlogAuthor(id:string){return this.publicApi.deleteBlogAuthor(id);}
   public async listBlogAuthors(page:number,pageSize:number,activeOnly=false){return await this.publicApi.listBlogAuthors(page,pageSize,activeOnly) as {items:BlogAuthorDto[];total:number};}
   public async saveBlogCategory(input:Parameters<CmsGateway['saveBlogCategory']>[0]){return await this.publicApi.saveBlogCategory(input) as BlogCategoryDto;}
+  public async getBlogCategory(id:string){return await this.publicApi.getBlogCategory(id) as BlogCategoryDto|null;}
+  public async deleteBlogCategory(id:string){return this.publicApi.deleteBlogCategory(id);}
   public async listBlogCategories(page:number,pageSize:number,activeOnly=false){return await this.publicApi.listBlogCategories(page,pageSize,activeOnly) as {items:BlogCategoryDto[];total:number};}
   public async publishScheduledBlogPosts(now?:string,limit=50){return this.publicApi.publishScheduledBlogPosts(now,limit);}
 }

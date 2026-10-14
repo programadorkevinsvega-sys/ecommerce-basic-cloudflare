@@ -31,4 +31,17 @@ describe('CMS blog persistence and public SSR',()=>{
     const audit=await env.DB.prepare("SELECT id FROM audit_logs WHERE entity_id=? AND action='cms.blog_post.published_by_schedule'").bind(scheduled.id).all();
     expect(audit.results).toHaveLength(1);
   });
+
+  it('deletes blog content without leaving taxonomy links or orphaned authors',async()=>{
+    const repository=new D1BlogPostRepository(env.DB);
+    const author=await repository.saveAuthor({name:'Autor eliminable '+crypto.randomUUID().slice(0,6)});
+    const category=await repository.saveCategory({name:'Categoría eliminable '+crypto.randomUUID().slice(0,6)});
+    const post=await new SaveBlogPostUseCase(repository).execute({title:'Artículo eliminable',slug:`eliminable-${crypto.randomUUID().slice(0,8)}`,excerpt:'',contentHtml:'<p>Temporal</p>',authorId:author.id,status:'draft',categoryIds:[category.id]});
+    expect(await repository.deleteAuthor(author.id)).toBe('in_use');
+    expect(await repository.deleteCategory(category.id)).toBe(true);
+    expect((await repository.findPost(post.id))?.toPrimitives().categoryIds).toEqual([]);
+    expect(await repository.deletePost(post.id)).toBe(true);
+    expect(await repository.deletePost(post.id)).toBe(false);
+    expect(await repository.deleteAuthor(author.id)).toBe('deleted');
+  });
 });
