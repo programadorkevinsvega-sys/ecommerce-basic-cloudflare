@@ -8,9 +8,13 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('summary', 'Resumen', 'switchTab(\'summary\')', true)}
         ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();", false, 'orders-pending-count', 'por atender')}
         ${navItem('inventory', 'Inventario', "switchTab('inventory'); loadAdminInventory();", false, 'inventory-alert-count', 'con stock bajo o agotados')}
-        ${navItem('payments', 'Pagos', "switchTab('payments'); loadAdminPayments();")}
         ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping')")}
-        ${navItem('invoices', 'Facturación', "switchTab('invoices'); loadAdminInvoices();")}
+      </ul></section>
+      <section class="admin-nav-group"><h2>Pagos y facturas</h2><ul>
+        ${navItem('payments', 'Recaudos contra entrega', "switchTab('payments', this); showAdminPaymentPage('collections'); loadAdminPayments()", false, undefined, undefined, true)}
+        ${navItem('payments', 'Conciliar', "switchTab('payments', this); showAdminPaymentPage('conciliation'); loadAdminPayments()", false, undefined, undefined, true)}
+        ${navItem('payments', 'Transacciones recientes', "switchTab('payments', this); showAdminPaymentPage('transactions'); loadAdminPayments()", false, undefined, undefined, true)}
+        ${navItem('invoices', 'Facturación', "switchTab('invoices', this); loadAdminInvoices()", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Catálogo</h2><ul>
         ${navItem('products', 'Productos', "switchTab('products')")}

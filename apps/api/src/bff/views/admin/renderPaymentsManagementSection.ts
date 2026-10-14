@@ -5,11 +5,6 @@ export function renderPaymentsManagementSection(): string {
         <div><h1 id="payments-title">Pagos</h1><p>Consulta transacciones, registra recaudos y concilia las liquidaciones.</p></div>
         <button class="btn-primary" type="button" onclick="loadAdminPayments()">Actualizar</button>
       </header>
-      <nav class="payments-subnav" aria-label="Secciones de pagos">
-        ${paymentPage('collections', 'Recaudos contra entrega', true)}
-        ${paymentPage('conciliation', 'Conciliar')}
-        ${paymentPage('transactions', 'Transacciones recientes')}
-      </nav>
       <section class="payments-page-panel" data-payment-panel="collections" aria-labelledby="payments-page-collections">
         <div id="cod-collection-section" class="card payments-page-card">
           <h2 id="payments-page-collections">Recaudos contra entrega</h2>
@@ -45,8 +40,4 @@ export function renderPaymentsManagementSection(): string {
       </section>
     </section>
   `;
-}
-
-function paymentPage(id: string, label: string, current = false): string {
-  return `<button type="button" class="payments-subtab${current ? ' selected' : ''}" data-payment-page="${id}"${current ? ' aria-current="page"' : ''}>${label}</button>`;
 }
