@@ -62,10 +62,14 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
           { title: 'Catálogo Completo', url: '/productos' },
           { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
         ];
+    const cleanFooterItems = configuredFooterItems.filter((item) =>
+      !['/', '/productos', '/carrito'].includes(item.url.split(/[?#]/, 1)[0] ?? item.url)
+      && !/^(inicio|cat[aá]logo(?: de productos| completo)?|carrito)$/i.test(item.title.trim())
+    );
 
     return {
       headerMenuItems: cleanHeaderMenuItems,
-      footerMenuItems: mergeInstitutionalFooterLinks(configuredFooterItems, pages),
+      footerMenuItems: mergeInstitutionalFooterLinks(cleanFooterItems, pages),
     };
   } catch {
     return {
@@ -74,8 +78,6 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
         { title: 'Catálogo', url: '/productos' },
       ],
       footerMenuItems: [
-        { title: 'Inicio', url: '/' },
-        { title: 'Catálogo Completo', url: '/productos' },
         { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
       ],
     };

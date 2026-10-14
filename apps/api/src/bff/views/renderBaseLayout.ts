@@ -104,7 +104,6 @@ export function renderBaseLayout(props: LayoutProps): string {
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand"><a href="/" class="brand-link">VEGA <span>STORE</span></a><p>Productos seleccionados para acompañarte todos los días.</p></div>
-      <div class="footer-column"><h2>Tienda</h2><a href="/productos">Catálogo</a><a href="/carrito">Carrito</a></div>
       <div class="footer-column"><h2>Ayuda</h2>${footerNavigation.map(renderFooterItem).join('')}</div>
       <div class="footer-column"><h2>Información</h2>${footerLegal.map(renderFooterItem).join('')}</div>
     </div>

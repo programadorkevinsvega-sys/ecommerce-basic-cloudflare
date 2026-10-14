@@ -221,3 +221,7 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La página de Términos existente continúa publicada y activa. No fue necesario modificar D1 ni cambiar el contenido de los borradores.
 - Validaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. Sin pruebas automatizadas ni revisión visual en navegador.
 - Smoke test del Home desplegado confirmó los enlaces activos y los rótulos de borrador. En la última consulta de producción, `sobre-nosotros`, `terminos-y-condiciones` y `tratamiento-de-datos` están publicados; las otras siete páginas siguen como borrador y aparecen marcadas “En preparación”.
+### Limpieza de enlaces del footer (2026-10-14)
+
+- Quité la columna “Tienda” del footer y filtré sus enlaces de Inicio, Catálogo y Carrito del menú CMS del footer. La navegación de cabecera no cambia.
+- Verificación de código y despliegue registrada después de ejecutar typecheck, lint y smoke test del Home.
