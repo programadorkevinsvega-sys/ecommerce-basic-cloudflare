@@ -402,3 +402,12 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - `payments__0005_settlement_corrections.sql` se aplicó a producción con el runner al confirmar las 40 migraciones previas y que la tabla aún no existía. La consulta posterior confirmó ledger, columnas, índice y tabla vacía; no se alteraron conciliaciones.
 - Commit `c014d0d` fue enviado a `main`. Al comprobar Wrangler a las 09:03 UTC, el deployment más reciente seguía siendo `1907801f-83fc-4699-b2c1-a9326f27a0b3` de las 08:53 UTC; el despliegue automático de este push no estaba reflejado todavía. No se hizo un deploy manual.
 - Typecheck, lint de arquitectura, consistencia de copias de migración, `git diff --check` y `pnpm db:test-migrations` pasaron. No se ejecutó prueba automatizada específica del flujo financiero ni inspección visual en navegador.
+
+### Entidad y páginas de colecciones (2026-10-14)
+
+- Añadí `catalog_collections` y `catalog_collection_products` como entidad propia del bounded context `catalog`; la relación mantiene el orden editorial de productos. El estado de creación es oculto por defecto. No se alteran productos ni contenido CMS existentes.
+- Implementé CRUD administrativo paginado en el BFF con permisos `catalog:read/create/edit/delete` y eventos de auditoría sin datos personales; edición, publicación/ocultamiento y eliminación con confirmación.
+- Implementé `/colecciones` paginada y `/colecciones/:slug`, con colecciones activas solamente, productos publicados solamente, metadatos SEO, enlaces de navegación y 404 cuando no existe o está oculta.
+- Pruebas añadidas para publicación, unicidad de slug, asociación solo de productos publicados, escape HTML, paginación y persistencia D1 real. Migración `catalog__0008_collections.sql` aditiva y aplicada tras consultar las 41 entradas previas; confirmados ledger, tablas y columnas en D1 productiva. No se insertó contenido de tienda.
+- Pruebas unitarias: 44 archivos / 121 pruebas aprobados. Workers/Miniflare: 5 archivos / 14 pruebas aprobados; una primera ejecución paralela agotó timeout en `/health`, y la ejecución aislada pasó. Verificadas migraciones desde cero y actualizaciones legacy, tipos, lint, aislamiento, arquitectura y consistencia de copias.
+- Pendiente: commit/push y comprobar el resultado del flujo de despliegue integrado. No se ha ejecutado inspección visual en navegador.

@@ -2,6 +2,9 @@ import { LegacyPriceMigrationPreview } from '../../../modules/catalog/applicatio
 import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
 
+export interface CatalogCollectionDto { id:string; name:string; slug:string; description:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; createdAt:string; updatedAt:string; }
+export interface CatalogCollectionInput { name:string; slug:string; description:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; }
+
 export interface CreateProductGatewayRequest {
   name: string;
   slug?: string;
@@ -169,6 +172,12 @@ export interface CatalogGateway {
   listProductVariants(query?: CatalogPageQuery): Promise<ProductVariantDto[]>;
   updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
   deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
+  listCollections(query?: CatalogPageQuery): Promise<CatalogCollectionDto[]>;
+  getCollectionBySlug(slug: string): Promise<CatalogCollectionDto>;
+  findCollectionBySlug(slug: string): Promise<CatalogCollectionDto | null>;
+  getCollectionById(id: string): Promise<CatalogCollectionDto>;
+  saveCollection(input: CatalogCollectionInput, id?: string): Promise<CatalogCollectionDto>;
+  deleteCollection(id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }

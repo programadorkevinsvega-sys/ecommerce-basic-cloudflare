@@ -53,6 +53,9 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
       /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
 
     const cleanHeaderMenuItems = headerMenuItems.filter((item) => !isLegalItem(item));
+    if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/colecciones')) {
+      cleanHeaderMenuItems.push({ title: 'Colecciones', url: '/colecciones' });
+    }
 
     const configuredFooterItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
       ? footerMenu.items.map((it: CmsMenuItemDto) => ({

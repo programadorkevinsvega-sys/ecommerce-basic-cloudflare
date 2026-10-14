@@ -2,6 +2,31 @@
 
 Generada por comparación estática de migraciones fuente y búsqueda textual en repositorios TypeScript. No verifica el estado remoto. Wrangler raíz usa `apps/api/migrations/`; Wrangler de `apps/api` usa `migrations/`.
 
+## `catalog__0008_collections.sql` · fuente `apps/api/src/modules/catalog/infrastructure/persistence/d1/migrations/0008_collections.sql`
+
+Tablas: 2; índices explícitos: 2. Copias: `migrations/catalog__0008_collections.sql` y `apps/api/migrations/catalog__0008_collections.sql`.
+
+### `catalog_collections`
+
+Declaraciones de columnas/restricciones:
+- `id TEXT PRIMARY KEY`, `name TEXT NOT NULL`, `slug TEXT NOT NULL UNIQUE`
+- `description TEXT NOT NULL DEFAULT ''`
+- `status TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('active','inactive'))`
+- `seo_title TEXT`, `seo_description TEXT`, `created_at TEXT NOT NULL`, `updated_at TEXT NOT NULL`
+
+Índices: `idx_catalog_collections_status_name` (status, name).
+Consultas: `D1CollectionRepository` SELECT/INSERT ON CONFLICT/UPDATE sobre estas columnas y estado; se lista por estado, nombre y paginación.
+
+### `catalog_collection_products`
+
+Declaraciones de columnas/restricciones:
+- `collection_id TEXT NOT NULL`, `product_id TEXT NOT NULL`
+- `sort_order INTEGER NOT NULL DEFAULT 0 CHECK (sort_order >= 0)`
+- `PRIMARY KEY (collection_id, product_id)`
+
+Índices: `idx_catalog_collection_products_product` (product_id).
+Consultas: `D1CollectionRepository` elimina y reemplaza asociaciones dentro de `D1.batch`, y consulta las asociaciones por colección ordenadas por `sort_order`. La validez/publicación del producto se comprueba en el caso de uso por el gateway del repositorio de catálogo; la base no introduce FK ni JOIN entre tablas.
+
 ## `audit__0001_init.sql` · fuente `apps/api/src/modules/audit/infrastructure/persistence/d1/migrations/0001_init.sql`
 
 Tablas: 1; índices explícitos: 3. Copias: `migrations/audit__0001_init.sql` y `apps/api/migrations/audit__0001_init.sql`.

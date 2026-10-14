@@ -14,6 +14,7 @@ describe('admin dashboard permissions', () => {
     const catalog = {
       listProducts: vi.fn().mockResolvedValue([]), listCategories: vi.fn().mockResolvedValue([]),
       listBrands: vi.fn().mockResolvedValue([]), listAttributes: vi.fn().mockResolvedValue([]),
+      listCollections: vi.fn().mockResolvedValue([]),
     } as unknown as CatalogGateway;
     const storefront = { listBanners: vi.fn().mockResolvedValue([]), listAnnouncements: vi.fn().mockResolvedValue([]) } as unknown as StorefrontGateway;
     const cms = { listPages: vi.fn().mockResolvedValue([]) } as unknown as CmsGateway;

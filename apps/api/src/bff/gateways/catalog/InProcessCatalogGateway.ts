@@ -8,6 +8,7 @@ import {
   AttributeDto,
   SupplierDto,
   ProductVariantDto,
+  CatalogCollectionDto,
 } from './CatalogGateway.js';
 import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
 
@@ -128,6 +129,24 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public deleteTaxonomy(kind: Parameters<CatalogGateway['deleteTaxonomy']>[0], id: string): Promise<void> {
     return this.publicApi.deleteTaxonomy(kind, id);
   }
+
+  public async listCollections(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<CatalogCollectionDto[]> {
+    return (await this.publicApi.listCollections(query)).map((collection) => collection.toPrimitives());
+  }
+  public async getCollectionBySlug(slug: string): Promise<CatalogCollectionDto> {
+    return (await this.publicApi.getCollectionBySlug(slug)).toPrimitives();
+  }
+  public async findCollectionBySlug(slug: string): Promise<CatalogCollectionDto | null> {
+    const collection = await this.publicApi.findCollectionBySlug(slug);
+    return collection?.toPrimitives() ?? null;
+  }
+  public async getCollectionById(id: string): Promise<CatalogCollectionDto> {
+    return (await this.publicApi.getCollectionById(id)).toPrimitives();
+  }
+  public async saveCollection(input: Parameters<CatalogGateway['saveCollection']>[0], id?: string): Promise<CatalogCollectionDto> {
+    return (await this.publicApi.saveCollection(input,id)).toPrimitives();
+  }
+  public deleteCollection(id: string): Promise<void> { return this.publicApi.deleteCollection(id); }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number) {
     return this.publicApi.previewLegacyPriceMigration(taxRateBasisPoints);

@@ -6,8 +6,8 @@ import { createInventoryModule } from '../../src/modules/inventory/module.config
 describe('D1 stock consumption', () => {
   beforeAll(async () => {
     for (const migration of env.TEST_MIGRATIONS) {
-      for (const statement of migration.sql.split(';')) {
-        if (statement.replace(/--[^\n]*/g, '').trim()) await env.DB.prepare(statement).run();
+      for (const statement of migration.sql.replace(/--[^\n]*/g, '').split(';')) {
+        if (statement.trim()) await env.DB.prepare(statement).run();
       }
     }
   });

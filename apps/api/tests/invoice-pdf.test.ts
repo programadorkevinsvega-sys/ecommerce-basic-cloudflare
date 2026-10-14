@@ -28,7 +28,7 @@ describe('invoice PDF generation', () => {
 
     const result = await new PdfInvoiceAdapter(bucket as never).generateInvoiceDocument(invoice);
     const parsed = await PDFDocument.load(result.contentBytes);
-    expect(key).toBe('private/invoices/FAC-000001.pdf');
+    expect(key).toBe('private/invoices/FAC-000001-v2.pdf');
     expect(result.contentType).toBe('application/pdf');
     expect(new TextDecoder().decode(stored.subarray(0, 5))).toBe('%PDF-');
     expect(parsed.getPageCount()).toBeGreaterThan(0);

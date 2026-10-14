@@ -51,13 +51,15 @@ export class SeoController {
     });
 
     // sitemap-pages.xml (Páginas estáticas y colecciones)
-    router.get('/sitemap-pages.xml', (c) => {
+    router.get('/sitemap-pages.xml', async (c) => {
       const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const today = new Date().toISOString().split('T')[0];
+      const collections = await catalogGateway.listCollections({ limit: 1000, offset: 0 });
 
       const staticUrls = [
         { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'daily' },
         { loc: `${baseUrl}/productos`, priority: '0.9', changefreq: 'daily' },
+        ...collections.map((collection) => ({ loc: `${baseUrl}/colecciones/${encodeURIComponent(collection.slug)}`, priority: '0.7', changefreq: 'weekly' })),
       ];
 
       const xml = [

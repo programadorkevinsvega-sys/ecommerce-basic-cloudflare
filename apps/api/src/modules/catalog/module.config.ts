@@ -25,6 +25,8 @@ import { ListSuppliersUseCase } from './application/use-cases/ListSuppliersUseCa
 import { CreateProductVariantUseCase } from './application/use-cases/CreateProductVariantUseCase.js';
 import { ListProductVariantsUseCase } from './application/use-cases/ListProductVariantsUseCase.js';
 import { ManageCatalogTaxonomyUseCase } from './application/use-cases/ManageCatalogTaxonomyUseCase.js';
+import { D1CollectionRepository } from './infrastructure/persistence/d1/repositories/D1CollectionRepository.js';
+import { ManageCollectionUseCase } from './application/use-cases/ManageCollectionUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -47,6 +49,7 @@ export interface CatalogModuleContainer {
   createProductVariantUseCase: CreateProductVariantUseCase;
   listProductVariantsUseCase: ListProductVariantsUseCase;
   manageCatalogTaxonomyUseCase: ManageCatalogTaxonomyUseCase;
+  manageCollectionUseCase: ManageCollectionUseCase;
 }
 
 export function createCatalogModule(env: Env): CatalogModuleContainer {
@@ -56,6 +59,7 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
   const attributeRepo = new D1AttributeRepository(env.DB);
   const supplierRepo = new D1SupplierRepository(env.DB);
   const variantRepo = new D1ProductVariantRepository(env.DB);
+  const collectionRepo = new D1CollectionRepository(env.DB);
 
   return {
     createProductUseCase: new CreateProductUseCase(productRepo),
@@ -78,5 +82,6 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     createProductVariantUseCase: new CreateProductVariantUseCase(variantRepo, productRepo),
     listProductVariantsUseCase: new ListProductVariantsUseCase(variantRepo),
     manageCatalogTaxonomyUseCase: new ManageCatalogTaxonomyUseCase(categoryRepo, brandRepo, attributeRepo, supplierRepo, variantRepo),
+    manageCollectionUseCase: new ManageCollectionUseCase(collectionRepo, productRepo),
   };
 }

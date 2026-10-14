@@ -3,7 +3,7 @@ import { renderAdminDashboardPage } from '../src/bff/views/admin/renderAdminDash
 import type { AdminDashboardProps } from '../src/bff/views/admin/AdminDashboardProps.js';
 
 const props: AdminDashboardProps = {
-  products: [], categories: [], brands: [], attributes: [], suppliers: [], variants: [], banners: [], announcements: [],
+  products: [], categories: [], brands: [], attributes: [], suppliers: [], variants: [], collections: [], banners: [], announcements: [],
   cmsPages: [], promotionRules: [], coupons: [], shippingZones: [], divipolaLocations: [],
   settings: {
     id: 'settings', storeName: 'Vega Store', footerCopyrightText: 'Todos los derechos reservados.', currency: 'COP', taxRatePercent: 19,
@@ -27,7 +27,10 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('inventory-page-active');
     expect(html).toContain('id="newProductForm"');
     expect(html).toContain('id="settingsForm"');
-    expect(html).toContain('function switchTab(tabId)');
+    expect(html).toContain('data-taxonomy-page="collections"');
+    expect(html).toContain("collections:'collections'");
+    expect(html).toContain('collectionProducts');
+    expect(html).toContain('function switchTab(tabId, navButton)');
     expect(html).toContain("fetch('/api/v1/admin/orders'");
     expect(html).toContain('VEGA STORE');
     expect(html).not.toContain('$286.790');

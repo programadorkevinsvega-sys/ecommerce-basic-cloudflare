@@ -28,6 +28,9 @@ def check_fresh_schema() -> None:
     catalog_columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_products)")}
     assert {"supplier_cost_cents", "target_margin_basis_points", "pricing_target_type", "target_profit_cents", "allowed_payment_methods", "pricing_version"} <= catalog_columns
     assert "legacy_price_before_tax_cents" in catalog_columns
+    assert {"catalog_collections", "catalog_collection_products"} <= {
+        row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }, "Collection migrations are missing from the fresh schema"
     order_columns = {row[1] for row in db.execute("PRAGMA table_info(orders_orders)")}
     assert {"tax_cents", "pricing_version", "estimated_payment_fee_cents"} <= order_columns
     assert "transaction_fee_cents" in order_columns
@@ -121,7 +124,14 @@ def check_legacy_backfills() -> None:
     assert defaults == (10000, "margin", None), defaults
     catalog.execute("UPDATE catalog_products SET pricing_target_type='profit',target_profit_cents=2000000 WHERE id='p'")
     assert catalog.execute("SELECT pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone() == ("profit", 2000000)
-    print("Legacy catalog upgrade passed (price unchanged; existing margin retained; fixed profit metadata persisted).")
+    catalog.executescript((catalog_path / "0006_suppliers_variants.sql").read_text(encoding="utf-8"))
+    catalog.executescript((catalog_path / "0007_taxonomy_status.sql").read_text(encoding="utf-8"))
+    previous_product = catalog.execute("SELECT price_in_cents,pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone()
+    catalog.executescript((catalog_path / "0008_collections.sql").read_text(encoding="utf-8"))
+    catalog.executescript((catalog_path / "0008_collections.sql").read_text(encoding="utf-8"))
+    assert catalog.execute("SELECT price_in_cents,pricing_target_type,target_profit_cents FROM catalog_products WHERE id='p'").fetchone() == previous_product
+    assert catalog.execute("SELECT status FROM catalog_collections").fetchone() is None
+    print("Legacy catalog upgrade passed (price and margin metadata preserved; collection tables added from v7).")
 
     invoices = sqlite3.connect(":memory:")
     invoice_path = MIGRATIONS / "invoicing/infrastructure/persistence/d1/migrations"

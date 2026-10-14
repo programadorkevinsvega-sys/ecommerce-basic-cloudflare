@@ -12,6 +12,7 @@ import { CatalogBrandAdminController } from './controllers/catalog/CatalogBrandA
 import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAuxiliaryAdminController.js';
 import { CatalogTaxonomyListController } from './controllers/catalog/CatalogTaxonomyListController.js';
 import { CatalogTaxonomyMutationController } from './controllers/catalog/CatalogTaxonomyMutationController.js';
+import { CollectionAdminController } from './controllers/catalog/CollectionAdminController.js';
 import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
 import { CollectionPagesController } from './controllers/storefront/CollectionPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
@@ -118,7 +119,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.settingsGateway
   ));
   app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway));
-  app.route('/', CollectionPagesController.createRoutes(cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway));
+  app.route('/', CollectionPagesController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.cmsGateway,cRoot.settingsGateway,cRoot.promotionsGateway));
 
   // Infra y Auth
   app.route('/health', HealthController.createRoutes());
@@ -130,6 +131,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1', CatalogBrandAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CatalogTaxonomyListController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
+  app.route('/api/v1', CollectionAdminController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.auditGateway));
   app.route('/api/v1', CatalogAuxiliaryAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
 
   app.notFound(async (c) => {

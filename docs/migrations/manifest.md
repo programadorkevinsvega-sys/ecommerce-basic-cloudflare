@@ -55,6 +55,10 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `catalog__0006_suppliers_variants.sql` | v6 | Local temporal | 2026-10-14 | trabajo actual | ✅ Aplicada desde D1 vacía junto con las 38 migraciones previas; segunda pasada idempotente |
 | `catalog__0006_suppliers_variants.sql` | v6 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada y verificada en `d1_migrations` y `sqlite_master`; tablas confirmadas |
 | `catalog__0007_taxonomy_status.sql` | v7 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada a las 07:55 UTC y verificada en `d1_migrations` y `PRAGMA table_info`; expansión aditiva, conserva los registros existentes activos. |
+| `catalog__0008_collections.sql` | v8 | Local temporal | 2026-10-14 | trabajo actual | ✅ Verificada desde esquema vacío y en actualización; integración D1 de persistencia aprobada. |
+| `catalog__0008_collections.sql` | v8 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada por runner después de verificar las 41 entradas anteriores; ledger, tablas y columnas confirmados por consulta remota. No se insertó contenido. |
+
+`catalog__0008_collections.sql` crea `catalog_collections` y `catalog_collection_products`. El estado inicial queda `inactive` para que una colección nueva no se publique por accidente. El rollback del Worker no requiere retirar las tablas: la versión anterior no las consulta. No ejecutar `DROP TABLE` como rollback, porque eliminaría las colecciones configuradas. Para aplicar en local: `pnpm db:migrate:local`; en producción, después de respaldo y revisión del ledger: `ALLOW_REMOTE_D1_MIGRATIONS=1 pnpm db:migrate:remote`. En esta ejecución se aplicó en producción y la comprobación posterior confirmó el ledger, las tablas y todas sus columnas. No se insertó contenido.
 
 ---
 

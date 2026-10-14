@@ -1,10 +1,17 @@
-import type { AttributeDto, BrandDto, CategoryDto, CatalogProductDto, ProductVariantDto, SupplierDto } from '../../gateways/catalog/CatalogGateway.js';
+import type { AttributeDto, BrandDto, CategoryDto, CatalogProductDto, ProductVariantDto, SupplierDto, CatalogCollectionDto } from '../../gateways/catalog/CatalogGateway.js';
 
-export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: CatalogProductDto[]): string {
+export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: CatalogProductDto[], collections:CatalogCollectionDto[]): string {
   return `<section class="taxonomy-screen" aria-label="Gestión del catálogo">
     <header class="taxonomy-heading"><div><h1 id="taxonomy-page-title">Categorías</h1><p id="taxonomy-page-description">Organiza los productos en categorías independientes.</p></div></header>
-    ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products)}
+    ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products)}${collectionPage(collections,products)}
   </section>`;
+}
+
+function collectionPage(items:CatalogCollectionDto[],products:CatalogProductDto[]):string {
+  const rows=items.map((item)=>`<tr><td><strong>${e(item.name)}</strong><small>/colecciones/${e(item.slug)}</small></td><td>${item.productIds.length}</td><td><span class="taxonomy-status ${item.status}">${item.status==='active'?'Publicada':'Oculta'}</span></td><td class="taxonomy-row-actions"><button class="taxonomy-secondary" type="button" data-taxonomy-action="edit" data-taxonomy-key="collections" data-taxonomy-id="${e(item.id)}">Editar</button><button class="taxonomy-danger" type="button" data-taxonomy-action="delete" data-taxonomy-key="collections" data-taxonomy-id="${e(item.id)}">Eliminar</button></td></tr>`).join('');
+  const productOptions=products.filter((item)=>item.status==='published').map((item)=>`<option value="${e(item.id)}">${e(item.name)} · ${e(item.sku)}</option>`).join('');
+  const form=`<label>Nombre<input id="collectionName" maxlength="120" required></label><label>Dirección / slug<input id="collectionSlug" maxlength="140" required placeholder="verano"></label><label class="wide">Descripción<textarea id="collectionDescription" maxlength="2000" required></textarea></label><label>Estado<select id="collectionStatus"><option value="inactive">Oculta</option><option value="active">Publicada</option></select></label><label>Productos publicados<select id="collectionProducts" multiple size="8">${productOptions}</select></label><label>Título SEO<input id="collectionSeoTitle" maxlength="70"></label><label>Descripción SEO<textarea id="collectionSeoDescription" maxlength="160"></textarea></label>`;
+  return page('collections','Colecciones','Organiza productos publicados en páginas de colección con dirección propia.',items.length,'Colección','Crear colección',form,'newCollectionForm','<th>Colección</th><th>Productos</th><th>Estado</th><th>Acciones</th>',rows,'Aún no hay colecciones. Crea una para comenzar.');
 }
 
 function categoryPage(items: CategoryDto[]): string {

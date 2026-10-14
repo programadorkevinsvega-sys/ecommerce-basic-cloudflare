@@ -412,6 +412,8 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/productos` | Listado con filtros, orden y paginación |
 | `/productos/:slug` | Detalle de producto |
 | `/categorias/:slug`, `/marcas/:slug` | Listados por categoría / marca |
+| `/colecciones` | Directorio paginado de colecciones publicadas |
+| `/colecciones/:slug` | Productos publicados de una colección |
 | `/buscar?q=` | Búsqueda |
 | `/promociones` | Promociones vigentes |
 | `/sobre-nosotros`, `/contacto`, `/preguntas-frecuentes` | Páginas informativas editables desde CMS |

@@ -39,7 +39,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-taxonomies" class="tab-content">
-      ${renderCatalogManagementSection(props.categories, props.brands, props.attributes, props.suppliers, props.variants, props.products)}
+      ${renderCatalogManagementSection(props.categories, props.brands, props.attributes, props.suppliers, props.variants, props.products, props.collections)}
     </div>
 
     <div id="tab-storefront" class="tab-content">

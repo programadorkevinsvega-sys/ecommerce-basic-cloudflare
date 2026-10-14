@@ -16,6 +16,8 @@ import { Supplier } from './domain/entities/Supplier.js';
 import { ProductVariant } from './domain/entities/ProductVariant.js';
 import { CatalogPageQuery } from './domain/ports/CatalogPageQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from './application/use-cases/ManageCatalogTaxonomyUseCase.js';
+import { CollectionInput } from './application/use-cases/ManageCollectionUseCase.js';
+import { Collection } from './domain/entities/Collection.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -38,6 +40,12 @@ export interface ICatalogPublicApi {
   listProductVariants(query?: CatalogPageQuery): Promise<ProductVariant[]>;
   updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
   deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
+  listCollections(query?: CatalogPageQuery): Promise<Collection[]>;
+  getCollectionBySlug(slug: string): Promise<Collection>;
+  findCollectionBySlug(slug: string): Promise<Collection | null>;
+  getCollectionById(id: string): Promise<Collection>;
+  saveCollection(input: CollectionInput, id?: string): Promise<Collection>;
+  deleteCollection(id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
@@ -154,6 +162,13 @@ export class CatalogPublicApi implements ICatalogPublicApi {
   public deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void> {
     return this.container.manageCatalogTaxonomyUseCase.delete(kind, id);
   }
+
+  public listCollections(query?: CatalogPageQuery): Promise<Collection[]> { return this.container.manageCollectionUseCase.list(query); }
+  public getCollectionBySlug(slug: string): Promise<Collection> { return this.container.manageCollectionUseCase.getBySlug(slug); }
+  public findCollectionBySlug(slug: string): Promise<Collection | null> { return this.container.manageCollectionUseCase.findBySlug(slug); }
+  public getCollectionById(id: string): Promise<Collection> { return this.container.manageCollectionUseCase.getById(id); }
+  public saveCollection(input: CollectionInput, id?: string): Promise<Collection> { return this.container.manageCollectionUseCase.save(input, id); }
+  public deleteCollection(id: string): Promise<void> { return this.container.manageCollectionUseCase.delete(id); }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {
     return this.container.migrateLegacyProductPricesUseCase.preview(taxRateBasisPoints);
