@@ -4,7 +4,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 
 export interface AuthoritativeOrderPricing {
   lines: Array<{ productId: string; productName: string; productSku: string; quantity: number; unitPriceCents: number }>;
-  policyItems: Array<{ product: { productId: string; name: string; allowsCashOnDelivery: boolean; shippingScope: 'national' | 'local'; localCoverageZones: string[] }; quantity: number }>;
+  policyItems: Array<{ product: { productId: string; name: string; allowsCashOnDelivery: boolean; shippingScope: 'national' | 'local'; localCoverageZones: string[]; allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> }; quantity: number }>;
   subtotalCents: number;
   discountCents: number;
   taxCents: number;
@@ -47,7 +47,7 @@ export async function calculateOrderPricing(
     if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0) throw new Error('Precio no válido');
     subtotalCents += unitPriceCents * quantity;
     lines.push({ productId: product.id, productName: product.name, productSku: product.sku, quantity, unitPriceCents });
-    policyItems.push({ product: { productId: product.id, name: product.name, allowsCashOnDelivery: product.salePolicy.allowsCashOnDelivery, shippingScope: product.salePolicy.shippingScope, localCoverageZones: product.salePolicy.localCoverageZones }, quantity });
+    policyItems.push({ product: { productId: product.id, name: product.name, allowsCashOnDelivery: product.salePolicy.allowsCashOnDelivery, shippingScope: product.salePolicy.shippingScope, localCoverageZones: product.salePolicy.localCoverageZones, allowedPaymentMethods: productMethods }, quantity });
   }
   const couponCode = typeof couponInput === 'string' ? couponInput.trim() : '';
   let discountCents = 0;

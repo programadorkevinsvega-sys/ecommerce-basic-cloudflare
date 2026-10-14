@@ -33,7 +33,8 @@ export function getCheckoutDraftScript(): string {
             city.dispatchEvent(new Event('input'));
           }
         }
-        if (saved.draft.payment === 'cash_on_delivery') document.getElementById('radio-cod').checked = true;
+        if (saved.draft.payment === 'cash_on_delivery' && document.getElementById('radio-cod').dataset.productAllowed === 'true') document.getElementById('radio-cod').checked = true;
+        if (saved.draft.payment === 'wompi' && !document.getElementById('radio-wompi').disabled) document.getElementById('radio-wompi').checked = true;
       } else {
         sessionStorage.removeItem(storageKey);
       }

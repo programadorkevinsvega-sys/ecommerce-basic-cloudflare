@@ -56,7 +56,7 @@ export function renderProductFormsScript(): string {
         targetProfitCents: document.getElementById('pTargetType').value === 'profit' ? window.copPesosToCents('pTargetProfit') : null,
         allowedPaymentMethods: [
           ...(document.getElementById('pPayWompi').checked ? ['wompi'] : []),
-          ...(document.getElementById('pPayCod').checked ? ['cash_on_delivery'] : [])
+          ...(document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : [])
         ],
         stockQuantity: Number(document.getElementById('pStock').value),
         condition: document.getElementById('pCondition').value,
@@ -69,7 +69,7 @@ export function renderProductFormsScript(): string {
         noindex: document.getElementById('pNoindex').checked,
         specifications: specs,
         tags,
-        allowsCashOnDelivery: document.getElementById('pPayCod').checked && document.getElementById('pCod').value === 'true',
+        allowsCashOnDelivery: document.getElementById('pCod').value === 'true',
         shippingScope: document.getElementById('pScope').value,
         localCoverageZones: document.getElementById('pScope').value === 'local' && document.getElementById('pLocalZones')
           ? Array.from(document.getElementById('pLocalZones').selectedOptions).map(opt => opt.value)
@@ -79,6 +79,13 @@ export function renderProductFormsScript(): string {
         mediaIds: (window.currentProductMediaIds || []).slice(0, 5),
         status: 'published'
       };
+
+      if (payload.allowedPaymentMethods.length === 0) {
+        msg.textContent = '❌ Activa al menos Wompi o permite el pago contra entrega para este producto.';
+        msg.style.background = '#7f1d1d';
+        msg.style.display = 'block';
+        return;
+      }
 
       const editId = document.getElementById('pEditId')?.value;
       const url = editId ? '/api/v1/admin/products/' + editId : '/api/v1/admin/products';

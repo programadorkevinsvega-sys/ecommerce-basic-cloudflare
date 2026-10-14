@@ -50,7 +50,7 @@ export class OrdersCheckoutPolicy {
       // 2. Política de pago contra entrega por producto
       if (!p.allowsCashOnDelivery) {
         codBlockingReasons.push(
-          `El producto '${p.name}' no permite pago contra entrega (requiere pago anticipado con Wompi).`
+          `El producto '${p.name}' no permite pago contra entrega.`
         );
       }
     }

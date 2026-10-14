@@ -94,8 +94,8 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pMargin').value = Number(p.targetMarginBasisPoints || 2000) / 100;
         document.getElementById('pTargetType').value = p.pricingTargetType || 'margin';
         window.setCopInputValue('pTargetProfit', p.targetProfitCents == null ? '' : Math.round(p.targetProfitCents / 100));
-        document.getElementById('pPayWompi').checked = (p.allowedPaymentMethods || ['wompi']).includes('wompi');
-        document.getElementById('pPayCod').checked = (p.allowedPaymentMethods || []).includes('cash_on_delivery');
+        const paymentMethods = p.allowedPaymentMethods || ['wompi', 'cash_on_delivery'];
+        document.getElementById('pPayWompi').checked = paymentMethods.includes('wompi');
         window.updateProductPricingTargetFields?.();
         window.updateRecommendedProductPrice?.();
         document.getElementById('pStock').value = p.stockQuantity ?? 10;
@@ -104,7 +104,7 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pType').value = p.productType || '';
         document.getElementById('pGtin').value = p.barcodeGtin || '';
         document.getElementById('pTags').value = (p.tags || []).join(', ');
-        document.getElementById('pCod').value = p.salePolicy?.allowsCashOnDelivery ? 'true' : 'false';
+        document.getElementById('pCod').value = p.salePolicy?.allowsCashOnDelivery && paymentMethods.includes('cash_on_delivery') ? 'true' : 'false';
         const scope = p.salePolicy?.shippingScope || 'national';
         document.getElementById('pScope').value = scope;
         const wrap = document.getElementById('pLocalZonesWrapper');

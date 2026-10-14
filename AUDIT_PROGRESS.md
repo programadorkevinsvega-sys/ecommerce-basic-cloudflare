@@ -89,3 +89,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Verificaciones: `pnpm lint`, `pnpm typecheck`, `pnpm test` (39 archivos, 103 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm db:check-migrations`, `pnpm db:test-migrations`, `pnpm db:test-wrangler-migrations` (35 migraciones desde vacío, idempotentes), `git diff --check`.
 - Producción: ledger mostraba las 34 migraciones anteriores; se aplicó solo `catalog__0005_profit_target_pricing.sql`. Consulta posterior confirmó ledger y columnas; los 8 productos conservan modo `margin`, cero objetivos fijos, y 7 siguen con `pricing_version=1`.
 - Commit `4392264` enviado a `main`. El push no produjo un deployment nuevo; se publicó el Worker `ab9e970a-967c-4947-a2d3-fc1309cbd753`. `/health` devolvió `healthy` y D1/KV/Queue/R2 en `ok`. Consulta pública en vivo devolvió 200 sin costo proveedor, modo ni ganancia objetivo.
+
+### Métodos de pago por producto y checkout (2026-10-13)
+
+- Corregido el formulario de catálogo: contra entrega queda definida por el selector comercial “Contra Entrega” y genera el método `cash_on_delivery`; se eliminó la casilla duplicada que podía dejar una lista vacía y disparar “Validación fallida”. Guardar un producto sin ningún medio muestra ahora el motivo antes de llamar a la API.
+- El checkout calcula los medios comunes de todos los productos al renderizar. Si Wompi no está habilitado en cada producto, inicia con Wompi bloqueado, COD seleccionado como única opción (pendiente de cobertura) y sin mostrar la tarifa fija Wompi. El borrador no puede volver a seleccionar un medio que el producto excluye.
+- El servidor conserva los medios de pago en la evaluación final del pedido y rechaza cualquier método que no esté permitido por todos los productos. COD solo se habilita cuando también permiten las reglas del producto y la zona de envío.
+- Verificaciones: `pnpm test` (40 archivos, 108 tests), `pnpm test:workers` (4 archivos, 13 tests), `pnpm lint`, `pnpm typecheck`, `git diff --check`. Sin cambios de esquema.
+- Pendiente: sincronizar commit/push y verificar el deployment resultante; no se hizo consulta ni escritura en D1 de producción.

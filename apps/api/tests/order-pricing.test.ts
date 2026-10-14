@@ -57,4 +57,15 @@ describe('calculateOrderPricing', () => {
     expect(online.totalCents - cod.totalCents).toBe(70000);
     expect(cod.transactionFeeCents).toBe(0);
   });
+
+  it('permite crear un pedido COD-only sin seleccionar Wompi ni sumar sus cargos', async () => {
+    const codOnly = { ...product, allowedPaymentMethods: ['cash_on_delivery'] };
+    const g = gateways({ catalog: { listProducts: async () => [codOnly] } });
+    const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: 'p1', quantity: 1 }], null, null, 500, 'cash_on_delivery');
+    expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);
+    expect(result.policyItems[0]?.product.allowedPaymentMethods).toEqual(['cash_on_delivery']);
+    expect(result.transactionFeeCents).toBe(0);
+    expect(result.estimatedPaymentFeeCents).toBe(0);
+  });
 });

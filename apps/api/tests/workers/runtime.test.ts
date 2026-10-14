@@ -110,7 +110,7 @@ describe('Worker API security and runtime bindings', () => {
     const order = { id: 'order-reserve-fail', paymentMethod: 'wompi', lines: [{ productId: 'prod-1', quantity: 1 }], toJSON: () => ({ id: 'order-reserve-fail' }) };
     const zone = { id: 'zone-1', isActive: true, priceInCents: 500, allowsCashOnDelivery: true };
     const product = { id: 'prod-1', name: 'Test product', sku: 'SKU1', status: 'published', priceInCents: 1000, stockQuantity: 2, salePolicy: { allowsCashOnDelivery: false, shippingScope: 'national', localCoverageZones: [] } };
-    const orders = { createOrder: vi.fn().mockResolvedValue(order), updateOrderStatus, evaluateCheckoutPolicy: vi.fn().mockResolvedValue({ canProceed: true, allowsCashOnDelivery: false }) };
+    const orders = { createOrder: vi.fn().mockResolvedValue(order), updateOrderStatus, evaluateCheckoutPolicy: vi.fn().mockResolvedValue({ canProceed: true, allowsCashOnDelivery: false, allowedPaymentMethods: ['wompi'] }) };
     const shipping = { getZone: vi.fn().mockResolvedValue(zone), checkCoverage: vi.fn().mockResolvedValue({ isCovered: true, zoneId: zone.id }) };
     const catalog = { listProducts: vi.fn().mockResolvedValue([product]) };
     const promotions = { evaluateProductDiscount: vi.fn().mockResolvedValue({ hasDiscount: false }), validateCoupon: vi.fn() };

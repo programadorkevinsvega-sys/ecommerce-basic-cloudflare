@@ -7,7 +7,7 @@ export async function validateOrderPolicy(
   orders: OrdersGateway,
   zone: ShippingZoneDto,
   pricing: AuthoritativeOrderPricing,
-  paymentMethod: string,
+  paymentMethod: 'wompi' | 'cash_on_delivery',
   daneCode: string,
   shipping: ShippingGateway,
 ): Promise<string | null> {
@@ -24,6 +24,6 @@ export async function validateOrderPolicy(
     items: pricing.policyItems,
   });
   if (!policy.canProceed) return 'El destino no cumple las reglas de envío del pedido';
-  if (paymentMethod === 'cash_on_delivery' && !policy.allowsCashOnDelivery) return 'El pago contra entrega no está disponible para este pedido';
+  if (!policy.allowedPaymentMethods.includes(paymentMethod)) return 'El método de pago no está habilitado para todos los productos';
   return null;
 }

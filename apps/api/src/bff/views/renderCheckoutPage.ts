@@ -15,6 +15,8 @@ function formatPrice(cents: number): string {
 
 export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19): string {
   const subtotalCents = cart.items.reduce((total, item) => total + item.subtotalCents, 0);
+  const productPaymentMethods = getProductPaymentMethods(cart.items, productsMap);
+  const initialPaymentMethod = productPaymentMethods.wompi ? 'wompi' : productPaymentMethods.cashOnDelivery ? 'cash_on_delivery' : null;
   const pricingVersion = cart.items.every((item) => productsMap.get(item.productId)?.pricingVersion === 2) ? 2 : 1;
   const taxCents = pricingVersion === 2 ? Math.round(subtotalCents * taxRatePercent / (100 + taxRatePercent)) : Math.round(subtotalCents * taxRatePercent / 100);
   const cartItems = cart.items.map((item) => {
@@ -30,10 +32,10 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
     <div class="checkout-columns"><form id="checkout-form" class="checkout-form" novalidate><p class="checkout-required-note">Los campos marcados con * son obligatorios.</p>
       ${renderContactFields()}
       ${renderAddressFields(zoneOptions)}
-      ${renderPaymentFields()}
-      <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
+      ${renderPaymentFields(productPaymentMethods.wompi, productPaymentMethods.cashOnDelivery)}
+      <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">${initialPaymentMethod === 'wompi' ? `Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}` : initialPaymentMethod === 'cash_on_delivery' ? 'Confirmar pedido' : 'Selecciona un método de pago'}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
     </form>
-    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion)}
+    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion, initialPaymentMethod === 'wompi')}
     </div><footer class="checkout-footer"><span><strong>VEGA STORE</strong> · © ${new Date().getFullYear()} · Colombia</span><span>Compra segura · Precios en COP</span></footer>
   </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion)}${getCheckoutDraftScript()}`;
 }
@@ -56,11 +58,27 @@ function renderAddressFields(zoneOptions: string): string {
   </div><div id="policy-alert" class="checkout-policy" role="status" aria-live="polite" data-state="idle"><span aria-hidden="true">ⓘ</span><span>Selecciona tu zona para consultar cobertura, costo y tiempo estimado de entrega.</span></div></fieldset>`;
 }
 
-function renderPaymentFields(): string {
+function renderPaymentFields(wompiAvailable: boolean, codAvailable: boolean): string {
+  const wompiChecked = wompiAvailable;
+  const codChecked = !wompiAvailable && codAvailable;
+  const codDescription = codAvailable ? 'Se habilita al confirmar cobertura de envío.' : 'No disponible para todos los productos de este pedido.';
   return `<fieldset class="checkout-card"><legend><span>3.</span> Método de pago</legend><div class="checkout-payment-options">
-    <label class="checkout-payment-option" for="radio-wompi"><input id="radio-wompi" type="radio" name="payment-method" value="wompi" checked><span><strong>Pago en línea</strong><small>Tarjeta débito o crédito, PSE, Nequi y Bancolombia.</small><em>Pago seguro a través de Wompi.</em></span></label>
-    <label class="checkout-payment-option" id="cod-label" for="radio-cod"><input id="radio-cod" type="radio" name="payment-method" value="cash_on_delivery" disabled><span><strong>Pago contra entrega</strong><small>Paga en efectivo cuando recibas tu pedido.</small></span></label>
+    <label class="checkout-payment-option" for="radio-wompi"><input id="radio-wompi" type="radio" name="payment-method" value="wompi" ${wompiChecked ? 'checked' : 'disabled'}><span><strong>Pago en línea</strong><small>Tarjeta débito o crédito, PSE, Nequi y Bancolombia.</small><em>${wompiAvailable ? 'Pago seguro a través de Wompi.' : 'No disponible para todos los productos de este pedido.'}</em></span></label>
+    <label class="checkout-payment-option" id="cod-label" for="radio-cod"><input id="radio-cod" type="radio" name="payment-method" value="cash_on_delivery" data-product-allowed="${codAvailable}" ${codChecked ? 'checked' : ''} disabled><span><strong>Pago contra entrega</strong><small>Paga en efectivo cuando recibas tu pedido.</small><em>${codDescription}</em></span></label>
   </div></fieldset>`;
+}
+
+function getProductPaymentMethods(items: CartDto['items'], products: Map<string, CatalogProductDto>): { wompi: boolean; cashOnDelivery: boolean } {
+  if (!items.length) return { wompi: false, cashOnDelivery: false };
+  return items.reduce<{ wompi: boolean; cashOnDelivery: boolean }>((available, item) => {
+    const product = products.get(item.productId);
+    if (!product) return { wompi: false, cashOnDelivery: false };
+    const methods = product.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'];
+    return {
+      wompi: available.wompi && methods.includes('wompi'),
+      cashOnDelivery: available.cashOnDelivery && methods.includes('cash_on_delivery') && product.salePolicy.allowsCashOnDelivery,
+    };
+  }, { wompi: true, cashOnDelivery: true });
 }
 
 function renderCheckoutItem(item: CartDto['items'][number], product?: CatalogProductDto): string {
@@ -68,10 +86,10 @@ function renderCheckoutItem(item: CartDto['items'][number], product?: CatalogPro
   return `<li class="checkout-item"><span class="checkout-item-image">${image}</span><span class="checkout-item-name">${escapeHtml(product?.name ?? 'Producto')}<small>Cantidad: ${item.quantity}</small></span><span class="checkout-item-price">${formatPrice(item.subtotalCents)}</span></li>`;
 }
 
-function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number): string {
+function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number, showWompiFee: boolean): string {
   const taxRow = version === 2 ? '' : `<div class="checkout-total-row"><dt>IVA (${taxRate}%)</dt><dd id="txt-tax">${formatPrice(tax)}</dd></div>`;
   const initialTax = version === 2 ? 0 : tax;
   return `<aside class="checkout-summary" aria-labelledby="checkout-summary-title"><h2 id="checkout-summary-title">Resumen del pedido</h2><ul class="checkout-items">${rows}</ul><dl class="checkout-totals">
-    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div>${taxRow}<div class="checkout-total-row"><dt>Envío</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-transaction-fee-row"><dt>Costo de transacción Wompi <small>Tarifa fija por procesar el pago en línea</small></dt><dd id="txt-transaction-fee">${formatPrice(70000)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + initialTax + 70000)}</dd></div>
+    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div>${taxRow}<div class="checkout-total-row"><dt>Envío</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-transaction-fee-row"${showWompiFee ? '' : ' style="display:none"'}><dt>Costo de transacción Wompi <small>Tarifa fija por procesar el pago en línea</small></dt><dd id="txt-transaction-fee">${formatPrice(showWompiFee ? 70000 : 0)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + initialTax + (showWompiFee ? 70000 : 0))}</dd></div>
   </dl><p class="checkout-tax-note">${version === 2 ? `IVA (${taxRate}%) incluido en el precio de los productos.` : 'Impuestos estimados según la configuración vigente.'}</p></aside>`;
 }
