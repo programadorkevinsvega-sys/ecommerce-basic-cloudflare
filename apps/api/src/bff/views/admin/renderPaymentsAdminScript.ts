@@ -19,8 +19,14 @@ export function renderPaymentsAdminScript(): string {
             <td style="padding:0.75rem; font-size:0.85rem; color:var(--muted);">\${escapeHtml(new Date(t.createdAt).toLocaleString('es-CO'))}</td>
           </tr>
         \`).join('');
+        const collectionsBody = document.getElementById('cod-collections-table-body');
+        if (collectionsBody) collectionsBody.innerHTML = (data.collections || []).length
+          ? data.collections.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td></tr>\`).join('')
+          : '<tr><td colspan="5" class="payments-empty-row">Aún no hay recaudos registrados</td></tr>';
         const settlementBody = document.getElementById('settlement-table-body');
-        settlementBody.innerHTML = (data.settlementCosts || []).map(row => \`<tr><td>\${escapeHtml(row.orderId)}</td><td>$\${(row.estimatedFeeCents / 100).toLocaleString('es-CO')}</td><td>$\${(row.actualFeeCents / 100).toLocaleString('es-CO')}</td><td>$\${(row.varianceCents / 100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference)}</td></tr>\`).join('');
+        if (settlementBody) settlementBody.innerHTML = (data.settlementCosts || []).length
+          ? data.settlementCosts.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td></tr>\`).join('')
+          : '<tr><td colspan="5" class="payments-empty-row">Aún no hay conciliaciones registradas</td></tr>';
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
@@ -41,6 +47,7 @@ export function renderPaymentsAdminScript(): string {
         document.getElementById('cod-order-id').value = '';
         document.getElementById('cod-amount').value = '';
         document.getElementById('cod-receipt').value = '';
+        closeCodCollectionForm();
         loadAdminPayments();
         loadAdminOrders();
       } else {
@@ -58,12 +65,32 @@ export function renderPaymentsAdminScript(): string {
       document.getElementById('settlement-order-id').value = '';
       document.getElementById('settlement-fee').value = '';
       document.getElementById('settlement-report-ref').value = '';
+      closeSettlementForm();
       await loadAdminPayments();
     }
+
+    function openPaymentsModal(id, firstFieldId) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.hidden = false;
+      document.getElementById(firstFieldId)?.focus();
+    }
+    function closePaymentsModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.hidden = true;
+    }
+    function openCodCollectionForm() { openPaymentsModal('cod-collection-modal', 'cod-order-id'); }
+    function closeCodCollectionForm() { closePaymentsModal('cod-collection-modal'); }
+    function openSettlementForm() { openPaymentsModal('settlement-modal', 'settlement-order-id'); }
+    function closeSettlementForm() { closePaymentsModal('settlement-modal'); }
 
     window.loadAdminPayments = loadAdminPayments;
     window.submitCodCollection = submitCodCollection;
     window.submitSettlementCost = submitSettlementCost;
+    window.openCodCollectionForm = openCodCollectionForm;
+    window.closeCodCollectionForm = closeCodCollectionForm;
+    window.openSettlementForm = openSettlementForm;
+    window.closeSettlementForm = closeSettlementForm;
 
     function showAdminPaymentPage(page) {
       document.querySelectorAll('[data-payment-panel]').forEach(panel => { panel.hidden = panel.dataset.paymentPanel !== page; });

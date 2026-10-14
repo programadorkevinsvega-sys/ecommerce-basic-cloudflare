@@ -179,3 +179,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Los accesos laterales seleccionan el panel correspondiente dentro de Pagos; Facturación abre su pantalla existente. Quité la navegación interna duplicada del contenido de Pagos. Sin cambios de backend o permisos.
 - Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este ajuste de navegación.
 - Commit `5d0d921` enviado a `main`; publiqué el Worker `5fb078fe-03bd-48cb-8c62-0bb2daebcea8`. `/health` posterior respondió `healthy` con D1/KV/Queue/R2 `ok`.
+
+### Listas de recaudos y conciliaciones (2026-10-14)
+
+- Recaudos contra entrega ahora presenta primero la tabla de recaudos ya registrados y el botón “Crear nuevo recaudo”; el formulario abre en un modal. Conciliar muestra la lista de liquidaciones y “Crear conciliación” abre su formulario en otro modal.
+- Las filas consumen las listas que ya devuelve `GET /api/v1/admin/payments`; se conservaron POST, permisos, validaciones y contratos existentes. No hubo cambios en backend de negocio, D1 ni datos.
+- Validaciones: `pnpm typecheck`, `pnpm lint` (incluye arquitectura/límite 200 líneas), `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No se ejecutaron pruebas automatizadas para este cambio de presentación. Commit/push y comprobación de deployment pendientes.
