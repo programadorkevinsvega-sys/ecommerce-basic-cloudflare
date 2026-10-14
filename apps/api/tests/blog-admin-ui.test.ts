@@ -7,7 +7,13 @@ describe('Blog admin presentation and actions', () => {
   it('uses the same light admin surface as the CMS management page', () => {
     expect(renderAdminDashboardScript()).toContain("classList.toggle('blog-mode', tabId === 'blog')");
     expect(renderBlogDashboardCss()).toContain('.admin-legacy-pane.blog-mode .blog-toolbar label');
-    expect(renderBlogDashboardCss()).toContain('background:#151a23');
+    expect(renderBlogDashboardCss()).toContain('background:#20563d');
+  });
+
+  it('renders row actions in a wrapping group with consistent button sizing', () => {
+    expect(renderBlogAdminScript()).toContain('class=\"blog-row-actions\"');
+    expect(renderBlogDashboardCss()).toContain('.blog-row-actions{display:flex;flex-wrap:wrap');
+    expect(renderBlogDashboardCss()).toContain('min-width:64px;min-height:34px');
   });
 
   it('opens the new article dialog without waiting for taxonomy requests', () => {
