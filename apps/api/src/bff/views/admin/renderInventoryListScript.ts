@@ -19,6 +19,8 @@ export function renderInventoryListScript(): string {
       const availableTotal = items.reduce((sum, item) => sum + availableStock(item), 0);
       const reservedTotal = items.reduce((sum, item) => sum + Number(item.reservedQuantity || 0), 0);
       const lowCount = items.filter(item => availableStock(item) < INVENTORY_ALERT_LIMIT).length;
+      const alertCount = document.getElementById('inventory-alert-count');
+      if (alertCount) alertCount.textContent = String(lowCount);
       document.getElementById('inv-kpi-total').textContent = items.length.toLocaleString('es-CO');
       document.getElementById('inv-kpi-available').textContent = availableTotal.toLocaleString('es-CO');
       document.getElementById('inv-kpi-reserved').textContent = reservedTotal.toLocaleString('es-CO');

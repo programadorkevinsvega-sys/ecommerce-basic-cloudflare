@@ -6,7 +6,7 @@ export function renderPaymentsManagementSection(): string {
         <button class="btn-primary" onclick="loadAdminPayments()" style="padding:0.4rem 0.8rem; font-size:0.85rem;">🔄 Actualizar</button>
       </div>
 
-      <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
+      <div id="cod-collection-section" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; scroll-margin-top:24px;">
         <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Registrar Recaudo Contra Entrega (Efectivo)</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.75rem; align-items: flex-end;">
           <div>

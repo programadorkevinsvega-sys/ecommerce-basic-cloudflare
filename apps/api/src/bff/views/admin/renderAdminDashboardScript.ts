@@ -1,12 +1,12 @@
 export function renderAdminDashboardScript(): string {
   return `
-    function switchTab(tabId) {
+    function switchTab(tabId, navButton) {
       document.querySelectorAll('.tab-btn').forEach(b => {
         b.classList.remove('active');
         b.removeAttribute('aria-current');
       });
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      const selected = document.querySelector('[data-tab="' + tabId + '"]');
+      const selected = navButton || document.querySelector('[data-tab="' + tabId + '"]');
       selected?.classList.add('active');
       selected?.setAttribute('aria-current', 'page');
       const summary = document.getElementById('tab-summary');

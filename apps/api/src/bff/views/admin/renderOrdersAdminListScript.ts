@@ -30,6 +30,8 @@ export function renderOrdersAdminListScript(): string {
         const status = node.dataset.ordersCount;
         node.textContent = String(status === 'all' ? orders.length : orders.filter(order => order.status === status).length);
       });
+      const pendingCount = document.getElementById('orders-pending-count');
+      if (pendingCount) pendingCount.textContent = String(orders.filter(order => order.status === 'placed').length);
       const visible = filteredAdminOrders();
       const body = document.getElementById('orders-table-body');
       const region = document.getElementById('orders-table-region');

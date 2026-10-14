@@ -35,7 +35,7 @@ export function renderCatalogManagementSection(
   `).join('');
 
   return `
-    <div class="card">
+    <div class="card" id="taxonomy-categories" tabindex="-1">
       <h2>Categorías (${categories.length})</h2>
       <form id="newCategoryForm" style="margin-bottom: 1.5rem;">
         <div class="form-grid">
@@ -52,7 +52,7 @@ export function renderCatalogManagementSection(
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" id="taxonomy-brands" tabindex="-1">
       <h2>Marcas y Proveedores (${brands.length})</h2>
       <form id="newBrandForm" style="margin-bottom: 1.5rem;">
         <div class="form-grid">
@@ -69,7 +69,7 @@ export function renderCatalogManagementSection(
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" id="taxonomy-attributes" tabindex="-1">
       <h2>Atributos y Variantes (Tallas, Colores, Dimensiones)</h2>
       <form id="newAttributeForm" style="margin-bottom: 1.5rem;">
         <div class="form-grid">

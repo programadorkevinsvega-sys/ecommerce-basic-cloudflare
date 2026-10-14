@@ -132,3 +132,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Pruebas: presentación/render y sintaxis del script; `pnpm typecheck`, `pnpm lint`, `pnpm test` (43 archivos, 116 pruebas al momento de esa ejecución), `pnpm test:workers` (4 archivos, 13 pruebas), `pnpm test:architecture`, `wrangler deploy --dry-run`, `git diff --check`. Se añadió una aserción adicional del panel general después de correr la suite completa; se reejecutará el test afectado antes del commit.
 - No se modificó dominio, controlador, repositorio, esquema ni datos. Sin comprobación visual de navegador automatizada porque Chromium no está instalado en este entorno.
 - Push no inició deployment automáticamente. Desplegué el Worker manualmente como `5fcbffec-9d0c-4dc8-86ce-c0e574480a5c`; `/health` posterior respondió `healthy` y D1/KV/Queue/R2 en `ok`. El despliegue no aplicó migraciones ni escribió datos de negocio.
+
+### Reorganización de la navegación administrativa (2026-10-13)
+
+- Actualicé los grupos Operación, Catálogo, Marketing y Sistema según la nueva jerarquía. Pagos y Recaudos son accesos separados; Recaudos abre el formulario existente. Productos, Categorías, Marcas, Proveedores, Atributos y Variantes llevan a sus secciones existentes. Marcas/Proveedores y Atributos/Variantes continúan compartiendo sus implementaciones actuales; no se agregaron módulos ni backend.
+- Los contadores de Pedidos por atender e Inventario bajo/agotado se calculan desde las respuestas existentes de pedidos e inventario; no se codificaron los valores de ejemplo 6 y 3.
+- Sin cambios de API, permisos, dominio o datos. Validación realizada: revisión del diff y `git diff --check`. No se ejecutaron pruebas automatizadas para este cambio de presentación.

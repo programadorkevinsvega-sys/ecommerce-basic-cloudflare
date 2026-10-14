@@ -8,7 +8,10 @@ export function renderAdminSummaryScript(): string {
         if (response.status === 403) throw new Error('No tienes permiso para consultar pedidos.');
         if (!response.ok) throw new Error('No fue posible consultar los pedidos.');
         const result = await response.json();
-        const orders = Array.isArray(result.orders) ? result.orders.slice(0, 6) : [];
+        const allOrders = Array.isArray(result.orders) ? result.orders : [];
+        const pendingCount = document.getElementById('orders-pending-count');
+        if (pendingCount) pendingCount.textContent = String(allOrders.filter(order => order.status === 'placed').length);
+        const orders = allOrders.slice(0, 6);
         if (!orders.length) {
           body.innerHTML = '<tr><td colspan="6" class="summary-empty">Todavía no hay pedidos para mostrar.</td></tr>';
           return;
@@ -41,6 +44,20 @@ export function renderAdminSummaryScript(): string {
       const amount = Number(cents);
       return Number.isSafeInteger(amount) ? '$' + (amount / 100).toLocaleString('es-CO', { maximumFractionDigits: 0 }) : '—';
     }
-    document.addEventListener('DOMContentLoaded', loadAdminSummaryOrders);
+    async function loadAdminInventoryAlertCount() {
+      const count = document.getElementById('inventory-alert-count');
+      if (!count) return;
+      try {
+        const response = await fetch('/api/v1/admin/inventory', { headers: adminHeaders() });
+        const result = await response.json();
+        if (!response.ok || !Array.isArray(result.items)) return;
+        const low = result.items.filter(item => Number(item.availableQuantity ?? (item.quantity - item.reservedQuantity)) < 10).length;
+        count.textContent = String(low);
+      } catch { /* El contador queda sin valor si el permiso o servicio no está disponible. */ }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAdminSummaryOrders();
+      loadAdminInventoryAlertCount();
+    });
   `;
 }
