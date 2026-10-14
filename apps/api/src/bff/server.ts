@@ -13,6 +13,7 @@ import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAu
 import { CatalogTaxonomyListController } from './controllers/catalog/CatalogTaxonomyListController.js';
 import { CatalogTaxonomyMutationController } from './controllers/catalog/CatalogTaxonomyMutationController.js';
 import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
+import { CollectionPagesController } from './controllers/storefront/CollectionPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { StorefrontAdminController } from './controllers/storefront/StorefrontAdminController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
@@ -35,6 +36,9 @@ import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
 import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
 import { createAdminMutationAuditMiddleware } from './middleware/AdminMutationAuditMiddleware.js';
 import { AdminMutationSnapshotProvider } from './middleware/AdminMutationSnapshotProvider.js';
+import { renderBaseLayout } from './views/renderBaseLayout.js';
+import { renderNotFoundPage } from './views/renderNotFoundPage.js';
+import { getCustomerEmail, getStorefrontNavMenus } from './controllers/storefront/StorefrontNavigationHelper.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -114,6 +118,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.settingsGateway
   ));
   app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway));
+  app.route('/', CollectionPagesController.createRoutes(cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway));
 
   // Infra y Auth
   app.route('/health', HealthController.createRoutes());
@@ -127,7 +132,25 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CatalogAuxiliaryAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
 
-  app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));
+  app.notFound(async (c) => {
+    if (c.req.method !== 'GET' && c.req.method !== 'HEAD' || c.req.path.startsWith('/api/') || c.req.path.startsWith('/admin') || c.req.path.startsWith('/media/') || c.req.path === '/health') {
+      return c.json({ error: 'Recurso no encontrado' }, 404);
+    }
+    const [customerEmail, nav] = await Promise.all([
+      getCustomerEmail(c, cRoot.identityGateway),
+      getStorefrontNavMenus(cRoot.cmsGateway, cRoot.settingsGateway),
+    ]);
+    return c.html(renderBaseLayout({
+      title: 'Página no encontrada | Vega Store',
+      description: 'No encontramos la página que buscas. Explora el catálogo de Vega Store.',
+      noindex: true,
+      bodyHtml: renderNotFoundPage(c.req.path),
+      customerEmail,
+      headerMenuItems: nav.headerMenuItems,
+      footerMenuItems: nav.footerMenuItems,
+      footerStoreProfile: nav.footerStoreProfile,
+    }), 404);
+  });
   app.onError((err, c) => {
     const traceContext = c.get('traceContext');
     console.error(JSON.stringify({ event: 'bff.unhandled_error', trace_id: traceContext?.traceId, request_id: traceContext?.requestId, error_name: err instanceof Error ? err.name : 'UnknownError' }));

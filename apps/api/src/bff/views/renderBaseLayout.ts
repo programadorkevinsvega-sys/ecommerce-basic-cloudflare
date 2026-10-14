@@ -6,6 +6,7 @@ import { storefrontCartStyles } from './storefrontCartStyles.js';
 import { storefrontCatalogStyles } from './storefrontCatalogStyles.js';
 import { storefrontCheckoutStyles } from './storefrontCheckoutStyles.js';
 import { storefrontCmsStyles } from './storefrontCmsStyles.js';
+import { storefrontNotFoundStyles } from './storefrontNotFoundStyles.js';
 import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
 import { renderStoreFooterDetails, renderStoreLegalIdentity, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 
@@ -82,7 +83,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}${storefrontNotFoundStyles}</style>
 </head>
 <body class="${props.checkoutMode ? 'checkout-mode' : ''}">
   ${props.checkoutMode ? '' : topBarHtml}

@@ -7,6 +7,7 @@ import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.j
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderBrandDirectoryPage } from '../../views/renderBrandDirectoryPage.js';
 import { renderBrandDetailPage } from '../../views/renderBrandDetailPage.js';
+import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 
@@ -22,7 +23,7 @@ export class BrandPagesController {
       const [brands, nav] = await Promise.all([catalog.listBrands(), getStorefrontNavMenus(cms, settings)]);
       const customerEmail = await getCustomerEmail(c, identity);
       const brand = brands.find((item) => item.slug === c.req.param('slug'));
-      if (!brand) return c.html(renderBaseLayout({ title: 'Marca no encontrada', description: 'La marca solicitada no existe.', bodyHtml: '<main><h1>Marca no encontrada</h1><p><a href="/marcas">Ver todas las marcas</a></p></main>', customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile }), 404);
+      if (!brand) return c.html(renderBaseLayout({ title: 'Marca no encontrada', description: 'La marca solicitada no existe.', noindex: true, bodyHtml: renderNotFoundPage(`/marcas/${c.req.param('slug')}`), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile }), 404);
       const matches = await catalog.listProducts({ limit: 100, status: 'published', searchQuery: brand.name });
       const products = matches.filter((p) => p.status === 'published' && p.brand?.trim().toLocaleLowerCase() === brand.name.trim().toLocaleLowerCase());
       const discounts = await resolveProductDiscounts(products, promotions);

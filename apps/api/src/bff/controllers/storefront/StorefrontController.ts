@@ -11,6 +11,7 @@ import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
 import { renderProductDetail } from '../../views/renderProductDetail.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
+import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
@@ -162,7 +163,7 @@ export class StorefrontController {
         const notFoundHtml = renderBaseLayout({
           title: 'Producto no encontrado',
           description: 'El producto solicitado no existe o fue retirado del catálogo.',
-          bodyHtml: '<div style="text-align:center; padding:3rem;"><h2>404 - Producto no encontrado</h2><p><a href="/productos">Regresar a la tienda</a></p></div>',
+          bodyHtml: renderNotFoundPage(`/productos/${slug}`),
           customerEmail,
           headerMenuItems: nav.headerMenuItems,
           footerMenuItems: nav.footerMenuItems,
