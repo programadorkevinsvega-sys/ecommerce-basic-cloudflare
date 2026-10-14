@@ -186,3 +186,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Las filas consumen las listas que ya devuelve `GET /api/v1/admin/payments`; se conservaron POST, permisos, validaciones y contratos existentes. No hubo cambios en backend de negocio, D1 ni datos.
 - Validaciones: `pnpm typecheck`, `pnpm lint` (incluye arquitectura/límite 200 líneas), `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No se ejecutaron pruebas automatizadas para este cambio de presentación.
 - Commit `022d28e` enviado a `main`. El push no generó deployment; publiqué con `pnpm --filter @ecommerce/api run deploy`, versión `e1a1f6e5-4220-49de-8af8-fd379c3b59f5`. `/health` respondió `healthy`, D1/KV/Queue/R2 `ok`.
+
+### Modal de zonas y página de municipios DANE (2026-10-14)
+
+- El formulario de crear/editar zonas de envío ahora se abre en modal desde la página de zonas. Añadí una página independiente de municipios DANE con búsqueda, estado de cobertura y acción para iniciar una zona individual con municipio y código DANE precargados.
+- La página usa el catálogo de solo lectura que ya entrega el servidor y conserva las rutas/contratos existentes; no se añadieron endpoints ni escritura de municipios DANE porque el backend actual no ofrece esa operación.
+- Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador.
+- Commit/push, deployment y `/health` pendientes.

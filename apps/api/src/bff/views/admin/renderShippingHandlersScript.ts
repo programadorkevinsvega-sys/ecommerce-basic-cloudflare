@@ -76,11 +76,11 @@ export function renderShippingHandlersScript(): string {
         updateSelectedLocationsCount();
       }
 
-      document.getElementById('shFormTitle').textContent = 'Editar Zona de Envío (' + data.name + ')';
+      document.getElementById('shFormTitle').textContent = 'Editar zona de envío';
       document.getElementById('shSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('shCancelBtn').style.display = 'inline-block';
-
-      document.getElementById('shFormTitle').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('shippingZoneModal').style.display = 'flex';
+      document.getElementById('shName').focus();
     }
 
     async function toggleShippingZoneStatus(id, activate) {

@@ -23,6 +23,7 @@ export function renderAdminDashboardScript(): string {
       legacy?.classList.toggle('invoices-mode', tabId === 'invoices');
       document.querySelector('.admin-main')?.classList.toggle('invoices-page-active', tabId === 'invoices');
       if (tabId === 'payments' && !navButton && typeof window.showAdminPaymentPage === 'function') window.showAdminPaymentPage('collections');
+      if (tabId === 'shipping' && !navButton && typeof window.showAdminShippingPage === 'function') window.showAdminShippingPage('zones');
       if (tabId === 'summary') {
         summary?.classList.add('active');
         if (legacy) legacy.hidden = true;
