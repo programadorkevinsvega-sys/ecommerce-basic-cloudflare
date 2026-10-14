@@ -206,4 +206,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Transacciones muestra referencia de factura, nombre y correo del cliente junto a la referencia de pago, pedido, método, monto, estado y fecha. El frontend cruza las respuestas existentes de pagos, pedidos y facturas; cada API conserva su autorización y, si falta permiso de pedidos/facturas, esos datos quedan vacíos.
 - Añadí búsqueda en transacciones por referencia, factura, pedido, nombre/correo y monto; y en Facturación por número de factura, pedido, cliente y total. Los COP se muestran en pesos enteros; la búsqueda reconoce también fracciones de montos históricos.
 - Sin cambios de endpoints, permisos, backend de negocio o D1. Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y dry-run de Wrangler pasaron. No ejecuté pruebas automatizadas ni visuales de navegador.
-- Commit/push, deployment y `/health` pendientes.
+- Commit `3b3d871` enviado a `main`; Wrangler registró los deployments `a883b629-8a7b-431b-9a1e-4ab66401e172` y `9e760915-5351-4704-bce4-3c370373bfab` después del push. `/health` respondió `healthy` con D1/KV/Queue/R2 `ok`.
