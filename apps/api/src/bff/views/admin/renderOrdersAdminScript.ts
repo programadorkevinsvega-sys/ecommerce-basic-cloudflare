@@ -9,60 +9,13 @@ export function renderOrdersAdminScript(): string {
       try {
         const res = await fetch('/api/v1/admin/orders', { headers: adminHeaders() });
         const data = await res.json();
-        if (!data.success || !data.orders || data.orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="padding:1.5rem; text-align:center; color:var(--muted);">No hay pedidos registrados</td></tr>';
-          return;
-        }
-
+        if (!res.ok || !data.success || !Array.isArray(data.orders)) throw new Error('No fue posible cargar los pedidos.');
         window._adminOrdersCache = {};
+        window._adminOrdersList = data.orders;
         data.orders.forEach(o => { window._adminOrdersCache[o.id] = o; });
-
-        tbody.innerHTML = data.orders.map(o => \`
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.75rem;">
-              <code style="color:#38bdf8; font-weight:700;">#\${escapeHtml(String(o.id).replace('ord-', ''))}</code>
-              <br><small style="color:var(--muted);">\${escapeHtml(new Date(o.createdAt).toLocaleDateString('es-CO'))}</small>
-            </td>
-            <td style="padding:0.75rem;">
-              <strong>\${escapeHtml(o.customerName)}</strong>
-              <br><small style="color:var(--muted);">\${escapeHtml(o.customerPhone)}</small>
-            </td>
-            <td style="padding:0.75rem; font-weight:700;">
-              $\${(Number(o.totalCents)/100).toLocaleString('es-CO')}
-            </td>
-            <td style="padding:0.75rem;">
-              \${o.paymentMethod === 'wompi' ? '💳 Wompi' : '💵 Contra Entrega'}
-            </td>
-            <td style="padding:0.75rem;">
-              <span class="tag" style="background:\${o.status === 'confirmed' ? '#14532d' : o.status === 'delivered' ? '#047857' : o.status === 'cancelled' ? '#7f1d1d' : '#334155'}; color:#fff;">
-                \${escapeHtml(o.status)}
-              </span>
-            </td>
-            <td style="padding:0.75rem;">
-              <span class="tag" style="background:\${o.paymentStatus === 'approved' ? '#14532d' : o.paymentStatus === 'collected' ? '#047857' : o.paymentStatus === 'failed' ? '#7f1d1d' : '#78350f'}; color:#fff;">
-                \${escapeHtml(o.paymentStatus)}
-              </span>
-            </td>
-            <td style="padding:0.75rem; text-align:center;">
-              <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
-                <button onclick="openOrderDetailModal(\${escapeHtml(JSON.stringify(String(o.id)))})"
-                  style="padding:0.35rem 0.65rem; background:#0284c7; border:none; border-radius:5px; color:#fff; font-size:0.8rem; cursor:pointer; font-weight:600;">
-                  👁️ Detalle
-                </button>
-                <select onchange="updateOrderStatus(\${escapeHtml(JSON.stringify(String(o.id)))}, this.value)"
-                  style="padding:0.3rem; border:1px solid var(--border); border-radius:4px; font-size:0.8rem; background:transparent; color:inherit;">
-                  <option value="">Estado…</option>
-                  <option value="confirmed" \${o.status==='confirmed'?'selected':''}>Confirmado</option>
-                  <option value="shipped" \${o.status==='shipped'?'selected':''}>Enviado</option>
-                  <option value="delivered" \${o.status==='delivered'?'selected':''}>Entregado</option>
-                  <option value="cancelled" \${o.status==='cancelled'?'selected':''}>Cancelado</option>
-                </select>
-              </div>
-            </td>
-          </tr>
-        \`).join('');
-      } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pedidos</td></tr>';
+        window.renderAdminOrdersTable();
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="7" class="orders-loading">' + escapeHtml(error.message || 'Error al cargar pedidos') + '</td></tr>';
       }
     }
 
@@ -76,13 +29,15 @@ export function renderOrdersAdminScript(): string {
       
       const stEl = document.getElementById('modal-order-status');
       stEl.innerText = order.status;
-      stEl.style.background = order.status === 'confirmed' ? '#14532d' : order.status === 'delivered' ? '#047857' : '#334155';
-      stEl.style.color = '#fff';
+      const orderState = orderStates[order.status] || ['En proceso', '#eef0f4', '#3e4656'];
+      stEl.style.background = orderState[1];
+      stEl.style.color = orderState[2];
 
       const payEl = document.getElementById('modal-payment-status');
       payEl.innerText = order.paymentStatus;
-      payEl.style.background = order.paymentStatus === 'approved' ? '#14532d' : order.paymentStatus === 'collected' ? '#047857' : '#78350f';
-      payEl.style.color = '#fff';
+      const paymentState = paymentStates[order.paymentStatus] || ['Pendiente', '#eef0f4', '#3e4656'];
+      payEl.style.background = paymentState[1];
+      payEl.style.color = paymentState[2];
 
       document.getElementById('modal-payment-method').innerText = order.paymentMethod === 'wompi' ? '💳 Pago en línea (Wompi)' : '💵 Pago Contra Entrega';
 

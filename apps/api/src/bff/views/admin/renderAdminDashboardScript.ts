@@ -12,6 +12,8 @@ export function renderAdminDashboardScript(): string {
       const summary = document.getElementById('tab-summary');
       const legacy = document.getElementById('admin-legacy-tabs');
       const section = document.getElementById('tab-' + tabId);
+      legacy?.classList.toggle('orders-mode', tabId === 'orders');
+      document.querySelector('.admin-main')?.classList.toggle('orders-page-active', tabId === 'orders');
       if (tabId === 'summary') {
         summary?.classList.add('active');
         if (legacy) legacy.hidden = true;

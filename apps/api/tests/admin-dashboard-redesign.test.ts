@@ -20,7 +20,7 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('id="admin-legacy-tabs"');
     expect(html).toContain('hidden>');
     expect(html).toContain('id="tab-orders"');
-    expect(html).toContain('Gestión de Pedidos');
+    expect(html).toContain('id="orders-title">Pedidos</h1>');
     expect(html).toContain('id="orders-table-body"');
     expect(html).toContain('id="newProductForm"');
     expect(html).toContain('id="settingsForm"');

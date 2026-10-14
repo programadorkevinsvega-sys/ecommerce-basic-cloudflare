@@ -114,3 +114,11 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm test` (41 archivos, 112 pruebas), `pnpm test:workers` (4 archivos, 13 pruebas), build Worker `wrangler deploy --dry-run` y `git diff --check`. No se efectuaron cambios de esquema ni escrituras de producción.
 - Commit `04ee346` enviado a `main`. El push no produjo un deployment; se publicó explícitamente el Worker `1660e4aa-6fcc-457a-8ca6-d1a05b6b1522`.
 - `/health` posterior respondió `healthy` con D1, KV, Queue y R2 en `ok`. No se hizo comprobación visual en navegador; la evidencia de esta pasada es el renderizado de servidor, las pruebas automatizadas y el bundle de Worker.
+
+### Rediseño de la sección administrativa Pedidos (2026-10-13)
+
+- Se adaptó la sección Pedidos a la referencia: cabecera, filtros por estado, búsqueda, método y pago, tabla compacta, total filtrado y estados vacíos. Los conteos y filas se calculan desde `/api/v1/admin/orders`; no se copiaron los ejemplos estáticos del ZIP.
+- Se añadió exportación CSV del subconjunto visible, con campos protegidos ante fórmulas de hoja de cálculo. Se mantuvieron el detalle del pedido, los datos de cliente/dirección, desglose fiscal y financiero y los cambios de estado existentes.
+- Archivos: render de sección y modal de detalle, scripts administrativos de lista/filtros, CSS del panel, pruebas de presentación y este registro. Sin cambios en controladores, endpoints, dominio, D1 o reglas de acceso.
+- Verificaciones: `pnpm typecheck`, `pnpm lint`, `pnpm test` (42 archivos, 114 pruebas), `pnpm test:workers` (4 archivos, 13 pruebas), `wrangler deploy --dry-run` y `git diff --check`.
+- No se hizo comprobación visual automatizada: no hay Chromium instalado en el entorno. Commit, push y despliegue pendientes.
