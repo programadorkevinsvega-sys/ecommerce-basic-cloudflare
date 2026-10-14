@@ -11,8 +11,8 @@ export function renderCmsDashboardCss(): string {
     .cms-heading h1 { margin:4px 0; color:#151a23; font-size:24px; }
     .cms-heading p,.cms-list-heading p,.cms-editor-heading p { margin:4px 0 0; color:#636b7b; font-size:13px; }
     .cms-primary,.cms-secondary { min-height:42px; border:1px solid #cbd1db; border-radius:8px; padding:0 15px; background:#fff; color:#303744; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
-    .cms-primary { border-color:#151a23; background:#151a23; color:#fff; }
-    .cms-primary:hover { background:#303744; }
+    .cms-primary { border-color:#20563d; background:#20563d; color:#fff; }
+    .cms-primary:hover { border-color:#17452f; background:#17452f; }
     .cms-template-card,.cms-list-card,.cms-editor-card { overflow:hidden; margin:0 0 18px; border:1px solid #e3e6ec; border-radius:12px; background:#fff; }
     .cms-template-card { padding:16px 20px; }
     .cms-template-card label { color:#303744!important; }
