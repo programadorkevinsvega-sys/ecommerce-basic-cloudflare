@@ -374,3 +374,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Los PDFs históricos permanecen intactos en R2. Al consultar una factura antigua, se crea y reutiliza una representación `-v2.pdf` desde el snapshot inmutable; el PDF original sigue disponible y un rollback del Worker continúa leyendo la clave original. Las nuevas facturas se guardan directamente en la ruta versionada.
 - Aprobado y Confirmado en Pedidos usan el mismo tono verde de la interfaz; la verificación de despliegue anterior seguía mostrando el estilo anterior en esa captura.
 - Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni inspección visual del PDF en navegador.
+
+### Estados visuales de Transacciones recientes (2026-10-14)
+
+- La tabla usaba la clase genérica heredada `.tag`, que aplicaba fondo azul oscuro y texto claro a estados como `approved`.
+- Reemplacé esa clase por estados acotados: Aprobado/Recaudado en verde, Pendiente en ámbar, errores/rechazos en rojo y valores desconocidos en neutro. Los estados se muestran en español.
+- Verificaciones: typecheck, lint de arquitectura y `git diff --check`. No ejecuté pruebas automatizadas ni revisión visual en navegador.

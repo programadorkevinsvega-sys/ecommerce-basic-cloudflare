@@ -55,12 +55,26 @@ export function renderPaymentsAdminScript(): string {
         const order = _adminPaymentOrders.get(transaction.orderId) || {};
         const invoice = _adminPaymentInvoices.get(transaction.orderId) || {};
         const amount = Math.round(Number(transaction.amountInCents || 0) / 100);
-        return \`<tr><td><code>\${escapeHtml(transaction.reference || '—')}</code></td><td><strong class="invoice-number">\${escapeHtml(invoice.invoiceNumber || '—')}</strong></td><td><code>\${escapeHtml(transaction.orderId || '—')}</code></td><td><div class="invoice-client"><strong>\${escapeHtml(order.customerName || invoice.customerName || '—')}</strong><small>\${escapeHtml(order.customerEmail || invoice.customerEmail || '')}</small></div></td><td>\${escapeHtml(transaction.paymentMethod || '—')}</td><td class="payments-amount">$\${amount.toLocaleString('es-CO')}</td><td><span class="tag">\${escapeHtml(transaction.status || '—')}</span></td><td>\${escapeHtml(new Date(transaction.createdAt).toLocaleString('es-CO'))}</td></tr>\`;
+        return \`<tr><td><code>\${escapeHtml(transaction.reference || '—')}</code></td><td><strong class="invoice-number">\${escapeHtml(invoice.invoiceNumber || '—')}</strong></td><td><code>\${escapeHtml(transaction.orderId || '—')}</code></td><td><div class="invoice-client"><strong>\${escapeHtml(order.customerName || invoice.customerName || '—')}</strong><small>\${escapeHtml(order.customerEmail || invoice.customerEmail || '')}</small></div></td><td>\${escapeHtml(transaction.paymentMethod || '—')}</td><td class="payments-amount">$\${amount.toLocaleString('es-CO')}</td><td><span class="payments-status-badge \${paymentStatusClass(transaction.status)}">\${escapeHtml(paymentStatusLabel(transaction.status))}</span></td><td>\${escapeHtml(new Date(transaction.createdAt).toLocaleString('es-CO'))}</td></tr>\`;
       }, 8, 'No hay transacciones que coincidan con la búsqueda.');
     }
 
     function normalizePaymentSearch(value) {
       return String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function paymentStatusClass(status) {
+      const normalized = String(status || '').toLowerCase();
+      if (normalized === 'approved' || normalized === 'collected') return 'success';
+      if (normalized === 'pending') return 'pending';
+      if (['declined', 'failed', 'error', 'voided', 'refunded'].includes(normalized)) return 'danger';
+      return 'neutral';
+    }
+
+    function paymentStatusLabel(status) {
+      const labels = { approved: 'Aprobado', collected: 'Recaudado', pending: 'Pendiente', declined: 'Rechazado', failed: 'Fallido', error: 'Error', voided: 'Anulado', refunded: 'Reintegrado' };
+      const normalized = String(status || '').toLowerCase();
+      return labels[normalized] || status || '—';
     }
 
     function filterPaymentTransactions() { window.resetAdminTablePage('payment-transactions'); renderAdminPaymentTransactions(); }
