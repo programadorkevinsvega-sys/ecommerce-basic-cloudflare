@@ -290,3 +290,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Categorías, Marcas, Proveedores, Atributos y Variantes ahora abren vistas independientes desde la navegación y cada vista tiene su propia tabla, encabezado y formulario cuando hay operaciones existentes.
 - Categorías, marcas y atributos muestran sus registros reales. El proyecto no tiene una entidad D1/API independiente para proveedores ni variantes con SKU/precio/stock propios; sus tablas muestran el estado vacío y explican esta limitación, sin copiar marcas ni inventar variantes.
 - Sin cambios de backend o base de datos. Pendiente typecheck/lint y revisión visual; no se ejecutan pruebas automatizadas por instrucción vigente.
+
+### Corrección de estilos heredados en Catálogo, Pagos y Facturas (2026-10-14)
+
+- Las búsquedas de Pagos y Facturas ahora tienen selectores más específicos que la regla heredada de formularios oscuros; recuperan fondo blanco, texto legible, borde y foco coherentes con Envíos.
+- El botón principal de Catálogo pasa al tono verde usado por las vistas recientes.
+- No se añadieron botones ficticios: Catálogo aún carece de operaciones completas de edición/estado para varias entidades. Los recaudos y conciliaciones tampoco tienen flujos auditados de reversión; editar o borrar directamente esos registros financieros no es seguro. Queda pendiente implementar esas operaciones de dominio con auditoría antes de exponerlas.

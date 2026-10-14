@@ -15,8 +15,8 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-list-heading h2 { margin:0; color:#151a23; font-size:17px; }
     .taxonomy-list-heading p { margin:5px 0 0; color:#737b89; font-size:12px; }
     .taxonomy-primary,.taxonomy-secondary,.taxonomy-danger { display:inline-flex; min-height:42px; align-items:center; justify-content:center; gap:7px; border:1px solid transparent; border-radius:9px; padding:0 15px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; transition:background .16s ease,border-color .16s ease; }
-    .taxonomy-primary { background:#2563eb; color:#fff; }
-    .taxonomy-primary:hover { background:#1d4ed8; }
+    .taxonomy-primary { background:#20563d; color:#fff; }
+    .taxonomy-primary:hover { background:#17452f; }
     .taxonomy-secondary { border-color:#d5dae3; background:#fff; color:#394253; }
     .taxonomy-secondary:hover { background:#f4f6fa; }
     .taxonomy-danger { min-height:34px; border-color:#edd8d4; background:#fff; color:#99483e; font-size:12px; }
