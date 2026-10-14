@@ -6,6 +6,7 @@ export interface AttributeProps {
   code: string;
   type: AttributeType;
   options: string[];
+  status?: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
 }
@@ -20,7 +21,7 @@ export class Attribute {
     if (!props.code || props.code.trim().length === 0) {
       throw new Error('El código del atributo no puede estar vacío');
     }
-    this.props = props;
+    this.props = { status: 'active', ...props };
   }
 
   public get id(): string { return this.props.id; }

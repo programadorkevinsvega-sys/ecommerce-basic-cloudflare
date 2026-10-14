@@ -4,6 +4,7 @@ export interface CategoryProps {
   slug: string;
   description?: string;
   parentId?: string;
+  status?: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
 }
@@ -12,7 +13,7 @@ export class Category {
   private readonly props: CategoryProps;
 
   public constructor(props: CategoryProps) {
-    this.props = props;
+    this.props = { status: 'active', ...props };
   }
 
   public get id(): string { return this.props.id; }

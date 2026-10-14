@@ -22,6 +22,9 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-danger { min-height:34px; border-color:#edd8d4; background:#fff; color:#99483e; font-size:12px; }
     .taxonomy-danger:hover { background:#fff6f4; }
     .taxonomy-table-scroll { overflow-x:auto; }
+    .taxonomy-pagination { display:flex; justify-content:center; align-items:center; gap:12px; border-top:1px solid #e8eaf0; padding:12px; color:#586172; font-size:12px; }
+    .taxonomy-row-actions { min-width:260px; white-space:nowrap; }
+    .taxonomy-row-actions button { min-height:32px; margin:2px; padding:0 9px; font-size:11px; }
     .taxonomy-table { width:100%; min-width:620px; border-collapse:collapse; text-align:left; font-size:13px; }
     .taxonomy-table th { padding:12px 16px; border-top:1px solid #e8eaf0; border-bottom:1px solid #e3e6ec; background:#f8f9fb; color:#586172; font-size:10px; letter-spacing:.055em; text-transform:uppercase; }
     .taxonomy-table td { padding:14px 16px; border-bottom:1px solid #eef0f4; color:#394253; vertical-align:middle; }

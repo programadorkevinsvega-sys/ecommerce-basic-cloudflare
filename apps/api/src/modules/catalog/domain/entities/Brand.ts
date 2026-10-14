@@ -4,6 +4,7 @@ export interface BrandProps {
   slug: string;
   description?: string;
   websiteUrl?: string;
+  status?: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
 }
@@ -18,7 +19,7 @@ export class Brand {
     if (!props.slug || props.slug.trim().length === 0) {
       throw new Error('El slug de la marca no puede estar vacío');
     }
-    this.props = props;
+    this.props = { status: 'active', ...props };
   }
 
   public get id(): string { return this.props.id; }

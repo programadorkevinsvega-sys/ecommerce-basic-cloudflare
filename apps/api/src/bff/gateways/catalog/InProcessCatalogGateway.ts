@@ -62,8 +62,8 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return category.toPrimitives();
   }
 
-  public async listCategories(): Promise<CategoryDto[]> {
-    const categories = await this.publicApi.listCategories();
+  public async listCategories(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<CategoryDto[]> {
+    const categories = await this.publicApi.listCategories(query);
     return categories.map((c) => c.toPrimitives());
   }
 
@@ -81,8 +81,8 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return brand.toPrimitives();
   }
 
-  public async listBrands(): Promise<BrandDto[]> {
-    const brands = await this.publicApi.listBrands();
+  public async listBrands(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<BrandDto[]> {
+    const brands = await this.publicApi.listBrands(query);
     return brands.map((b) => b.toPrimitives());
   }
 
@@ -100,8 +100,8 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return attribute.toPrimitives();
   }
 
-  public async listAttributes(): Promise<AttributeDto[]> {
-    const attributes = await this.publicApi.listAttributes();
+  public async listAttributes(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<AttributeDto[]> {
+    const attributes = await this.publicApi.listAttributes(query);
     return attributes.map((a) => a.toPrimitives());
   }
 
@@ -109,16 +109,24 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return (await this.publicApi.createSupplier(request)).toPrimitives();
   }
 
-  public async listSuppliers(): Promise<SupplierDto[]> {
-    return (await this.publicApi.listSuppliers()).map((supplier) => supplier.toPrimitives());
+  public async listSuppliers(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<SupplierDto[]> {
+    return (await this.publicApi.listSuppliers(query)).map((supplier) => supplier.toPrimitives());
   }
 
   public async createProductVariant(request: Omit<ProductVariantDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariantDto> {
     return (await this.publicApi.createProductVariant(request)).toPrimitives();
   }
 
-  public async listProductVariants(): Promise<ProductVariantDto[]> {
-    return (await this.publicApi.listProductVariants()).map((variant) => variant.toPrimitives());
+  public async listProductVariants(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<ProductVariantDto[]> {
+    return (await this.publicApi.listProductVariants(query)).map((variant) => variant.toPrimitives());
+  }
+
+  public updateTaxonomy(input: Parameters<CatalogGateway['updateTaxonomy']>[0]): Promise<void> {
+    return this.publicApi.updateTaxonomy(input);
+  }
+
+  public deleteTaxonomy(kind: Parameters<CatalogGateway['deleteTaxonomy']>[0], id: string): Promise<void> {
+    return this.publicApi.deleteTaxonomy(kind, id);
   }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number) {

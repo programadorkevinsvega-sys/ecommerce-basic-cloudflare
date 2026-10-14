@@ -1,6 +1,7 @@
 import { Result } from '../../../../shared-kernel/Result.js';
 import { Attribute } from '../../domain/entities/Attribute.js';
 import { IAttributeRepository } from '../../domain/ports/IAttributeRepository.js';
+import { CatalogPageQuery } from '../../domain/ports/CatalogPageQuery.js';
 
 export class ListAttributesUseCase {
   private readonly attributeRepo: IAttributeRepository;
@@ -9,9 +10,9 @@ export class ListAttributesUseCase {
     this.attributeRepo = attributeRepo;
   }
 
-  public async execute(): Promise<Result<Attribute[], Error>> {
+  public async execute(query?: CatalogPageQuery): Promise<Result<Attribute[], Error>> {
     try {
-      const attributes = await this.attributeRepo.list();
+      const attributes = await this.attributeRepo.list(query);
       return Result.ok(attributes);
     } catch (err) {
       return Result.fail(err instanceof Error ? err : new Error('Error al listar atributos'));

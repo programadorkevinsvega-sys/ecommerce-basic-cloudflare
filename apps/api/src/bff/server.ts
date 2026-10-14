@@ -10,6 +10,8 @@ import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
 import { CatalogBrandAdminController } from './controllers/catalog/CatalogBrandAdminController.js';
 import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAuxiliaryAdminController.js';
+import { CatalogTaxonomyListController } from './controllers/catalog/CatalogTaxonomyListController.js';
+import { CatalogTaxonomyMutationController } from './controllers/catalog/CatalogTaxonomyMutationController.js';
 import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
 import { StorefrontAdminController } from './controllers/storefront/StorefrontAdminController.js';
@@ -121,6 +123,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.auditGateway, cRoot.shippingGateway));
   app.route('/api/v1', CatalogBrandAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
+  app.route('/api/v1', CatalogTaxonomyListController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
+  app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CatalogAuxiliaryAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
 
   app.notFound((c) => c.json({ error: 'Recurso no encontrado' }, 404));

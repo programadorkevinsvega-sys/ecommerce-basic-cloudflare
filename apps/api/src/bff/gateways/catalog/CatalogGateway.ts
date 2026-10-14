@@ -1,4 +1,6 @@
 import { LegacyPriceMigrationPreview } from '../../../modules/catalog/application/use-cases/MigrateLegacyProductPricesUseCase.js';
+import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
+import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
 
 export interface CreateProductGatewayRequest {
   name: string;
@@ -113,6 +115,7 @@ export interface CategoryDto {
   slug: string;
   description?: string;
   parentId?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface BrandDto {
@@ -121,6 +124,7 @@ export interface BrandDto {
   slug: string;
   description?: string;
   websiteUrl?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface AttributeDto {
@@ -129,6 +133,7 @@ export interface AttributeDto {
   code: string;
   type: string;
   options: string[];
+  status?: 'active' | 'inactive';
 }
 
 export interface SupplierDto {
@@ -151,17 +156,19 @@ export interface CatalogGateway {
   getProductById(id: string): Promise<CatalogProductDto>;
   listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string }): Promise<CatalogProductDto[]>;
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
-  listCategories(): Promise<CategoryDto[]>;
+  listCategories(query?: CatalogPageQuery): Promise<CategoryDto[]>;
   deleteCategory(id: string): Promise<void>;
   createBrand(request: { name: string; slug?: string; description?: string; websiteUrl?: string }): Promise<BrandDto>;
-  listBrands(): Promise<BrandDto[]>;
+  listBrands(query?: CatalogPageQuery): Promise<BrandDto[]>;
   updateBrandDescription(id: string, description: string): Promise<BrandDto>;
   createAttribute(request: { name: string; code: string; type: 'text' | 'select' | 'number'; options?: string[] }): Promise<AttributeDto>;
-  listAttributes(): Promise<AttributeDto[]>;
+  listAttributes(query?: CatalogPageQuery): Promise<AttributeDto[]>;
   createSupplier(request: Omit<SupplierDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupplierDto>;
-  listSuppliers(): Promise<SupplierDto[]>;
+  listSuppliers(query?: CatalogPageQuery): Promise<SupplierDto[]>;
   createProductVariant(request: Omit<ProductVariantDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductVariantDto>;
-  listProductVariants(): Promise<ProductVariantDto[]>;
+  listProductVariants(query?: CatalogPageQuery): Promise<ProductVariantDto[]>;
+  updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
+  deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }

@@ -329,3 +329,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La paginación reutilizable conserva las acciones de cada fila; los filtros de Pedidos, Productos, Transacciones y banners reinician en la página 1. Las listas con filas SSR guardan una copia de las filas originales para que filtrar banners siga funcionando al cambiar de página.
 - Se conserva el origen actual de datos y sus límites de respuesta existentes; esta mejora pagina los resultados actualmente entregados al panel, no amplía los límites de consulta de las API.
 - Verificaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni revisión visual en navegador.
+
+### Acciones y paginación BFF del Catálogo (2026-10-14)
+
+- Categorías, Marcas, Proveedores, Atributos y Variantes ahora cargan desde endpoints administrativos paginados en el BFF: 10 filas por página y una fila adicional para determinar `hasMore`; D1 recibe `LIMIT`/`OFFSET` y el navegador ya no descarga la lista completa.
+- Cada fila ofrece Ver, Editar, Ocultar/Mostrar y Eliminar. Las mutaciones pasan por RBAC, validación Zod y auditoría; las eliminaciones rechazan entidades relacionadas o variantes con stock. Los cambios de stock siguen en Inventario.
+- La migración aditiva `catalog__0007_taxonomy_status.sql` añade estado a categorías, marcas y atributos, conserva las filas actuales como activas y fue aplicada/verificada en producción el 2026-10-14 07:55 UTC. Copias generadas y manifiesto actualizados.
+- Verificaciones: `pnpm --filter @ecommerce/api exec tsc --noEmit`, `pnpm lint`, `pnpm db:check-migrations`, `git diff --check` y consulta remota de estado/esquema de migración. No ejecuté pruebas automatizadas ni verificación visual en navegador.

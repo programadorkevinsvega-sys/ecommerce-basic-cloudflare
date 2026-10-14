@@ -38,7 +38,7 @@ export function renderAdminPaginationScript(): string {
     window.getStaticAdminTableRows = (tbody) => adminStaticRows.get(tbody) || [];
 
     function initializeStaticAdminTables() {
-      const tables = document.querySelectorAll('.taxonomy-screen table,[data-marketing-page] table');
+      const tables = document.querySelectorAll('[data-marketing-page] table');
       tables.forEach((table, index) => {
         const tbody = table.querySelector('tbody');
         if (!tbody || tbody.dataset.paginationReady) return;

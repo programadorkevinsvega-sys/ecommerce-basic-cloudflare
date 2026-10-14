@@ -14,6 +14,8 @@ import { CreateSupplierInput } from './application/use-cases/CreateSupplierUseCa
 import { CreateProductVariantInput } from './application/use-cases/CreateProductVariantUseCase.js';
 import { Supplier } from './domain/entities/Supplier.js';
 import { ProductVariant } from './domain/entities/ProductVariant.js';
+import { CatalogPageQuery } from './domain/ports/CatalogPageQuery.js';
+import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from './application/use-cases/ManageCatalogTaxonomyUseCase.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -23,17 +25,19 @@ export interface ICatalogPublicApi {
   getProductById(id: string): Promise<Product>;
   listProducts(input: ListProductsInput): Promise<Product[]>;
   createCategory(input: CreateCategoryInput): Promise<Category>;
-  listCategories(): Promise<Category[]>;
+  listCategories(query?: CatalogPageQuery): Promise<Category[]>;
   deleteCategory(id: string): Promise<void>;
   createBrand(input: CreateBrandInput): Promise<Brand>;
-  listBrands(): Promise<Brand[]>;
+  listBrands(query?: CatalogPageQuery): Promise<Brand[]>;
   updateBrandDescription(id: string, description: string): Promise<Brand>;
   createAttribute(input: CreateAttributeInput): Promise<Attribute>;
-  listAttributes(): Promise<Attribute[]>;
+  listAttributes(query?: CatalogPageQuery): Promise<Attribute[]>;
   createSupplier(input: CreateSupplierInput): Promise<Supplier>;
-  listSuppliers(): Promise<Supplier[]>;
+  listSuppliers(query?: CatalogPageQuery): Promise<Supplier[]>;
   createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant>;
-  listProductVariants(): Promise<ProductVariant[]>;
+  listProductVariants(query?: CatalogPageQuery): Promise<ProductVariant[]>;
+  updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
+  deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
@@ -86,8 +90,8 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return res.value;
   }
 
-  public async listCategories(): Promise<Category[]> {
-    const res = await this.container.listCategoriesUseCase.execute();
+  public async listCategories(query?: CatalogPageQuery): Promise<Category[]> {
+    const res = await this.container.listCategoriesUseCase.execute(query);
     if (res.isFail()) throw res.error;
     return res.value;
   }
@@ -103,8 +107,8 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return res.value;
   }
 
-  public async listBrands(): Promise<Brand[]> {
-    const res = await this.container.listBrandsUseCase.execute();
+  public async listBrands(query?: CatalogPageQuery): Promise<Brand[]> {
+    const res = await this.container.listBrandsUseCase.execute(query);
     if (res.isFail()) throw res.error;
     return res.value;
   }
@@ -121,8 +125,8 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return res.value;
   }
 
-  public async listAttributes(): Promise<Attribute[]> {
-    const res = await this.container.listAttributesUseCase.execute();
+  public async listAttributes(query?: CatalogPageQuery): Promise<Attribute[]> {
+    const res = await this.container.listAttributesUseCase.execute(query);
     if (res.isFail()) throw res.error;
     return res.value;
   }
@@ -131,16 +135,24 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return this.container.createSupplierUseCase.execute(input);
   }
 
-  public listSuppliers(): Promise<Supplier[]> {
-    return this.container.listSuppliersUseCase.execute();
+  public listSuppliers(query?: CatalogPageQuery): Promise<Supplier[]> {
+    return this.container.listSuppliersUseCase.execute(query);
   }
 
   public createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant> {
     return this.container.createProductVariantUseCase.execute(input);
   }
 
-  public listProductVariants(): Promise<ProductVariant[]> {
-    return this.container.listProductVariantsUseCase.execute();
+  public listProductVariants(query?: CatalogPageQuery): Promise<ProductVariant[]> {
+    return this.container.listProductVariantsUseCase.execute(query);
+  }
+
+  public updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void> {
+    return this.container.manageCatalogTaxonomyUseCase.update(input);
+  }
+
+  public deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void> {
+    return this.container.manageCatalogTaxonomyUseCase.delete(kind, id);
   }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {

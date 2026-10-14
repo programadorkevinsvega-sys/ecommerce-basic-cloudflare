@@ -24,6 +24,7 @@ import { CreateSupplierUseCase } from './application/use-cases/CreateSupplierUse
 import { ListSuppliersUseCase } from './application/use-cases/ListSuppliersUseCase.js';
 import { CreateProductVariantUseCase } from './application/use-cases/CreateProductVariantUseCase.js';
 import { ListProductVariantsUseCase } from './application/use-cases/ListProductVariantsUseCase.js';
+import { ManageCatalogTaxonomyUseCase } from './application/use-cases/ManageCatalogTaxonomyUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -45,6 +46,7 @@ export interface CatalogModuleContainer {
   listSuppliersUseCase: ListSuppliersUseCase;
   createProductVariantUseCase: CreateProductVariantUseCase;
   listProductVariantsUseCase: ListProductVariantsUseCase;
+  manageCatalogTaxonomyUseCase: ManageCatalogTaxonomyUseCase;
 }
 
 export function createCatalogModule(env: Env): CatalogModuleContainer {
@@ -75,5 +77,6 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     listSuppliersUseCase: new ListSuppliersUseCase(supplierRepo),
     createProductVariantUseCase: new CreateProductVariantUseCase(variantRepo, productRepo),
     listProductVariantsUseCase: new ListProductVariantsUseCase(variantRepo),
+    manageCatalogTaxonomyUseCase: new ManageCatalogTaxonomyUseCase(categoryRepo, brandRepo, attributeRepo, supplierRepo, variantRepo),
   };
 }
