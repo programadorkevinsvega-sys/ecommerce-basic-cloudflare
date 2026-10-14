@@ -17,7 +17,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
       </div>
     </section>
     <section class="shipping-page-panel" data-shipping-panel="locations" aria-labelledby="shipping-locations-title" hidden>
-      <div class="card shipping-locations-page-card"><div class="shipping-section-heading"><div><h2 id="shipping-locations-title">Municipios DANE</h2><p>Consulta la cobertura por municipio y crea zonas independientes para ciudades del catálogo oficial.</p></div></div>
+      <div class="card shipping-locations-page-card"><div class="shipping-section-heading"><div><h2 id="shipping-locations-title">Municipios DANE · ${divipolaLocations.length} disponibles</h2><p>Consulta la cobertura local y crea tarifas independientes por municipio.</p><small class="shipping-catalog-note">El catálogo cargado contiene municipios principales; no incluye todos los municipios de DIVIPOLA. La cobertura nacional se muestra por separado.</small></div></div>
         <label class="shipping-location-search" for="shipping-location-search">Buscar municipio, departamento o código</label><input id="shipping-location-search" type="search" placeholder="Ej. Medellín o 05001" oninput="filterShippingDirectory()" />
         <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Municipio</th><th>Departamento</th><th>Código DANE</th><th>Cobertura actual</th><th>Acción</th></tr></thead><tbody id="shippingLocationsTableBody">${renderShippingLocationRows(divipolaLocations, zones)}</tbody></table></div>
       </div>

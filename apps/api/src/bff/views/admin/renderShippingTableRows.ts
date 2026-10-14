@@ -8,7 +8,7 @@ export function renderShippingTableRows(zones: ShippingZoneDto[], divipolaMap: M
     const cod = zone.allowsCashOnDelivery ? '<span class="shipping-badge active">Contra entrega</span>' : '<span class="shipping-badge neutral">Pago anticipado</span>';
     const encoded = encodeURIComponent(JSON.stringify(zone));
     const locations = zone.type === 'national' ? 'Todo el territorio' : zone.locations.slice(0, 3).map(code => divipolaMap.get(code) || code).join(', ') || 'Sin municipios asignados';
-    const more = zone.type !== 'national' && zone.locations.length > 3 ? ` (+${zone.locations.length - 3})` : '';
+    const more = zone.type !== 'national' && zone.locations.length > 3 ? ` (+${zone.locations.length - 3} municipios)` : '';
     const toggle = zone.isActive
       ? `<button class="shipping-action" onclick="toggleShippingZoneStatus('${zone.id}', false)">Desactivar</button>`
       : `<button class="shipping-action" onclick="toggleShippingZoneStatus('${zone.id}', true)">Activar</button>`;

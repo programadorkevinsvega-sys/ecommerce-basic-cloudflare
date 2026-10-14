@@ -193,3 +193,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La página usa el catálogo de solo lectura que ya entrega el servidor y conserva las rutas/contratos existentes; no se añadieron endpoints ni escritura de municipios DANE porque el backend actual no ofrece esa operación.
 - Validaciones: `pnpm typecheck`, `pnpm lint`, `git diff --check` y `pnpm --filter @ecommerce/api exec wrangler deploy --dry-run` pasaron. No ejecuté pruebas automatizadas ni verificación visual en navegador.
 - Commit `d230059` enviado a `main`; Wrangler registró el deployment `31f90a82-db8e-48e1-a459-5c3f779d2bf5`. `/health` respondió `healthy`, D1/KV/Queue/R2 `ok`.
+
+### Aclaración de cobertura municipal DANE (2026-10-14)
+
+- Verifiqué D1 de producción en solo lectura: `shipping_divipola` contiene 48 municipios. Coincide con los 48 registros semilla de `shipping__0001_init.sql`; esa migración los define como ciudades/municipios principales y no como el catálogo DIVIPOLA completo. No faltó aplicar esa migración, pero los municipios restantes del país no están incluidos en el catálogo actual.
+- La página municipal ahora diferencia zona local/metropolitana de cobertura nacional, permite iniciar una zona local aunque el municipio tenga respaldo nacional y explica que el catálogo es parcial. La lista de zonas identifica explícitamente los municipios resumidos como `+N municipios`.
+- Validaciones: consulta D1 remota sin escrituras, `pnpm typecheck`, `pnpm lint`, `git diff --check` y dry-run de Wrangler pasaron. No se ejecutó prueba automatizada ni se añadieron registros/migraciones.
