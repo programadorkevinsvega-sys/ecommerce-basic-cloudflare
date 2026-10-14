@@ -302,3 +302,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La navegación de Marketing ahora tiene cinco páginas separadas: Banners Hero Promocionales, Banners Hero Informativos, Anuncios & Barra Superior, Regla de Promoción y Cupón de Descuento.
 - Cada opción muestra únicamente su propio formulario y listado existentes. Se conservan los controladores, endpoints, permisos y operaciones actuales.
 - Se añadió encabezado de página con título y descripción, selección activa de navegación y regla accesible para ocultar paneles no seleccionados. Sin cambios de backend ni base de datos.
+
+### Consistencia de acciones principales del panel (2026-10-14)
+
+- Centralicé el color de acciones principales en un token verde oscuro compartido por Productos, Catálogo, Inventario, Pedidos, Pagos, Envíos, Facturación y formularios administrativos heredados.
+- Las acciones principales comparten color base, hover y foco visible; las acciones secundarias y destructivas conservan su jerarquía semántica.
+- Sin cambios de lógica, API o base de datos.
