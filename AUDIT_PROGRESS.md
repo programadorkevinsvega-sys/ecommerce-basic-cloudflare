@@ -178,3 +178,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El menú lateral ahora presenta el grupo “Pagos y facturas” con Recaudos contra entrega, Conciliar, Transacciones recientes y Facturación como opciones hijas independientes. Envíos y cobertura permanece por separado en Operación, igual que el grupo Catálogo conserva sus subsecciones.
 - Los accesos laterales seleccionan el panel correspondiente dentro de Pagos; Facturación abre su pantalla existente. Quité la navegación interna duplicada del contenido de Pagos. Sin cambios de backend o permisos.
 - Validación: diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para este ajuste de navegación.
+- Commit `5d0d921` enviado a `main`; publiqué el Worker `5fb078fe-03bd-48cb-8c62-0bb2daebcea8`. `/health` posterior respondió `healthy` con D1/KV/Queue/R2 `ok`.
