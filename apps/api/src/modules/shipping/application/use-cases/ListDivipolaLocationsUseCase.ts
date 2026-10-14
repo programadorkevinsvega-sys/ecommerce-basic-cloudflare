@@ -8,7 +8,11 @@ export class ListDivipolaLocationsUseCase {
     this.divipolaRepo = divipolaRepo;
   }
 
-  public async execute(): Promise<DivipolaLocation[]> {
-    return this.divipolaRepo.listAll();
+  public async execute(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocation[]> {
+    return this.divipolaRepo.listPage(query);
+  }
+
+  public async count(search?: string): Promise<number> {
+    return this.divipolaRepo.count(search);
   }
 }

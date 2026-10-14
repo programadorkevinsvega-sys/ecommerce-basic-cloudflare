@@ -336,3 +336,9 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Cada fila ofrece Ver, Editar, Ocultar/Mostrar y Eliminar. Las mutaciones pasan por RBAC, validación Zod y auditoría; las eliminaciones rechazan entidades relacionadas o variantes con stock. Los cambios de stock siguen en Inventario.
 - La migración aditiva `catalog__0007_taxonomy_status.sql` añade estado a categorías, marcas y atributos, conserva las filas actuales como activas y fue aplicada/verificada en producción el 2026-10-14 07:55 UTC. Copias generadas y manifiesto actualizados.
 - Verificaciones: `pnpm --filter @ecommerce/api exec tsc --noEmit`, `pnpm lint`, `pnpm db:check-migrations`, `git diff --check` y consulta remota de estado/esquema de migración. No ejecuté pruebas automatizadas ni verificación visual en navegador.
+
+### Paginación de Municipios DANE y controles de Marketing (2026-10-14)
+
+- Municipios DANE ahora consulta 10 filas por página en un endpoint BFF protegido, con búsqueda y conteo en D1. La búsqueda del directorio y el selector de municipios del modal dejaron de precargar el catálogo completo; la búsqueda pública también limita resultados.
+- Los paginadores genéricos se insertan junto a su tabla y dentro de la página correspondiente. Antes se insertaban después de la tarjeta, dejando visibles juntos los controles de banners promocionales, informativos y cupones aunque sus páginas estuvieran ocultas.
+- Sin cambios de esquema ni migraciones. Verificaciones: TypeScript, lint de arquitectura y `git diff --check` pasaron. No ejecuté pruebas automatizadas ni validación visual en navegador.

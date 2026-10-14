@@ -10,7 +10,7 @@ export class SearchDivipolaLocationsUseCase {
 
   public async execute(query: string, limit = 20): Promise<DivipolaLocation[]> {
     if (!query || query.trim() === '') {
-      return (await this.divipolaRepo.listAll()).slice(0, limit);
+      return this.divipolaRepo.listPage({ limit, offset: 0 });
     }
     return this.divipolaRepo.search(query.trim(), limit);
   }

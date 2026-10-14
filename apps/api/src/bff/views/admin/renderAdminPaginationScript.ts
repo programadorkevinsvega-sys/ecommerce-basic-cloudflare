@@ -14,15 +14,14 @@ export function renderAdminPaginationScript(): string {
       tbody.innerHTML = pageRows.length ? pageRows.map(renderRow).join('') : '<tr><td colspan="' + colspan + '" class="admin-pagination-empty">' + escapeHtml(emptyMessage || 'No hay registros para mostrar.') + '</td></tr>';
 
       const table = tbody.closest('table');
-      const wrapper = table?.parentElement || table;
-      if (!wrapper) return;
+      if (!table) return;
       let footer = document.getElementById('admin-pagination-' + key);
       if (!footer) {
         footer = document.createElement('nav');
         footer.id = 'admin-pagination-' + key;
         footer.className = 'admin-pagination';
         footer.setAttribute('aria-label', 'Paginación de resultados');
-        wrapper.after(footer);
+        table.after(footer);
       }
       const from = total ? start + 1 : 0;
       const to = Math.min(start + pageSize, total);

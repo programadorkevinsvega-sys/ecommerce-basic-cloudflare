@@ -70,6 +70,7 @@ export function renderShippingHandlersScript(): string {
       const locSelect = document.getElementById('shLocationsSelect');
       if (locSelect) {
         const assignedSet = new Set(data.locations || []);
+        assignedSet.forEach((code) => window.ensureShippingOption(code));
         for (let i = 0; i < locSelect.options.length; i++) {
           locSelect.options[i].selected = assignedSet.has(locSelect.options[i].value);
         }

@@ -88,7 +88,7 @@ export class AdminUiController {
           can('promotions:read') ? promotionsGateway.listPromotionRules() : Promise.resolve([]),
           can('promotions:read') ? promotionsGateway.listCoupons() : Promise.resolve([]),
           can('shipping:read') ? shippingGateway.listZones() : Promise.resolve([]),
-          can('shipping:read') ? shippingGateway.listLocations() : Promise.resolve([]),
+          Promise.resolve([]),
           can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings()),
         ]);
 

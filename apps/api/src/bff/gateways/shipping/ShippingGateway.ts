@@ -66,7 +66,8 @@ export interface ShippingGateway {
   deleteZone(id: string): Promise<void>;
   toggleZone(id: string): Promise<ShippingZoneDto>;
   searchLocations(query: string, limit?: number): Promise<DivipolaLocationDto[]>;
-  listLocations(): Promise<DivipolaLocationDto[]>;
+  listLocations(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocationDto[]>;
+  countLocations(search?: string): Promise<number>;
   checkCoverage(
     daneCode: string,
     shippingScope?: 'national' | 'local',

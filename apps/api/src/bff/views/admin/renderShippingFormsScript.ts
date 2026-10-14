@@ -10,27 +10,64 @@ export function renderShippingFormsScript(): string {
       }
     }
 
-    function filterShippingLocations() {
-      const query = (document.getElementById('shLocSearch').value || '').toLowerCase().trim();
-      const select = document.getElementById('shLocationsSelect');
-      if (!select) return;
-      const options = select.options;
-      for (let i = 0; i < options.length; i++) {
-        const text = options[i].text.toLowerCase();
-        options[i].hidden = !text.includes(query);
+    let shippingDirectoryPage = 1;
+    let shippingDirectoryTimer;
+    let shippingSelectTimer;
+    async function loadShippingDirectory(page = 1) {
+      const body = document.getElementById('shippingLocationsTableBody');
+      if (!body) return;
+      shippingDirectoryPage = page;
+      body.innerHTML = '<tr><td colspan="5" class="shipping-empty">Cargando municipios…</td></tr>';
+      const search = document.getElementById('shipping-location-search')?.value.trim() || '';
+      try {
+        const response = await fetch('/api/v1/admin/shipping/locations?page=' + page + '&q=' + encodeURIComponent(search));
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cargar municipios.');
+        body.innerHTML = result.data.length ? result.data.map((item) => renderShippingDirectoryRow(item, result.zones)).join('') : '<tr><td colspan="5" class="shipping-empty">No hay municipios que coincidan.</td></tr>';
+        const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
+        document.getElementById('shipping-location-count').textContent = result.total + ' municipios · Página ' + result.page + ' de ' + totalPages;
+        const pager = document.getElementById('shipping-locations-pagination');
+        pager.querySelector('span').textContent = (result.total ? ((page - 1) * result.pageSize + 1) : 0) + '–' + Math.min(page * result.pageSize, result.total) + ' de ' + result.total + ' · Página ' + result.page + ' de ' + totalPages;
+        pager.querySelector('[data-page-direction="previous"]').disabled = page <= 1;
+        pager.querySelector('[data-page-direction="next"]').disabled = !result.hasMore;
+      } catch (error) {
+        body.innerHTML = '<tr><td colspan="5" class="shipping-empty">' + escapeHtml(error.message || 'Error cargando municipios.') + '</td></tr>';
       }
     }
-
-    function filterShippingDirectory() {
-      const query = (document.getElementById('shipping-location-search')?.value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-      document.querySelectorAll('#shippingLocationsTableBody tr[data-shipping-search]').forEach(row => {
-        const text = (row.dataset.shippingSearch || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        row.hidden = !text.includes(query);
-      });
+    function renderShippingDirectoryRow(item, zones) {
+      const local = zones.filter((zone) => zone.type !== 'national' && zone.locations.includes(item.daneCode));
+      const active = local.filter((zone) => zone.isActive);
+      const national = zones.some((zone) => zone.type === 'national' && zone.isActive);
+      const coverage = active.length ? '<span class="shipping-badge active">Zona local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' + (national ? '<small>Cobertura nacional también activa</small>' : '') : local.length ? '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>' : national ? '<span class="shipping-badge neutral">Solo cobertura nacional</span><small>Sin tarifa local específica</small>' : '<span class="shipping-badge inactive">Sin cobertura activa</span>';
+      const zone = active[0] || local[0];
+      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar zona local</button>' : '<button class="shipping-action primary" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" onclick="createZoneForLocation(this)">Crear zona local</button>';
+      return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td>' + action + '</td></tr>';
+    }
+    function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
+    async function filterShippingLocations() {
+      clearTimeout(shippingSelectTimer);
+      shippingSelectTimer = setTimeout(async () => {
+        const select = document.getElementById('shLocationsSelect');
+        const search = document.getElementById('shLocSearch').value.trim();
+        if (!select) return;
+        try {
+          const response = await fetch('/api/v1/shipping/locations?q=' + encodeURIComponent(search) + '&limit=25');
+          const result = await response.json();
+          if (!response.ok) return;
+          Array.from(select.options).filter((option) => !option.selected).forEach((option) => option.remove());
+          result.data.forEach((item) => ensureShippingOption(item.daneCode, item.municipality + ' (' + item.department + ') [' + item.daneCode + ']'));
+        } catch { /* La lista conserva las opciones ya seleccionadas. */ }
+      }, 200);
+    }
+    function ensureShippingOption(code, label) {
+      const select = document.getElementById('shLocationsSelect');
+      if (!select || Array.from(select.options).some((option) => option.value === code)) return;
+      const option = document.createElement('option'); option.value = code; option.textContent = label || 'Código DANE ' + code + ' (asignado)'; select.append(option);
     }
 
     function showAdminShippingPage(page) {
       document.querySelectorAll('[data-shipping-panel]').forEach(panel => { panel.hidden = panel.dataset.shippingPanel !== page; });
+      if (page === 'locations') loadShippingDirectory(shippingDirectoryPage);
     }
 
     function closeShippingZoneModal() {
@@ -40,6 +77,7 @@ export function renderShippingFormsScript(): string {
     function openShippingZoneModal() {
       resetShippingZoneForm(false);
       document.getElementById('shippingZoneModal').style.display = 'flex';
+      filterShippingLocations();
       document.getElementById('shName').focus();
     }
 
@@ -48,6 +86,7 @@ export function renderShippingFormsScript(): string {
       document.getElementById('shType').value = 'municipality';
       document.getElementById('shName').value = 'Envío ' + button.dataset.name;
       const select = document.getElementById('shLocationsSelect');
+      ensureShippingOption(button.dataset.code, button.dataset.name + ' [' + button.dataset.code + ']');
       Array.from(select.options).forEach(option => { option.selected = option.value === button.dataset.code; });
       updateSelectedLocationsCount();
       document.getElementById('shPrice').focus();
@@ -56,6 +95,7 @@ export function renderShippingFormsScript(): string {
     window.openShippingZoneModal = openShippingZoneModal;
     window.closeShippingZoneModal = closeShippingZoneModal;
     window.createZoneForLocation = createZoneForLocation;
+    window.ensureShippingOption = ensureShippingOption;
 
     function updateSelectedLocationsCount() {
       const select = document.getElementById('shLocationsSelect');
@@ -83,6 +123,9 @@ export function renderShippingFormsScript(): string {
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      const locationPager = document.getElementById('shipping-locations-pagination');
+      locationPager?.querySelector('[data-page-direction="previous"]')?.addEventListener('click', () => loadShippingDirectory(Math.max(1, shippingDirectoryPage - 1)));
+      locationPager?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadShippingDirectory(shippingDirectoryPage + 1));
       const locSelect = document.getElementById('shLocationsSelect');
       if (locSelect) {
         locSelect.addEventListener('change', updateSelectedLocationsCount);

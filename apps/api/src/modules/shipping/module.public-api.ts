@@ -40,8 +40,12 @@ export class ShippingPublicApi {
     return this.container.searchDivipolaLocationsUseCase.execute(query, limit);
   }
 
-  public async listLocations(): Promise<DivipolaLocation[]> {
-    return this.container.listDivipolaLocationsUseCase.execute();
+  public async listLocations(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocation[]> {
+    return this.container.listDivipolaLocationsUseCase.execute(query);
+  }
+
+  public async countLocations(search?: string): Promise<number> {
+    return this.container.listDivipolaLocationsUseCase.count(search);
   }
 
   public async checkCoverage(

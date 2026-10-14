@@ -123,7 +123,8 @@ describe('Shipping Module - Domain & Application Tests', () => {
     };
 
     const mockDivipolaRepo: IDivipolaRepository = {
-      listAll: async () => [],
+      listPage: async () => [],
+      count: async () => 0,
       search: async () => [],
       findByDaneCode: async (code) => {
         if (code === '11001') {

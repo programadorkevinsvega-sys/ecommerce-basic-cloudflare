@@ -10,9 +10,26 @@ export class ShippingController {
     // Buscar municipios / departamentos (Público)
     router.get('/api/v1/shipping/locations', async (c) => {
       const q = c.req.query('q') || '';
-      const limit = Number(c.req.query('limit')) || 25;
-      const locations = await shippingGateway.searchLocations(q, limit);
+      if (q.length > 100) return c.json({ error: 'Búsqueda demasiado larga' }, 400);
+      const requestedLimit = Number(c.req.query('limit')) || 25;
+      const limit = Math.min(25, Math.max(1, Number.isSafeInteger(requestedLimit) ? requestedLimit : 25));
+      const locations = q ? await shippingGateway.searchLocations(q, limit) : await shippingGateway.listLocations({ limit, offset: 0 });
       return c.json({ data: locations });
+    });
+
+    router.get('/api/v1/admin/shipping/locations', createAuthMiddleware(identityGateway, 'admin', 'shipping:read'), async (c) => {
+      const page = Number(c.req.query('page') || '1');
+      const search = (c.req.query('q') || '').trim();
+      if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000 || search.length > 100) {
+        return c.json({ error: 'Parámetros de paginación o búsqueda inválidos' }, 400);
+      }
+      const pageSize = 10;
+      const [data, total, zones] = await Promise.all([
+        shippingGateway.listLocations({ limit: pageSize, offset: (page - 1) * pageSize, search }),
+        shippingGateway.countLocations(search),
+        shippingGateway.listZones(),
+      ]);
+      return c.json({ success: true, page, pageSize, total, hasMore: page * pageSize < total, data, zones });
     });
 
     // Evaluar cobertura, tarifa y contra entrega (Público / Storefront / Checkout)
