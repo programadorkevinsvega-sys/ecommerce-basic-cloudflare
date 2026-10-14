@@ -498,4 +498,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Apliqué estilos de tabla, estado, botones, formularios, acciones y modal de detalle coherentes con la superficie clara y los controles del panel. Los formularios de autor/categoría ahora tienen botón Cancelar.
 - Sin migraciones y sin cambios a datos existentes.
 - Pruebas: `pnpm test` (46 archivos/137 pruebas), `pnpm test:workers` (6 archivos/17 pruebas), `pnpm typecheck`, `pnpm lint`, `git diff --check` y `wrangler deploy --dry-run`, todos aprobados. Añadí cobertura RBAC/UI y una prueba D1 Worker para borrado y relaciones.
-- Commit/push y despliegue de esta versión pendientes de completar.
+- Commit `366bd74` enviado a `main`; Wrangler desplegó la versión `338d7c4a-097c-4373-a8fc-db3c0ca5afe0`. Smoke posterior: `/health` y `/blog` respondieron HTTP 200. No se hizo inspección visual autenticada del panel; no se borraron datos existentes.
