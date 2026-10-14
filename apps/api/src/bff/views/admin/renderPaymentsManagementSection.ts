@@ -14,8 +14,8 @@ export function renderPaymentsManagementSection(): string {
             <input type="text" id="cod-order-id" placeholder="ord-..." style="width:100%; padding:0.4rem; border:1px solid var(--border); border-radius:4px;" />
           </div>
           <div>
-            <label style="font-size:0.8rem; display:block; margin-bottom:0.2rem;">Monto en Centavos COP *</label>
-            <input type="number" id="cod-amount" placeholder="Ej: 5000000 (= $50.000)" style="width:100%; padding:0.4rem; border:1px solid var(--border); border-radius:4px;" />
+            <label style="font-size:0.8rem; display:block; margin-bottom:0.2rem;">Monto recibido en pesos (COP) *</label>
+            <input type="text" id="cod-amount" data-cop-input inputmode="numeric" autocomplete="off" placeholder="50.000" style="width:100%; padding:0.4rem; border:1px solid var(--border); border-radius:4px;" />
           </div>
           <div>
             <label style="font-size:0.8rem; display:block; margin-bottom:0.2rem;">Recibo / Guía</label>
@@ -30,7 +30,7 @@ export function renderPaymentsManagementSection(): string {
         <p>Registra el valor real y la referencia del reporte de liquidación del comercio. No uses el valor estimado como si fuera el real.</p>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:.75rem; align-items:end;">
           <label>Pedido Wompi aprobado<input id="settlement-order-id" /></label>
-          <label>Comisión real (centavos COP)<input id="settlement-fee" type="number" min="0" /></label>
+          <label>Comisión real (COP)<input id="settlement-fee" data-cop-input type="text" inputmode="numeric" autocomplete="off" placeholder="1.450" /></label>
           <label>Referencia del reporte<input id="settlement-report-ref" maxlength="120" /></label>
           <button type="button" class="btn-primary" onclick="submitSettlementCost()">Guardar</button>
         </div>

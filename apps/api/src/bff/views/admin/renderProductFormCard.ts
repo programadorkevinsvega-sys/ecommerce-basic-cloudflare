@@ -23,9 +23,9 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div><label>Nombre</label><input type="text" id="pName" required placeholder="Ej. Camiseta Negra" /></div>
           <div><label>Slug / Handle</label><input type="text" id="pSlug" required placeholder="camiseta-negra" /></div>
           <div><label>SKU</label><input type="text" id="pSku" required placeholder="TSHIRT-001" /></div>
-          <div><label>Costo del proveedor (COP)</label><input type="number" id="pCost" min="0" required placeholder="1200000" /></div>
+          <div><label>Costo del proveedor (COP)</label><input type="text" id="pCost" data-cop-input inputmode="numeric" autocomplete="off" required placeholder="1.200.000" /><small>Escribe pesos completos; los separadores aparecen automáticamente.</small></div>
           <div><label>Margen objetivo sobre la venta neta (%)</label><input type="number" id="pMargin" min="0.01" max="99.99" step="0.01" value="20" required /><small>Es margen sobre venta sin IVA, no recargo sobre costo. Se calcula antes de descuentos o promociones.</small></div>
-          <div><label>Precio recomendado con IVA incluido (COP)</label><input type="number" id="pPrice" readonly required /><small id="pPriceBreakdown" aria-live="polite">El precio contempla la comisión porcentual estimada de Wompi y el mayor envío configurado; los $700 fijos aparecen como costo de transacción en el checkout.</small></div>
+          <div><label>Precio recomendado con IVA incluido (COP)</label><input type="text" id="pPrice" data-cop-input inputmode="numeric" readonly required /><small id="pPriceBreakdown" aria-live="polite">El precio contempla la comisión porcentual estimada de Wompi y el mayor envío configurado; los $700 fijos aparecen como costo de transacción en el checkout.</small></div>
           <div class="form-field-full"><label>Medios de pago habilitados</label><label><input type="checkbox" id="pPayWompi" checked /> Wompi (comisión estimada incluida en el precio)</label><label><input type="checkbox" id="pPayCod" checked /> Contra entrega</label><small>Mercado Pago no está disponible hasta integrar y verificar su flujo de pago.</small></div>
           <div><label>Stock</label><input type="number" id="pStock" required value="10" /></div>
           <div>

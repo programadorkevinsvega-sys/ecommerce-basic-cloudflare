@@ -37,8 +37,9 @@ export function renderPromotionsFormsScript(): string {
       const editId = document.getElementById('prEditId').value;
       const name = document.getElementById('prName').value.trim();
       const discountType = document.getElementById('prDiscountType').value;
-      const rawVal = Number(document.getElementById('prDiscountValue').value);
-      const discountValue = discountType === 'fixed_amount' ? Math.round(rawVal * 100) : rawVal;
+      const discountValue = discountType === 'fixed_amount'
+        ? window.copPesosToCents('prDiscountValue')
+        : Number(document.getElementById('prDiscountValue').value);
       const targetType = document.getElementById('prTargetType').value;
 
       let targetId = undefined;
@@ -100,8 +101,9 @@ export function renderPromotionsFormsScript(): string {
       const editId = document.getElementById('cpEditId').value;
       const code = document.getElementById('cpCode').value.trim().toUpperCase();
       const discountType = document.getElementById('cpDiscountType').value;
-      const rawVal = Number(document.getElementById('cpDiscountValue').value);
-      const discountValue = discountType === 'fixed_amount' ? Math.round(rawVal * 100) : rawVal;
+      const discountValue = discountType === 'fixed_amount'
+        ? window.copPesosToCents('cpDiscountValue')
+        : Number(document.getElementById('cpDiscountValue').value);
       const targetType = document.getElementById('cpTargetType').value;
 
       let targetId = undefined;
@@ -111,7 +113,7 @@ export function renderPromotionsFormsScript(): string {
         targetId = document.getElementById('cpTargetCategorySelect').value || undefined;
       }
 
-      const minAmount = Math.round(Number(document.getElementById('cpMinAmount').value || 0) * 100);
+      const minAmount = window.copPesosToCents('cpMinAmount');
       const maxGlobal = document.getElementById('cpMaxGlobal').value ? Number(document.getElementById('cpMaxGlobal').value) : undefined;
       const maxPerCust = Number(document.getElementById('cpMaxPerCustomer').value) || 1;
       const startsAt = new Date(document.getElementById('cpStartsAt').value + 'T00:00:00Z').toISOString();

@@ -3,7 +3,13 @@ export function renderProductFormsScript(): string {
     window.currentProductMediaIds = [];
 
     function updateRecommendedProductPrice() {
-      const cost = Math.round(Number(document.getElementById('pCost')?.value) * 100);
+      const costInput = document.getElementById('pCost');
+      if (!costInput?.value.trim()) {
+        window.setCopInputValue('pPrice', '');
+        document.getElementById('pPriceBreakdown').textContent = 'Ingresa el costo del proveedor en pesos colombianos para calcular el precio recomendado.';
+        return;
+      }
+      const cost = window.copPesosToCents('pCost');
       const marginBps = Math.round(Number(document.getElementById('pMargin')?.value) * 100);
       const includeWompi = document.getElementById('pPayWompi')?.checked;
       if (!Number.isSafeInteger(cost) || cost < 0 || !Number.isSafeInteger(marginBps) || marginBps <= 0 || marginBps >= 10000) return;
@@ -18,7 +24,7 @@ export function renderProductFormsScript(): string {
       let low = cost, high = Math.max(cost * 4 + 100000, 100000);
       while (!meets(high)) high *= 2;
       while (low < high) { const mid = Math.floor((low + high) / 2); if (meets(mid)) high = mid; else low = mid + 1; }
-      document.getElementById('pPrice').value = Math.ceil(low / 100);
+      window.setCopInputValue('pPrice', Math.ceil(low / 100));
       const taxRate = Number(document.getElementById('productTaxRate')?.value || 19);
       const tax = Math.round(low * taxRate / (100 + taxRate));
       document.getElementById('pPriceBreakdown').textContent = 'IVA incluido estimado: $' + Math.round(tax / 100).toLocaleString('es-CO') + '. Comisión porcentual Wompi estimada, incluido el mayor envío: $' + Math.round(fee(low) / 100).toLocaleString('es-CO') + '. En compras Wompi se suman $700 por transacción en el checkout.';
@@ -72,8 +78,8 @@ export function renderProductFormsScript(): string {
         name: document.getElementById('pName').value,
         slug: document.getElementById('pSlug').value,
         sku: document.getElementById('pSku').value,
-        priceInCents: Math.round(Number(document.getElementById('pPrice').value) * 100),
-        supplierCostCents: Math.round(Number(document.getElementById('pCost').value) * 100),
+        priceInCents: window.copPesosToCents('pPrice'),
+        supplierCostCents: window.copPesosToCents('pCost'),
         targetMarginBasisPoints: Math.round(Number(document.getElementById('pMargin').value) * 100),
         allowedPaymentMethods: [
           ...(document.getElementById('pPayWompi').checked ? ['wompi'] : []),

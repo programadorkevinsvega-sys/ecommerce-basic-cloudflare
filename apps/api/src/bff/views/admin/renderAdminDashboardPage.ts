@@ -6,6 +6,7 @@ import { PromotionRuleDto, CouponDto } from '../../gateways/promotions/Promotion
 import { ShippingZoneDto, DivipolaLocationDto } from '../../gateways/shipping/ShippingGateway.js';
 import { renderAdminDashboardCss } from './renderAdminDashboardCss.js';
 import { renderAdminDashboardScript } from './renderAdminDashboardScript.js';
+import { renderCopInputScript } from './renderCopInputScript.js';
 import { renderStorefrontActionsScript } from './renderStorefrontActionsScript.js';
 import { renderProductFormsScript } from './renderProductFormsScript.js';
 import { renderStorefrontFormsScript } from './renderStorefrontFormsScript.js';
@@ -160,6 +161,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     }
     window.escapeHtml = escapeHtml;
   </script>
+  <script>${renderCopInputScript()}</script>
   <script>${renderAdminDashboardScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>

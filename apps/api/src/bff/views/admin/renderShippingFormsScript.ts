@@ -62,7 +62,7 @@ export function renderShippingFormsScript(): string {
         const editId = document.getElementById('shEditId').value.trim();
         const name = document.getElementById('shName').value.trim();
         const type = document.getElementById('shType').value;
-        const priceCop = Number(document.getElementById('shPrice').value) || 0;
+        const priceCop = window.readCopPesos('shPrice') || 0;
         const priceInCents = Math.round(priceCop * 100);
         const minEstimatedDays = Number(document.getElementById('shMinDays').value) || 1;
         const maxEstimatedDays = Number(document.getElementById('shMaxDays').value) || 3;

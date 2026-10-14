@@ -59,7 +59,7 @@ export function renderShippingHandlersScript(): string {
       document.getElementById('shEditId').value = data.id;
       document.getElementById('shName').value = data.name;
       document.getElementById('shType').value = data.type;
-      document.getElementById('shPrice').value = Math.round(data.priceInCents / 100);
+      window.setCopInputValue('shPrice', Math.round(data.priceInCents / 100));
       document.getElementById('shMinDays').value = data.minEstimatedDays;
       document.getElementById('shMaxDays').value = data.maxEstimatedDays;
       document.getElementById('shAllowsCod').value = data.allowsCashOnDelivery ? '1' : '0';

@@ -49,7 +49,7 @@ export function renderInvoicingAdminScript(): string {
     function openCreditNoteModal(invoiceId, invoiceNumber, totalCents) {
       _activeCnInvoiceId = invoiceId;
       document.getElementById('cn-modal-invoice-num').innerText = 'Factura: #' + invoiceNumber;
-      document.getElementById('cn-amount').value = totalCents;
+      window.setCopInputValue('cn-amount', Math.round(totalCents / 100));
       document.getElementById('cn-reason').value = '';
       document.getElementById('credit-note-modal').style.display = 'flex';
     }
@@ -62,8 +62,8 @@ export function renderInvoicingAdminScript(): string {
     async function submitCreditNote() {
       if (!_activeCnInvoiceId) return;
       const reason = document.getElementById('cn-reason').value.trim();
-      const amount = parseInt(document.getElementById('cn-amount').value, 10);
-      if (!reason || isNaN(amount) || amount <= 0) {
+      const amountInCents = window.copPesosToCents('cn-amount');
+      if (!reason || !Number.isSafeInteger(amountInCents) || amountInCents <= 0) {
         alert('Por favor indica motivo y monto válido');
         return;
       }
@@ -71,7 +71,7 @@ export function renderInvoicingAdminScript(): string {
       const res = await fetch('/api/v1/admin/invoices/' + _activeCnInvoiceId + '/credit-notes', {
         method: 'POST',
         headers: adminHeaders(true),
-        body: JSON.stringify({ reason, amountInCents: amount })
+        body: JSON.stringify({ reason, amountInCents })
       });
 
       if (res.ok) {

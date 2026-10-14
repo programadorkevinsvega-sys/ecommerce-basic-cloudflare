@@ -28,13 +28,13 @@ export function renderPaymentsAdminScript(): string {
 
     async function submitCodCollection() {
       const orderId = document.getElementById('cod-order-id').value.trim();
-      const amount = parseInt(document.getElementById('cod-amount').value, 10);
+      const amountInCents = window.copPesosToCents('cod-amount');
       const receipt = document.getElementById('cod-receipt').value.trim();
-      if (!orderId || !amount) { alert('Por favor indica ID de Pedido y Monto en Centavos'); return; }
+      if (!orderId || !amountInCents) { alert('Por favor indica ID del pedido y monto en pesos colombianos.'); return; }
       const res = await fetch('/api/v1/admin/payments/cod/collect', {
         method: 'POST',
         headers: adminHeaders(true),
-        body: JSON.stringify({ orderId, amountInCents: amount, receiptNumber: receipt })
+        body: JSON.stringify({ orderId, amountInCents, receiptNumber: receipt })
       });
       if (res.ok) {
         alert('¡Recaudo registrado con éxito!');
@@ -50,7 +50,7 @@ export function renderPaymentsAdminScript(): string {
 
     async function submitSettlementCost() {
       const orderId = document.getElementById('settlement-order-id').value.trim();
-      const actualFeeCents = Number(document.getElementById('settlement-fee').value);
+      const actualFeeCents = window.copPesosToCents('settlement-fee');
       const reportReference = document.getElementById('settlement-report-ref').value.trim();
       if (!orderId || !Number.isSafeInteger(actualFeeCents) || actualFeeCents < 0 || !reportReference) return alert('Ingresa pedido, comisión real y referencia del reporte.');
       const response = await fetch('/api/v1/admin/payments/' + encodeURIComponent(orderId) + '/settlement', { method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ actualFeeCents, reportReference }) });

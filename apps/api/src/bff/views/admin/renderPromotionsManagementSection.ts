@@ -36,7 +36,7 @@ export function renderPromotionsManagementSection(
             <label>Tipo de Descuento</label>
             <select id="prDiscountType"><option value="percentage">Porcentaje (%)</option><option value="fixed_amount">Monto Fijo (COP)</option></select>
           </div>
-          <div><label>Valor del Descuento</label><input type="number" id="prDiscountValue" required placeholder="Ej. 20 (para 20%) o 15000 (en COP)" /></div>
+          <div><label>Valor del Descuento</label><input type="text" id="prDiscountValue" data-cop-input data-cop-type-select="prDiscountType" inputmode="decimal" required placeholder="20 (%) o 15.000 COP" /></div>
           <div>
             <label>Alcance del Descuento</label>
             <select id="prTargetType" onchange="onPromoTargetTypeChange()">
@@ -87,7 +87,7 @@ export function renderPromotionsManagementSection(
             <label>Tipo de Descuento</label>
             <select id="cpDiscountType"><option value="percentage">Porcentaje (%)</option><option value="fixed_amount">Monto Fijo (COP)</option></select>
           </div>
-          <div><label>Valor del Descuento</label><input type="number" id="cpDiscountValue" required placeholder="Ej. 10 (%) o 20000 (COP)" /></div>
+          <div><label>Valor del Descuento</label><input type="text" id="cpDiscountValue" data-cop-input data-cop-type-select="cpDiscountType" inputmode="decimal" required placeholder="10 (%) o 20.000 COP" /></div>
           <div>
             <label>Alcance del Cupón</label>
             <select id="cpTargetType" onchange="onCouponTargetTypeChange()">
@@ -109,7 +109,7 @@ export function renderPromotionsManagementSection(
             <label>Categoría Objetivo</label>
             <select id="cpTargetCategorySelect"><option value="">-- Selecciona una categoría --</option>${categoryOptions}</select>
           </div>
-          <div><label>Compra Mínima en COP</label><input type="number" id="cpMinAmount" value="0" placeholder="0" /></div>
+          <div><label>Compra Mínima (COP)</label><input type="text" id="cpMinAmount" data-cop-input inputmode="numeric" value="0" placeholder="0" /></div>
           <div><label>Límite Usos Global (Vacío = Ilimitado)</label><input type="number" id="cpMaxGlobal" placeholder="100" /></div>
           <div><label>Límite por Cliente</label><input type="number" id="cpMaxPerCustomer" value="1" /></div>
           <div><label>Fecha Inicio</label><input type="date" id="cpStartsAt" required /></div>

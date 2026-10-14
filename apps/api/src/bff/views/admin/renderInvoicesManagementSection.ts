@@ -38,8 +38,8 @@ export function renderInvoicesManagementSection(): string {
           <input type="text" id="cn-reason" placeholder="Ej. Devolución de producto o corrección" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:5px; background:transparent; color:inherit;" />
         </div>
         <div style="margin-bottom:1.5rem;">
-          <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Monto en Centavos COP:</label>
-          <input type="number" id="cn-amount" placeholder="Ej. 172855000" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:5px; background:transparent; color:inherit;" />
+          <label style="display:block; font-size:0.85rem; margin-bottom:0.3rem;">Monto de la nota en pesos (COP):</label>
+          <input type="text" id="cn-amount" data-cop-input inputmode="numeric" autocomplete="off" placeholder="1.728.550" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:5px; background:transparent; color:inherit;" />
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
           <button onclick="closeCreditNoteModal()" style="padding:0.4rem 0.8rem; background:transparent; border:1px solid var(--border); border-radius:5px; color:inherit; cursor:pointer;">Cancelar</button>

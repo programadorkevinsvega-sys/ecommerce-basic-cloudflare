@@ -31,7 +31,7 @@ export function renderShippingManagementSection(
               <option value="municipality">Municipio Específico</option>
             </select>
           </div>
-          <div><label>Tarifa de Envío en COP</label><input type="number" id="shPrice" required placeholder="Ej. 12000 (para $12.000 COP)" /></div>
+          <div><label>Tarifa de Envío (COP)</label><input type="text" id="shPrice" data-cop-input inputmode="numeric" autocomplete="off" required placeholder="12.000" /></div>
           <div><label>Plazo Mínimo (Días hábiles)</label><input type="number" id="shMinDays" value="1" min="0" required /></div>
           <div><label>Plazo Máximo (Días hábiles)</label><input type="number" id="shMaxDays" value="3" min="1" required /></div>
           <div>

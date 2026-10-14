@@ -70,7 +70,9 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('prEditId').value = data.id;
       document.getElementById('prName').value = data.name;
       document.getElementById('prDiscountType').value = data.discountType;
-      document.getElementById('prDiscountValue').value = data.discountType === 'fixed_amount' ? Math.round(data.discountValue / 100) : data.discountValue;
+      window.setCopInputMode('prDiscountValue', data.discountType === 'fixed_amount');
+      if (data.discountType === 'fixed_amount') window.setCopInputValue('prDiscountValue', Math.round(data.discountValue / 100));
+      else document.getElementById('prDiscountValue').value = data.discountValue;
       document.getElementById('prTargetType').value = data.targetType;
       onPromoTargetTypeChange();
       if (data.targetType === 'product') {
@@ -123,7 +125,9 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('cpEditId').value = data.id;
       document.getElementById('cpCode').value = data.code;
       document.getElementById('cpDiscountType').value = data.discountType;
-      document.getElementById('cpDiscountValue').value = data.discountType === 'fixed_amount' ? Math.round(data.discountValue / 100) : data.discountValue;
+      window.setCopInputMode('cpDiscountValue', data.discountType === 'fixed_amount');
+      if (data.discountType === 'fixed_amount') window.setCopInputValue('cpDiscountValue', Math.round(data.discountValue / 100));
+      else document.getElementById('cpDiscountValue').value = data.discountValue;
       document.getElementById('cpTargetType').value = data.targetType || 'all';
       onCouponTargetTypeChange();
       if (data.targetType === 'product') {
@@ -132,7 +136,7 @@ export function renderPromotionsHandlersScript(): string {
       } else if (data.targetType === 'category') {
         document.getElementById('cpTargetCategorySelect').value = data.targetId || '';
       }
-      document.getElementById('cpMinAmount').value = Math.round(data.minOrderAmountCents / 100);
+      window.setCopInputValue('cpMinAmount', Math.round(data.minOrderAmountCents / 100));
       document.getElementById('cpMaxGlobal').value = data.maxUsesGlobal !== undefined ? data.maxUsesGlobal : '';
       document.getElementById('cpMaxPerCustomer').value = data.maxUsesPerCustomer || 1;
       document.getElementById('cpStartsAt').value = data.startsAt.substring(0, 10);

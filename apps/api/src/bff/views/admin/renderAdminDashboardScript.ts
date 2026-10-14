@@ -89,8 +89,8 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pName').value = p.name || '';
         document.getElementById('pSlug').value = p.slug || '';
         document.getElementById('pSku').value = p.sku || '';
-        document.getElementById('pPrice').value = Math.round((p.priceInCents || 0) / 100);
-        document.getElementById('pCost').value = p.supplierCostCents == null ? '' : Math.round(p.supplierCostCents / 100);
+        window.setCopInputValue('pPrice', Math.round((p.priceInCents || 0) / 100));
+        window.setCopInputValue('pCost', p.supplierCostCents == null ? '' : Math.round(p.supplierCostCents / 100));
         document.getElementById('pMargin').value = Number(p.targetMarginBasisPoints || 2000) / 100;
         document.getElementById('pPayWompi').checked = (p.allowedPaymentMethods || ['wompi']).includes('wompi');
         document.getElementById('pPayCod').checked = (p.allowedPaymentMethods || []).includes('cash_on_delivery');
