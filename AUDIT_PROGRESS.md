@@ -220,3 +220,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - El footer ahora combina el menú editable existente con las páginas institucionales presentes en CMS, sin duplicar enlaces ya configurados. Las páginas publicadas abren su ruta canónica; las que siguen como borrador aparecen como “En preparación” y no apuntan a una página que daría 404.
 - La página de Términos existente continúa publicada y activa. No fue necesario modificar D1 ni cambiar el contenido de los borradores.
 - Validaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. Sin pruebas automatizadas ni revisión visual en navegador.
+- Smoke test del Home desplegado confirmó los enlaces activos y los rótulos de borrador. En la última consulta de producción, `sobre-nosotros`, `terminos-y-condiciones` y `tratamiento-de-datos` están publicados; las otras siete páginas siguen como borrador y aparecen marcadas “En preparación”.
