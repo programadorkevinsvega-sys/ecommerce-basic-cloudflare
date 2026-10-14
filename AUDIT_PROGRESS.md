@@ -215,3 +215,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Validaciones ejecutadas: `pnpm typecheck`, `pnpm lint`, `node scripts/check-migration-consistency.js` y `git diff --check`, todas correctas. No ejecuté pruebas automatizadas ni validación visual en navegador.
 - `cms__0002_institutional_pages.sql` aplicada con el runner remoto después de desplegar el control de estado. La consulta posterior confirmó las nueve páginas en borrador con versión 1 y `terminos-y-condiciones` intacta/publicada. `/sobre-nosotros` devolvió 404 mientras sigue en borrador; las dos rutas de términos (`/terminos-y-condiciones` y `/p/terminos-y-condiciones`) devolvieron 200.
 - Commit `7125966` enviado a `main`; el push no inició despliegue, por lo que se publicó con Wrangler, versión `5b42deb6-36c7-4edb-8f5d-e1218d74fb79`. `/health` respondió 200 con D1/KV/Queue/R2 `ok`.
+### Navegación del footer para páginas CMS (2026-10-14)
+
+- El footer ahora combina el menú editable existente con las páginas institucionales presentes en CMS, sin duplicar enlaces ya configurados. Las páginas publicadas abren su ruta canónica; las que siguen como borrador aparecen como “En preparación” y no apuntan a una página que daría 404.
+- La página de Términos existente continúa publicada y activa. No fue necesario modificar D1 ni cambiar el contenido de los borradores.
+- Validaciones: `pnpm typecheck`, `pnpm lint` y `git diff --check` pasaron. Sin pruebas automatizadas ni revisión visual en navegador.

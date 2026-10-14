@@ -1,6 +1,7 @@
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CmsGateway, CmsMenuItemDto } from '../../gateways/cms/CmsGateway.js';
 import { LayoutMenuItem } from '../../views/renderBaseLayout.js';
+import { mergeInstitutionalFooterLinks } from '../../cms/mergeInstitutionalFooterLinks.js';
 
 export async function getCustomerEmail(
   c: { req: { header: (k: string) => string | undefined } },
@@ -27,9 +28,10 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
   footerMenuItems: LayoutMenuItem[];
 }> {
   try {
-    const [headerMenu, footerMenu] = await Promise.all([
+    const [headerMenu, footerMenu, pages] = await Promise.all([
       cmsGateway.getMenuByCode('header').catch(() => null),
       cmsGateway.getMenuByCode('footer').catch(() => null),
+      cmsGateway.listPages(50, 0).catch(() => []),
     ]);
 
     const headerMenuItems: LayoutMenuItem[] = headerMenu?.items && headerMenu.items.length > 0
@@ -49,7 +51,7 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
 
     const cleanHeaderMenuItems = headerMenuItems.filter((item) => !isLegalItem(item));
 
-    const footerMenuItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
+    const configuredFooterItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
       ? footerMenu.items.map((it: CmsMenuItemDto) => ({
           title: it.title,
           url: it.url,
@@ -61,7 +63,10 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway): Promise<{
           { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
         ];
 
-    return { headerMenuItems: cleanHeaderMenuItems, footerMenuItems };
+    return {
+      headerMenuItems: cleanHeaderMenuItems,
+      footerMenuItems: mergeInstitutionalFooterLinks(configuredFooterItems, pages),
+    };
   } catch {
     return {
       headerMenuItems: [

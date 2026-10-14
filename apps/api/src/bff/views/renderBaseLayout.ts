@@ -12,6 +12,7 @@ export interface LayoutMenuItem {
   url: string;
   target?: string;
   children?: LayoutMenuItem[];
+  pending?: boolean;
 }
 
 export interface LayoutProps {
@@ -52,6 +53,9 @@ export function renderBaseLayout(props: LayoutProps): string {
     /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
   const footerNavigation = footerItems.filter((item) => !isLegalLink(item));
   const footerLegal = footerItems.filter(isLegalLink);
+  const renderFooterItem = (item: LayoutMenuItem): string => item.pending
+    ? `<span class="footer-link-pending">${escapeHtml(item.title)}<small>En preparación</small></span>`
+    : `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`;
   const checkoutHeader = `<header class="checkout-header"><div class="checkout-header-inner"><a href="/" class="checkout-brand" aria-label="Vega Store, inicio">VEGA <span>STORE</span></a><p class="checkout-secure"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z"/></svg> Compra segura</p><a class="checkout-back" href="/carrito"><span aria-hidden="true">←</span> Volver al carrito</a></div></header>`;
 
   return `<!DOCTYPE html>
@@ -101,8 +105,8 @@ export function renderBaseLayout(props: LayoutProps): string {
     <div class="footer-inner">
       <div class="footer-brand"><a href="/" class="brand-link">VEGA <span>STORE</span></a><p>Productos seleccionados para acompañarte todos los días.</p></div>
       <div class="footer-column"><h2>Tienda</h2><a href="/productos">Catálogo</a><a href="/carrito">Carrito</a></div>
-      <div class="footer-column"><h2>Ayuda</h2>${footerNavigation.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')}</div>
-      <div class="footer-column"><h2>Información</h2>${footerLegal.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')}</div>
+      <div class="footer-column"><h2>Ayuda</h2>${footerNavigation.map(renderFooterItem).join('')}</div>
+      <div class="footer-column"><h2>Información</h2>${footerLegal.map(renderFooterItem).join('')}</div>
     </div>
     <p class="footer-copyright">&copy; ${new Date().getFullYear()} Vega Store. Todos los derechos reservados.</p>
   </footer>

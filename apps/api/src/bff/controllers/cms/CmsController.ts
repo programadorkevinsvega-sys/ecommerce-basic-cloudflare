@@ -5,18 +5,14 @@ import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderCmsPage } from '../../views/renderCmsPage.js';
 import { CMS_INSTITUTIONAL_PAGE_ROUTES } from '../../cms/CmsInstitutionalPageRoutes.js';
+import { getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 
 export class CmsController {
   public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
     const showPublishedPage = async (c: Context, slug: string, requestedPath: string) => {
-      const [headerMenu, footerMenu] = await Promise.all([
-        cmsGateway.getMenuByCode('header').catch(() => null),
-        cmsGateway.getMenuByCode('footer').catch(() => null),
-      ]);
-      const headerMenuItems = headerMenu?.items?.map((it) => ({ title: it.title, url: it.url, target: it.target }));
-      const footerMenuItems = footerMenu?.items?.map((it) => ({ title: it.title, url: it.url, target: it.target }));
+      const { headerMenuItems, footerMenuItems } = await getStorefrontNavMenus(cmsGateway);
 
       try {
         const page = await cmsGateway.getPageBySlug(slug);

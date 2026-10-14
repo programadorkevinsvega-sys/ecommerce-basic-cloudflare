@@ -83,6 +83,8 @@ export const storefrontComponentStyles = String.raw`
     .footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; }
     .footer-column h2 { margin: 0 0 .25rem; color: #fff; font-size: .9rem; letter-spacing: 0; }
     .footer-column a { color: #bfcdbd; font-size: .82rem; }
+    .footer-link-pending { display:flex; align-items:baseline; flex-wrap:wrap; gap:.35rem; color:#bfcdbd; font-size:.82rem; }
+    .footer-link-pending small { color:#a8b9a7; font-size:.66rem; font-weight:650; }
     .footer-links, .footer-legal-links { justify-content: flex-start; }
     .footer-copyright { max-width: var(--content-width); margin: 1rem auto 0 !important; padding-top: 1rem; border-top: 1px solid rgba(237,247,220,.2); }
     .campaign-copy { padding: clamp(1.8rem, 4.5vw, 3.2rem); align-self: center; z-index: 2; }
