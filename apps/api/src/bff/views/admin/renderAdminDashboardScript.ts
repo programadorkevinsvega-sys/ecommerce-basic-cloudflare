@@ -16,6 +16,12 @@ export function renderAdminDashboardScript(): string {
       document.querySelector('.admin-main')?.classList.toggle('orders-page-active', tabId === 'orders');
       legacy?.classList.toggle('inventory-mode', tabId === 'inventory');
       document.querySelector('.admin-main')?.classList.toggle('inventory-page-active', tabId === 'inventory');
+      legacy?.classList.toggle('payments-mode', tabId === 'payments');
+      document.querySelector('.admin-main')?.classList.toggle('payments-page-active', tabId === 'payments');
+      legacy?.classList.toggle('shipping-mode', tabId === 'shipping');
+      document.querySelector('.admin-main')?.classList.toggle('shipping-page-active', tabId === 'shipping');
+      legacy?.classList.toggle('invoices-mode', tabId === 'invoices');
+      document.querySelector('.admin-main')?.classList.toggle('invoices-page-active', tabId === 'invoices');
       if (tabId === 'summary') {
         summary?.classList.add('active');
         if (legacy) legacy.hidden = true;

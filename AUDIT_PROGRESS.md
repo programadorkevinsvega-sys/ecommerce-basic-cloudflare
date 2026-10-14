@@ -160,3 +160,8 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Facturación ahora tiene cabecera y tabla adaptable; mantiene consulta, ver/descargar PDF y emisión de notas crédito con los mismos endpoints, IDs y validaciones.
 - Cambios solo de BFF/presentación y CSS; sin modificaciones de dominio, permisos, endpoints, D1 o datos. Diff revisado y `git diff --check`; no ejecuté pruebas automatizadas para el cambio de interfaz.
 - Commit `b706dee` enviado a `main`; publiqué el Worker `07d11b99-5d34-49e3-9eff-48118c5b9c8a`. `/health` posterior respondió `healthy` y D1/KV/Queue/R2 `ok`.
+
+### Corrección visual tras revisión de capturas (2026-10-13)
+
+- Las vistas de Pagos, Envíos y Facturación heredaban el fondo, tarjetas y colores de texto oscuros del contenedor legacy. Añadí modos visuales claros al cambiar de pestaña, oculté la cabecera antigua duplicada y fijé contraste de títulos, formularios y tarjetas al mismo estilo de Pedidos/Inventario.
+- Verificaciones: `pnpm typecheck`, `pnpm lint`, Wrangler deploy dry-run y `git diff --check`; no ejecuté pruebas automatizadas. Sin cambios de endpoints, lógica de negocio o datos.
