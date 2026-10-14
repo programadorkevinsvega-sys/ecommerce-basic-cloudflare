@@ -165,3 +165,4 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 
 - Las vistas de Pagos, Envíos y Facturación heredaban el fondo, tarjetas y colores de texto oscuros del contenedor legacy. Añadí modos visuales claros al cambiar de pestaña, oculté la cabecera antigua duplicada y fijé contraste de títulos, formularios y tarjetas al mismo estilo de Pedidos/Inventario.
 - Verificaciones: `pnpm typecheck`, `pnpm lint`, Wrangler deploy dry-run y `git diff --check`; no ejecuté pruebas automatizadas. Sin cambios de endpoints, lógica de negocio o datos.
+- Commit `13aaffe` enviado a `main`; publiqué el Worker `a860fc50-acb4-411f-95c1-1abfdba1e46d`. `/health` posterior confirmó `healthy` con D1/KV/Queue/R2 `ok`.
