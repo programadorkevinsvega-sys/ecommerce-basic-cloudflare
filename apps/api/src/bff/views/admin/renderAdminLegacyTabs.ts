@@ -14,7 +14,7 @@ import { renderShippingManagementSection } from './renderShippingManagementSecti
 
 export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
   return `    <div id="tab-products" class="tab-content active">
-      ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent)}
+      ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent, props.brands, props.products.map((product) => product.brand || ''))}
       ${renderProductTable(props.products)}
     </div>
 

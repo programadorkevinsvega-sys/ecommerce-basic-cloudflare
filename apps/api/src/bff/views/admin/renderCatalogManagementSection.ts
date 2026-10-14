@@ -57,7 +57,7 @@ export function renderCatalogManagementSection(
       <form id="newBrandForm" style="margin-bottom: 1.5rem;">
         <div class="form-grid">
           <div><label>Nombre de Marca / Proveedor</label><input type="text" id="brandName" required placeholder="Ej. Nike, Vega Basic" /></div>
-          <div><label>Slug</label><input type="text" id="brandSlug" placeholder="nike" /></div>
+          <div><label>Slug</label><input type="text" id="brandSlug" placeholder="Se genera automáticamente" /><small>Se completa desde el nombre y puedes editarlo.</small></div>
           <div><label>Sitio Web Oficial</label><input type="url" id="brandWeb" placeholder="https://..." /></div>
         </div>
         <button type="submit" class="btn-primary">Guardar Marca / Proveedor</button>

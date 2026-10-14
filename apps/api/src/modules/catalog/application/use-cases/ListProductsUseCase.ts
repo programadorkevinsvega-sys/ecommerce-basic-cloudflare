@@ -22,7 +22,7 @@ export class ListProductsUseCase {
 
     let products: Product[];
     if (input.searchQuery && input.searchQuery.trim().length > 0) {
-      products = await this.productRepo.search(input.searchQuery.trim(), limit, offset);
+      products = await this.productRepo.search(input.searchQuery.trim(), limit, offset, input.status);
     } else {
       products = await this.productRepo.list(limit, offset, input.status);
     }

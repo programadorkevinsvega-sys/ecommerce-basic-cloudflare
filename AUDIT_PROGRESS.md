@@ -251,3 +251,10 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La emisión de factura ya capturaba correo, razón social, NIT y dirección en el snapshot, pero el PDF omitía la razón social cuando había nombre comercial, no presentaba ciudad/país y usaba un correo de ejemplo como fallback. Ahora el snapshot incluye ciudad/país, y el PDF muestra por separado nombre comercial, razón social, NIT, dirección, ciudad/país y correo de soporte tomados de Configuración. El mismo PDF se adjunta al email de confirmación.
 - Sin migración D1: `company` está serializado dentro del snapshot JSON y los nuevos campos son opcionales. Las facturas emitidas conservan su snapshot inmutable; los PDFs históricos no se reescriben al cambiar Configuración.
 - Pendiente de validar una factura real nueva después del despliegue. No ejecuté pruebas automatizadas.
+
+### Marcas del catálogo y búsqueda (2026-10-14)
+
+- Confirmado en producción: `catalog_brands` tenía “Vega Eyewear”, mientras que `catalog_products.brand` contenía nombres independientes (incluida esa marca) y el índice FTS solo cubría nombre, descripción y SKU. `Marcas` lista `catalog_brands`; el formulario del producto era texto libre; la búsqueda de catálogo no consultaba `brand` y además ignoraba el filtro de estado cuando había texto de búsqueda.
+- El formulario de producto ahora selecciona marcas registradas; ofrece valores históricos ya usados para no perder marcas al editar productos antiguos. El alta de marca genera slug mientras se escribe y permite editarlo; el servidor normaliza acentos también.
+- La búsqueda incluye coincidencias de marca y aplica `status=published` a búsquedas públicas. No requiere migración: mantiene la columna de texto y el índice existentes.
+- Una consulta D1 remota de solo lectura reprodujo la causa: FTS devolvió 0 filas para “Vega Eyewear”, mientras la consulta por `brand` encontró el producto publicado. Pendiente validación visual del flujo en navegador. No ejecuté pruebas automatizadas.

@@ -115,19 +115,29 @@ export class D1ProductRepository implements IProductRepository {
     return Promise.all((results || []).map((row) => D1ProductMapper.hydrate(row, this.db)));
   }
 
-  public async search(query: string, limit: number, offset: number): Promise<Product[]> {
+  public async search(query: string, limit: number, offset: number, status?: string): Promise<Product[]> {
+    const fetchLimit = Math.min(limit + offset, 500);
     const ftsResults = await this.db
-      .prepare('SELECT product_id FROM catalog_products_fts WHERE catalog_products_fts MATCH ? LIMIT ? OFFSET ?')
-      .bind(query, limit, offset)
+      .prepare(`SELECT catalog_products_fts.product_id FROM catalog_products_fts
+        JOIN catalog_products ON catalog_products.id = catalog_products_fts.product_id
+        WHERE catalog_products_fts MATCH ? ${status ? 'AND catalog_products.status = ?' : ''}
+        LIMIT ?`)
+      .bind(...(status ? [query, status, fetchLimit] : [query, fetchLimit]))
       .all<{ product_id: string }>();
 
-    const productIds = (ftsResults.results || []).map((r) => r.product_id);
-    const products: Product[] = [];
-    for (const pid of productIds) {
-      const p = await this.findById(pid);
-      if (p) products.push(p);
-    }
-    return products;
+    const brandQuery = `SELECT id FROM catalog_products
+      WHERE instr(lower(COALESCE(brand, '')), lower(?)) > 0 ${status ? 'AND status = ?' : ''}
+      ORDER BY created_at DESC LIMIT ?`;
+    const brandResults = await this.db.prepare(brandQuery)
+      .bind(...(status ? [query, status, fetchLimit] : [query, fetchLimit]))
+      .all<{ id: string }>();
+    const productIds = [...new Set([
+      ...(ftsResults.results || []).map((row) => row.product_id),
+      ...(brandResults.results || []).map((row) => row.id),
+    ])];
+    const products = (await Promise.all(productIds.map((id) => this.findById(id))))
+      .filter((product): product is Product => Boolean(product));
+    return products.slice(offset, offset + limit);
   }
 
 }

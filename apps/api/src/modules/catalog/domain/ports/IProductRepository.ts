@@ -6,5 +6,5 @@ export interface IProductRepository {
   save(product: Product): Promise<void>;
   delete(id: string): Promise<void>;
   list(limit: number, offset: number, status?: string): Promise<Product[]>;
-  search(query: string, limit: number, offset: number): Promise<Product[]>;
+  search(query: string, limit: number, offset: number, status?: string): Promise<Product[]>;
 }

@@ -17,9 +17,9 @@ export class CreateBrandUseCase {
   }
 
   public async execute(input: CreateBrandInput): Promise<Result<Brand, Error>> {
-    const rawSlug = input.slug && input.slug.trim().length > 0
-      ? input.slug.trim()
-      : input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const rawSlug = (input.slug?.trim() || input.name)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
     const existing = await this.brandRepo.findBySlug(rawSlug);
     if (existing) {

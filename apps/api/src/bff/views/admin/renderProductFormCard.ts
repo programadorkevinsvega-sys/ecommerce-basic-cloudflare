@@ -1,7 +1,12 @@
 import { ShippingZoneDto } from '../../gateways/shipping/ShippingGateway.js';
+import { BrandDto } from '../../gateways/catalog/CatalogGateway.js';
 
-export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19): string {
+export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = []): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national');
+  const registeredBrands = brands.map((brand) => brand.name);
+  const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
+  const legacyBrands = [...new Set(legacyBrandNames.map((name) => name.trim()).filter((name) => name && !registeredNames.has(name.toLocaleLowerCase())))];
+  const brandOptions = `${registeredBrands.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}${legacyBrands.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (marca histórica)</option>`).join('')}`;
   const zoneOptions = localZones.map((z) =>
     `<option value="${escapeHtml(z.id)}">${escapeHtml(z.name)} (${escapeHtml(z.type)})</option>`
   ).join('');
@@ -34,7 +39,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
             <label>Condición</label>
             <select id="pCondition"><option value="new">Nuevo</option><option value="used">Usado</option><option value="refurbished">Reacondicionado</option></select>
           </div>
-          <div><label>Marca / Fabricante</label><input type="text" id="pBrand" placeholder="Vega Clothing" /></div>
+          <div><label>Marca / Fabricante</label><select id="pBrand"><option value="">Sin marca</option>${brandOptions}</select><small>Las marcas se administran en Catálogo → Marcas.</small></div>
           <div><label>Tipo de Producto</label><input type="text" id="pType" placeholder="Ropa / Camisetas" /></div>
           <div><label>Código de Barras (GTIN)</label><input type="text" id="pGtin" placeholder="7701234567890" /></div>
           <div><label>Etiquetas (separadas por coma)</label><input type="text" id="pTags" placeholder="verano, algodon, basico" /></div>

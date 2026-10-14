@@ -1,5 +1,16 @@
 export function renderTaxonomyFormsScript(): string {
   return `
+    const brandNameInput = document.getElementById('brandName');
+    const brandSlugInput = document.getElementById('brandSlug');
+    const createBrandSlug = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    brandNameInput?.addEventListener('input', () => {
+      if (brandSlugInput && !brandSlugInput.dataset.manuallyEdited) brandSlugInput.value = createBrandSlug(brandNameInput.value);
+    });
+    brandSlugInput?.addEventListener('input', () => {
+      if (!brandSlugInput.value) delete brandSlugInput.dataset.manuallyEdited;
+      else brandSlugInput.dataset.manuallyEdited = 'true';
+    });
+
     document.getElementById('newCategoryForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('catMsg');
