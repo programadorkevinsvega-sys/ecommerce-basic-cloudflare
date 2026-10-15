@@ -5,6 +5,10 @@ import {
   ShippingGateway,
   ShippingZoneDto,
   UpdateShippingZoneGatewayRequest,
+  CarrierIntegrationConfigDto,
+  CarrierShippingQuoteDto,
+  CarrierShipmentDto,
+  CarrierShipmentCreateRequest,
 } from './ShippingGateway.js';
 import { ShippingPublicApi } from '../../../modules/shipping/module.public-api.js';
 import { ShippingZone } from '../../../modules/shipping/domain/entities/ShippingZone.js';
@@ -68,6 +72,51 @@ export class InProcessShippingGateway implements ShippingGateway {
     return this.publicApi.checkCoverage(daneCode, shippingScope, allowedZoneIds);
   }
 
+  public getCarrierConfig(): Promise<CarrierIntegrationConfigDto> {
+    return this.publicApi.getCarrierConfig();
+  }
+
+  public updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto> {
+    return this.publicApi.updateCarrierConfig(config);
+  }
+
+  public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuoteDto[]> {
+    const quotes = await this.publicApi.quoteCarrierShipping(input);
+    return quotes.map(({ id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt }) => ({
+      id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
+    }));
+  }
+
+  public getCarrierAvailability(): Promise<boolean> { return this.publicApi.getCarrierAvailability(); }
+  public isCarrierApiConfigured(): boolean { return this.publicApi.isCarrierApiConfigured(); }
+
+  public async getAvailableCarrierQuote(id: string, paymentMethod: 'wompi' | 'cash_on_delivery', daneCode: string): Promise<CarrierShippingQuoteDto | null> {
+    const quote = await this.publicApi.getAvailableCarrierQuote(id, paymentMethod, daneCode);
+    return quote ? mapCarrierQuote(quote) : null;
+  }
+
+  public async getCarrierQuoteForOrder(orderId: string): Promise<CarrierShippingQuoteDto | null> {
+    const quote = await this.publicApi.getCarrierQuoteForOrder(orderId);
+    return quote ? mapCarrierQuote(quote) : null;
+  }
+
+  public linkCarrierQuoteToOrder(id: string, orderId: string): Promise<boolean> {
+    return this.publicApi.linkCarrierQuoteToOrder(id, orderId);
+  }
+
+  public async createMiPaqueteShipment(order: CarrierShipmentCreateRequest): Promise<CarrierShipmentDto> {
+    return mapShipment(await this.publicApi.createMiPaqueteShipment(order));
+  }
+
+  public async syncMiPaqueteShipment(id: string): Promise<CarrierShipmentDto | null> {
+    const shipment = await this.publicApi.syncMiPaqueteShipment(id);
+    return shipment ? mapShipment(shipment) : null;
+  }
+
+  public async syncPendingMiPaqueteShipments(): Promise<CarrierShipmentDto[]> {
+    return (await this.publicApi.syncPendingMiPaqueteShipments()).map(mapShipment);
+  }
+
   private mapZone(zone: ShippingZone): ShippingZoneDto {
     return {
       id: zone.id,
@@ -93,4 +142,20 @@ export class InProcessShippingGateway implements ShippingGateway {
       fullName: loc.fullName,
     };
   }
+}
+
+function mapShipment(shipment: CarrierShipmentDto): CarrierShipmentDto {
+  return { id: shipment.id, orderId: shipment.orderId, mipaqueteCode: shipment.mipaqueteCode,
+    carrierName: shipment.carrierName, guideNumber: shipment.guideNumber, guideUrl: shipment.guideUrl,
+    pickupCode: shipment.pickupCode, providerStatus: shipment.providerStatus, status: shipment.status,
+    shippingCostCents: shipment.shippingCostCents, collectionValueCents: shipment.collectionValueCents,
+    lastSyncedAt: shipment.lastSyncedAt };
+}
+
+function mapCarrierQuote(quote: Awaited<ReturnType<ShippingPublicApi['getCarrierQuoteForOrder']>> & {}): CarrierShippingQuoteDto {
+  return {
+    id: quote.id, deliveryCompanyName: quote.deliveryCompanyName, shippingCostCents: quote.shippingCostCents,
+    collectionCommissionCents: quote.collectionCommissionCents, deliveryMinutes: quote.deliveryMinutes,
+    expiresAt: quote.expiresAt, providerQuoteId: quote.providerQuoteId, deliveryCompanyId: quote.deliveryCompanyId,
+  };
 }

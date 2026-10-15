@@ -19,7 +19,7 @@ export function renderOrderTrackingAdminSection(): string {
         <label>Estado actual<select id="tracking-edit-status" onchange="updateOrderTrackingStatusActionState()"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
         <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>
         <button id="tracking-edit-status-submit" class="shipping-action" type="button" onclick="saveOrderTrackingStatus()">Actualizar estado</button>
-        <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" onclick="closeOrderTrackingEditor()">Cancelar</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
+        <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" onclick="closeOrderTrackingEditor()">Cancelar</button><button class="shipping-action" type="button" onclick="createMiPaqueteGuide()">Generar / consultar guía MiPaquete</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
       </form>
     </dialog>
   </section>`;

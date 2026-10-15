@@ -310,6 +310,7 @@ Las reglas 2–5 son la propuesta inicial; se confirman en ADR-0010.
 - Zonas de tipo `national`, `department`, `city` y `municipality`, basadas en el catálogo oficial de divisiones político-administrativas (códigos DANE/DIVIPOLA) cargado como *seed* del módulo.
 - Cada zona define tarifas, plazo estimado y si **admite contra entrega**.
 - `catalog` y `orders` guardan únicamente el `zone_id` como texto; resuelven nombres y tarifas vía `ShippingGateway` (§6.1).
+- La integración MiPaquete usa el secret de Cloudflare `MI_PAQUETE_TRANSPORTADORA` y la variable explícita `MI_PAQUETE_API_URL` (HTTPS, dominio MiPaquete). El host productivo debe confirmarse con el proveedor; no se usa un host por defecto. El perfil de origen y empaque se configura desde Admin → Envíos y cobertura. La guía se crea desde la gestión del pedido, después de validar el pago/estado.
 
 ### Pagos con Wompi (`payments`)
 

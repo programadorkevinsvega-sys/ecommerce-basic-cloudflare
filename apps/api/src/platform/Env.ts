@@ -16,6 +16,8 @@ export interface Env {
   WOMPI_ENVIRONMENT?: 'sandbox' | 'production';
   WOMPI_INTEGRITY_SECRET?: string;
   WOMPI_EVENTS_SECRET?: string;
+  MI_PAQUETE_TRANSPORTADORA?: string;
+  MI_PAQUETE_API_URL?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   RESEND_WEBHOOK_SECRET?: string;

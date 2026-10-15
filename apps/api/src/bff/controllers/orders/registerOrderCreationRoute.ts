@@ -17,6 +17,7 @@ import { validateOrderPolicy } from './validateOrderPolicy.js';
 import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 import { createOrderTrackingToken, hashOrderTrackingToken } from '../../security/OrderTrackingCapability.js';
 import { notifyOrderTrackingAccess } from './notifyOrderTrackingAccess.js';
+import { registerCarrierQuoteRoute } from './registerCarrierQuoteRoute.js';
 
 export function registerOrderCreationRoute(
   app: Hono<{ Bindings: Env }>, deps: {
@@ -25,6 +26,10 @@ export function registerOrderCreationRoute(
     notifications: NotificationsGateway; settings: SettingsGateway; promotions: PromotionsGateway;
   },
 ): void {
+  registerCarrierQuoteRoute(app, {
+    catalog: deps.catalog, orders: deps.orders, shipping: deps.shipping,
+    settings: deps.settings, promotions: deps.promotions,
+  });
   app.post('/api/v1/orders', async (c) => {
     let body: any;
     try { body = await c.req.json(); } catch { return c.json({ error: 'Body JSON inválido' }, 400); }
@@ -51,13 +56,22 @@ export function registerOrderCreationRoute(
     if (!customerId && !guestCartIdHash) return c.json({ error: 'Carrito invitado inválido' }, 400);
     const zone = await deps.shipping.getZone(String(body.shippingZoneId || ''));
     if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
-    const shippingCostCents = zone.priceInCents;
+    const shippingAddress = normalizeShippingAddress(body.shippingAddress);
+    const carrierEnabled = await deps.shipping.getCarrierAvailability();
+    const carrierQuoteId = typeof body.carrierQuoteId === 'string' && body.carrierQuoteId.length <= 100
+      ? body.carrierQuoteId : null;
+    if (carrierEnabled && !carrierQuoteId) return c.json({ error: 'Selecciona una tarifa de transportadora vigente.' }, 409);
+    if (!carrierEnabled && body.carrierQuoteId) return c.json({ error: 'La tarifa de transportadora ya no está disponible.' }, 409);
+    const carrierQuote = carrierQuoteId
+      ? await deps.shipping.getAvailableCarrierQuote(carrierQuoteId, body.paymentMethod, `${shippingAddress.daneCode}000`)
+      : null;
+    if (carrierQuoteId && !carrierQuote) return c.json({ error: 'La tarifa venció. Vuelve a cotizar el envío.' }, 409);
+    const shippingCostCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
     let pricing;
     try {
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
         body.lines, body.couponCode, customerId, shippingCostCents, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
-    const shippingAddress = normalizeShippingAddress(body.shippingAddress);
     const policyError = await validateOrderPolicy(deps.orders, zone, pricing, body.paymentMethod,
       shippingAddress.daneCode, deps.shipping);
     if (policyError) return c.json({ error: policyError }, 400);
@@ -76,6 +90,10 @@ export function registerOrderCreationRoute(
         minEstimatedDays: zone.minEstimatedDays, maxEstimatedDays: zone.maxEstimatedDays,
         paymentMethod: body.paymentMethod, lines: pricing.lines,
       });
+      if (carrierQuote && !await deps.shipping.linkCarrierQuoteToOrder(carrierQuote.id, order.id)) {
+        await deps.orders.updateOrderStatus({ orderId: order.id, status: 'cancelled', note: 'La tarifa de envío venció al crear el pedido', actor: 'system' });
+        return c.json({ error: 'La tarifa venció. Vuelve a cotizar el envío.' }, 409);
+      }
       if (order.lines?.length) {
         try {
           const reservation = await deps.inventory.reserveStock(order.id,

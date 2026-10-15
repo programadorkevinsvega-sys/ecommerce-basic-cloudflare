@@ -26,6 +26,8 @@ import { CmsMenuAdminController } from './controllers/cms/CmsMenuAdminController
 import { CmsBlogPublicController } from './controllers/cms/CmsBlogPublicController.js';
 import { PromotionsController } from './controllers/promotions/PromotionsController.js';
 import { ShippingController } from './controllers/shipping/ShippingController.js';
+import { MiPaqueteConfigController } from './controllers/shipping/MiPaqueteConfigController.js';
+import { MiPaqueteShipmentController } from './controllers/shipping/MiPaqueteShipmentController.js';
 import { CartController } from './controllers/cart/CartController.js';
 import { InventoryController } from './controllers/inventory/InventoryController.js';
 import { OrdersController } from './controllers/orders/OrdersController.js';
@@ -68,6 +70,9 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
+  app.route('/', MiPaqueteConfigController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
+  app.route('/', MiPaqueteShipmentController.createRoutes({ identity: cRoot.identityGateway,
+    orders: cRoot.ordersGateway, settings: cRoot.settingsGateway, shipping: cRoot.shippingGateway }));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CmsMenuAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));

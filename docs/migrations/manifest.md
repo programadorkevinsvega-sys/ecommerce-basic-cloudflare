@@ -136,6 +136,8 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 |---|---|---|---|---|---|
 | `shipping__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `shipping__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
+| `shipping__0002_mipaquete_shipments.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-15 | HEAD | ✅ Aplicada con el runner; ledger y cuatro tablas verificadas |
+| `shipping__0002_mipaquete_shipments.sql` | v2 | Local temporal | 2026-10-15 | HEAD | ✅ D1 vacía; 53 migraciones aplicadas y segunda pasada idempotente |
 
 ---
 
@@ -253,6 +255,10 @@ Time-travel bookmark antes: `000001d3-00000000-00005103-de470059e507085a4470e642
 La fuente canónica es `apps/api/src/modules/<módulo>/infrastructure/persistence/d1/migrations/`. `node scripts/build-migrations.js` genera copias para ambos directorios de Wrangler (`migrations/` raíz y `apps/api/migrations/`); no elimina archivos. Ejecutar cada script desde la raíz o desde `apps/api/` produce las mismas salidas. El runner `apps/api/scripts/apply-migrations.js` aplica por módulo y versión numérica y registra los nombres en `d1_migrations`; úselo en local y remoto. Wrangler 3 no ordenó adecuadamente nombres prefijados por módulo desde base vacía (`settings__0002` antes de `settings__0001`). Con Wrangler 4.149.0, la prueba local desde base vacía verificó 29 migraciones, orden correcto y segunda pasada sin cambios. El runner se ejecutó en producción para `orders__0002_guest_cart_capability.sql` y `inventory__0002_idempotent_order_consumption.sql` después de verificar ledger, esquema y time-travel. Las consultas posteriores confirmaron ambas entradas; la columna guest es nullable y la tabla de idempotencia está vacía. La base tiene 8 pedidos guest con `payment_status='pending'` (3 Wompi, 5 contra entrega); antes de desplegar código que exige capability deben conciliarse los pedidos Wompi/checkout en curso y definirse el seguimiento seguro de pedidos previos sin hash. La migración inventory v2 es aditiva, no modifica datos ni tablas de otros módulos. Modo remoto requiere `ALLOW_REMOTE_D1_MIGRATIONS=1`; revisar respaldo y estado conforme a `ROLLBACK_RECOVERY.md`.
 
 Time-travel bookmarks para inventory v2: anterior `000001d5-000000ba-00005103-eb91d48b70aea4fec605c7d2d20c96ad`; posterior `000001d5-000000c8-00005103-d2640c92983f646d012ce00d26d099ca`. Verificado después de aplicar: entrada en `d1_migrations`, tabla presente y vacía. No se ejecutaron escrituras funcionales ni datos de prueba en producción.
+
+### Integración de MiPaquete (`shipping__0002_mipaquete_shipments.sql`, 2026-10-15)
+
+Bookmark previo `0000031c-0000000a-00005105-f0f8576beb70c994817e0ae73956d4ff`; posterior `0000031c-00000014-00005105-e13bfad6e2a92d4cee82c9b8e44840fe`. El runner aplicó únicamente `shipping__0002_mipaquete_shipments.sql`, pues la consulta previa confirmó las otras 52 migraciones registradas. La verificación posterior confirmó el ledger y estas cuatro tablas vacías: `shipping_carrier_config`, `shipping_carrier_quotes`, `shipping_carrier_shipments` y `shipping_carrier_shipment_events`. No se crearon guías ni se hicieron llamadas a MiPaquete.
 
 ### Precios, snapshots fiscales y conciliación (2026-10-13)
 

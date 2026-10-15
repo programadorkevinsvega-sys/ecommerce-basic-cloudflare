@@ -75,6 +75,26 @@ export function renderOrderTrackingAdminScript(): string {
         await openOrderTrackingEditor(encodeURIComponent(orderId)); await loadAdminOrderTracking(trackingAdminPage);
       } catch (error) { message.textContent = error.message || 'Error al actualizar el estado'; }
     }
+    async function createMiPaqueteGuide() {
+      const orderId = document.getElementById('tracking-edit-order-id').value;
+      const message = document.getElementById('tracking-edit-message');
+      const button = document.querySelector('[onclick="createMiPaqueteGuide()"]');
+      button.disabled = true; message.textContent = 'Consultando configuración y creando o recuperando la guía…';
+      try {
+        let response = await fetch('/api/v1/admin/orders/' + encodeURIComponent(orderId) + '/mipaquete', { method: 'POST', headers: adminHeaders(true) });
+        let data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo generar la guía');
+        if (data.shipment?.id && data.shipment?.mipaqueteCode) {
+          response = await fetch('/api/v1/admin/shipping/mipaquete/' + encodeURIComponent(data.shipment.id) + '/sync', { method: 'POST', headers: adminHeaders(true) });
+          const synced = await response.json(); if (response.ok && synced.shipment) data.shipment = synced.shipment;
+        }
+        const shipment = data.shipment;
+        message.innerHTML = 'Guía ' + escapeHtml(shipment.guideNumber || shipment.mipaqueteCode || 'creada') +
+          (shipment.guideUrl ? ' · <a href="' + escapeHtml(shipment.guideUrl) + '" target="_blank" rel="noopener">Abrir PDF</a>' : '') +
+          (shipment.pickupCode ? ' · Recolección: ' + escapeHtml(shipment.pickupCode) : '');
+        await loadAdminOrderTracking(trackingAdminPage);
+      } catch (error) { message.textContent = error.message || 'Error al generar guía'; }
+      finally { button.disabled = false; }
+    }
     document.getElementById('order-tracking-edit-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.currentTarget; const button = form.querySelector('[type="submit"]'); button.disabled = true;
@@ -95,6 +115,7 @@ export function renderOrderTrackingAdminScript(): string {
     window.openOrderTrackingEditor = openOrderTrackingEditor;
     window.closeOrderTrackingEditor = closeOrderTrackingEditor;
     window.saveOrderTrackingStatus = saveOrderTrackingStatus;
+    window.createMiPaqueteGuide = createMiPaqueteGuide;
     window.updateOrderTrackingStatusActionState = updateOrderTrackingStatusActionState;
   `;
 }

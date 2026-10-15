@@ -7,6 +7,11 @@ export class ShippingController {
   public static createRoutes(shippingGateway: ShippingGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
+    router.get('/api/v1/shipping/carrier/availability', async (c) => {
+      c.header('Cache-Control', 'no-store');
+      return c.json({ enabled: await shippingGateway.getCarrierAvailability() });
+    });
+
     // Buscar municipios / departamentos (Público)
     router.get('/api/v1/shipping/locations', async (c) => {
       const q = c.req.query('q') || '';

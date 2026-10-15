@@ -1,13 +1,16 @@
 import { ShippingZoneDto, DivipolaLocationDto } from '../../gateways/shipping/ShippingGateway.js';
 import { renderShippingTableRows } from './renderShippingTableRows.js';
 import { renderShippingLocationRows } from './renderShippingLocationRows.js';
+import { CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGateway.js';
+import { renderMiPaqueteConfigSection } from './renderMiPaqueteConfigSection.js';
 
-export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = []): string {
+export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = [], carrierConfig?: CarrierIntegrationConfigDto): string {
   const divipolaMap = new Map<string, string>();
   divipolaLocations.forEach(location => divipolaMap.set(location.daneCode, location.fullName));
   return `<section class="shipping-screen" aria-labelledby="shipping-title">
     <header class="shipping-heading" data-shipping-heading><div><h1 id="shipping-title">Envíos y cobertura</h1><p>Configura las tarifas, tiempos de entrega y municipios cubiertos.</p></div><button class="btn-primary" type="button" onclick="openShippingZoneModal()">Crear zona de envío</button></header>
     <section class="shipping-page-panel" data-shipping-panel="zones" aria-labelledby="shipping-zones-title">
+      ${carrierConfig ? renderMiPaqueteConfigSection(carrierConfig) : ''}
       <div class="card shipping-zones-card"><div class="shipping-section-heading"><div><h2 id="shipping-zones-title">Zonas de cobertura y tarifas</h2><p>${zones.length} zonas configuradas</p></div></div>
         <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Zona / cobertura</th><th>Tipo</th><th>Tarifa</th><th>Plazo</th><th>Condiciones</th><th>Acciones</th></tr></thead><tbody id="shippingZonesTableBody">${renderShippingTableRows(zones, divipolaMap)}</tbody></table></div>
       </div>

@@ -77,6 +77,7 @@ export class AdminUiController {
           coupons,
           shippingZones,
           divipolaLocations,
+          shippingCarrierConfig,
           settings,
           marketingBrands,
           marketingCollections,
@@ -97,6 +98,7 @@ export class AdminUiController {
           can('promotions:read') ? promotionsGateway.listCoupons() : Promise.resolve([]),
           can('shipping:read') ? shippingGateway.listZones() : Promise.resolve([]),
           Promise.resolve([]),
+          can('shipping:read') ? shippingGateway.getCarrierConfig() : Promise.resolve(emptyCarrierConfig()),
           can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings()),
           can('catalog:read') ? catalogGateway.listBrands({limit:100,offset:0}) : Promise.resolve([]),
           can('catalog:read') ? catalogGateway.listCollections({limit:100,offset:0}) : Promise.resolve([]),
@@ -125,6 +127,7 @@ export class AdminUiController {
           coupons,
           shippingZones,
           divipolaLocations,
+          shippingCarrierConfig,
           settings,
           adminEmail: session.actorId || 'Administrador',
           reviewCanRead: can('catalog:read'),
@@ -151,4 +154,10 @@ function hasPermission(permissions: string[], required: string): boolean {
 
 function emptySettings(): StoreSettingsResponse {
   return { id: '', storeName: 'Vega Store', footerCopyrightText: 'Todos los derechos reservados.', currency: 'COP', taxRatePercent: 0, supportEmail: '', requireCodVerification: false, updatedAt: '' };
+}
+
+function emptyCarrierConfig() {
+  return { enabled: false, originDaneCode: null, packageWidthCm: null, packageLengthCm: null, packageHeightCm: null,
+    packageWeightKg: null, declaredValueMode: null, cashOnDeliveryPaymentType: null,
+    requestPickup: null, selectionCriterion: null, updatedAt: '' };
 }

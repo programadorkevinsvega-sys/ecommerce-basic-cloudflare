@@ -17,11 +17,14 @@ export function getCheckoutScript(
       const TAX_INCLUDED = ${pricingVersion === 2};
       let shippingCostCents = 0;
       let zonePolicyAllowsOrder = false;
+      let carrierIntegrationEnabled = false;
+      let selectedCarrierQuoteId = null;
+      let carrierQuoteRequest = 0;
       const checkoutStatus = document.getElementById('policy-alert');
       const checkoutError = document.getElementById('checkout-error');
       function updateSubmitAvailability() {
         const hasVerifiedLocation = Boolean(document.getElementById('addr-dane-code').value);
-        document.getElementById('btn-submit-order').disabled = !zonePolicyAllowsOrder || !hasVerifiedLocation;
+        document.getElementById('btn-submit-order').disabled = !zonePolicyAllowsOrder || !hasVerifiedLocation || (carrierIntegrationEnabled && !selectedCarrierQuoteId);
       }
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
       function updateCheckoutCta() {
@@ -42,6 +45,9 @@ export function getCheckoutScript(
         const sel = document.getElementById('dest-zone');
         const opt = sel.options[sel.selectedIndex];
         const zoneId = sel.value;
+        selectedCarrierQuoteId = null;
+        const quoteBox = document.getElementById('carrier-quote-options');
+        quoteBox.hidden = true; quoteBox.innerHTML = '';
         const codRadio = document.getElementById('radio-cod');
       const wompiRadio = document.getElementById('radio-wompi');
         const btn = document.getElementById('btn-submit-order');
@@ -99,12 +105,51 @@ export function getCheckoutScript(
                 codRadio.disabled = !p.allowedPaymentMethods.includes('cash_on_delivery');
               }
               updateCheckoutCta();
+              if (carrierIntegrationEnabled) await loadCarrierQuotes();
             }
           }
         } catch (error) {
           btn.disabled = true;
           codRadio.disabled = true;
           setCheckoutStatus(error.message || 'No fue posible validar la cobertura. Intenta de nuevo.', 'error');
+        }
+      }
+      function escapeCarrierText(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+      async function loadCarrierQuotes() {
+        const box = document.getElementById('carrier-quote-options');
+        const daneCode = document.getElementById('addr-dane-code').value;
+        const zoneId = document.getElementById('dest-zone').value;
+        if (!carrierIntegrationEnabled || !zonePolicyAllowsOrder || !daneCode || !zoneId) return;
+        const requestId = ++carrierQuoteRequest;
+        selectedCarrierQuoteId = null; updateSubmitAvailability();
+        box.hidden = false; box.textContent = 'Consultando tarifas de transportadora…';
+        const paymentMethod = document.querySelector('input[name="payment-method"]:checked')?.value || 'wompi';
+        try {
+          const response = await fetch('/api/v1/shipping/carrier-quotes', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ destinationZoneId: zoneId, destinationDaneCode: daneCode, paymentMethod,
+              lines: cartItems.map(item => ({ productId: item.productId, quantity: item.quantity })) }),
+          });
+          const result = await response.json();
+          if (requestId !== carrierQuoteRequest) return;
+          if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cotizar el envío.');
+          if (!result.quotes.length) throw new Error('No hay transportadoras disponibles para este destino.');
+          const fmt = cents => '$' + (cents / 100).toLocaleString('es-CO');
+          box.innerHTML = '<strong>Selecciona una transportadora *</strong>' + result.quotes.map((quote, index) =>
+            '<label class="checkout-carrier-option"><input type="radio" name="carrier-quote" value="' + escapeCarrierText(quote.id) + '" data-rate="' + Number(quote.shippingCostCents) + '" ' + (index === 0 ? 'checked' : '') + '><span><strong>' + escapeCarrierText(quote.deliveryCompanyName) + '</strong><small>' + fmt(Number(quote.shippingCostCents)) + ' · aprox. ' + Math.ceil(Number(quote.deliveryMinutes) / 60) + ' horas</small></span></label>'
+          ).join('');
+          box.querySelectorAll('input[name="carrier-quote"]').forEach(input => input.addEventListener('change', () => {
+            selectedCarrierQuoteId = input.value; shippingCostCents = Number(input.dataset.rate); updateTotals(); updateSubmitAvailability();
+          }));
+          const selected = box.querySelector('input[name="carrier-quote"]:checked');
+          selectedCarrierQuoteId = selected?.value || null;
+          if (selected) shippingCostCents = Number(selected.dataset.rate);
+          updateTotals(); updateSubmitAvailability();
+        } catch (error) {
+          if (requestId !== carrierQuoteRequest) return;
+          box.textContent = error.message || 'No fue posible obtener tarifas. Intenta nuevamente.';
+          setCheckoutStatus('No se pudo cotizar con la transportadora. El pedido no se puede continuar.', 'error');
+          updateSubmitAvailability();
         }
       }
       function updateTotals() {
@@ -123,8 +168,12 @@ export function getCheckoutScript(
         updateCheckoutCta();
       }
       ${getCheckoutSubmitOrderScript()}
-      document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', updateSubmitAvailability);
-      document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', updateTotals));
+      document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', () => { updateSubmitAvailability(); if (zonePolicyAllowsOrder && carrierIntegrationEnabled) loadCarrierQuotes(); });
+      document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', () => { updateTotals(); if (zonePolicyAllowsOrder && carrierIntegrationEnabled) loadCarrierQuotes(); }));
+      fetch('/api/v1/shipping/carrier/availability').then(response => response.json()).then(result => {
+        carrierIntegrationEnabled = Boolean(result.enabled);
+        if (carrierIntegrationEnabled && document.getElementById('dest-zone').value) handleZoneChange();
+      }).catch(() => {});
       // Inicializar totales al cargar
       updateTotals();
     </script>

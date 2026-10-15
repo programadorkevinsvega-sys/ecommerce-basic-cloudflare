@@ -44,6 +44,8 @@ export default {
       } catch (error) { logger.error('Falló la publicación programada del blog', error); }
     })());
 
+    ctx.waitUntil(reconcileCarrierShipments(compositionRoot));
+
     ctx.waitUntil(
       (async () => {
         try {
@@ -62,6 +64,27 @@ export default {
     );
   },
 };
+
+async function reconcileCarrierShipments(root: AppCompositionRoot): Promise<void> {
+  try {
+    const shipments = await root.shippingGateway.syncPendingMiPaqueteShipments();
+    for (const shipment of shipments) {
+      const order = await root.ordersGateway.getOrder(shipment.orderId);
+      if (!order || order.status === 'cancelled') continue;
+      const nextStatus = shipment.status === 'delivered' ? 'delivered'
+        : shipment.status === 'in_transit' ? 'shipped' : null;
+      if (nextStatus && order.status !== nextStatus) await root.ordersGateway.updateOrderStatus({
+        orderId: order.id, status: nextStatus,
+        note: `Estado confirmado por consulta autenticada a MiPaquete: ${shipment.providerStatus || shipment.status}`,
+        actor: 'mipaquete:scheduled_sync',
+      });
+      if (shipment.guideNumber) await root.ordersGateway.saveOrderShippingDetails(order.id, {
+        shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
+        shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
+      });
+    }
+  } catch { /* La siguiente ejecución programada reintenta la sincronización. */ }
+}
 
 async function collectOldMedia(collector: AppCompositionRoot['mediaOrphanCollector'], cache: KVNamespace, logger: JsonLogger): Promise<void> {
   const key = 'maintenance:media-orphan-cursor:v1';

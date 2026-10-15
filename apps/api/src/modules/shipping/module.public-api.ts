@@ -4,6 +4,10 @@ import { UpdateShippingZoneCommand } from './application/use-cases/UpdateShippin
 import { ShippingCoverageResult } from './application/use-cases/CheckShippingCoverageUseCase.js';
 import { ShippingZone } from './domain/entities/ShippingZone.js';
 import { DivipolaLocation } from './domain/entities/DivipolaLocation.js';
+import { CarrierIntegrationConfig } from './domain/entities/CarrierIntegrationConfig.js';
+import { CarrierShippingQuote } from './domain/entities/CarrierShippingQuote.js';
+import { CarrierOrderInput } from './application/use-cases/CreateMiPaqueteShipmentUseCase.js';
+import { CarrierShipment } from './domain/entities/CarrierShipment.js';
 
 export class ShippingPublicApi {
   private readonly container: ShippingModuleContainer;
@@ -11,6 +15,8 @@ export class ShippingPublicApi {
   public constructor(container: ShippingModuleContainer) {
     this.container = container;
   }
+
+  public isCarrierApiConfigured(): boolean { return this.container.carrierApiConfigured; }
 
   public async createZone(cmd: CreateShippingZoneCommand): Promise<ShippingZone> {
     return this.container.createShippingZoneUseCase.execute(cmd);
@@ -46,6 +52,49 @@ export class ShippingPublicApi {
 
   public async countLocations(search?: string): Promise<number> {
     return this.container.listDivipolaLocationsUseCase.count(search);
+  }
+
+  public getCarrierConfig(): Promise<CarrierIntegrationConfig> {
+    return this.container.getCarrierConfigUseCase.execute();
+  }
+
+  public async getCarrierAvailability(): Promise<boolean> {
+    const config = await this.getCarrierConfig();
+    return this.container.carrierApiConfigured && config.enabled && Boolean(config.originDaneCode &&
+      config.packageWidthCm && config.packageLengthCm && config.packageHeightCm && config.packageWeightKg &&
+      config.declaredValueMode && config.cashOnDeliveryPaymentType && config.requestPickup !== null && config.selectionCriterion);
+  }
+
+  public updateCarrierConfig(config: CarrierIntegrationConfig): Promise<CarrierIntegrationConfig> {
+    return this.container.updateCarrierConfigUseCase.execute(config);
+  }
+
+  public quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuote[]> {
+    return this.container.quoteCarrierShippingUseCase.execute(input);
+  }
+
+  public getAvailableCarrierQuote(id: string, method: 'wompi' | 'cash_on_delivery', daneCode: string): Promise<CarrierShippingQuote | null> {
+    return this.container.getAvailableCarrierQuoteUseCase.execute(id, method, daneCode);
+  }
+
+  public getCarrierQuoteForOrder(orderId: string): Promise<CarrierShippingQuote | null> {
+    return this.container.getCarrierQuoteForOrderUseCase.execute(orderId);
+  }
+
+  public linkCarrierQuoteToOrder(id: string, orderId: string): Promise<boolean> {
+    return this.container.linkCarrierQuoteToOrderUseCase.execute(id, orderId);
+  }
+
+  public createMiPaqueteShipment(order: CarrierOrderInput): Promise<CarrierShipment> {
+    return this.container.createMiPaqueteShipmentUseCase.execute(order);
+  }
+
+  public syncMiPaqueteShipment(id: string): Promise<CarrierShipment | null> {
+    return this.container.syncMiPaqueteShipmentUseCase.execute(id);
+  }
+
+  public syncPendingMiPaqueteShipments(): Promise<CarrierShipment[]> {
+    return this.container.syncPendingMiPaqueteShipmentsUseCase.execute(10);
   }
 
   public async checkCoverage(
