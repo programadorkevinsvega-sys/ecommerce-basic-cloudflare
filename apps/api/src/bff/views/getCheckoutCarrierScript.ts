@@ -28,9 +28,16 @@ export function getCheckoutCarrierScript(): string {
             selectedCarrierQuoteId = null; carrierFreightCents = 0; updateTotals(); updateSubmitAvailability();
             return;
           }
+          const firstQuote = result.quotes[0];
+          const packageNote = firstQuote
+            ? '<small class="checkout-carrier-package-note">Tarifa calculada con el empaque configurado: ' +
+              Number(firstQuote.packageWidthCm) + ' × ' + Number(firstQuote.packageLengthCm) + ' × ' +
+              Number(firstQuote.packageHeightCm) + ' cm · peso cotizado: ' +
+              Number(firstQuote.packageWeightKg).toLocaleString('es-CO') + ' kg.</small>'
+            : '';
           box.innerHTML = chargeModes + '<strong>Selecciona una transportadora *</strong>' + result.quotes.map((quote, index) =>
               '<label class="checkout-carrier-option"><input type="radio" name="carrier-quote" value="' + escapeCarrierText(quote.id) + '" data-rate="' + Number(quote.shippingCostCents) + '" ' + (index === 0 ? 'checked' : '') + '><span><strong>' + escapeCarrierText(quote.deliveryCompanyName) + '</strong><small>' + fmt(Number(quote.shippingCostCents)) + ' · aprox. ' + Math.ceil(Number(quote.deliveryMinutes) / 60) + ' horas</small></span></label>'
-            ).join('');
+            ).join('') + packageNote;
           box.querySelectorAll('input[name="shipping-charge-mode"]').forEach(input => input.addEventListener('change', () => { shippingChargeMode = input.value; loadCarrierQuotes(); }));
           box.querySelectorAll('input[name="carrier-quote"]').forEach(input => input.addEventListener('change', () => {
             selectedCarrierQuoteId = input.value; carrierFreightCents = Number(input.dataset.rate);

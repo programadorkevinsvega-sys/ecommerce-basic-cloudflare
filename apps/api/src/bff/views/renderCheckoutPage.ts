@@ -67,10 +67,10 @@ function renderAddressFields(zoneOptions: string): string {
 function renderPaymentFields(wompiAvailable: boolean, codAvailable: boolean): string {
   const wompiChecked = wompiAvailable;
   const codChecked = !wompiAvailable && codAvailable;
-  const codDescription = codAvailable ? 'Se habilita al confirmar cobertura de envío.' : 'No disponible para todos los productos de este pedido.';
+  const codDescription = codAvailable ? 'Verificaremos si está disponible para tu destino.' : 'No disponible para todos los productos de este pedido.';
   return `<fieldset class="checkout-card"><legend><span>3.</span> Método de pago</legend><div class="checkout-payment-options">
     <label class="checkout-payment-option" for="radio-wompi"><input id="radio-wompi" type="radio" name="payment-method" value="wompi" ${wompiChecked ? 'checked' : 'disabled'}><span><strong>Pago en línea</strong><small>Tarjeta débito o crédito, PSE, Nequi y Bancolombia.</small><em>${wompiAvailable ? 'Pago seguro a través de Wompi.' : 'No disponible para todos los productos de este pedido.'}</em></span></label>
-    <label class="checkout-payment-option" id="cod-label" for="radio-cod"><input id="radio-cod" type="radio" name="payment-method" value="cash_on_delivery" data-product-allowed="${codAvailable}" ${codChecked ? 'checked' : ''} disabled><span><strong>Pago contra entrega</strong><small>Paga en efectivo cuando recibas tu pedido.</small><em>${codDescription}</em></span></label>
+    <label class="checkout-payment-option" id="cod-label" for="radio-cod"><input id="radio-cod" type="radio" name="payment-method" value="cash_on_delivery" data-product-allowed="${codAvailable}" ${codChecked ? 'checked' : ''} disabled><span><strong>Pago contra entrega</strong><small>Paga en efectivo cuando recibas tu pedido.</small><em id="cod-help">${codDescription}</em></span></label>
   </div></fieldset>`;
 }
 

@@ -57,7 +57,8 @@ export function getCheckoutScript(
         const quoteBox = document.getElementById('carrier-quote-options');
         quoteBox.hidden = true; quoteBox.innerHTML = '';
         const codRadio = document.getElementById('radio-cod');
-      const wompiRadio = document.getElementById('radio-wompi');
+        const wompiRadio = document.getElementById('radio-wompi');
+        const codHelp = document.getElementById('cod-help');
         const btn = document.getElementById('btn-submit-order');
         if (!zoneId) {
           shippingCostCents = 0;
@@ -86,6 +87,11 @@ export function getCheckoutScript(
           if (!res.ok || !data.success) throw new Error(data.error || 'No fue posible validar la cobertura.');
           if (data.success) {
             const p = data.policy;
+            if (codHelp) {
+              codHelp.textContent = p.allowsCashOnDelivery
+                ? 'Disponible para este pedido y destino.'
+                : 'No disponible: ' + (p.codBlockingReasons || []).join(' ');
+            }
             if (!p.canProceed) {
               zonePolicyAllowsOrder = false;
               setCheckoutStatus('No hay cobertura para este pedido: ' + p.blockingReasons.join(' · '), 'error');
