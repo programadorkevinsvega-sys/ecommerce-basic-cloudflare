@@ -9,6 +9,7 @@ export function renderAdminDashboardScript(): string {
       const selected = navButton || document.querySelector('[data-tab="' + tabId + '"]');
       selected?.classList.add('active');
       selected?.setAttribute('aria-current', 'page');
+      window.saveAdminNavigationState?.(selected);
       const summary = document.getElementById('tab-summary');
       const legacy = document.getElementById('admin-legacy-tabs');
       const section = document.getElementById('tab-' + tabId);
@@ -31,8 +32,7 @@ export function renderAdminDashboardScript(): string {
       legacy?.classList.toggle('promotions-mode', tabId === 'promotions');
       legacy?.classList.toggle('products-mode', tabId === 'products');
       document.querySelector('.admin-main')?.classList.toggle('products-page-active', tabId === 'products');
-      if (tabId === 'payments' && !navButton && typeof window.showAdminPaymentPage === 'function') window.showAdminPaymentPage('collections');
-      if (tabId === 'shipping' && !navButton && typeof window.showAdminShippingPage === 'function') window.showAdminShippingPage('zones');
+      if (tabId === 'payments' && !navButton && typeof window.showAdminPaymentPage === 'function') window.showAdminPaymentPage('collections'); if (tabId === 'shipping' && !navButton && typeof window.showAdminShippingPage === 'function') window.showAdminShippingPage('zones');
       if (tabId === 'summary') {
         summary?.classList.add('active');
         if (legacy) legacy.hidden = true;

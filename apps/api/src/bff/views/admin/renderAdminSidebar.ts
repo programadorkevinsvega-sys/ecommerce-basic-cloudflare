@@ -57,7 +57,7 @@ export function renderAdminSidebar(adminLabel: string): string {
 
 function navItem(id: string, label: string, action: string, current = false, countId?: string, countLabel?: string, nested = false): string {
   const count = countId ? `<span class="admin-nav-count"><strong id="${countId}">—</strong><small>${escapeHtml(countLabel || '')}</small></span>` : '';
-  return `<li><button type="button" class="tab-btn admin-nav-link${current ? ' active' : ''}${nested ? ' admin-nav-link-nested' : ''}" data-tab="${id}" onclick="${action}"${current ? ' aria-current="page"' : ''}>${escapeHtml(label)}${count}</button></li>`;
+  return `<li><button type="button" class="tab-btn admin-nav-link${current ? ' active' : ''}${nested ? ' admin-nav-link-nested' : ''}" data-tab="${id}" data-admin-nav="${escapeHtml(label)}" onclick="${action}"${current ? ' aria-current="page"' : ''}>${escapeHtml(label)}${count}</button></li>`;
 }
 
 function initials(label: string): string {
