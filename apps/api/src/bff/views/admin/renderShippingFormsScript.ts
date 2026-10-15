@@ -25,11 +25,11 @@ export function renderShippingFormsScript(): string {
         const response = await fetch('/api/v1/admin/shipping/locations?page=' + page + '&q=' + encodeURIComponent(search));
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cargar municipios.');
-        body.innerHTML = result.data.length ? result.data.map((item) => renderShippingDirectoryRow(item, result.zones)).join('') : '<tr><td colspan="5" class="shipping-empty">No hay municipios que coincidan.</td></tr>';
+        body.innerHTML = result.data.length ? result.data.map((item) => renderShippingDirectoryRow(item, result.zones)).join('') : '<tr><td colspan="5" class="shipping-empty">No hay municipios locales asignados que coincidan. Agrega municipios al crear o editar una zona local.</td></tr>';
         const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
-        document.getElementById('shipping-location-count').textContent = result.total + ' municipios · Página ' + result.page + ' de ' + totalPages;
+        document.getElementById('shipping-location-count').textContent = result.total + ' municipios con entrega local · Página ' + result.page + ' de ' + totalPages;
         const pager = document.getElementById('shipping-locations-pagination');
-        pager.querySelector('span').textContent = (result.total ? ((page - 1) * result.pageSize + 1) : 0) + '–' + Math.min(page * result.pageSize, result.total) + ' de ' + result.total + ' · Página ' + result.page + ' de ' + totalPages;
+        pager.querySelector('span').textContent = (result.total ? ((page - 1) * result.pageSize + 1) : 0) + '–' + Math.min(page * result.pageSize, result.total) + ' asignados · Página ' + result.page + ' de ' + totalPages;
         pager.querySelector('[data-page-direction="previous"]').disabled = page <= 1;
         pager.querySelector('[data-page-direction="next"]').disabled = !result.hasMore;
       } catch (error) {
@@ -39,8 +39,7 @@ export function renderShippingFormsScript(): string {
     function renderShippingDirectoryRow(item, zones) {
       const local = zones.filter((zone) => zone.type !== 'national' && zone.locations.includes(item.daneCode));
       const active = local.filter((zone) => zone.isActive);
-      const national = zones.some((zone) => zone.type === 'national' && zone.isActive);
-      const coverage = active.length ? '<span class="shipping-badge active">Zona local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' + (national ? '<small>Cobertura nacional también activa</small>' : '') : local.length ? '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>' : national ? '<span class="shipping-badge neutral">Solo cobertura nacional</span><small>Sin tarifa local específica</small>' : '<span class="shipping-badge inactive">Sin cobertura activa</span>';
+      const coverage = active.length ? '<span class="shipping-badge active">Entrega local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' : '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>';
       const zone = active[0] || local[0];
       const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar cobertura</button>' : '<button class="shipping-action primary" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" onclick="createZoneForLocation(this)">Crear zona local</button>';
       const view = '<button class="shipping-action" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" onclick="viewShippingLocation(this)">Ver</button>';

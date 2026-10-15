@@ -52,8 +52,16 @@ export class ShippingPublicApi {
     return this.container.listDivipolaLocationsUseCase.execute(query);
   }
 
+  public listLocalCoverageLocations(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocation[]> {
+    return this.container.listDivipolaLocationsUseCase.executeLocalCoverage(query);
+  }
+
   public async countLocations(search?: string): Promise<number> {
     return this.container.listDivipolaLocationsUseCase.count(search);
+  }
+
+  public countLocalCoverageLocations(search?: string): Promise<number> {
+    return this.container.listDivipolaLocationsUseCase.countLocalCoverage(search);
   }
 
   public syncCarrierLocations(): Promise<void> {

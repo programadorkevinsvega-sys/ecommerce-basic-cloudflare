@@ -15,4 +15,14 @@ export class ListDivipolaLocationsUseCase {
   public async count(search?: string): Promise<number> {
     return this.divipolaRepo.count(search);
   }
+
+  public async executeLocalCoverage(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocation[]> {
+    if (!this.divipolaRepo.listLocalCoveragePage) return [];
+    return this.divipolaRepo.listLocalCoveragePage(query);
+  }
+
+  public async countLocalCoverage(search?: string): Promise<number> {
+    if (!this.divipolaRepo.countLocalCoverage) return 0;
+    return this.divipolaRepo.countLocalCoverage(search);
+  }
 }

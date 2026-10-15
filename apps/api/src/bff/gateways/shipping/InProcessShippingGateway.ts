@@ -62,8 +62,17 @@ export class InProcessShippingGateway implements ShippingGateway {
     return locs.map((l) => this.mapLocation(l));
   }
 
+  public async listLocalCoverageLocations(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocationDto[]> {
+    const locations = await this.publicApi.listLocalCoverageLocations(query);
+    return locations.map((location) => this.mapLocation(location));
+  }
+
   public async countLocations(search?: string): Promise<number> {
     return this.publicApi.countLocations(search);
+  }
+
+  public countLocalCoverageLocations(search?: string): Promise<number> {
+    return this.publicApi.countLocalCoverageLocations(search);
   }
 
   public syncCarrierLocations(): Promise<void> {

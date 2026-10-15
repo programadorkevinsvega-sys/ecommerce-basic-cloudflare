@@ -6,4 +6,6 @@ export interface IDivipolaRepository {
   search(query: string, limit?: number): Promise<DivipolaLocation[]>;
   findByDaneCode(daneCode: string): Promise<DivipolaLocation | null>;
   upsertLocations?(locations: Array<{ daneCode: string; department: string; municipality: string }>): Promise<void>;
+  listLocalCoveragePage?(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocation[]>;
+  countLocalCoverage?(search?: string): Promise<number>;
 }

@@ -34,8 +34,8 @@ export class ShippingController {
       if (!search && page === 1) await syncCarrierLocationsIfNeeded(shippingGateway);
       const pageSize = 10;
       const [data, total, zones] = await Promise.all([
-        shippingGateway.listLocations({ limit: pageSize, offset: (page - 1) * pageSize, search }),
-        shippingGateway.countLocations(search),
+        shippingGateway.listLocalCoverageLocations({ limit: pageSize, offset: (page - 1) * pageSize, search }),
+        shippingGateway.countLocalCoverageLocations(search),
         shippingGateway.listZones(),
       ]);
       return c.json({ success: true, page, pageSize, total, hasMore: page * pageSize < total, data, zones });
