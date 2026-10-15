@@ -47,7 +47,3 @@ CREATE TABLE IF NOT EXISTS inventory_outbox_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_inventory_outbox_status ON inventory_outbox_events (status);
-
--- Seed stock inicial para producto de demostración
-INSERT OR IGNORE INTO inventory_stocks (product_id, quantity, reserved_quantity, updated_at) VALUES
-('35326c88-2865-4d72-b2a9-3f4277e947fa', 50, 0, '2026-10-11T00:00:00Z');

@@ -16,10 +16,10 @@ La tienda necesita mostrar valoraciones y comentarios en los detalles de product
 - El frontend presenta promedio y total en la ficha, y enlaza a `/productos/:slug/opiniones`, que pagina el listado.
 - La API y el HTML público no revelan email, nombre, teléfono ni ID del cliente. El JSON-LD incluye `AggregateRating` solo cuando existe al menos una reseña.
 - `reviews` consulta pedidos mediante el Gateway público de `orders`; no consulta ni cruza tablas de otros módulos.
-- Excepción aprobada explícitamente por el responsable de la tienda: una migración puede agregar opiniones ficticias porque la tienda aún no tenía compradores reales. Conservan una fuente interna distinta de las opiniones de clientes; no se etiquetan como compra verificada ni se atribuyen a una compra o pago. Si un producto tiene reseñas verificadas, las ficticias no afectan el promedio; si aún no tiene verificadas, se muestran sus puntuaciones en la interfaz. El JSON-LD excluye puntuaciones ficticias. La creación normal de reseñas solo produce `source='verified'` después de validar la compra. El valor interno heredado `source='demo'` y el nombre histórico de la migración no son un modo de producto ni deben exponerse en la interfaz.
+- La excepción histórica que insertaba opiniones ficticias quedó retirada para instalaciones nuevas antes del prelanzamiento. `source='demo'` se conserva en el esquema para identificar registros de bases existentes hasta que estas se reemplacen o se limpien mediante una operación autorizada. No se deben crear nuevas reseñas ficticias ni atribuirlas a compras o pagos.
 
 ## Consecuencias
 
-La reseña verificada es inmediata y no requiere moderación manual. Para publicar, el comprador necesita tener cuenta y haber recibido el producto. El límite por actor e IP reduce abuso; el endpoint requiere sesión y compra verificada. La migración de opiniones ficticias es una excepción limitada, autorizada expresamente por el usuario; mantiene su fuente separada y no permite que una opinión ficticia se convierta en verificada por moderación.
+La reseña verificada es inmediata y no requiere moderación manual. Para publicar, el comprador necesita tener cuenta y haber recibido el producto. El límite por actor e IP reduce abuso; el endpoint requiere sesión y compra verificada. Las bases previas pueden contener opiniones ficticias de la excepción histórica; una base nueva ya no las genera.
 
 La migración es expand-only. Al revertir el Worker se conserva la tabla y sus filas; no se ejecuta `DROP TABLE` como rollback.
