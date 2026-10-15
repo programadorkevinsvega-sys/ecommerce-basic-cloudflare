@@ -4,6 +4,7 @@ export function renderOrderTrackingAdminScript(): string {
     let trackingAdminTotal = 0;
     let trackingAdminItems = [];
     let trackingAdminTimer;
+    let trackingEditingStatus = '';
     const trackingStatusLabels = {placed:'Recibido',confirmed:'Confirmado',prepared:'Preparado',shipped:'Enviado',delivered:'Entregado',cancelled:'Cancelado'};
     async function loadAdminOrderTracking(page = trackingAdminPage) {
       trackingAdminPage = page;
@@ -42,16 +43,32 @@ export function renderOrderTrackingAdminScript(): string {
       document.getElementById('tracking-edit-number').value = item.shippingTrackingNumber || '';
       document.getElementById('tracking-edit-url').value = item.shippingTrackingUrl || '';
       document.getElementById('tracking-edit-date').value = item.estimatedDeliveryDate || '';
-      document.getElementById('tracking-edit-status').value = ['confirmed','prepared','shipped','delivered'].includes(item.status) ? item.status : 'confirmed';
+      trackingEditingStatus = item.status;
+      document.getElementById('tracking-edit-status').value = item.status;
       document.getElementById('tracking-edit-status-note').value = '';
-      document.getElementById('tracking-edit-timeline').innerHTML = item.events.map((event) => '<li><strong>' + escapeHtml(trackingStatusLabels[event.status] || event.status) + '</strong><time>' + escapeHtml(new Date(event.createdAt).toLocaleString('es-CO')) + '</time></li>').join('') || '<li>Sin cambios de estado registrados.</li>';
+      const events = item.events.reduce((history, event) => {
+        if (history.length && history[history.length - 1].status === event.status) history[history.length - 1] = event;
+        else history.push(event);
+        return history;
+      }, []);
+      document.getElementById('tracking-edit-timeline').innerHTML = events.map((event) => '<li><strong>' + escapeHtml(trackingStatusLabels[event.status] || event.status) + '</strong><time>' + escapeHtml(new Date(event.createdAt).toLocaleString('es-CO')) + '</time></li>').join('') || '<li>Sin cambios de estado registrados.</li>';
       document.getElementById('tracking-edit-message').textContent = '';
+      updateOrderTrackingStatusActionState();
       document.getElementById('order-tracking-edit-dialog').showModal();
     }
     function closeOrderTrackingEditor() { document.getElementById('order-tracking-edit-dialog')?.close(); }
+    function updateOrderTrackingStatusActionState() {
+      const button = document.getElementById('tracking-edit-status-submit');
+      const sameStatus = document.getElementById('tracking-edit-status')?.value === trackingEditingStatus;
+      if (button) { button.disabled = sameStatus; button.title = sameStatus ? 'Este estado ya está aplicado' : ''; }
+    }
     async function saveOrderTrackingStatus() {
       const orderId = document.getElementById('tracking-edit-order-id').value;
       const message = document.getElementById('tracking-edit-message');
+      if (document.getElementById('tracking-edit-status').value === trackingEditingStatus) {
+        message.textContent = 'Selecciona un estado diferente para registrar el cambio.';
+        return;
+      }
       try {
         const response = await fetch('/api/v1/admin/orders/' + encodeURIComponent(orderId) + '/status', { method: 'PATCH', headers: adminHeaders(true), body: JSON.stringify({ status: document.getElementById('tracking-edit-status').value, note: document.getElementById('tracking-edit-status-note').value.trim() || undefined }) });
         const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo actualizar el estado');
@@ -78,5 +95,6 @@ export function renderOrderTrackingAdminScript(): string {
     window.openOrderTrackingEditor = openOrderTrackingEditor;
     window.closeOrderTrackingEditor = closeOrderTrackingEditor;
     window.saveOrderTrackingStatus = saveOrderTrackingStatus;
+    window.updateOrderTrackingStatusActionState = updateOrderTrackingStatusActionState;
   `;
 }

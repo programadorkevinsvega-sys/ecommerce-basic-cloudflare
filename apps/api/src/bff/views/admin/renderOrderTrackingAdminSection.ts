@@ -16,9 +16,9 @@ export function renderOrderTrackingAdminSection(): string {
         <label>Enlace de seguimiento<input id="tracking-edit-url" type="url" placeholder="https://…" /></label>
         <label>Fecha estimada de entrega<input id="tracking-edit-date" type="date" /></label>
         <section class="tracking-admin-timeline"><h3>Historial del pedido</h3><ol id="tracking-edit-timeline"></ol></section>
-        <label>Estado actual<select id="tracking-edit-status"><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option></select></label>
+        <label>Estado actual<select id="tracking-edit-status" onchange="updateOrderTrackingStatusActionState()"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
         <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>
-        <button class="shipping-action" type="button" onclick="saveOrderTrackingStatus()">Actualizar estado</button>
+        <button id="tracking-edit-status-submit" class="shipping-action" type="button" onclick="saveOrderTrackingStatus()">Actualizar estado</button>
         <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" onclick="closeOrderTrackingEditor()">Cancelar</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
       </form>
     </dialog>
