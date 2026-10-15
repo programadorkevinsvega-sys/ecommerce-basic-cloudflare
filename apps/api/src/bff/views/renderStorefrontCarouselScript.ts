@@ -16,7 +16,7 @@ export function renderStorefrontCarouselScript(carouselId: string): string {
       pauseButton.textContent = manuallyPaused ? 'Reanudar' : 'Pausar';
       pauseButton.setAttribute('aria-label', manuallyPaused ? 'Reanudar carrusel automático' : 'Pausar carrusel automático');
       pauseButton.setAttribute('aria-pressed', String(manuallyPaused));
-      if (!reducedMotion && !manuallyPaused && !document.hidden) timer = window.setInterval(() => move(1), 6000);
+      if (!manuallyPaused && !document.hidden) timer = window.setInterval(() => move(1), 6000);
     };
     const move = direction => {
       const currentIndex = Math.round(carousel.scrollLeft / carousel.clientWidth);
