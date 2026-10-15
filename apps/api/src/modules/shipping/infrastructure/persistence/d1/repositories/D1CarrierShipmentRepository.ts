@@ -70,6 +70,8 @@ export class D1CarrierShipmentRepository implements ICarrierShipmentRepository {
   public async listPendingSync(limit: number): Promise<CarrierShipment[]> {
     const rows = await this.db.prepare(`SELECT * FROM shipping_carrier_shipments
       WHERE normalized_status IN ('created', 'in_transit', 'exception')
+        OR (normalized_status = 'creation_pending' AND
+          (last_synced_at IS NULL OR julianday(last_synced_at) <= julianday('now', '-15 minutes')))
       ORDER BY COALESCE(last_synced_at, created_at) ASC LIMIT ?`).bind(limit).all<ShipmentRow>();
     return (rows.results || []).map(mapShipment);
   }

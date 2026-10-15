@@ -30,6 +30,7 @@ import { SyncPendingMiPaqueteShipmentsUseCase } from './application/use-cases/Sy
 import { ManageCarrierPackageProfilesUseCase } from './application/use-cases/ManageCarrierPackageProfilesUseCase.js';
 import { ListCarrierShipmentsUseCase } from './application/use-cases/ListCarrierShipmentsUseCase.js';
 import { MarkCarrierShipmentPrintedUseCase } from './application/use-cases/MarkCarrierShipmentPrintedUseCase.js';
+import { ReconcilePendingMiPaqueteShipmentUseCase } from './application/use-cases/ReconcilePendingMiPaqueteShipmentUseCase.js';
 
 export interface ShippingModuleContainer {
   carrierApiConfigured: boolean;
@@ -69,7 +70,8 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     ? new MiPaqueteCarrierAdapter(new MiPaqueteHttpClient(carrierConfig))
     : new UnavailableShippingCarrierAdapter();
 
-  const syncMiPaqueteShipmentUseCase = new SyncMiPaqueteShipmentUseCase(carrierShipmentRepo, carrier);
+  const reconcilePending = new ReconcilePendingMiPaqueteShipmentUseCase(carrierShipmentRepo, carrier);
+  const syncMiPaqueteShipmentUseCase = new SyncMiPaqueteShipmentUseCase(carrierShipmentRepo, carrier, reconcilePending);
   return {
     carrierApiConfigured: Boolean(carrierConfig),
     createShippingZoneUseCase: new CreateShippingZoneUseCase(zoneRepo, outboxRepo),
@@ -87,7 +89,7 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     getAvailableCarrierQuoteUseCase: new GetAvailableCarrierQuoteUseCase(carrierQuoteRepo),
     getCarrierQuoteForOrderUseCase: new GetCarrierQuoteForOrderUseCase(carrierQuoteRepo),
     linkCarrierQuoteToOrderUseCase: new LinkCarrierQuoteToOrderUseCase(carrierQuoteRepo),
-    createMiPaqueteShipmentUseCase: new CreateMiPaqueteShipmentUseCase(carrierConfigRepo, carrierQuoteRepo, carrierShipmentRepo, carrier),
+    createMiPaqueteShipmentUseCase: new CreateMiPaqueteShipmentUseCase(carrierConfigRepo, carrierQuoteRepo, carrierShipmentRepo, carrier, reconcilePending),
     syncMiPaqueteShipmentUseCase,
     syncPendingMiPaqueteShipmentsUseCase: new SyncPendingMiPaqueteShipmentsUseCase(carrierShipmentRepo, syncMiPaqueteShipmentUseCase),
     manageCarrierPackageProfilesUseCase: new ManageCarrierPackageProfilesUseCase(carrierConfigRepo),

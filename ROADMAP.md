@@ -405,7 +405,8 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Persistir en tablas `shipping_*` el identificador, transportadora, guía, URL y estado. El admin puede crear/consultar guía desde gestión de seguimiento; se refleja en el seguimiento público ya autorizado.
 - [x] Mostrar guías en el panel de seguimiento, permitir abrir guías individuales o el lote visible y registrar la confirmación de impresión con actor y fecha.
 - [x] La documentación revisada no describe firma verificable de webhook; no se acepta callback externo. Se consulta `getSendings` con credenciales mediante Cron cada cinco minutos y se permite sincronización administrativa autenticada, con deduplicación de eventos.
-- [ ] Definir cancelación y conciliación con MiPaquete para respuestas ambiguas; el registro pendiente bloquea duplicados, pero aún requiere resolución operativa antes de poder reintentar.
+- [x] Conciliar respuestas ambiguas consultando `getSendings` por rango acotado y referencia única del pedido; una coincidencia única recupera guía/estado, con pausa entre consultas, sin volver a crear mientras siga ambiguo.
+- [ ] Resolver con MiPaquete el caso sin coincidencia confirmada; sin garantía documentada de consistencia eventual, el sistema conserva el bloqueo y no autoriza un segundo `createSending` automáticamente.
 - [x] Aplicar/verificar migración aditiva `shipping__0002_mipaquete_shipments.sql`; arquitectura, aislamiento, pruebas D1 vacía/idempotente y tests de adaptador/configuración pasan. Quedan pruebas de integración real con proveedor y fallos externos.
 - [ ] Crear una guía real controlada tras confirmar costos y operación; verificar recaudo COD, tracking, alertas y recuperación sin duplicados.
 

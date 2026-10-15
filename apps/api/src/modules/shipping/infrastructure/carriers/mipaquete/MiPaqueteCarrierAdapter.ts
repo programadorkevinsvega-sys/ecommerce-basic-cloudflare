@@ -1,4 +1,4 @@
-import { IShippingCarrierPort, CarrierQuoteRequest, CreateCarrierShipmentRequest } from '../../../application/ports/out/IShippingCarrierPort.js';
+import { IShippingCarrierPort, CarrierQuoteRequest, CreateCarrierShipmentRequest, CarrierShipmentLookup } from '../../../application/ports/out/IShippingCarrierPort.js';
 import { MiPaqueteHttpClient } from './MiPaqueteHttpClient.js';
 import { MiPaqueteCreateSchema, MiPaqueteQuoteSchema, MiPaqueteSendingsSchema } from './MiPaqueteResponseSchemas.js';
 
@@ -69,6 +69,50 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
       tracking: (sending.tracking || []).map((event) => ({ status: event.updateState, occurredAt: event.date || null })),
     };
   }
+
+  public async findByOrderReference(orderId: string, createdAt: string): Promise<CarrierShipmentLookup> {
+    const { init, end } = dateWindow(createdAt);
+    const pageSize = 25;
+    const maxPages = 8;
+    const first = await this.sendingsPage(1, pageSize, init, end);
+    const total = first.totalItems;
+    if (total !== undefined && total > pageSize * maxPages) return { kind: 'inconclusive' };
+    const pages = total === undefined ? maxPages : Math.max(1, Math.ceil(total / pageSize));
+    const matches = [];
+    for (let page = 1; page <= pages; page++) {
+      const result = page === 1 ? first : await this.sendingsPage(page, pageSize, init, end);
+      matches.push(...result.sendings.filter((item) => String(item['Producto o Referencia'] ?? '') === orderId));
+      if (matches.length > 1) return { kind: 'multiple' };
+      if (total === undefined && result.sendings.length < pageSize) return lookupResult(matches[0]);
+    }
+    if (total === undefined && pages === maxPages && first.sendings.length === pageSize) return { kind: 'inconclusive' };
+    return lookupResult(matches[0]);
+  }
+
+  private async sendingsPage(page: number, pageSize: number, init: string, end: string) {
+    const response = await this.client.listSendings(page, { pageSize, confirmationDate: { init, end } });
+    const parsed = MiPaqueteSendingsSchema.safeParse(response);
+    if (!parsed.success) throw new Error('Invalid MiPaquete reconciliation response');
+    return parsed.data;
+  }
+}
+
+function lookupResult(item: { _id?: string; 'Código mipaquete': string | number; 'Número de Guía'?: string | number;
+  'Número de Recolección'?: string | number; 'Transportadora'?: string; 'Estado actual del envío'?: string;
+  pdfGuide?: string[] } | undefined): CarrierShipmentLookup {
+  if (!item) return { kind: 'not_found' };
+  return { kind: 'found', providerShipmentId: item._id || null, mipaqueteCode: String(item['Código mipaquete']),
+    guideNumber: item['Número de Guía'] === undefined ? null : String(item['Número de Guía']),
+    guideUrls: item.pdfGuide || [], pickupCode: item['Número de Recolección'] === undefined ? null : String(item['Número de Recolección']),
+    carrierName: item['Transportadora'] || null, status: item['Estado actual del envío'] || 'Envío creado' };
+}
+
+function dateWindow(value: string): { init: string; end: string } {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) throw new Error('Invalid shipment timestamp');
+  const init = new Date(date.getTime() - 86_400_000).toISOString().slice(0, 10);
+  const end = new Date(date.getTime() + 86_400_000).toISOString().slice(0, 10);
+  return { init, end };
 }
 
 function describeQuoteResponse(response: unknown, issues: Array<{ path: PropertyKey[]; message: string }>): string {

@@ -29,12 +29,15 @@ export const MiPaqueteCreateSchema = z.object({
 }).passthrough();
 
 export const MiPaqueteSendingsSchema = z.object({
+  totalItems: z.number().int().nonnegative().optional(),
   sendings: z.array(z.object({
     _id: z.string().optional(),
+    'Producto o Referencia': z.union([z.string(), z.number()]).optional(),
     'Código mipaquete': z.union([z.string(), z.number()]),
     'Número de Guía': z.union([z.string(), z.number()]).optional(),
     'Transportadora': z.string().optional(),
     'Estado actual del envío': z.string().optional(),
+    'Número de Recolección': z.union([z.string(), z.number()]).optional(),
     tracking: z.array(z.object({ updateState: z.string(), date: z.string().optional() }).passthrough()).optional(),
     pdfGuide: z.array(HttpsUrl).optional(),
   }).passthrough()).max(100),

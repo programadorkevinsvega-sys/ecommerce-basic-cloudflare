@@ -4,4 +4,5 @@ export class UnavailableShippingCarrierAdapter implements IShippingCarrierPort {
   public async quote(): Promise<never> { throw new Error('Shipping carrier is not configured'); }
   public async create(): Promise<never> { throw new Error('Shipping carrier is not configured'); }
   public async getStatus(): Promise<never> { throw new Error('Shipping carrier is not configured'); }
+  public async findByOrderReference(): Promise<never> { throw new Error('Shipping carrier is not configured'); }
 }

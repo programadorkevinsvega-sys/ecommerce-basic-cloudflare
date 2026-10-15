@@ -13,7 +13,14 @@ export class SyncPendingMiPaqueteShipmentsUseCase {
     const results: CarrierShipment[] = [];
     for (const shipment of pending) {
       try { const updated = await this.syncOne.execute(shipment.id); if (updated) results.push(updated); }
-      catch { /* El próximo cron reintentará consultas autenticadas que fallaron. */ }
+      catch {
+        if (shipment.status === 'creation_pending') {
+          const now = new Date().toISOString();
+          await this.repository.update(shipment.id, {
+            providerStatus: 'No se pudo consultar MiPaquete; se reintentará la conciliación.', lastSyncedAt: now,
+          }, now);
+        }
+      }
     }
     return results;
   }

@@ -1,16 +1,19 @@
 import { CarrierShipment } from '../../domain/entities/CarrierShipment.js';
 import { ICarrierShipmentRepository } from '../../domain/ports/ICarrierShipmentRepository.js';
 import { IShippingCarrierPort } from '../ports/out/IShippingCarrierPort.js';
+import { ReconcilePendingMiPaqueteShipmentUseCase } from './ReconcilePendingMiPaqueteShipmentUseCase.js';
 
 export class SyncMiPaqueteShipmentUseCase {
   private readonly repository: ICarrierShipmentRepository;
   private readonly carrier: IShippingCarrierPort;
-  public constructor(repository: ICarrierShipmentRepository, carrier: IShippingCarrierPort) {
-    this.repository = repository; this.carrier = carrier;
+  private readonly reconcilePending: ReconcilePendingMiPaqueteShipmentUseCase;
+  public constructor(repository: ICarrierShipmentRepository, carrier: IShippingCarrierPort, reconcilePending: ReconcilePendingMiPaqueteShipmentUseCase) {
+    this.repository = repository; this.carrier = carrier; this.reconcilePending = reconcilePending;
   }
 
   public async execute(id: string): Promise<CarrierShipment | null> {
-    const shipment = await this.repository.findById(id);
+    let shipment = await this.repository.findById(id);
+    if (shipment?.status === 'creation_pending') shipment = await this.reconcilePending.execute(shipment);
     if (!shipment?.mipaqueteCode) return shipment;
     const status = await this.carrier.getStatus(shipment.mipaqueteCode);
     if (!status) return shipment;

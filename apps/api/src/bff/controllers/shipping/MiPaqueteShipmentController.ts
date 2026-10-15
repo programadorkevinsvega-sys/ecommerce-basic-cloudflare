@@ -95,6 +95,7 @@ function party(name: string, identification: string | undefined | null, phone: s
 
 function safeMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
-  return message.startsWith('La ') || message.startsWith('No existe') || message.startsWith('El pedido') || message.startsWith('Completa')
+  return message.startsWith('La ') || message.startsWith('No existe') || message.startsWith('El pedido') ||
+    message.startsWith('Completa') || message.startsWith('MiPaquete no confirmó')
     ? message : 'No fue posible generar la guía. Revisa la configuración o consulta el pedido antes de reintentar.';
 }

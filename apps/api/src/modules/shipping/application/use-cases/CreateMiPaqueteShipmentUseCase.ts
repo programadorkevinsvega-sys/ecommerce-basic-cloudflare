@@ -4,6 +4,7 @@ import { ICarrierConfigRepository } from '../../domain/ports/ICarrierConfigRepos
 import { ICarrierQuoteRepository } from '../../domain/ports/ICarrierQuoteRepository.js';
 import { ICarrierShipmentRepository } from '../../domain/ports/ICarrierShipmentRepository.js';
 import { IShippingCarrierPort, CarrierParty } from '../ports/out/IShippingCarrierPort.js';
+import { ReconcilePendingMiPaqueteShipmentUseCase } from './ReconcilePendingMiPaqueteShipmentUseCase.js';
 
 export interface CarrierOrderInput {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
@@ -17,15 +18,20 @@ export class CreateMiPaqueteShipmentUseCase {
   private readonly quotes: ICarrierQuoteRepository;
   private readonly shipments: ICarrierShipmentRepository;
   private readonly carrier: IShippingCarrierPort;
-  public constructor(configs: ICarrierConfigRepository, quotes: ICarrierQuoteRepository, shipments: ICarrierShipmentRepository, carrier: IShippingCarrierPort) {
-    this.configs = configs; this.quotes = quotes; this.shipments = shipments; this.carrier = carrier;
+  private readonly reconcilePending: ReconcilePendingMiPaqueteShipmentUseCase;
+  public constructor(configs: ICarrierConfigRepository, quotes: ICarrierQuoteRepository, shipments: ICarrierShipmentRepository, carrier: IShippingCarrierPort, reconcilePending: ReconcilePendingMiPaqueteShipmentUseCase) {
+    this.configs = configs; this.quotes = quotes; this.shipments = shipments; this.carrier = carrier; this.reconcilePending = reconcilePending;
   }
 
   public async execute(order: CarrierOrderInput): Promise<CarrierShipment> {
     assertOrderEligible(order);
     const existing = await this.shipments.findByOrderId(order.orderId);
     if (existing) {
-      if (existing.status === 'creation_pending') throw new Error('La creación está pendiente de conciliación; no reintentes para evitar una guía duplicada.');
+      if (existing.status === 'creation_pending') {
+        const reconciled = await this.reconcilePending.execute(existing);
+        if (reconciled.status === 'creation_pending') throw new Error('La creación sigue pendiente de conciliación. Se consultó MiPaquete y se mantiene el bloqueo para evitar duplicados.');
+        return reconciled;
+      }
       return existing;
     }
     const [config, quote] = await Promise.all([this.configs.get(), this.quotes.findByOrderId(order.orderId)]);
@@ -67,7 +73,8 @@ export class CreateMiPaqueteShipmentUseCase {
       requestHash, now,
     });
     if (!inserted) throw new Error('Ya existe una guía o creación pendiente para este pedido.');
-    const created = await this.carrier.create({
+    let created: Awaited<ReturnType<IShippingCarrierPort['create']>>;
+    try { created = await this.carrier.create({
       orderId: order.orderId, sender: order.sender, recipient: order.recipient,
       package: { widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,
         heightCm: quote.packageHeightCm, weightKg: quote.packageWeightKg, quantity: 1,
@@ -81,7 +88,16 @@ export class CreateMiPaqueteShipmentUseCase {
         : collectShippingAtDelivery ? Math.ceil((order.shippingCollectionCents || 0) / 100) : 0,
       saleValueCop: order.paymentMethod === 'cash_on_delivery' ? Math.ceil(saleValueCents / 100) : 0,
       requestPickup: Boolean(config.requestPickup), description: order.description.slice(0, 200),
-    });
+    }); } catch {
+      const pending = await this.shipments.findById(id);
+      if (pending) {
+        try {
+          const reconciled = await this.reconcilePending.execute(pending);
+          if (reconciled.status !== 'creation_pending') return reconciled;
+        } catch { /* Se conserva la marca pendiente; el cron repetirá solo la consulta. */ }
+      }
+      throw new Error('MiPaquete no confirmó la respuesta. El sistema buscará el pedido por su referencia; no vuelvas a crear la guía.');
+    }
     const updatedAt = new Date().toISOString();
     await this.shipments.update(id, {
       providerShipmentId: created.providerShipmentId, mipaqueteCode: created.mipaqueteCode,
