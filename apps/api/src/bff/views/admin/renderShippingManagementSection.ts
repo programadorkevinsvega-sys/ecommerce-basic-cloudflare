@@ -3,9 +3,13 @@ import { renderShippingTableRows } from './renderShippingTableRows.js';
 import { renderShippingLocationRows } from './renderShippingLocationRows.js';
 import { CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGateway.js';
 import { renderMiPaqueteConfigSection } from './renderMiPaqueteConfigSection.js';
+import { renderShippingPackagesSection } from './renderShippingPackagesSection.js';
 
 export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = [], carrierConfig?: CarrierIntegrationConfigDto): string {
   const divipolaMap = new Map<string, string>();
+  const packageConfig = carrierConfig || { enabled: false, originDaneCode: null, packageWidthCm: null, packageLengthCm: null,
+    packageHeightCm: null, packageWeightKg: null, declaredValueMode: null, cashOnDeliveryPaymentType: null,
+    requestPickup: null, selectionCriterion: null, packageProfiles: [], updatedAt: '' };
   divipolaLocations.forEach(location => divipolaMap.set(location.daneCode, location.fullName));
   return `<section class="shipping-screen" aria-labelledby="shipping-title">
     <header class="shipping-heading" data-shipping-heading><div><h1 id="shipping-title">Envíos y cobertura</h1><p>Configura las tarifas, tiempos de entrega y municipios cubiertos.</p></div><button class="btn-primary" type="button" onclick="openShippingZoneModal()">Crear zona de envío</button></header>
@@ -20,6 +24,9 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
         <div class="shipping-carrier-group-heading"><h2>Integraciones</h2><p>Cada transportadora conserva sus propios datos y reglas operativas.</p></div>
         ${carrierConfig ? renderMiPaqueteConfigSection(carrierConfig) : '<section class="card shipping-carrier-config-card"><h2>MiPaquete</h2><p>No se pudo cargar su configuración.</p></section>'}
       </div>
+    </section>
+    <section class="shipping-page-panel" data-shipping-panel="packages" aria-labelledby="shipping-packages-title" hidden>
+      ${renderShippingPackagesSection(packageConfig)}
     </section>
     <section class="shipping-page-panel" data-shipping-panel="locations" aria-labelledby="shipping-locations-title" hidden>
         <div class="card shipping-locations-page-card"><div class="shipping-section-heading"><div><h2 id="shipping-locations-title">Municipios DANE</h2><p id="shipping-location-count">Cargando municipios…</p><small class="shipping-catalog-note">El catálogo cargado contiene municipios principales; no incluye todos los municipios de DIVIPOLA. La cobertura nacional se muestra por separado.</small></div></div>

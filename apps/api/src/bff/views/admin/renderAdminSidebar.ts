@@ -11,6 +11,7 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping', this); showAdminShippingPage('zones')")}
         ${navItem('shipping', 'Municipios DANE', "switchTab('shipping', this); showAdminShippingPage('locations')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Transportadoras', "switchTab('shipping', this); showAdminShippingPage('carriers')", false, undefined, undefined, true)}
+        ${navItem('shipping', 'Empaques', "switchTab('shipping', this); showAdminShippingPage('packages')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Seguimiento de pedidos', "switchTab('shipping', this); showAdminShippingPage('tracking')", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Pagos y facturas</h2><ul>
