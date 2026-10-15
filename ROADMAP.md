@@ -196,14 +196,14 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-ORD-05, SEC-RATE-01, SEC-VAL-06, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: reconciliar `promotions_redemptions` con pedidos.
 
 - [x] Tipos: porcentaje, monto fijo por producto/categoría/todo el catálogo (**productos con descuento**).
-- [x] Reglas: vigencia (starts_at/ends_at), mínimo de compra, límites de uso por cliente, prioridad de ejecución y estado activo.
+- [x] Reglas: vigencia (starts_at/ends_at), mínimo de compra, límites de uso por cliente, prioridad de ejecución y estado activo. El mínimo se valida contra el subtotal base del carrito; las reglas con mínimo no aparecen como descuento inmediato en tarjetas de producto.
 - [x] Cupones: códigos únicos en mayúsculas, límite global y límite por cliente con registro de canjes en `promotions_redemptions`.
 - [x] `PromotionsGateway`: evaluación desacoplada de precios de productos y validación server-side de cupones sin confiar en el cliente (`SEC-VAL-06`, `SEC-ORD-05`).
-- [x] Etiquetas de descuento en listado y detalle (`-XX% OFF`, banner promocional y precio tachado en SSR).
+- [x] Etiquetas de descuento en listado y detalle (`-XX% OFF`, banner promocional y precio tachado en SSR); promociones automáticas elegibles se reflejan también en carrito, checkout y recálculo autoritativo del pedido.
 - [x] CRUD completo en panel administrativo `/admin` para reglas automáticas y cupones con activación/desactivación y eliminación.
 - [x] Base de datos D1 con prefijo estricto `promotions_*` y outbox de eventos (`promotions_outbox_events`).
 
-**Criterio de salida:** una promoción programada se aplica en listado y detalle con el precio correcto, y un cupón respeta sus límites. (Completado y verificado en vivo en producción).
+**Criterio de salida:** una promoción sin compra mínima se aplica en listado, detalle, carrito y checkout; una promoción con mínimo solo se aplica cuando el subtotal base del carrito alcanza el umbral; un cupón respeta sus límites. (La corrección de paridad de precios se encuentra en implementación).
 
 ---
 

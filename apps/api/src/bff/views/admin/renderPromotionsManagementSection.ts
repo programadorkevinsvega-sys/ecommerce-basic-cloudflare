@@ -26,7 +26,7 @@ export function renderPromotionsManagementSection(
     <div class="card" data-marketing-page="promotion-rule">
       <h2 id="prFormTitle">Crear Nueva Regla de Promoción</h2>
       <p style="color:#94a3b8; font-size:0.875rem; margin-bottom:1rem;">
-        Descuentos automáticos aplicados en catálogo y detalle de productos por fecha y alcance.
+        Descuentos automáticos por producto y compra mínima. Un anuncio de envío gratis no modifica las tarifas de transporte.
       </p>
       <form id="newPromoRuleForm" style="margin-bottom: 1.5rem;">
         <input type="hidden" id="prEditId" value="" />
@@ -37,6 +37,7 @@ export function renderPromotionsManagementSection(
             <select id="prDiscountType"><option value="percentage">Porcentaje (%)</option><option value="fixed_amount">Monto Fijo (COP)</option></select>
           </div>
           <div><label>Valor del Descuento</label><input type="text" id="prDiscountValue" data-cop-input data-cop-type-select="prDiscountType" inputmode="decimal" required placeholder="20 (%) o 15.000 COP" /></div>
+          <div><label>Compra mínima (COP)</label><input type="text" id="prMinAmount" data-cop-input inputmode="numeric" value="0" placeholder="0" /><small>El descuento se aplica cuando el subtotal del carrito alcance este valor.</small></div>
           <div>
             <label>Alcance del Descuento</label>
             <select id="prTargetType" onchange="onPromoTargetTypeChange()">

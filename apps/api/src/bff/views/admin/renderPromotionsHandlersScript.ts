@@ -81,6 +81,7 @@ export function renderPromotionsHandlersScript(): string {
       } else if (data.targetType === 'category') {
         document.getElementById('prTargetCategorySelect').value = data.targetId || '';
       }
+      window.setCopInputValue('prMinAmount', Math.round(data.minOrderAmountCents / 100));
       document.getElementById('prStartsAt').value = data.startsAt.substring(0, 10);
       document.getElementById('prEndsAt').value = data.endsAt.substring(0, 10);
       document.getElementById('prPriority').value = data.priority;

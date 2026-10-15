@@ -1,4 +1,4 @@
-import { PromotionsGateway, PromotionRuleDto, CouponDto, ProductDiscountDto, CouponValidationDto } from './PromotionsGateway.js';
+import { PromotionsGateway, PromotionRuleDto, CouponDto, ProductDiscountDto, CouponValidationDto, CartDiscountItemDto } from './PromotionsGateway.js';
 import { IPromotionsPublicApi } from '../../../modules/promotions/module.public-api.js';
 
 export class InProcessPromotionsGateway implements PromotionsGateway {
@@ -109,9 +109,14 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
   public async evaluateProductDiscount(input: {
     productId: string;
     categoryId?: string;
+    categoryIds?: string[];
     priceInCents: number;
   }): Promise<ProductDiscountDto> {
     return this.publicApi.evaluateProductDiscount(input);
+  }
+
+  public async evaluateCartDiscounts(items: Array<{ productId: string; categoryIds?: string[]; unitPriceCents: number; quantity: number }>): Promise<CartDiscountItemDto[]> {
+    return this.publicApi.evaluateCartDiscounts(items);
   }
 
   public async validateCoupon(input: {

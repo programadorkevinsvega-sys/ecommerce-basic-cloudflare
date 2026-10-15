@@ -28,7 +28,7 @@ export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], product
       <tr>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
           ${escapeHtml(r.name)}
-          <div style="font-size:0.75rem; color:#94a3b8;">${targetLabel} | Prioridad: ${r.priority}</div>
+          <div style="font-size:0.75rem; color:#94a3b8;">${targetLabel} | Compra mínima: $${Math.round(r.minOrderAmountCents / 100).toLocaleString('es-CO')} | Prioridad: ${r.priority}</div>
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:700; color:#38bdf8;">${discountLabel}</td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; font-size:0.8rem; color:#cbd5e1;">${r.startsAt.substring(0, 10)} al ${r.endsAt.substring(0, 10)}</td>

@@ -4,6 +4,7 @@ import { IPromotionRuleRepository } from '../../domain/ports/IPromotionRuleRepos
 export interface EvaluateProductDiscountInput {
   productId: string;
   categoryId?: string;
+  categoryIds?: string[];
   priceInCents: number;
 }
 
@@ -30,13 +31,14 @@ export class EvaluateProductDiscountUseCase {
 
       for (const rule of activeRules) {
         if (!rule.isCurrentlyValid(now)) continue;
+        if (rule.minOrderAmountCents > 0) continue;
 
         let matches = false;
         if (rule.targetType === 'all') {
           matches = true;
         } else if (rule.targetType === 'product' && rule.targetId === input.productId) {
           matches = true;
-        } else if (rule.targetType === 'category' && input.categoryId && rule.targetId === input.categoryId) {
+        } else if (rule.targetType === 'category' && (input.categoryIds?.includes(rule.targetId || '') || rule.targetId === input.categoryId)) {
           matches = true;
         }
 

@@ -13,8 +13,10 @@ import { renderCheckoutPage } from '../../views/renderCheckoutPage.js';
 import { renderCheckoutResultPage } from '../../views/renderCheckoutResultPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
+import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
 import { hashGuestCartId, isValidGuestCartId } from '../../security/GuestCartCapability.js';
+import { resolveCartDiscounts } from '../storefront/StorefrontDiscountResolver.js';
 
 export class StorefrontCheckoutController {
   public static createRoutes(
@@ -25,7 +27,8 @@ export class StorefrontCheckoutController {
     cmsGateway: CmsGateway,
     identityGateway: IdentityGateway,
     settingsGateway: SettingsGateway,
-    storefrontGateway: StorefrontGateway
+    storefrontGateway: StorefrontGateway,
+    promotionsGateway?: PromotionsGateway
   ): Hono {
     const router = new Hono();
 
@@ -57,7 +60,8 @@ export class StorefrontCheckoutController {
       const productsMap = new Map();
       allProducts.forEach((p) => productsMap.set(p.id, p));
 
-      const bodyHtml = renderCartPage(cart, productsMap);
+      const discounts = promotionsGateway ? await resolveCartDiscounts(cart.items, productsMap, promotionsGateway) : new Map();
+      const bodyHtml = renderCartPage(cart, productsMap, discounts);
       const html = renderBaseLayout({
         title: 'Tu Carrito de Compras',
         description: 'Revisa y modifica los productos agregados a tu carrito de compras.',
@@ -89,10 +93,11 @@ export class StorefrontCheckoutController {
 
       const productsMap = new Map();
       allProducts.forEach((p) => productsMap.set(p.id, p));
+      const discounts = promotionsGateway ? await resolveCartDiscounts(cart.items, productsMap, promotionsGateway) : new Map();
 
       const taxRate = settings?.taxRatePercent ?? 19;
       const marketing = await getPageMarketingContent(storefrontGateway, 'checkout', 'Información para tu compra');
-      const bodyHtml = `${marketing.bannersHtml}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile)}`;
+      const bodyHtml = `${marketing.bannersHtml}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile, discounts)}`;
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',

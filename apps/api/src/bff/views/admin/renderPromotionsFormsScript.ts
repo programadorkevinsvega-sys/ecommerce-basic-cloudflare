@@ -52,6 +52,7 @@ export function renderPromotionsFormsScript(): string {
       const startsAt = new Date(document.getElementById('prStartsAt').value + 'T00:00:00Z').toISOString();
       const endsAt = new Date(document.getElementById('prEndsAt').value + 'T23:59:59Z').toISOString();
       const priority = Number(document.getElementById('prPriority').value) || 0;
+      const minOrderAmountCents = window.copPesosToCents('prMinAmount');
 
       const payload = {
         name,
@@ -59,6 +60,7 @@ export function renderPromotionsFormsScript(): string {
         discountValue,
         targetType,
         targetId,
+        minOrderAmountCents,
         startsAt,
         endsAt,
         priority

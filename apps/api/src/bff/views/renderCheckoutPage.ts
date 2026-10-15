@@ -5,6 +5,7 @@ import { getCheckoutScript } from './getCheckoutScript.js';
 import { getCheckoutLocationScript } from './getCheckoutLocationScript.js';
 import { getCheckoutDraftScript } from './getCheckoutDraftScript.js';
 import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
+import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 import { renderCheckoutStoreDetails, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 
 function escapeHtml(value: string): string {
@@ -15,18 +16,20 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 }
 
-export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19, footerStoreProfile?: StorefrontStoreProfile): string {
-  const subtotalCents = cart.items.reduce((total, item) => total + item.subtotalCents, 0);
+export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19, footerStoreProfile?: StorefrontStoreProfile, discounts = new Map<string, ProductDiscountDto>()): string {
+  const basePriceFor = (productId: string, storedPrice: number) => productsMap.get(productId)?.priceInCents ?? storedPrice;
+  const priceFor = (productId: string, basePrice: number) => discounts.get(productId)?.finalPriceCents ?? basePrice;
+  const subtotalCents = cart.items.reduce((total, item) => total + priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) * item.quantity, 0);
   const productPaymentMethods = getProductPaymentMethods(cart.items, productsMap);
   const initialPaymentMethod = productPaymentMethods.wompi ? 'wompi' : productPaymentMethods.cashOnDelivery ? 'cash_on_delivery' : null;
   const pricingVersion = cart.items.every((item) => productsMap.get(item.productId)?.pricingVersion === 2) ? 2 : 1;
   const taxCents = pricingVersion === 2 ? Math.round(subtotalCents * taxRatePercent / (100 + taxRatePercent)) : Math.round(subtotalCents * taxRatePercent / 100);
   const cartItems = cart.items.map((item) => {
     const product = productsMap.get(item.productId);
-    return { productId: item.productId, productName: product?.name ?? 'Producto', productSku: product?.sku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents: item.unitPriceCents };
+    return { productId: item.productId, productName: product?.name ?? 'Producto', productSku: product?.sku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents: priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) };
   });
   const itemsJson = JSON.stringify(cartItems);
-  const rows = cart.items.map((item) => renderCheckoutItem(item, productsMap.get(item.productId))).join('');
+  const rows = cart.items.map((item) => renderCheckoutItem(item, productsMap.get(item.productId), priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)), discounts.get(item.productId))).join('');
   const zoneOptions = zones.map((zone) => {
     const carrierManaged = zone.type === 'national';
     const label = carrierManaged ? `${zone.name} · Cotizar con MiPaquete` : `Entrega local · ${zone.name} · ${zone.priceInCents === 0 ? 'Gratis' : formatPrice(zone.priceInCents)}`;
@@ -87,9 +90,11 @@ function getProductPaymentMethods(items: CartDto['items'], products: Map<string,
   }, { wompi: true, cashOnDelivery: true });
 }
 
-function renderCheckoutItem(item: CartDto['items'][number], product?: CatalogProductDto): string {
+function renderCheckoutItem(item: CartDto['items'][number], product: CatalogProductDto | undefined, unitPriceCents: number, discount?: ProductDiscountDto): string {
   const image = product?.mediaIds[0] ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="" loading="lazy">` : '<span aria-hidden="true">▧</span>';
-  return `<li class="checkout-item"><span class="checkout-item-image">${image}</span><span class="checkout-item-name">${escapeHtml(product?.name ?? 'Producto')}<small>Cantidad: ${item.quantity}</small></span><span class="checkout-item-price">${formatPrice(item.subtotalCents)}</span></li>`;
+  const oldPrice = discount?.discountAppliedCents ? `<del>${formatPrice(item.unitPriceCents * item.quantity)}</del> ` : '';
+  const promo = discount?.promotionName ? `<small>${escapeHtml(discount.promotionName)}</small>` : '';
+  return `<li class="checkout-item"><span class="checkout-item-image">${image}</span><span class="checkout-item-name">${escapeHtml(product?.name ?? 'Producto')}<small>Cantidad: ${item.quantity}</small>${promo}</span><span class="checkout-item-price">${oldPrice}${formatPrice(unitPriceCents * item.quantity)}</span></li>`;
 }
 
 function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number, showWompiFee: boolean): string {

@@ -29,11 +29,11 @@ export async function calculateOrderPricing(
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 50) throw new Error('Líneas de pedido inválidas');
   const products = await catalog.listProducts({ limit: 100 });
   const byId = new Map(products.filter((product) => product.status === 'published').map((product) => [product.id, product]));
-  const lines: AuthoritativeOrderPricing['lines'] = [];
   const policyItems: AuthoritativeOrderPricing['policyItems'] = [];
   const versions = new Set<number>();
   let allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> | null = null;
-  let subtotalCents = 0;
+  const discountInputs: Array<{ productId: string; categoryIds: string[]; unitPriceCents: number; quantity: number }> = [];
+  const lineProducts = new Map<string, { productName: string; productSku: string }>();
   for (const input of inputs as Array<{ productId?: unknown; quantity?: unknown }>) {
     const product = byId.get(String(input?.productId ?? ''));
     const quantity = Number(input?.quantity);
@@ -46,13 +46,21 @@ export async function calculateOrderPricing(
     ];
     allowedPaymentMethods = allowedPaymentMethods === null ? productMethods : allowedPaymentMethods.filter((method) => productMethods.includes(method));
     if (product.stockQuantity < quantity) throw new Error('Inventario insuficiente');
-    const discount = await promotions.evaluateProductDiscount({ productId: product.id, priceInCents: product.priceInCents });
-    const unitPriceCents = discount.hasDiscount ? discount.finalPriceCents : product.priceInCents;
-    if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0) throw new Error('Precio no válido');
-    subtotalCents += unitPriceCents * quantity;
-    lines.push({ productId: product.id, productName: product.name, productSku: product.sku, quantity, unitPriceCents });
+    discountInputs.push({ productId: product.id, categoryIds: product.categoryIds,
+      unitPriceCents: product.priceInCents, quantity });
+    lineProducts.set(product.id, { productName: product.name, productSku: product.sku });
     policyItems.push({ product: { productId: product.id, name: product.name, allowsCashOnDelivery: product.salePolicy.allowsCashOnDelivery, shippingScope: product.salePolicy.shippingScope, localCoverageZones: product.salePolicy.localCoverageZones, allowedPaymentMethods: productMethods }, quantity });
   }
+  const evaluatedDiscounts = await promotions.evaluateCartDiscounts(discountInputs);
+  const discountsByProduct = new Map(evaluatedDiscounts.map((discount) => [discount.productId, discount]));
+  const lines: AuthoritativeOrderPricing['lines'] = discountInputs.map((item) => {
+    const discount = discountsByProduct.get(item.productId);
+    const unitPriceCents = discount?.finalPriceCents ?? item.unitPriceCents;
+    if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0) throw new Error('Precio no válido');
+    return { productId: item.productId, productName: lineProducts.get(item.productId)?.productName ?? 'Producto',
+      productSku: lineProducts.get(item.productId)?.productSku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents };
+  });
+  let subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
   const couponCode = typeof couponInput === 'string' ? couponInput.trim() : '';
   let discountCents = 0;
   if (couponCode) {

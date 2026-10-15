@@ -43,6 +43,11 @@ export interface ProductDiscountDto {
   discountPercentage?: number;
 }
 
+export interface CartDiscountItemDto {
+  productId: string; originalPriceCents: number; finalPriceCents: number; discountAppliedCents: number;
+  promotionName?: string; discountPercentage?: number;
+}
+
 export interface CouponValidationDto {
   valid: boolean;
   code: string;
@@ -119,8 +124,11 @@ export interface PromotionsGateway {
   evaluateProductDiscount(input: {
     productId: string;
     categoryId?: string;
+    categoryIds?: string[];
     priceInCents: number;
   }): Promise<ProductDiscountDto>;
+
+  evaluateCartDiscounts(items: Array<{ productId: string; categoryIds?: string[]; unitPriceCents: number; quantity: number }>): Promise<CartDiscountItemDto[]>;
 
   validateCoupon(input: {
     code: string;

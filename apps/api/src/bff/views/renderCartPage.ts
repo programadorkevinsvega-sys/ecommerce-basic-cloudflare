@@ -1,21 +1,30 @@
 import { CartDto } from '../gateways/cart/CartGateway.js';
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
+import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 
-export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>): string {
+export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, discounts = new Map<string, ProductDiscountDto>()): string {
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const breadcrumb = '<nav class="cart-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Carrito</span></nav>';
   const confirmation = `<dialog id="cart-confirm-dialog" class="cart-confirm-dialog" aria-labelledby="cart-confirm-title" aria-describedby="cart-confirm-description"><h2 id="cart-confirm-title">¿Vaciar el carrito?</h2><p id="cart-confirm-description">Se quitarán todos los productos de tu carrito.</p><div><button type="button" class="cart-danger-button" id="cart-confirm-action">Sí, vaciar</button><button type="button" class="cart-secondary-button" data-close-cart-dialog>Cancelar</button></div></dialog>`;
   if (!cart.items.length) return `${breadcrumb}<section class="cart-empty"><span aria-hidden="true">▢</span><h1>Tu carrito está vacío</h1><p>Aún no has agregado productos. Explora el catálogo y encuentra algo para ti.</p><a class="cart-primary-link" href="/productos">Explorar productos <span aria-hidden="true">→</span></a></section>${renderCartScript()}`;
 
-  const subtotalCents = cart.items.reduce((sum, item) => sum + item.subtotalCents, 0);
+  const basePriceFor = (productId: string, storedPrice: number) => productsMap.get(productId)?.priceInCents ?? storedPrice;
+  const priceFor = (productId: string, basePrice: number) => discounts.get(productId)?.finalPriceCents ?? basePrice;
+  const subtotalCents = cart.items.reduce((sum, item) => sum + priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) * item.quantity, 0);
   const products = cart.items.map((item) => {
     const product = productsMap.get(item.productId);
+    const discount = discounts.get(item.productId);
+    const basePrice = basePriceFor(item.productId, item.unitPriceCents);
+    const unitPrice = priceFor(item.productId, basePrice);
+    const linePrice = unitPrice * item.quantity;
     const name = product?.name || 'Producto';
     const detailsUrl = product ? `/productos/${encodeURIComponent(product.slug)}` : '/productos';
     const image = product?.mediaIds[0]
       ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="" loading="lazy" onerror="this.hidden=true;this.parentElement.classList.add('has-no-image')" />`
       : '<span aria-hidden="true">▢</span>';
-    return `<li class="cart-item" data-cart-item="${escapeHtml(item.productId)}"><a class="cart-item-image" href="${detailsUrl}" aria-label="Ver ${escapeHtml(name)}">${image}</a><div class="cart-item-info"><h2><a href="${detailsUrl}">${escapeHtml(name)}</a></h2><span class="cart-sku">SKU ${escapeHtml(product?.sku || '—')}</span><span class="cart-unit-price"><span class="sr-only">Precio unitario: </span>${formatPrice(item.unitPriceCents)} c/u</span></div><div class="cart-quantity"><span id="quantity-${escapeHtml(item.id)}">Cantidad</span><div><button type="button" data-quantity-change="-1" data-product-id="${escapeHtml(item.productId)}" aria-label="Disminuir cantidad de ${escapeHtml(name)}" ${item.quantity <= 1 ? 'disabled' : ''}>−</button><input type="number" min="1" max="99" step="1" value="${item.quantity}" data-quantity-input data-product-id="${escapeHtml(item.productId)}" aria-labelledby="quantity-${escapeHtml(item.id)}" /><button type="button" data-quantity-change="1" data-product-id="${escapeHtml(item.productId)}" aria-label="Aumentar cantidad de ${escapeHtml(name)}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button></div></div><strong class="cart-line-total"><span class="sr-only">Total del producto: </span>${formatPrice(item.subtotalCents)}</strong><button type="button" class="cart-remove-button" data-remove-product="${escapeHtml(item.productId)}" aria-label="Eliminar ${escapeHtml(name)} del carrito"><span aria-hidden="true">×</span></button></li>`;
+    const promotionPrice = discount?.discountAppliedCents ? `<del>${formatPrice(basePrice)}</del> <strong>${formatPrice(unitPrice)}</strong> <small>−${discount.discountPercentage ?? ''}%</small>` : `${formatPrice(unitPrice)}`;
+    const promotionName = discount?.promotionName ? `<small class="cart-promotion-name">${escapeHtml(discount.promotionName)}</small>` : '';
+    return `<li class="cart-item" data-cart-item="${escapeHtml(item.productId)}"><a class="cart-item-image" href="${detailsUrl}" aria-label="Ver ${escapeHtml(name)}">${image}</a><div class="cart-item-info"><h2><a href="${detailsUrl}">${escapeHtml(name)}</a></h2><span class="cart-sku">SKU ${escapeHtml(product?.sku || '—')}</span><span class="cart-unit-price"><span class="sr-only">Precio unitario: </span>${promotionPrice} c/u</span>${promotionName}</div><div class="cart-quantity"><span id="quantity-${escapeHtml(item.id)}">Cantidad</span><div><button type="button" data-quantity-change="-1" data-product-id="${escapeHtml(item.productId)}" aria-label="Disminuir cantidad de ${escapeHtml(name)}" ${item.quantity <= 1 ? 'disabled' : ''}>−</button><input type="number" min="1" max="99" step="1" value="${item.quantity}" data-quantity-input data-product-id="${escapeHtml(item.productId)}" aria-labelledby="quantity-${escapeHtml(item.id)}" /><button type="button" data-quantity-change="1" data-product-id="${escapeHtml(item.productId)}" aria-label="Aumentar cantidad de ${escapeHtml(name)}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button></div></div><strong class="cart-line-total"><span class="sr-only">Total del producto: </span>${formatPrice(linePrice)}</strong><button type="button" class="cart-remove-button" data-remove-product="${escapeHtml(item.productId)}" aria-label="Eliminar ${escapeHtml(name)} del carrito"><span aria-hidden="true">×</span></button></li>`;
   }).join('');
 
   return `${breadcrumb}<header class="cart-page-heading"><div><h1>Tu carrito</h1><p>${cart.totalQuantity} ${cart.totalQuantity === 1 ? 'producto' : 'productos'} en tu carrito</p></div><button type="button" class="cart-empty-button" data-clear-cart>Vaciar carrito</button></header>

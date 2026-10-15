@@ -143,7 +143,7 @@ export class StorefrontController {
       try {
         const product = await catalogGateway.getProductBySlug(slug);
         const [discount, reviewPage] = await Promise.all([
-          promotionsGateway.evaluateProductDiscount({ productId: product.id, priceInCents: product.priceInCents }).catch(() => undefined),
+          promotionsGateway.evaluateProductDiscount({ productId: product.id, categoryIds: product.categoryIds, priceInCents: product.priceInCents }).catch(() => undefined),
           reviewsGateway.list(product.id, 1, 1).catch(() => ({ items: [], total: 0, summary: { average: 0, count: 0, isDemo:false, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } } })),
         ]);
 

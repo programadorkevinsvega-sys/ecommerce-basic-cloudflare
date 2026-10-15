@@ -5,6 +5,7 @@ import { CreateCouponInput } from './application/use-cases/CreateCouponUseCase.j
 import { UpdateCouponInput } from './application/use-cases/UpdateCouponUseCase.js';
 import { EvaluateProductDiscountInput, ProductDiscountResult } from './application/use-cases/EvaluateProductDiscountUseCase.js';
 import { ValidateCouponInput, CouponValidationResult } from './application/use-cases/ValidateCouponUseCase.js';
+import { CartDiscountItemInput, CartDiscountItemResult } from './application/use-cases/EvaluateCartDiscountsUseCase.js';
 import { PromotionRule } from './domain/entities/PromotionRule.js';
 import { Coupon } from './domain/entities/Coupon.js';
 
@@ -20,6 +21,7 @@ export interface IPromotionsPublicApi {
   deleteCoupon(id: string): Promise<void>;
   toggleCoupon(id: string, active: boolean): Promise<Coupon>;
   evaluateProductDiscount(input: EvaluateProductDiscountInput): Promise<ProductDiscountResult>;
+  evaluateCartDiscounts(items: CartDiscountItemInput[]): Promise<CartDiscountItemResult[]>;
   validateCoupon(input: ValidateCouponInput): Promise<CouponValidationResult>;
 }
 
@@ -90,6 +92,12 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
 
   public async evaluateProductDiscount(input: EvaluateProductDiscountInput): Promise<ProductDiscountResult> {
     const res = await this.container.evaluateProductDiscountUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async evaluateCartDiscounts(items: CartDiscountItemInput[]): Promise<CartDiscountItemResult[]> {
+    const res = await this.container.evaluateCartDiscountsUseCase.execute(items);
     if (res.isFail()) throw res.error;
     return res.value;
   }

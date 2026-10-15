@@ -245,6 +245,8 @@ La comisión del pedido queda guardada como estimación. En Pagos, un administra
 | `sale_mode` | `cash` / `credit` / `both` | Campo de política de catálogo; no existe todavía gestión de cuotas ni módulo de crédito (ADR-0009 pendiente) |
 | Descuento | vía `promotions` | Los productos con descuento se resuelven por `PromotionsGateway`, no por columnas en `catalog` |
 
+Las reglas de promoción automáticas se recalculan desde servidor. Las reglas sin compra mínima pueden mostrarse en tarjetas/detalle y se descuentan también en carrito, checkout y pedido. Las reglas con compra mínima se evalúan sobre el subtotal base del carrito y no se anuncian en una tarjeta aislada. El texto de envío gratis en un banner o barra de anuncios es contenido informativo: no configura una tarifa gratis; la gratuidad del envío requiere una regla logística implementada/configurada por separado.
+
 ### Reglas SEO Profesionales (9 Pilares de eCommerce)
 
 1. **Técnico y Core Web Vitals (LCP, CLS, INP)**:

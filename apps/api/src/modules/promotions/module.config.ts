@@ -13,6 +13,7 @@ import { ToggleCouponUseCase } from './application/use-cases/ToggleCouponUseCase
 import { UpdatePromotionRuleUseCase } from './application/use-cases/UpdatePromotionRuleUseCase.js';
 import { EvaluateProductDiscountUseCase } from './application/use-cases/EvaluateProductDiscountUseCase.js';
 import { ValidateCouponUseCase } from './application/use-cases/ValidateCouponUseCase.js';
+import { EvaluateCartDiscountsUseCase } from './application/use-cases/EvaluateCartDiscountsUseCase.js';
 
 export interface PromotionsModuleContainer {
   createPromotionRuleUseCase: CreatePromotionRuleUseCase;
@@ -26,6 +27,7 @@ export interface PromotionsModuleContainer {
   deleteCouponUseCase: DeleteCouponUseCase;
   toggleCouponUseCase: ToggleCouponUseCase;
   evaluateProductDiscountUseCase: EvaluateProductDiscountUseCase;
+  evaluateCartDiscountsUseCase: EvaluateCartDiscountsUseCase;
   validateCouponUseCase: ValidateCouponUseCase;
 }
 
@@ -45,6 +47,7 @@ export function createPromotionsModule(env: Env): PromotionsModuleContainer {
     deleteCouponUseCase: new DeleteCouponUseCase(couponRepo),
     toggleCouponUseCase: new ToggleCouponUseCase(couponRepo),
     evaluateProductDiscountUseCase: new EvaluateProductDiscountUseCase(ruleRepo),
+    evaluateCartDiscountsUseCase: new EvaluateCartDiscountsUseCase(ruleRepo),
     validateCouponUseCase: new ValidateCouponUseCase(couponRepo),
   };
 }
