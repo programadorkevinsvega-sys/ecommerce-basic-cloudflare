@@ -295,13 +295,14 @@ Las reglas de promoción automáticas se recalculan desde servidor. Las reglas s
 ```text
 OrdersCheckoutPolicy (dominio de orders), con DTOs obtenidos por Gateways:
   CatalogGateway    → política de cada producto
-  ShippingGateway   → ¿la dirección está cubierta? tarifa, ¿la zona admite contra entrega?
+  ShippingGateway   → ¿la dirección está cubierta? tarifa y disponibilidad del transportista
   PromotionsGateway → descuentos aplicables
 
 Reglas:
   1. Producto local-only y dirección fuera de su cobertura  → no se puede enviar (se marca en el carrito).
-  2. Contra entrega disponible SOLO si TODOS los productos del carrito lo permiten
-     y la zona de destino admite contra entrega.
+  2. Contra entrega local disponible SOLO si TODOS los productos lo permiten
+     y la zona local la admite. En destinos nacionales depende de que MiPaquete esté
+     configurado, el producto permita recaudo y el transportista devuelva una cotización COD vigente.
   3. Carritos mixtos: se informa qué producto bloquea cada método; no se dividen pedidos sin decisión explícita.
   4. Envío: la entrega local la administra la tienda por zona; los destinos nacionales se cotizan con la transportadora.
 ```
@@ -311,7 +312,7 @@ El módulo de crédito aún no existe; su alcance está pendiente en ADR-0009. L
 ### Cobertura de envío (`shipping`)
 
 - Las zonas `department`, `city` y `municipality` representan entrega local gestionada por el comercio: tarifa, plazo y disponibilidad de contra entrega configurados en Admin. En la operación actual, la entrega local está limitada a Medellín y los diez municipios del Valle de Aburrá; Municipios DANE administra únicamente esa cobertura local.
-- Los destinos nacionales se cotizan con MiPaquete; su cobertura, tarifas y transportadoras no se duplican como reglas manuales. El catálogo local de búsqueda se completa desde `GET /getLocations` de MiPaquete, sin crear reglas de entrega local ni alterar las zonas del comercio. Cada pedido nuevo guarda `merchant_local` o `carrier`; los pedidos previos conservan `legacy`.
+- Los destinos nacionales se cotizan con MiPaquete; su cobertura, tarifas, transportadoras y disponibilidad de recaudo COD se determinan desde sus cotizaciones, no desde la bandera de una zona local. El catálogo local de búsqueda se completa desde `GET /getLocations` de MiPaquete, sin crear reglas de entrega local ni alterar las zonas del comercio. Cada pedido nuevo guarda `merchant_local` o `carrier`; los pedidos previos conservan `legacy`.
 - `catalog` y `orders` guardan únicamente el `zone_id` como texto; resuelven nombres y tarifas vía `ShippingGateway` (§6.1).
 - MiPaquete usa el secret de Cloudflare `MI_PAQUETE_TRANSPORTADORA` y la variable explícita `MI_PAQUETE_API_URL` (`https://api-v2.mpr.mipaquete.com` en producción). El secreto no se guarda en D1, frontend, logs ni respuestas. La configuración vive en Admin → Envíos y cobertura → Transportadoras, separada de las zonas locales. Empaques tiene su página propia en Admin → Envíos y cobertura → Empaques. Cada producto guarda peso y medidas de su unidad empacada. Para una sola unidad, se cotizan directamente esas dimensiones y su peso, sin agregar una caja. Para dos o más unidades, el servidor busca la caja activa compatible de menor volumen, usa sus medidas externas y suma el peso de todas las unidades más la tara; si ninguna caja activa las contiene, no ofrece tarifa hasta configurar una. MiPaquete recibe el peso redondeado hacia arriba al kilogramo entero. La cotización conserva si se usó empaque individual o una caja configurada y la instantánea del paquete para la guía. Colombia se identifica con código `170` en la solicitud. En envíos nacionales, el comprador puede incluir el flete en el total o pedir que MiPaquete lo cobre al entregar. La segunda opción queda fuera del pedido/factura: para COD, `valueCollection` suma mercancía y flete; si Wompi ya pagó la mercancía, al entregar se recauda solo el flete. `saleValue` identifica la mercancía, sin flete ni tarifa Wompi; `paymentType` define la liquidación entre el comercio y MiPaquete.
 

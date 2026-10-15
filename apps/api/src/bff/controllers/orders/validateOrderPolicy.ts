@@ -17,9 +17,10 @@ export async function validateOrderPolicy(
     item.product.shippingScope === 'local' ? item.product.localCoverageZones : [zone.id],
   )));
   const covered = coverage.every((result) => result.isCovered && result.zoneId === zone.id);
+  const nationalCarrierAvailable = zone.type === 'national' && await shipping.getCarrierAvailability();
   const policy = await orders.evaluateCheckoutPolicy({
     destinationZoneId: zone.id,
-    zoneAllowsCod: zone.allowsCashOnDelivery,
+    zoneAllowsCod: zone.type === 'national' ? nationalCarrierAvailable : zone.allowsCashOnDelivery,
     isDestinationCovered: covered,
     items: pricing.policyItems,
   });

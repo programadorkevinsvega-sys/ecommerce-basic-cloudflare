@@ -39,7 +39,8 @@ export class OrdersController {
 
       const zone = await shippingGateway.getZone(destinationZoneId);
       const isDestinationCovered = !!zone && zone.isActive;
-      const zoneAllowsCod = !!zone && zone.allowsCashOnDelivery;
+      const nationalCarrierAvailable = zone?.type === 'national' && await shippingGateway.getCarrierAvailability();
+      const zoneAllowsCod = !!zone && (zone.type === 'national' ? nationalCarrierAvailable : zone.allowsCashOnDelivery);
 
       const allProducts = await catalogGateway.listProducts({ limit: 100, status: 'published' });
       const productsMap = new Map(allProducts.filter((product) => product.status === 'published').map((p) => [p.id, p]));
