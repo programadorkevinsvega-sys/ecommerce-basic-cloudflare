@@ -72,11 +72,18 @@ export function renderShippingFormsScript(): string {
       document.getElementById('shippingZoneModal').style.display = 'none';
     }
 
+    function focusShippingZoneDialog() {
+      const dialog = document.getElementById('shippingZoneDialog');
+      const modal = document.getElementById('shippingZoneModal');
+      if (modal) modal.scrollTop = 0;
+      if (dialog) { dialog.scrollTop = 0; dialog.focus({ preventScroll: true }); }
+    }
+
     function openShippingZoneModal() {
       resetShippingZoneForm(false);
       document.getElementById('shippingZoneModal').style.display = 'flex';
       filterShippingLocations();
-      document.getElementById('shName').focus();
+      focusShippingZoneDialog();
     }
 
     function createZoneForLocation(button) {
@@ -92,6 +99,7 @@ export function renderShippingFormsScript(): string {
     window.showAdminShippingPage = showAdminShippingPage;
     window.openShippingZoneModal = openShippingZoneModal;
     window.closeShippingZoneModal = closeShippingZoneModal;
+    window.focusShippingZoneDialog = focusShippingZoneDialog;
     window.createZoneForLocation = createZoneForLocation;
     window.ensureShippingOption = ensureShippingOption;
     window.removeShippingLocationFromZone = removeShippingLocationFromZone;

@@ -29,20 +29,25 @@ export function renderShippingHandlersScript(): string {
         municipality: 'Municipio Específico'
       }[data.type] || data.type;
 
-      const locsHtml = data.type === 'national'
-        ? '<em>Cobertura nacional estándar para todo Colombia</em>'
-        : data.locations.length > 0
-        ? '<code>' + escapeHtml((data.locations || []).join(', ')) + '</code> (' + data.locations.length + ' códigos DANE)'
-        : '<em>Sin municipios asignados explícitamente</em>';
+      const localMunicipalities = {
+        '05001': 'Medellín', '05079': 'Barbosa', '05088': 'Bello', '05129': 'Caldas',
+        '05212': 'Copacabana', '05266': 'Envigado', '05308': 'Girardota', '05360': 'Itagüí',
+        '05380': 'La Estrella', '05631': 'Sabaneta'
+      };
+      const coverage = data.type === 'national'
+        ? '<p class="shipping-detail-coverage">Cobertura nacional</p>'
+        : (data.locations || []).map((code) => '<span>' + escapeHtml(localMunicipalities[code] || 'Municipio') + ' <code>' + escapeHtml(code) + '</code></span>').join('') || '<em>Sin municipios asignados</em>';
 
       document.getElementById('modalShContent').innerHTML = [
-        '<p><strong>ID:</strong> <code>' + escapeHtml(data.id) + '</code></p>',
-        '<p><strong>Tipo de Cobertura:</strong> ' + typeLabel + '</p>',
-        '<p><strong>Tarifa de Envío:</strong> <span style="color:#38bdf8; font-weight:700;">' + formattedPrice + '</span></p>',
-        '<p><strong>Plazo Estimado:</strong> ' + data.minEstimatedDays + ' a ' + data.maxEstimatedDays + ' días hábiles</p>',
-        '<p><strong>Pago Contra Entrega:</strong> ' + (data.allowsCashOnDelivery ? '<span class="badge badge-published">✓ Permitido</span>' : '<span class="badge badge-draft">✕ Solo Pago Anticipado</span>') + '</p>',
-        '<p><strong>Estado:</strong> ' + (data.isActive ? '<span class="badge badge-published">Activa</span>' : '<span class="badge badge-draft">Inactiva</span>') + '</p>',
-        '<div style="margin-top:0.75rem;"><strong>Códigos DANE Cubiertos:</strong><div style="background:#0f172a; padding:0.5rem; border-radius:4px; margin-top:0.25rem; font-size:0.8rem; max-height:120px; overflow-y:auto;">' + locsHtml + '</div></div>'
+        '<dl class="shipping-zone-details">',
+        '<div><dt>Identificador</dt><dd><code>' + escapeHtml(data.id) + '</code></dd></div>',
+        '<div><dt>Tipo de zona</dt><dd>' + escapeHtml(typeLabel) + '</dd></div>',
+        '<div><dt>Tarifa de envío</dt><dd class="shipping-detail-price">' + formattedPrice + ' COP</dd></div>',
+        '<div><dt>Plazo estimado</dt><dd>' + data.minEstimatedDays + '–' + data.maxEstimatedDays + ' días hábiles</dd></div>',
+        '<div><dt>Pago contra entrega</dt><dd>' + (data.allowsCashOnDelivery ? 'Permitido' : 'No permitido · Pago anticipado') + '</dd></div>',
+        '<div><dt>Estado</dt><dd><span class="shipping-badge ' + (data.isActive ? 'active' : 'inactive') + '">' + (data.isActive ? 'Activa' : 'Inactiva') + '</span></dd></div>',
+        '<div class="shipping-zone-coverage"><dt>Municipios cubiertos (' + (data.locations || []).length + ')</dt><dd><div class="shipping-detail-coverage">' + coverage + '</div></dd></div>',
+        '</dl>'
       ].join('');
 
       document.getElementById('shippingDetailsModal').style.display = 'flex';
@@ -81,7 +86,7 @@ export function renderShippingHandlersScript(): string {
       document.getElementById('shSubmitBtn').textContent = 'Guardar Cambios';
       document.getElementById('shCancelBtn').style.display = 'inline-block';
       document.getElementById('shippingZoneModal').style.display = 'flex';
-      document.getElementById('shName').focus();
+      window.focusShippingZoneDialog();
     }
 
     async function toggleShippingZoneStatus(id, activate) {

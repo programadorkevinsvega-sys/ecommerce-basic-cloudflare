@@ -40,7 +40,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
     <section class="shipping-page-panel" data-shipping-panel="print-labels" hidden>${renderShippingLabelsAdminSection()}</section>
     <div id="shippingZoneModal" class="shipping-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="shFormTitle">
       <button class="shipping-modal-backdrop" type="button" aria-label="Cerrar formulario de zona" onclick="closeShippingZoneModal()"></button>
-      <section class="shipping-modal-dialog shipping-zone-dialog"><header><div><h2 id="shFormTitle">Crear nueva zona de envío</h2><p>Define cobertura, tarifa, entrega y disponibilidad contra entrega.</p></div><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingZoneModal()">×</button></header>
+      <section id="shippingZoneDialog" tabindex="-1" class="shipping-modal-dialog shipping-zone-dialog"><header><div><h2 id="shFormTitle">Crear nueva zona de envío</h2><p>Define cobertura, tarifa, entrega y disponibilidad contra entrega.</p></div><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingZoneModal()">×</button></header>
         <form id="newShippingZoneForm"><input type="hidden" id="shEditId" value="" />
           <div class="shipping-form-grid">
             <label for="shName">Nombre de la zona</label><input type="text" id="shName" required placeholder="Ej. Bogotá D.C. & Sabana" />
@@ -56,7 +56,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
         </form>
       </section>
     </div>
-    <dialog id="shipping-location-detail" class="shipping-detail-dialog" aria-labelledby="shipping-location-detail-title">
+    <dialog id="shipping-location-detail" class="shipping-detail-dialog shipping-location-dialog" aria-labelledby="shipping-location-detail-title">
       <header><h2 id="shipping-location-detail-title">Municipio DANE</h2><form method="dialog"><button class="shipping-modal-close" aria-label="Cerrar">×</button></form></header>
       <dl><div><dt>Municipio</dt><dd id="shipping-detail-name"></dd></div><div><dt>Departamento</dt><dd id="shipping-detail-department"></dd></div><div><dt>Código DANE</dt><dd id="shipping-detail-code"></dd></div><div><dt>Tipo</dt><dd id="shipping-detail-type"></dd></div><div><dt>Zona y condiciones</dt><dd id="shipping-detail-zones" class="shipping-detail-zones"></dd></div></dl>
     </dialog>
