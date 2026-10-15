@@ -36,4 +36,8 @@ export class InProcessOrdersGateway implements OrdersGateway {
   public getOrderTracking(orderId: string, tokenHash: string) {
     return this.publicApi.getOrderTracking(orderId, tokenHash);
   }
+
+  public getCustomerOrderTracking(orderId: string, customerId: string) {
+    return this.publicApi.getCustomerOrderTracking(orderId, customerId);
+  }
 }

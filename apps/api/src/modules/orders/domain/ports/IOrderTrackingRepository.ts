@@ -15,4 +15,5 @@ export interface OrderTrackingRecord {
 
 export interface IOrderTrackingRepository {
   findByCapability(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null>;
+  findByCustomer(orderId: string, customerId: string): Promise<OrderTrackingRecord | null>;
 }

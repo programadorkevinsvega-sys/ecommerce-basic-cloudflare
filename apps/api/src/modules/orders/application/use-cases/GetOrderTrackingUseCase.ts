@@ -10,4 +10,8 @@ export class GetOrderTrackingUseCase {
   public execute(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null> {
     return this.repository.findByCapability(orderId, tokenHash);
   }
+
+  public executeForCustomer(orderId: string, customerId: string): Promise<OrderTrackingRecord | null> {
+    return this.repository.findByCustomer(orderId, customerId);
+  }
 }

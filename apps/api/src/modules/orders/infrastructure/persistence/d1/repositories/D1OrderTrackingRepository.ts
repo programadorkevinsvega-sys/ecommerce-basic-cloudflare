@@ -21,7 +21,18 @@ export class D1OrderTrackingRepository implements IOrderTrackingRepository {
       `SELECT id, status, payment_status, created_at, min_estimated_days, max_estimated_days
        FROM orders_orders WHERE id = ? AND guest_tracking_token_hash = ?`
     ).bind(orderId, tokenHash).first<TrackingRow>();
-    if (!row) return null;
+    return row ? this.loadRecord(row) : null;
+  }
+
+  public async findByCustomer(orderId: string, customerId: string): Promise<OrderTrackingRecord | null> {
+    const row = await this.db.prepare(
+      `SELECT id, status, payment_status, created_at, min_estimated_days, max_estimated_days
+       FROM orders_orders WHERE id = ? AND customer_id = ?`
+    ).bind(orderId, customerId).first<TrackingRow>();
+    return row ? this.loadRecord(row) : null;
+  }
+
+  private async loadRecord(row: TrackingRow): Promise<OrderTrackingRecord> {
     const history = await this.db.prepare(
       'SELECT to_status, created_at FROM orders_history WHERE order_id = ? ORDER BY created_at ASC'
     ).bind(row.id).all<HistoryRow>();

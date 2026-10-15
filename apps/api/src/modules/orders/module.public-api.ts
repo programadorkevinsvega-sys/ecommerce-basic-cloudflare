@@ -36,4 +36,8 @@ export class OrdersPublicApi {
   public getOrderTracking(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null> {
     return this.container.getOrderTrackingUseCase.execute(orderId, tokenHash);
   }
+
+  public getCustomerOrderTracking(orderId: string, customerId: string): Promise<OrderTrackingRecord | null> {
+    return this.container.getOrderTrackingUseCase.executeForCustomer(orderId, customerId);
+  }
 }

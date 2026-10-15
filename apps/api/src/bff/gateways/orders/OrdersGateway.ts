@@ -13,4 +13,5 @@ export interface OrdersGateway {
   hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>;
   getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;
   getOrderTracking(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null>;
+  getCustomerOrderTracking(orderId: string, customerId: string): Promise<OrderTrackingRecord | null>;
 }
