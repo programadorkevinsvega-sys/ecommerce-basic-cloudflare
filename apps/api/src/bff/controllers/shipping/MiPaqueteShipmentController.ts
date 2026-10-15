@@ -42,6 +42,7 @@ export class MiPaqueteShipmentController {
           orderId: order.id, status: order.status, paymentStatus: order.paymentStatus,
           paymentMethod: order.paymentMethod, totalCents: order.totalCents,
           shippingCostCents: order.shippingCostCents, transactionFeeCents: order.transactionFeeCents,
+          shippingDiscountCents: order.shippingDiscountCents,
           shippingCollectionCents: order.shippingCollectionCents, shippingChargeMode: order.shippingChargeMode,
           destinationDaneCode: `${order.shippingAddress.daneCode}000`,
           destinationAddress: order.shippingAddress.addressLine, recipient, sender,

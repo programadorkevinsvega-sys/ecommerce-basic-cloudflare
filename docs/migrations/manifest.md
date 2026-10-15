@@ -129,10 +129,15 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `promotions__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `promotions__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `promotions__0002_coupon_targets.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
+| `promotions__0003_correct_welcome_coupon_description.sql` | v3 | Local | Aplicada en D1 local el 2026-10-15 | trabajo actual | Corrige únicamente la descripción obsoleta de BIENVENIDO10 si coincide con el texto erróneo observado; en producción pendiente por acceso Cloudflare 7403. |
 
 ---
 
 ## Módulo: `shipping`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `shipping__0007_free_shipping_policy.sql` | v7 | Local | Aplicada en D1 local el 2026-10-15 | trabajo actual | Expand-only: crea la política única con envío gratis activo desde $150.000 COP para alinear el anuncio existente. Producción pendiente por acceso Cloudflare 7403. |
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
@@ -182,6 +187,7 @@ El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7
 | `orders__0004_checkout_transaction_fee.sql` | v4 | D1 temporal / Workers | 2026-10-13 | `c364eb8` | ✅ Aplicación vacía y repetición idempotente verificadas |
 | `orders__0005_secure_order_tracking.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada por runner tras verificar 49 migraciones previas; ledger, tres columnas e índice confirmados. Pedidos existentes: 13 antes y después, sin cambios de filas. Worker desplegado y al 100% (`7ac9c89a-eb45-433c-93b8-3f9c4aea54ca`); `/seguimiento-pedido` HTTP 200 y `/health` saludable. Bookmark previo `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. |
 | `orders__0008_shipping_fulfillment_method.sql` | v8 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada; entrada del ledger, columna/default verificados y 13 pedidos conservados. Bookmark previo `0000031e-000004ba-00005105-af412588b177ffea97d2b0bbf9c07c9d`; posterior `0000031e-000004c4-00005105-6741b923aa72b727756c4d275c673b0f`. |
+| `orders__0009_shipping_discount.sql` | v9 | Local | Aplicada en D1 local el 2026-10-15 | trabajo actual | Expand-only: agrega `shipping_discount_cents NOT NULL DEFAULT 0`; los pedidos anteriores conservan su valor y total. Producción pendiente por acceso Cloudflare 7403. |
 
 ---
 

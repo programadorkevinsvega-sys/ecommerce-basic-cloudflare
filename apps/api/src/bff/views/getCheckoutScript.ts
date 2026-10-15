@@ -21,6 +21,9 @@ export function getCheckoutScript(
       let shippingChargeMode = 'included';
       let zonePolicyAllowsOrder = false;
       let carrierIntegrationEnabled = false;
+      let freeShippingEnabled = false;
+      let freeShippingThresholdCents = 0;
+      const qualifiesForFreeShipping = () => freeShippingEnabled && subtotalCents >= freeShippingThresholdCents;
       let selectedCarrierQuoteId = null;
       let carrierQuoteRequest = 0;
       const selectedZone = () => document.getElementById('dest-zone').selectedOptions[0];
@@ -53,7 +56,7 @@ export function getCheckoutScript(
         const carrierDelivery = opt?.dataset.type === 'national' && carrierIntegrationEnabled;
         selectedCarrierQuoteId = null;
         carrierFreightCents = 0;
-        if (shippingChargeMode === 'collect_at_delivery') shippingChargeMode = 'included';
+        if (shippingChargeMode === 'collect_at_delivery' || qualifiesForFreeShipping()) shippingChargeMode = 'included';
         const quoteBox = document.getElementById('carrier-quote-options');
         quoteBox.hidden = true; quoteBox.innerHTML = '';
         const codRadio = document.getElementById('radio-cod');
@@ -69,7 +72,7 @@ export function getCheckoutScript(
           updateTotals();
           return;
         }
-        shippingCostCents = carrierDelivery ? 0 : parseInt(opt.getAttribute('data-rate'), 10) || 0;
+        shippingCostCents = carrierDelivery || qualifiesForFreeShipping() ? 0 : parseInt(opt.getAttribute('data-rate'), 10) || 0;
         zonePolicyAllowsOrder = false;
         btn.disabled = true;
         setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle');
@@ -126,7 +129,7 @@ export function getCheckoutScript(
             shippingChargeMode = 'included';
             selectedCarrierQuoteId = null;
             carrierFreightCents = 0;
-            shippingCostCents = parseInt(opt.dataset.rate, 10) || 0;
+            shippingCostCents = qualifiesForFreeShipping() ? 0 : parseInt(opt.dataset.rate, 10) || 0;
             updateTotals(); updateSubmitAvailability();
             setCheckoutStatus('Entrega local gestionada por la tienda.' + delivery, 'success');
           }
@@ -163,6 +166,13 @@ export function getCheckoutScript(
       fetch('/api/v1/shipping/carrier/availability').then(response => response.json()).then(result => {
         carrierIntegrationEnabled = Boolean(result.enabled);
         if (carrierIntegrationEnabled && document.getElementById('dest-zone').value) handleZoneChange();
+      }).catch(() => {});
+      fetch('/api/v1/shipping/free-shipping-policy').then(response => response.json()).then(result => {
+        const policy = result.data || {};
+        freeShippingEnabled = Boolean(policy.enabled);
+        freeShippingThresholdCents = Number(policy.thresholdCents) || 0;
+        const zone = document.getElementById('dest-zone');
+        if (zone.value) handleZoneChange();
       }).catch(() => {});
       // Inicializar totales al cargar
       updateTotals();

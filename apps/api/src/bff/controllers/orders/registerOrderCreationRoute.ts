@@ -72,24 +72,35 @@ export function registerOrderCreationRoute(
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
         body.lines, body.couponCode, customerId, zone.type !== 'national' ? zone.priceInCents : 0, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
+    const freeShippingPolicy = await deps.shipping.getFreeShippingPolicy();
+    const freeShippingApplies = await deps.orders.evaluateFreeShippingEligibility({ subtotalCents: pricing.subtotalCents,
+      discountCents: pricing.discountCents, enabled: freeShippingPolicy.enabled, thresholdCents: freeShippingPolicy.thresholdCents });
+    const requestedChargeMode = zone.type === 'national' ? shippingChargeMode : 'included';
+    const effectiveChargeMode = freeShippingApplies ? 'included' : requestedChargeMode;
     let carrierQuote = null;
     if (carrierQuoteId) {
       try {
         const pack = await resolveCarrierQuotePackage(deps.catalog, deps.shipping, pricing.lines,
           pricing.subtotalCents, pricing.discountCents);
         carrierQuote = await deps.shipping.getAvailableCarrierQuote({ id: carrierQuoteId,
-          paymentMethod: body.paymentMethod, shippingChargeMode, daneCode: `${shippingAddress.daneCode}000`, ...pack });
+          paymentMethod: body.paymentMethod, shippingChargeMode: effectiveChargeMode, daneCode: `${shippingAddress.daneCode}000`, ...pack });
       } catch { return c.json({ error: 'Actualiza la cotización del envío con los productos actuales.' }, 409); }
       if (!carrierQuote) return c.json({ error: 'La tarifa venció o ya no corresponde al contenido del carrito. Vuelve a cotizar.' }, 409);
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        body.lines, body.couponCode, customerId, shippingChargeMode === 'included' ? carrierQuote.shippingCostCents : 0, body.paymentMethod);
+        body.lines, body.couponCode, customerId, effectiveChargeMode === 'included' && !freeShippingApplies ? carrierQuote.shippingCostCents : 0, body.paymentMethod);
     }
-    if (shippingChargeMode === 'collect_at_delivery' && !carrierQuote) {
+    if (effectiveChargeMode === 'collect_at_delivery' && !carrierQuote) {
       return c.json({ error: 'El pago del envío al recibir requiere una cotización de transportadora vigente.' }, 409);
     }
-    const effectiveChargeMode = zone.type === 'national' ? shippingChargeMode : 'included';
     const quotedShippingCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
     const shippingCostCents = effectiveChargeMode === 'included' ? quotedShippingCents : 0;
+    const shippingDiscountCents = freeShippingApplies ? quotedShippingCents : 0;
+    if (freeShippingApplies && !carrierQuote) {
+      try {
+        pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
+          body.lines, body.couponCode, customerId, 0, body.paymentMethod);
+      } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
+    }
     const policyError = await validateOrderPolicy(deps.orders, zone, pricing, body.paymentMethod,
       shippingAddress.daneCode, deps.shipping);
     if (policyError) return c.json({ error: policyError }, 400);
@@ -100,6 +111,7 @@ export function registerOrderCreationRoute(
         customerId, guestCartIdHash, customerEmail: body.customerEmail, customerName: body.customerName,
         customerPhone: body.customerPhone, customerTaxId: body.customerTaxId || null, shippingAddress,
         shippingZoneId: zone.id, shippingCostCents,
+        shippingDiscountCents,
         shippingCollectionCents: effectiveChargeMode === 'collect_at_delivery' ? quotedShippingCents : 0,
         shippingChargeMode: effectiveChargeMode,
         shippingFulfillmentMethod: zone.type === 'national' ? (carrierEnabled ? 'carrier' : 'legacy') : 'merchant_local',

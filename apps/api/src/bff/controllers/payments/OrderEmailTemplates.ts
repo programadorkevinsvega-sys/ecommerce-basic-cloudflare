@@ -6,7 +6,8 @@ export class OrderEmailTemplates {
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
     const subtotalFormatted = (order.subtotalCents / 100).toLocaleString('es-CO');
     const taxFormatted = (calculateOrderTaxCents(order) / 100).toLocaleString('es-CO');
-    const shippingFormatted = (order.shippingCostCents / 100).toLocaleString('es-CO');
+    const billedShippingCents = Math.max(0, order.shippingCostCents - order.shippingDiscountCents);
+    const shippingFormatted = (billedShippingCents / 100).toLocaleString('es-CO');
     const addr = order.shippingAddress || {} as any;
 
     return `
@@ -49,6 +50,7 @@ export class OrderEmailTemplates {
           ${order.discountCents > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento:</span><span>-$${(order.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;"><span>IVA incluido:</span><span>$${taxFormatted}</span></div>
           <div style="display:flex;justify-content:space-between;"><span>${order.shippingChargeMode === 'collect_at_delivery' ? 'Envío incluido en factura:' : 'Envío:'}</span><span>$${shippingFormatted}</span></div>
+          ${order.shippingDiscountCents ? `<div style="display:flex;justify-content:space-between;"><span>Envío cubierto por la tienda:</span><span>-$${(order.shippingDiscountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.shippingCollectionCents ? `<div style="display:flex;justify-content:space-between;"><span>Envío por pagar al recibir:</span><span>$${(order.shippingCollectionCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}

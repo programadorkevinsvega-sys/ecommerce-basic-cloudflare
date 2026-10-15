@@ -33,6 +33,9 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
     try {
       const pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
         input.lines, input.couponCode, null, 0, input.paymentMethod);
+      const freeShipping = await deps.shipping.getFreeShippingPolicy();
+      const freeShippingApplies = await deps.orders.evaluateFreeShippingEligibility({ subtotalCents: pricing.subtotalCents,
+        discountCents: pricing.discountCents, enabled: freeShipping.enabled, thresholdCents: freeShipping.thresholdCents });
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,
         input.destinationDaneCode, deps.shipping);
       if (policyError) return c.json({ error: policyError }, 400);
@@ -40,7 +43,7 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
         pricing.subtotalCents, pricing.discountCents);
       const quotes = await deps.shipping.quoteCarrierShipping({
         destinationDaneCode: `${input.destinationDaneCode}000`, paymentMethod: input.paymentMethod,
-        shippingChargeMode: input.shippingChargeMode,
+        shippingChargeMode: freeShippingApplies ? 'included' : input.shippingChargeMode,
         ...pack,
       });
       return c.json({ success: true, quotes });

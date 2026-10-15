@@ -21,6 +21,7 @@ import { renderCmsFormsScript } from './renderCmsFormsScript.js';
 import { renderPromotionsFormsScript } from './renderPromotionsFormsScript.js';
 import { renderPromotionsHandlersScript } from './renderPromotionsHandlersScript.js';
 import { renderShippingFormsScript } from './renderShippingFormsScript.js';
+import { renderFreeShippingPolicyScript } from './renderFreeShippingPolicyScript.js';
 import { renderMiPaqueteConfigScript } from './renderMiPaqueteConfigScript.js';
 import { renderCmsEditorToolbarScript } from './renderCmsEditorToolbarScript.js';
 import { renderShippingHandlersScript } from './renderShippingHandlersScript.js';
@@ -101,6 +102,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderPromotionsFormsScript()}</script>
   <script>${renderPromotionsHandlersScript()}</script>
   <script>${renderShippingFormsScript()}</script>
+  ${renderFreeShippingPolicyScript()}
   <script>${renderMiPaqueteConfigScript()}</script>
   <script>${renderOrderTrackingAdminScript()}</script>
   <script>${renderShippingHandlersScript()}</script>

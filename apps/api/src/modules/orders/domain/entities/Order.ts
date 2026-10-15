@@ -23,6 +23,7 @@ export interface OrderProps {
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
+  shippingDiscountCents?: number;
   shippingCollectionCents?: number;
   shippingChargeMode?: 'included' | 'collect_at_delivery';
   shippingFulfillmentMethod?: ShippingFulfillmentMethod;
@@ -56,6 +57,7 @@ export class Order {
   public readonly shippingAddress: ShippingAddressSnapshot;
   public readonly shippingZoneId: string;
   public readonly shippingCostCents: number;
+  public readonly shippingDiscountCents: number;
   public readonly shippingCollectionCents: number;
   public readonly shippingChargeMode: 'included' | 'collect_at_delivery';
   public readonly shippingFulfillmentMethod: ShippingFulfillmentMethod;
@@ -91,6 +93,7 @@ export class Order {
     this.shippingAddress = props.shippingAddress;
     this.shippingZoneId = props.shippingZoneId;
     this.shippingCostCents = props.shippingCostCents;
+    this.shippingDiscountCents = props.shippingDiscountCents ?? 0;
     this.shippingCollectionCents = props.shippingCollectionCents ?? 0;
     this.shippingChargeMode = props.shippingChargeMode ?? 'included';
     this.shippingFulfillmentMethod = props.shippingFulfillmentMethod ?? 'legacy';
@@ -156,6 +159,7 @@ export class Order {
       shippingAddress: this.shippingAddress,
       shippingZoneId: this.shippingZoneId,
       shippingCostCents: this.shippingCostCents,
+      shippingDiscountCents: this.shippingDiscountCents,
       shippingCollectionCents: this.shippingCollectionCents,
       shippingChargeMode: this.shippingChargeMode,
       shippingFulfillmentMethod: this.shippingFulfillmentMethod,

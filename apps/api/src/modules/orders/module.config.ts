@@ -10,6 +10,7 @@ import { HasDeliveredProductPurchaseUseCase } from './application/use-cases/HasD
 import { GetDeliveredProductPaymentMethodUseCase } from './application/use-cases/GetDeliveredProductPaymentMethodUseCase.js';
 import { GetOrderTrackingUseCase } from './application/use-cases/GetOrderTrackingUseCase.js';
 import { D1OrderTrackingRepository } from './infrastructure/persistence/d1/repositories/D1OrderTrackingRepository.js';
+import { EvaluateFreeShippingEligibilityUseCase } from './application/use-cases/EvaluateFreeShippingEligibilityUseCase.js';
 
 export interface OrdersModuleContainer {
   evaluateCheckoutPolicyUseCase: EvaluateCheckoutPolicyUseCase;
@@ -20,6 +21,7 @@ export interface OrdersModuleContainer {
   hasDeliveredProductPurchaseUseCase:HasDeliveredProductPurchaseUseCase;
   getDeliveredProductPaymentMethodUseCase: GetDeliveredProductPaymentMethodUseCase;
   getOrderTrackingUseCase: GetOrderTrackingUseCase;
+  evaluateFreeShippingEligibilityUseCase: EvaluateFreeShippingEligibilityUseCase;
 }
 
 export function createOrdersModule(env: Env): OrdersModuleContainer {
@@ -36,5 +38,6 @@ export function createOrdersModule(env: Env): OrdersModuleContainer {
     hasDeliveredProductPurchaseUseCase:new HasDeliveredProductPurchaseUseCase(repo),
     getDeliveredProductPaymentMethodUseCase: new GetDeliveredProductPaymentMethodUseCase(repo),
     getOrderTrackingUseCase: new GetOrderTrackingUseCase(tracking),
+    evaluateFreeShippingEligibilityUseCase: new EvaluateFreeShippingEligibilityUseCase(),
   };
 }

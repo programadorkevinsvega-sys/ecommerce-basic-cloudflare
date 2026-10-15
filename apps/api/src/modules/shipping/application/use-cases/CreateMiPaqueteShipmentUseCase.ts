@@ -8,7 +8,7 @@ import { ReconcilePendingMiPaqueteShipmentUseCase } from './ReconcilePendingMiPa
 
 export interface CarrierOrderInput {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
-  totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
+  totalCents: number; shippingCostCents: number; shippingDiscountCents?: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
   shippingCollectionCents?: number; shippingChargeMode?: 'included' | 'collect_at_delivery';
   recipient: CarrierParty; sender: CarrierParty; description: string;
 }
@@ -48,7 +48,8 @@ export class CreateMiPaqueteShipmentUseCase {
     }
     // MiPaquete separa el valor de mercancía del recaudo. La mercancía usa el
     // subtotal final (con IVA incluido en el precio) y no suma flete ni tarifa Wompi.
-    const saleValueCents = Math.max(0, order.totalCents - order.shippingCostCents - order.transactionFeeCents);
+    const customerShippingCents = Math.max(0, order.shippingCostCents - (order.shippingDiscountCents || 0));
+    const saleValueCents = Math.max(0, order.totalCents - customerShippingCents - order.transactionFeeCents);
     const currentOptions = await this.carrier.quote({
       originDaneCode: config.originDaneCode as string, destinationDaneCode: order.destinationDaneCode,
       widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,

@@ -17,6 +17,10 @@ export class InProcessOrdersGateway implements OrdersGateway {
     return this.publicApi.evaluateCheckoutPolicy(input);
   }
 
+  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): Promise<boolean> {
+    return Promise.resolve(this.publicApi.evaluateFreeShippingEligibility(input));
+  }
+
   public async createOrder(cmd: CreateOrderCommand): Promise<Order> {
     return this.publicApi.createOrder(cmd);
   }

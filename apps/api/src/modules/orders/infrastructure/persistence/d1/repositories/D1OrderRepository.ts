@@ -11,6 +11,7 @@ interface OrderRow {
   shipping_address: string;
   shipping_zone_id: string;
   shipping_cost_cents: number;
+  shipping_discount_cents?: number;
   shipping_collection_cents?: number;
   shipping_charge_mode?: 'included' | 'collect_at_delivery';
   shipping_fulfillment_method?: 'merchant_local' | 'carrier' | 'legacy';
@@ -68,16 +69,17 @@ export class D1OrderRepository implements IOrderRepository {
       `INSERT INTO orders_orders (
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
+         shipping_discount_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
          payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days, shipping_collection_cents, shipping_charge_mode, shipping_fulfillment_method
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
          updated_at = excluded.updated_at`
     ).bind(
       order.id, order.customerId, order.guestCartIdHash, order.customerEmail, order.customerName, order.customerPhone,
-      JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents,
+      JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents, order.shippingDiscountCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
       order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents,
@@ -176,6 +178,7 @@ export class D1OrderRepository implements IOrderRepository {
       shippingAddress: parsedAddress as ShippingAddressSnapshot,
       shippingZoneId: row.shipping_zone_id,
       shippingCostCents: row.shipping_cost_cents,
+      shippingDiscountCents: row.shipping_discount_cents ?? 0,
       shippingCollectionCents: row.shipping_collection_cents ?? 0,
       shippingChargeMode: row.shipping_charge_mode ?? 'included',
       shippingFulfillmentMethod: row.shipping_fulfillment_method ?? 'legacy',

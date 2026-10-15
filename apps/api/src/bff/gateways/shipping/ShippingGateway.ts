@@ -50,6 +50,8 @@ export interface CarrierIntegrationConfigDto {
   updatedAt: string;
 }
 
+export interface FreeShippingPolicyDto { enabled: boolean; thresholdCents: number; updatedAt: string; }
+
 export type CarrierPackageProfileDto = CarrierIntegrationConfigDto['packageProfiles'][number];
 export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> & { isActive?: boolean };
 
@@ -70,7 +72,7 @@ export interface CarrierShipmentDto {
 }
 export interface CarrierShipmentCreateRequest {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
-  totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
+  totalCents: number; shippingCostCents: number; shippingDiscountCents?: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
   shippingCollectionCents?: number; shippingChargeMode?: 'included' | 'collect_at_delivery';
   recipient: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
   sender: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
@@ -119,6 +121,8 @@ export interface ShippingGateway {
     allowedZoneIds?: string[]
   ): Promise<ShippingCoverageDto>;
   getCarrierConfig(): Promise<CarrierIntegrationConfigDto>;
+  getFreeShippingPolicy(): Promise<FreeShippingPolicyDto>;
+  updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicyDto>;
   updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto>;
   listCarrierPackageProfiles(): Promise<CarrierPackageProfileDto[]>;
   getCarrierPackageProfile(id: string): Promise<CarrierPackageProfileDto>;

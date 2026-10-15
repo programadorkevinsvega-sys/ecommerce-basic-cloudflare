@@ -69,7 +69,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   // Storefront Admin API
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
-  app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
+  app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/', MiPaqueteConfigController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/', MiPaqueteShipmentController.createRoutes({ identity: cRoot.identityGateway,
     orders: cRoot.ordersGateway, settings: cRoot.settingsGateway, shipping: cRoot.shippingGateway,

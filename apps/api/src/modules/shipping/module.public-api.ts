@@ -10,6 +10,7 @@ import { CarrierOrderInput } from './application/use-cases/CreateMiPaqueteShipme
 import { CarrierShipment } from './domain/entities/CarrierShipment.js';
 import { PackedOrderItem } from './domain/services/PackOrderIntoConfiguredBox.js';
 import { CarrierPackageProfileInput } from './domain/entities/CarrierPackageProfile.js';
+import { FreeShippingPolicy } from './domain/entities/FreeShippingPolicy.js';
 
 export class ShippingPublicApi {
   private readonly container: ShippingModuleContainer;
@@ -70,6 +71,14 @@ export class ShippingPublicApi {
 
   public getCarrierConfig(): Promise<CarrierIntegrationConfig> {
     return this.container.getCarrierConfigUseCase.execute();
+  }
+
+  public getFreeShippingPolicy(): Promise<FreeShippingPolicy> {
+    return this.container.getFreeShippingPolicyUseCase.execute();
+  }
+
+  public updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicy> {
+    return this.container.updateFreeShippingPolicyUseCase.execute(input);
   }
 
   public async getCarrierAvailability(): Promise<boolean> {

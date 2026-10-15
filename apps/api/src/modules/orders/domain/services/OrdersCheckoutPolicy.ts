@@ -23,6 +23,12 @@ export interface CheckoutEvaluationResult {
 }
 
 export class OrdersCheckoutPolicy {
+  public static qualifiesForFreeShipping(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): boolean {
+    if (!input.enabled || !Number.isSafeInteger(input.subtotalCents) || !Number.isSafeInteger(input.discountCents) ||
+      !Number.isSafeInteger(input.thresholdCents) || input.thresholdCents < 0) return false;
+    return Math.max(0, input.subtotalCents - input.discountCents) >= input.thresholdCents;
+  }
+
   public static evaluate(input: CheckoutEvaluationInput): CheckoutEvaluationResult {
     const blockingReasons: string[] = [];
     const codBlockingReasons: string[] = [];

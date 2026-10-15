@@ -84,11 +84,11 @@ export function renderOrdersAdminScript(): string {
       } else {
         discRow.style.display = 'none';
       }
-      const taxCents = Number(order.pricingVersion) === 2 ? Number(order.taxCents || 0) : Number(order.totalCents) - Number(order.subtotalCents) - Number(order.shippingCostCents) + Number(disc);
+      const taxCents = Number(order.pricingVersion) === 2 ? Number(order.taxCents || 0) : Number(order.totalCents) - Number(order.subtotalCents) - Math.max(0, Number(order.shippingCostCents) - Number(order.shippingDiscountCents || 0)) + Number(disc) - Number(order.transactionFeeCents || 0);
       document.getElementById('modal-tax').innerText = '$' + (taxCents / 100).toLocaleString('es-CO');
       document.getElementById('modal-transaction-fee').innerText = '$' + (Number(order.transactionFeeCents || 0) / 100).toLocaleString('es-CO');
       document.getElementById('modal-payment-fee').innerText = '$' + (Number(order.estimatedPaymentFeeCents || 0) / 100).toLocaleString('es-CO') + ' (estimada)';
-      document.getElementById('modal-shipping-cost').innerText = '$' + (order.shippingCostCents / 100).toLocaleString('es-CO');
+      document.getElementById('modal-shipping-cost').innerText = '$' + (Math.max(0, Number(order.shippingCostCents) - Number(order.shippingDiscountCents || 0)) / 100).toLocaleString('es-CO');
       const shippingCollectionRow = document.getElementById('modal-shipping-collection-row');
       shippingCollectionRow.style.display = Number(order.shippingCollectionCents || 0) > 0 ? 'flex' : 'none';
       document.getElementById('modal-shipping-collection').innerText = '$' + (Number(order.shippingCollectionCents || 0) / 100).toLocaleString('es-CO');

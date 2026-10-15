@@ -16,6 +16,10 @@ export class OrdersPublicApi {
     return this.container.evaluateCheckoutPolicyUseCase.execute(input);
   }
 
+  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): boolean {
+    return this.container.evaluateFreeShippingEligibilityUseCase.execute(input);
+  }
+
   public async createOrder(cmd: CreateOrderCommand): Promise<Order> {
     return this.container.createOrderUseCase.execute(cmd);
   }

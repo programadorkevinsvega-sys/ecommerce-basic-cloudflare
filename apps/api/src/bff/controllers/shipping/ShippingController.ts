@@ -2,16 +2,38 @@ import { Hono } from 'hono';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 
 let lastLocationSyncAttempt = 0;
 
 export class ShippingController {
-  public static createRoutes(shippingGateway: ShippingGateway, identityGateway: IdentityGateway): Hono {
+  public static createRoutes(shippingGateway: ShippingGateway, identityGateway: IdentityGateway, auditGateway: AuditGateway): Hono {
     const router = new Hono();
 
     router.get('/api/v1/shipping/carrier/availability', async (c) => {
       c.header('Cache-Control', 'no-store');
       return c.json({ enabled: await shippingGateway.getCarrierAvailability() });
+    });
+
+    router.get('/api/v1/shipping/free-shipping-policy', async (c) => {
+      c.header('Cache-Control', 'no-store');
+      return c.json({ data: await shippingGateway.getFreeShippingPolicy() });
+    });
+
+    router.get('/api/v1/admin/shipping/free-shipping-policy', createAuthMiddleware(identityGateway, 'admin', 'shipping:read'), async (c) => {
+      return c.json({ data: await shippingGateway.getFreeShippingPolicy() });
+    });
+
+    router.put('/api/v1/admin/shipping/free-shipping-policy', createAuthMiddleware(identityGateway, 'admin', 'shipping:update'), async (c) => {
+      const body = await c.req.json().catch(() => null) as { enabled?: unknown; thresholdCents?: unknown } | null;
+      if (!body || typeof body.enabled !== 'boolean' || !Number.isSafeInteger(body.thresholdCents) || Number(body.thresholdCents) < 0 || Number(body.thresholdCents) > 100_000_000_000) {
+        return c.json({ error: 'Activa o desactiva el beneficio e indica un umbral válido en centavos.' }, 400);
+      }
+      const previous = await shippingGateway.getFreeShippingPolicy();
+      const updated = await shippingGateway.updateFreeShippingPolicy({ enabled: body.enabled, thresholdCents: Number(body.thresholdCents) });
+      await auditGateway.record({ actorId: c.get('actorId'), actorType: 'admin', action: 'shipping.free_shipping_policy.updated',
+        entityType: 'shipping_free_shipping_policy', entityId: 'default', changes: { previous, updated } });
+      return c.json({ data: updated });
     });
 
     // Buscar municipios / departamentos (Público)

@@ -9,6 +9,7 @@ export function getCheckoutCarrierScript(): string {
         selectedCarrierQuoteId = null; updateSubmitAvailability();
         box.hidden = false; box.textContent = 'Consultando tarifas de transportadora…';
         const paymentMethod = document.querySelector('input[name="payment-method"]:checked')?.value || 'wompi';
+        if (qualifiesForFreeShipping()) shippingChargeMode = 'included';
         try {
           const response = await fetch('/api/v1/shipping/carrier-quotes', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -19,7 +20,7 @@ export function getCheckoutCarrierScript(): string {
           if (requestId !== carrierQuoteRequest) return;
           if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cotizar el envío.');
           const fmt = cents => '$' + (cents / 100).toLocaleString('es-CO');
-          const chargeModes = '<strong>¿Cómo quieres pagar el envío?</strong>' +
+          const chargeModes = qualifiesForFreeShipping() ? '<p class="checkout-shipping-promo">Envío gratis: la tienda cubre el flete por compras desde $' + (freeShippingThresholdCents / 100).toLocaleString('es-CO') + '.</p>' : '<strong>¿Cómo quieres pagar el envío?</strong>' +
             '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="included" ' + (shippingChargeMode === 'included' ? 'checked' : '') + '><span><strong>Sumarlo al pedido</strong><small>Lo pagas ahora junto con tu compra.</small></span></label>' +
             '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="collect_at_delivery" ' + (shippingChargeMode === 'collect_at_delivery' ? 'checked' : '') + '><span><strong>Pagarlo al recibir</strong><small>La transportadora cobra el flete al entregar. Este valor no se suma al pago en línea.</small></span></label>';
           if (!result.quotes.length) {
@@ -37,18 +38,18 @@ export function getCheckoutCarrierScript(): string {
               Number(firstQuote.packageWeightKg).toLocaleString('es-CO') + ' kg.</small>'
             : '';
           box.innerHTML = chargeModes + '<strong>Selecciona una transportadora *</strong>' + result.quotes.map((quote, index) =>
-              '<label class="checkout-carrier-option"><input type="radio" name="carrier-quote" value="' + escapeCarrierText(quote.id) + '" data-rate="' + Number(quote.shippingCostCents) + '" ' + (index === 0 ? 'checked' : '') + '><span><strong>' + escapeCarrierText(quote.deliveryCompanyName) + '</strong><small>' + fmt(Number(quote.shippingCostCents)) + ' · aprox. ' + Math.ceil(Number(quote.deliveryMinutes) / 60) + ' horas</small></span></label>'
+              '<label class="checkout-carrier-option"><input type="radio" name="carrier-quote" value="' + escapeCarrierText(quote.id) + '" data-rate="' + Number(quote.shippingCostCents) + '" ' + (index === 0 ? 'checked' : '') + '><span><strong>' + escapeCarrierText(quote.deliveryCompanyName) + '</strong><small>' + (qualifiesForFreeShipping() ? 'Envío gratis · cubierto por la tienda' : fmt(Number(quote.shippingCostCents))) + ' · aprox. ' + Math.ceil(Number(quote.deliveryMinutes) / 60) + ' horas</small></span></label>'
             ).join('') + packageNote;
           box.querySelectorAll('input[name="shipping-charge-mode"]').forEach(input => input.addEventListener('change', () => { shippingChargeMode = input.value; loadCarrierQuotes(); }));
           box.querySelectorAll('input[name="carrier-quote"]').forEach(input => input.addEventListener('change', () => {
             selectedCarrierQuoteId = input.value; carrierFreightCents = Number(input.dataset.rate);
-            shippingCostCents = shippingChargeMode === 'included' ? carrierFreightCents : 0;
+            shippingCostCents = shippingChargeMode === 'included' && !qualifiesForFreeShipping() ? carrierFreightCents : 0;
             updateTotals(); updateSubmitAvailability();
           }));
           const selected = box.querySelector('input[name="carrier-quote"]:checked');
           selectedCarrierQuoteId = selected?.value || null;
           if (selected) carrierFreightCents = Number(selected.dataset.rate);
-          shippingCostCents = shippingChargeMode === 'included' ? carrierFreightCents : 0;
+          shippingCostCents = shippingChargeMode === 'included' && !qualifiesForFreeShipping() ? carrierFreightCents : 0;
           updateTotals(); updateSubmitAvailability();
         } catch (error) {
           if (requestId !== carrierQuoteRequest) return;

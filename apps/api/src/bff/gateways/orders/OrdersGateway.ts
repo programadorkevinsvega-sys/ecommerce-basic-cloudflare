@@ -6,6 +6,7 @@ import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails,
 
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
+  evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): Promise<boolean>;
   createOrder(cmd: CreateOrderCommand): Promise<Order>;
   getOrder(orderId: string): Promise<Order | null>;
   listOrders(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;

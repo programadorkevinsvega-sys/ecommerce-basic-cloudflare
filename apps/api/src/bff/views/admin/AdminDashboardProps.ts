@@ -3,7 +3,7 @@ import type { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefro
 import type { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import type { CmsPageDto } from '../../gateways/cms/CmsGateway.js';
 import type { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
-import type { ShippingZoneDto, DivipolaLocationDto, CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGateway.js';
+import type { ShippingZoneDto, DivipolaLocationDto, CarrierIntegrationConfigDto, FreeShippingPolicyDto } from '../../gateways/shipping/ShippingGateway.js';
 
 export interface MarketingDestinationOption { value: string; label: string; group: string; }
 
@@ -24,6 +24,7 @@ export interface AdminDashboardProps {
   shippingZones: ShippingZoneDto[];
   divipolaLocations: DivipolaLocationDto[];
   shippingCarrierConfig?: CarrierIntegrationConfigDto;
+  freeShippingPolicy?: FreeShippingPolicyDto;
   settings: SettingsDto;
   adminEmail: string;
   reviewCanRead: boolean;

@@ -11,6 +11,7 @@ import {
   CarrierShipmentCreateRequest,
   ShippingPackageItemDto,
   CarrierPackageProfileInputDto,
+  FreeShippingPolicyDto,
 } from './ShippingGateway.js';
 import { ShippingPublicApi } from '../../../modules/shipping/module.public-api.js';
 import { ShippingZone } from '../../../modules/shipping/domain/entities/ShippingZone.js';
@@ -89,6 +90,14 @@ export class InProcessShippingGateway implements ShippingGateway {
 
   public getCarrierConfig(): Promise<CarrierIntegrationConfigDto> {
     return this.publicApi.getCarrierConfig();
+  }
+
+  public getFreeShippingPolicy(): Promise<FreeShippingPolicyDto> {
+    return this.publicApi.getFreeShippingPolicy();
+  }
+
+  public updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicyDto> {
+    return this.publicApi.updateFreeShippingPolicy(input);
   }
 
   public updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto> {

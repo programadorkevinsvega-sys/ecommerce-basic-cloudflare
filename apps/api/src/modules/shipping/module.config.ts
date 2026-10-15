@@ -32,6 +32,9 @@ import { ListCarrierShipmentsUseCase } from './application/use-cases/ListCarrier
 import { MarkCarrierShipmentPrintedUseCase } from './application/use-cases/MarkCarrierShipmentPrintedUseCase.js';
 import { ReconcilePendingMiPaqueteShipmentUseCase } from './application/use-cases/ReconcilePendingMiPaqueteShipmentUseCase.js';
 import { SyncCarrierLocationsUseCase } from './application/use-cases/SyncCarrierLocationsUseCase.js';
+import { D1FreeShippingPolicyRepository } from './infrastructure/persistence/d1/repositories/D1FreeShippingPolicyRepository.js';
+import { GetFreeShippingPolicyUseCase } from './application/use-cases/GetFreeShippingPolicyUseCase.js';
+import { UpdateFreeShippingPolicyUseCase } from './application/use-cases/UpdateFreeShippingPolicyUseCase.js';
 
 export interface ShippingModuleContainer {
   carrierApiConfigured: boolean;
@@ -57,6 +60,8 @@ export interface ShippingModuleContainer {
   listCarrierShipmentsUseCase: ListCarrierShipmentsUseCase;
   markCarrierShipmentPrintedUseCase: MarkCarrierShipmentPrintedUseCase;
   syncCarrierLocationsUseCase: SyncCarrierLocationsUseCase;
+  getFreeShippingPolicyUseCase: GetFreeShippingPolicyUseCase;
+  updateFreeShippingPolicyUseCase: UpdateFreeShippingPolicyUseCase;
 }
 
 export function createShippingModule(env: Env): ShippingModuleContainer {
@@ -66,6 +71,7 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
   const carrierConfigRepo = new D1CarrierConfigRepository(env.DB);
   const carrierQuoteRepo = new D1CarrierQuoteRepository(env.DB);
   const carrierShipmentRepo = new D1CarrierShipmentRepository(env.DB);
+  const freeShippingPolicyRepo = new D1FreeShippingPolicyRepository(env.DB);
   const carrierConfig = readMiPaqueteApiConfig({ secret: env.MI_PAQUETE_TRANSPORTADORA,
     apiUrl: env.MI_PAQUETE_API_URL, environment: env.ENVIRONMENT });
   const carrier = carrierConfig
@@ -98,5 +104,7 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     listCarrierShipmentsUseCase: new ListCarrierShipmentsUseCase(carrierShipmentRepo),
     markCarrierShipmentPrintedUseCase: new MarkCarrierShipmentPrintedUseCase(carrierShipmentRepo),
     syncCarrierLocationsUseCase: new SyncCarrierLocationsUseCase(divipolaRepo, carrier),
+    getFreeShippingPolicyUseCase: new GetFreeShippingPolicyUseCase(freeShippingPolicyRepo),
+    updateFreeShippingPolicyUseCase: new UpdateFreeShippingPolicyUseCase(freeShippingPolicyRepo),
   };
 }

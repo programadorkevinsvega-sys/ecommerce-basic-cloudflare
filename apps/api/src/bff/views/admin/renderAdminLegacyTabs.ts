@@ -71,7 +71,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
     </div>
 
     <div id="tab-shipping" class="tab-content">
-      ${renderShippingManagementSection(props.shippingZones, props.divipolaLocations, props.shippingCarrierConfig)}
+      ${renderShippingManagementSection(props.shippingZones, props.divipolaLocations, props.shippingCarrierConfig, props.freeShippingPolicy)}
       ${renderOrderTrackingAdminSection()}
     </div>
 
