@@ -71,7 +71,7 @@ export function renderShippingFormsScript(): string {
 
     function showAdminShippingPage(page) {
       document.querySelectorAll('[data-shipping-panel]').forEach(panel => { panel.hidden = panel.dataset.shippingPanel !== page; });
-      document.querySelectorAll('[data-shipping-heading]').forEach(heading => { heading.hidden = page === 'tracking'; });
+      document.querySelectorAll('[data-shipping-heading]').forEach(heading => { heading.hidden = page !== 'zones'; });
       if (page === 'locations') loadShippingDirectory(shippingDirectoryPage);
       if (page === 'tracking') loadAdminOrderTracking(1);
     }
