@@ -59,7 +59,7 @@ export function renderAdminSummaryScript(): string {
     }
 
     function renderSummaryStatuses(orders) {
-      const states = [['delivered', 'Entregados'], ['shipped', 'Enviados'], ['confirmed', 'Confirmados'], ['placed', 'Pendientes de pago'], ['cancelled', 'Cancelados']];
+      const states = [['delivered', 'Entregados'], ['shipped', 'Enviados'], ['prepared', 'Preparados'], ['confirmed', 'Confirmados'], ['placed', 'Pendientes de pago'], ['cancelled', 'Cancelados']];
       const list = document.getElementById('summary-status-list');
       list.innerHTML = states.map(([key, label]) => {
         const count = orders.filter(order => order.status === key).length;
@@ -130,7 +130,7 @@ export function renderAdminSummaryScript(): string {
 
     function normalizeSummarySearch(value) { return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
     function summaryOrderStatus(status) {
-      const values = { placed: ['Pendiente', 'neutral'], confirmed: ['Confirmado', 'success'], shipped: ['Enviado', 'info'], delivered: ['Entregado', 'success'], cancelled: ['Cancelado', 'danger'] };
+      const values = { placed: ['Pendiente', 'neutral'], confirmed: ['Confirmado', 'success'], prepared: ['Preparado', 'info'], shipped: ['Enviado', 'info'], delivered: ['Entregado', 'success'], cancelled: ['Cancelado', 'danger'] };
       const current = values[status] || [status || 'En proceso', 'neutral'];
       return { label: current[0], className: current[1] };
     }

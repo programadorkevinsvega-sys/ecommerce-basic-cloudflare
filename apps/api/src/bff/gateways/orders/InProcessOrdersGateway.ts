@@ -31,4 +31,9 @@ export class InProcessOrdersGateway implements OrdersGateway {
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
     return this.publicApi.updateOrderStatus(cmd);
   }
+  public hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>{return this.publicApi.hasDeliveredProductPurchase(customerId,productId);}
+  public getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>{return this.publicApi.getDeliveredProductPaymentMethod(customerId,productId);}
+  public getOrderTracking(orderId: string, tokenHash: string) {
+    return this.publicApi.getOrderTracking(orderId, tokenHash);
+  }
 }

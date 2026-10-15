@@ -29,6 +29,9 @@ export interface CreateOrderCommand {
   pricingVersion?: number;
   estimatedPaymentFeeCents?: number;
   transactionFeeCents?: number;
+  guestTrackingTokenHash: string;
+  minEstimatedDays?: number;
+  maxEstimatedDays?: number;
   paymentMethod: 'wompi' | 'cash_on_delivery';
   lines: CreateOrderLineInput[];
 }
@@ -78,6 +81,9 @@ export class CreateOrderUseCase {
       pricingVersion: cmd.pricingVersion,
       estimatedPaymentFeeCents: cmd.estimatedPaymentFeeCents,
       transactionFeeCents: cmd.transactionFeeCents,
+      guestTrackingTokenHash: cmd.guestTrackingTokenHash,
+      minEstimatedDays: cmd.minEstimatedDays,
+      maxEstimatedDays: cmd.maxEstimatedDays,
       paymentMethod: cmd.paymentMethod,
       status: 'placed',
       paymentStatus: 'pending',

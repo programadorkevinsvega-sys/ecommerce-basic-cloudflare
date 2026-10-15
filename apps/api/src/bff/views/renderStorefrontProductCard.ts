@@ -1,7 +1,8 @@
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
+import { ProductReviewCardSummaryDto } from '../gateways/reviews/ReviewsGateway.js';
 
-export function renderStorefrontProductCard(product: CatalogProductDto, discount?: ProductDiscountDto): string {
+export function renderStorefrontProductCard(product: CatalogProductDto, discount?: ProductDiscountDto, review?: ProductReviewCardSummaryDto): string {
   const price = discount?.hasDiscount ? discount.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const priceHtml = discount?.hasDiscount
@@ -14,11 +15,14 @@ export function renderStorefrontProductCard(product: CatalogProductDto, discount
   const brand = product.brand || 'Vega Store';
   const stock = product.stockQuantity > 0 ? `${product.stockQuantity} disponibles` : 'Sin stock';
   const shipping = product.salePolicy.shippingScope === 'national' ? 'Envío nacional' : 'Envío local';
+  const reviewCount=review?.count||0;
+  const reviewLabel=reviewCount?`${review?.average.toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1})} de 5 · ${reviewCount} ${reviewCount===1?'reseña':'reseñas'}`:'0 reseñas';
+  const reviewHtml=`<a class="product-card-rating" href="/productos/${escapeHtml(product.slug)}/opiniones" aria-label="${escapeHtml(reviewLabel)}">${reviewCount?'<span aria-hidden="true">★</span>':''}${escapeHtml(reviewLabel)}</a>`;
 
   return `<article class="card product-card-v2" data-catalog-product data-name="${escapeHtml(product.name)}" data-brand="${escapeHtml(product.brand || '')}" data-price="${price}" data-cod="${product.salePolicy.allowsCashOnDelivery}">
     <a class="product-media" href="/productos/${escapeHtml(product.slug)}" aria-label="${escapeHtml(product.name)}">${image}${badge}</a>
     <div class="card-body"><div class="card-eyebrow"><span class="card-brand">${escapeHtml(brand)}</span><span class="card-sku">${escapeHtml(product.sku)}</span></div>
-      <h2 class="card-title"><a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a></h2>
+      <h2 class="card-title"><a href="/productos/${escapeHtml(product.slug)}">${escapeHtml(product.name)}</a></h2>${reviewHtml}
       <div class="card-pricing-block">${priceHtml}<span class="card-stock-indicator ${product.stockQuantity <= 5 && product.stockQuantity > 0 ? 'stock-low' : ''}">${stock}</span></div>
       <div class="product-card-footer"><div class="card-shipping-bullet"><span class="bullet-dot"></span><span>${shipping} · ${product.salePolicy.allowsCashOnDelivery ? 'Contra entrega' : 'Pago online'}</span></div>
         <div class="card-actions-group">${product.stockQuantity > 0 ? `<button type="button" class="btn-action-cart" data-add-to-cart data-product-id="${escapeHtml(product.id)}" data-price-cents="${price}"><span aria-hidden="true">＋</span><span>Añadir</span></button>` : ''}<a class="btn-action-view" href="/productos/${escapeHtml(product.slug)}">Detalles</a></div>

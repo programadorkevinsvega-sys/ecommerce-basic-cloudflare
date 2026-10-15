@@ -1,5 +1,15 @@
 # Progreso: precios, margen, IVA y costos de pago
 
+## Reseñas y valoraciones de producto (2026-10-14)
+
+- Se incorporó el módulo `reviews`, con migración D1 propia, puntuación de 1–5, comentario, estado, fecha y unicidad por cliente/producto.
+- La ficha del producto muestra el promedio y total, con un enlace a `/productos/:slug/opiniones`. La página dedicada presenta comentarios, fecha y paginación; el autor aparece únicamente como “Comprador verificado”.
+- Publicar requiere sesión de cliente y una compra del producto entregada y pagada/recaudada, verificada por el Gateway de `orders`. Se aplican límites por IP y actor; `customerId` nunca se acepta desde el formulario.
+- `AggregateRating` se incluye en el JSON-LD del producto solo si existen valoraciones. Los comentarios se escapan al renderizar.
+- Pruebas añadidas para elegibilidad cruzada, duplicados, validación y persistencia/consulta D1. Typecheck y lint aprobados; 142 pruebas unitarias y 19 Workers; aislamiento, consistencia, upgrade legacy y 47 migraciones D1 desde cero con segunda pasada idempotente, todo aprobado.
+- La migración `reviews__0001_init.sql` se aplicó a producción con `apps/api/wrangler.jsonc`; la consulta posterior confirmó que no quedaban migraciones pendientes. El Worker público quedó desplegado como versión `e9d2211b-405b-41fa-8d68-03ab5372e04d` y los endpoints de opiniones respondieron correctamente.
+- La gestión administrativa con listado paginado, búsqueda, filtros, publicación, ocultamiento y eliminación se añadió después en el workspace. Falta desplegar esta ampliación; sus endpoints usan permisos de catálogo y auditoría de mutaciones.
+
 ### Identidad y copyright del footer (2026-10-14)
 
 - El nombre mostrado en el footer público y el checkout ahora sale de Nombre Comercial. Razón Social/Propietario y NIT aparecen en el bloque de marca, entre el nombre y la descripción “Productos seleccionados para acompañarte todos los días.”

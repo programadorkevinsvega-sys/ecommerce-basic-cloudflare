@@ -3,7 +3,7 @@ export function renderOrdersAdminListScript(): string {
     let activeOrderStatus = 'all';
     const orderStates = {
       placed: ['Recibido', '#eef0f4', '#3e4656'], confirmed: ['Confirmado', '#e9efe9', '#315b43'],
-      shipped: ['Enviado', '#e8f2ed', '#315b43'], delivered: ['Entregado', '#e6f4ec', '#136b3e'],
+      prepared: ['Preparado', '#edf2e9', '#315b43'], shipped: ['Enviado', '#e8f2ed', '#315b43'], delivered: ['Entregado', '#e6f4ec', '#136b3e'],
       cancelled: ['Cancelado', '#fbe9e7', '#a8231b'],
     };
     const paymentStates = {
@@ -63,7 +63,7 @@ export function renderOrdersAdminListScript(): string {
     }
 
     function orderStatusOptions(current) {
-      const options = [['placed', 'Recibido'], ['confirmed', 'Confirmado'], ['shipped', 'Enviado'], ['delivered', 'Entregado'], ['cancelled', 'Cancelado']];
+      const options = [['placed', 'Recibido'], ['confirmed', 'Confirmado'], ['prepared', 'Preparado'], ['shipped', 'Enviado'], ['delivered', 'Entregado'], ['cancelled', 'Cancelado']];
       return options.map(([value, label]) => '<option value="' + value + '"' + (current === value ? ' selected' : '') + '>' + label + '</option>').join('');
     }
 

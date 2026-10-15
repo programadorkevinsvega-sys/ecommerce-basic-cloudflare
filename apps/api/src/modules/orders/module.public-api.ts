@@ -3,6 +3,7 @@ import { Order } from './domain/entities/Order.js';
 import { CheckoutEvaluationInput, CheckoutEvaluationResult } from './domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from './application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from './application/use-cases/UpdateOrderStatusUseCase.js';
+import { OrderTrackingRecord } from './domain/ports/IOrderTrackingRepository.js';
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -29,5 +30,10 @@ export class OrdersPublicApi {
 
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
     return this.container.updateOrderStatusUseCase.execute(cmd);
+  }
+  public hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>{return this.container.hasDeliveredProductPurchaseUseCase.execute(customerId,productId);}
+  public getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>{return this.container.getDeliveredProductPaymentMethodUseCase.execute(customerId,productId);}
+  public getOrderTracking(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null> {
+    return this.container.getOrderTrackingUseCase.execute(orderId, tokenHash);
   }
 }

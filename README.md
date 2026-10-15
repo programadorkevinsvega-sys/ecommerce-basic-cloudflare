@@ -61,7 +61,8 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 | Login y registro de clientes | `identity` | — | ✅ |
 | Home | `storefront` + `catalog` + `cms` | — | ✅ |
 | Listado de productos, filtros, búsqueda | `catalog` | ✅ CRUD | ✅ |
-| Detalle de producto | `catalog` + `seo` + `promotions` | ✅ CRUD | ✅ |
+| Detalle de producto | `catalog` + `seo` + `promotions` + `reviews` | ✅ CRUD | ✅ |
+| Reseñas y valoraciones | `reviews` + `orders` | ✅ Moderación, edición y reseñas editoriales; el método de pago se consulta solo para compras entregadas y pagadas | ✅ Compradores verificados y opiniones editoriales identificadas como tales |
 | Carrusel y su gestión | `storefront` | ✅ CRUD | ✅ |
 | Gestión de banners | `storefront` | ✅ CRUD | ✅ |
 | Anuncios (home, clientes, productos) | `storefront` | ✅ CRUD | ✅ |
@@ -149,7 +150,7 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 │     │  Gateways (en proceso hoy → Service Binding si se separa)   │
 │     ▼                                                             │
 │  identity · catalog · media · inventory · cart · orders ·         │
-│  payments · shipping · credit · invoicing · promotions ·          │
+│  payments · shipping · credit · invoicing · promotions · reviews · │
 │  storefront · cms · seo · settings · notifications ·              │
 │  realtime · audit                                                 │
 │     │                                                             │
@@ -185,6 +186,7 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 | `inventory` | Stock, movimientos, reservas | `inventory_stock`, `inventory_movements`, `inventory_reservations` |
 | `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items` |
 | `orders` | Pedidos, estados, historial | `orders_orders`, `orders_lines`, `orders_history`, `orders_outbox_events` |
+| `reviews` | Opiniones de productos, puntuaciones y agregados | `reviews_product_reviews` |
 | `payments` | Pagos con Wompi y contra entrega, webhooks idempotentes, recaudos | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_outbox_events` |
 | `shipping` | Zonas de cobertura (nacional, ciudad, municipio), tarifas, reglas de contra entrega por zona | `shipping_zones`, `shipping_coverage`, `shipping_rates` |
 | `credit` | Venta a crédito: planes, cuentas, cuotas y abonos *(alcance por confirmar, ADR-0009)* | `credit_plans`, `credit_accounts`, `credit_installments`, `credit_payments` |
@@ -411,6 +413,7 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/` | Home: carrusel, banners, anuncios, destacados, promociones |
 | `/productos` | Listado con filtros, orden y paginación |
 | `/productos/:slug` | Detalle de producto |
+| `/productos/:slug/opiniones` | Valoraciones y opiniones paginadas del producto |
 | `/categorias/:slug`, `/marcas/:slug` | Listados por categoría / marca |
 | `/colecciones` | Directorio paginado de colecciones publicadas |
 | `/colecciones/:slug` | Productos publicados de una colección |
@@ -423,6 +426,7 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/terminos-y-condiciones`, `/politica-de-privacidad`, `/politica-de-cookies`, `/tratamiento-de-datos` | Páginas legales editables desde CMS |
 | `/p/:slug` | Ruta histórica del CMS; se conserva por compatibilidad |
 | `/carrito`, `/checkout` | Compra |
+| `/seguimiento-pedido` | Seguimiento privado por número de pedido y clave enviada al correo |
 | `/login`, `/registro`, `/recuperar` | Acceso de clientes |
 | `/cuenta`, `/cuenta/pedidos`, `/cuenta/direcciones`, `/cuenta/facturas` | Área del cliente |
 | `/sitemap.xml`, `/sitemap-blog.xml`, `/robots.txt` | Generados dinámicamente |

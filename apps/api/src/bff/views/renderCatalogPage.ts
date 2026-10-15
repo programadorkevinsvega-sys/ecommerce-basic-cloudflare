@@ -5,10 +5,11 @@ import { renderStorefrontProductCard } from './renderStorefrontProductCard.js';
 import { renderProductCardActionsScript } from './renderProductCardActionsScript.js';
 import { renderStorefrontBanners } from './renderStorefrontBanners.js';
 import { renderStorefrontPagination } from './renderStorefrontPagination.js';
+import { ProductReviewCardSummaryDto } from '../gateways/reviews/ReviewsGateway.js';
 
 export interface CatalogPagePagination { page: number; previousHref?: string; nextHref?: string; }
 
-export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination): string {
+export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination, reviews?: Record<string,ProductReviewCardSummaryDto>): string {
   const escape = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const effectivePrice = (product: CatalogProductDto): number => discounts?.get(product.id)?.hasDiscount ? discounts.get(product.id)!.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -29,7 +30,7 @@ export function renderCatalogPage(products: CatalogProductDto[], query?: string,
     ${codCount ? `<section class="catalog-filter-group"><h2>Pago</h2><label class="catalog-filter-option"><input type="checkbox" data-cod-filter><span>Pago contra entrega</span><span>${codCount}</span></label></section>` : ''}</details></aside>` : '';
   const content = products.length ? `<div class="catalog-toolbar"><div><h1>${title}</h1><p>${products.length} ${products.length === 1 ? 'producto cargado' : 'productos cargados'} · Precios en COP</p></div><label class="catalog-sort">Ordenar por<select id="catalog-sort"><option value="featured">Destacados</option><option value="low">Menor precio</option><option value="high">Mayor precio</option><option value="name">Nombre (A–Z)</option></select></label></div>
     <div class="catalog-active-filters" id="catalog-active-filters" hidden><strong>Filtros activos:</strong><div id="catalog-filter-chips"></div></div><p id="catalog-results-count" class="catalog-results-count" role="status" aria-live="polite"></p><p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p>
-    <div class="grid catalog-grid" id="catalog-product-grid">${products.map((product) => renderStorefrontProductCard(product, discounts?.get(product.id))).join('')}</div>
+    <div class="grid catalog-grid" id="catalog-product-grid">${products.map((product) => renderStorefrontProductCard(product, discounts?.get(product.id),reviews?.[product.id])).join('')}</div>
     <section class="catalog-empty catalog-filter-empty" id="catalog-filter-empty" hidden><span aria-hidden="true">⌕</span><h2>Ningún producto coincide con tus filtros</h2><p>Prueba con otra línea o rango de precio.</p></section>` : '';
   const queryValue = JSON.stringify(query || '').replace(/</g, '\\u003c');
   const filtersScript = products.length ? `<script>

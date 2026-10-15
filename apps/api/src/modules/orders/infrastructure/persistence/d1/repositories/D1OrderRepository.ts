@@ -20,6 +20,9 @@ interface OrderRow {
   pricing_version: number;
   estimated_payment_fee_cents: number;
   transaction_fee_cents: number;
+  guest_tracking_token_hash?: string | null;
+  min_estimated_days?: number | null;
+  max_estimated_days?: number | null;
   payment_method: string;
   status: string;
   payment_status: string;
@@ -64,8 +67,8 @@ export class D1OrderRepository implements IOrderRepository {
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
-         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
@@ -75,7 +78,8 @@ export class D1OrderRepository implements IOrderRepository {
       JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
-      order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents
+      order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents,
+      order.guestTrackingTokenHash, order.minEstimatedDays, order.maxEstimatedDays
     ).run();
 
     await this.db.prepare('DELETE FROM orders_lines WHERE order_id = ?').bind(order.id).run();
@@ -128,6 +132,16 @@ export class D1OrderRepository implements IOrderRepository {
     return orders;
   }
 
+  public async hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>{
+    const row=await this.db.prepare("SELECT 1 AS found FROM orders_orders o JOIN orders_lines l ON l.order_id=o.id WHERE o.customer_id=? AND l.product_id=? AND o.status='delivered' AND o.payment_status IN ('approved','collected') LIMIT 1").bind(customerId,productId).first<{found:number}>();
+    return Boolean(row);
+  }
+
+  public async getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>{
+    const row=await this.db.prepare("SELECT o.payment_method FROM orders_orders o JOIN orders_lines l ON l.order_id=o.id WHERE o.customer_id=? AND l.product_id=? AND o.status='delivered' AND o.payment_status IN ('approved','collected') ORDER BY o.updated_at DESC LIMIT 1").bind(customerId,productId).first<{payment_method:'wompi'|'cash_on_delivery'}>();
+    return row?.payment_method||null;
+  }
+
   private async loadLines(orderId: string): Promise<OrderLine[]> {
     const { results } = await this.db
       .prepare('SELECT * FROM orders_lines WHERE order_id = ?')
@@ -170,6 +184,9 @@ export class D1OrderRepository implements IOrderRepository {
       pricingVersion: row.pricing_version ?? 1,
       estimatedPaymentFeeCents: row.estimated_payment_fee_cents ?? 0,
       transactionFeeCents: row.transaction_fee_cents ?? 0,
+      guestTrackingTokenHash: row.guest_tracking_token_hash ?? null,
+      minEstimatedDays: row.min_estimated_days ?? null,
+      maxEstimatedDays: row.max_estimated_days ?? null,
       paymentMethod: row.payment_method as 'wompi' | 'cash_on_delivery',
       status: row.status as OrderStatus,
       paymentStatus: row.payment_status as OrderPaymentStatus,

@@ -24,6 +24,18 @@ export async function getCustomerEmail(
   return undefined;
 }
 
+export async function getCustomerActorId(
+  c: { req: { header: (k: string) => string | undefined } },
+  identityGateway: IdentityGateway
+): Promise<string | undefined> {
+  const match = (c.req.header('cookie') || '').match(/(?:^|;\s*)__Host-session=([^;]+)/);
+  if (!match?.[1]) return undefined;
+  try {
+    const session = await identityGateway.validateSession(match[1]);
+    return session.actorType === 'customer' ? session.actorId : undefined;
+  } catch { return undefined; }
+}
+
 export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGateway: SettingsGateway): Promise<{
   headerMenuItems: LayoutMenuItem[];
   footerMenuItems: LayoutMenuItem[];

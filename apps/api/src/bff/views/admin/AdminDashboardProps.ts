@@ -25,4 +25,8 @@ export interface AdminDashboardProps {
   divipolaLocations: DivipolaLocationDto[];
   settings: SettingsDto;
   adminEmail: string;
+  reviewCanRead: boolean;
+  reviewCanCreate: boolean;
+  reviewCanEdit: boolean;
+  reviewCanDelete: boolean;
 }

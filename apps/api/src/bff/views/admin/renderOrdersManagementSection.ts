@@ -7,7 +7,7 @@ export function renderOrdersManagementSection(): string {
     </header>
     <section class="orders-card" aria-label="Lista de pedidos">
       <div class="orders-status-tabs" role="group" aria-label="Filtrar por estado del pedido">
-        ${statusTab('all', 'Todos')}${statusTab('placed', 'Recibidos')}${statusTab('confirmed', 'Confirmados')}${statusTab('shipped', 'Enviados')}${statusTab('delivered', 'Entregados')}
+        ${statusTab('all', 'Todos')}${statusTab('placed', 'Recibidos')}${statusTab('confirmed', 'Confirmados')}${statusTab('prepared', 'Preparados')}${statusTab('shipped', 'Enviados')}${statusTab('delivered', 'Entregados')}
       </div>
       <div class="orders-filters">
         <label class="orders-search">${icon('search')}<span class="sr-only">Buscar por pedido, cliente o teléfono</span><input id="orders-search" type="search" placeholder="Buscar pedido, cliente o teléfono"></label>

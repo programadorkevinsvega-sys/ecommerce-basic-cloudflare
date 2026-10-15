@@ -31,6 +31,12 @@ Es una tienda pública con clientes anónimos y registrados, un panel de adminis
 - **SEC-ISO-06** Toda funcionalidad nueva incluye al menos una **prueba automatizada de acceso cruzado** (cliente A intenta leer/modificar/cancelar recursos de cliente B y falla).
 - **SEC-ISO-07** Los administradores **no** son clientes: sesiones, cookies, audiencias y tablas separadas (`identity_admins` vs `identity_customers`). Un token de cliente jamás abre rutas `/admin`.
 
+### Reseñas públicas
+
+Las reseñas solo se aceptan desde una sesión de cliente validada y se vinculan en servidor con un pedido del mismo cliente que esté entregado y pagado/recaudado. El producto se resuelve por slug publicado; el cliente no puede enviar su propio `customerId`. Se limita a una reseña por cliente y producto, con rate limit por IP y actor. El storefront nunca publica información identificable del autor.
+
+La gestión administrativa usa `catalog:read`, `catalog:edit` y `catalog:delete` con verificación RBAC en el servidor. Las opiniones se consultan con paginación; moderar permite publicar u ocultar, y borrar requiere permiso independiente. Cada mutación queda auditada por el middleware administrativo; el snapshot registra solo identificador, producto, puntuación y estado, sin comentario ni datos del cliente.
+
 ## 2. Autenticación y contraseñas (AUTH)
 
 - **SEC-AUTH-01** Contraseñas con PBKDF2-SHA-256 (Web Crypto) a **100.000 iteraciones** (máximo permitido en Workers), sal aleatoria de 16 bytes por usuario y parámetros versionados para poder migrar.

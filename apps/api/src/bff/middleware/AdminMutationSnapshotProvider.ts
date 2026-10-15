@@ -9,12 +9,16 @@ export class AdminMutationSnapshotProvider {
       return { mfaEnabled: session.mfaEnabled === true };
     }
     if (path === '/api/v1/settings') return this.gateways.settingsGateway.getSettings();
-    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|cms\/blog\/posts|cms\/blog\/authors|cms\/blog\/categories|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices)\/([^/]+)(?:\/|$)/);
+    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|cms\/blog\/posts|cms\/blog\/authors|cms\/blog\/categories|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices|reviews)\/([^/]+)(?:\/|$)/);
     if (resource) {
       const kind = resource[1];
       const rawId = resource[2];
       if (!kind || !rawId) return null;
       const id = decodeURIComponent(rawId);
+      if (kind === 'reviews') {
+        const review = await this.gateways.reviewsGateway.getById(id);
+        return review ? { id: review.id, productId: review.productId, rating: review.rating, status: review.status } : null;
+      }
       if (kind === 'products') return this.gateways.catalogGateway.getProductById(id);
       if (kind === 'categories') return (await this.gateways.catalogGateway.listCategories()).find((item) => item.id === id) ?? null;
       if (kind === 'brands') return (await this.gateways.catalogGateway.listBrands()).find((item) => item.id === id) ?? null;
@@ -59,6 +63,7 @@ export class AdminMutationSnapshotProvider {
       '/api/v1/admin/cms/blog/authors', '/api/v1/admin/cms/blog/categories',
       '/api/v1/admin/shipping/zones', '/api/v1/admin/promotions/rules',
       '/api/v1/admin/promotions/coupons',
+      '/api/v1/admin/reviews',
     ]);
     return collections.has(path) ? `${path}/${encodeURIComponent(id)}` : null;
   }

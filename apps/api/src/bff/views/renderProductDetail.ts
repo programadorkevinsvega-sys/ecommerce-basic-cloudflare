@@ -2,7 +2,7 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 import { renderProductShippingWidget } from './renderProductShippingWidget.js';
 
-export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto): string {
+export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto, reviews?: { average: number; count: number; isDemo?: boolean; demoCount?: number }): string {
   const salePrice = discount?.hasDiscount ? discount.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const condition = product.condition === 'refurbished' ? 'Reacondicionado' : product.condition === 'used' ? 'Usado' : 'Nuevo';
@@ -31,7 +31,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
 
   return `${breadcrumb}<article class="detail-layout"><div class="detail-gallery-col">${gallery}</div><div class="detail-info-col">
     <header class="detail-product-heading"><div class="detail-brand-sku">${brandHtml}<span>SKU ${escapeHtml(product.sku)}</span></div>
-      <h1>${escapeHtml(product.name)}</h1><div class="detail-product-meta"><span class="stock-dot ${product.stockQuantity > 0 ? 'is-available' : ''}" aria-hidden="true"></span><span>${stockLabel}</span><span aria-hidden="true">·</span><span>${escapeHtml(saleMode)}</span></div>
+      <h1>${escapeHtml(product.name)}</h1><a class="detail-review-summary" href="/productos/${encodeURIComponent(product.slug)}/opiniones#opiniones" aria-label="Ver opiniones">${reviews?.count ? `<span aria-hidden="true">★</span> ${reviews.average.toFixed(1)} · ${reviews.count} ${reviews.count === 1 ? 'opinión' : 'opiniones'}` : reviews?.isDemo ? `${reviews.demoCount||0} opiniones` : 'Sé la primera persona en opinar'} <span aria-hidden="true">↓</span></a><div class="detail-product-meta"><span class="stock-dot ${product.stockQuantity > 0 ? 'is-available' : ''}" aria-hidden="true"></span><span>${stockLabel}</span><span aria-hidden="true">·</span><span>${escapeHtml(saleMode)}</span></div>
     </header>
     ${price}<p class="detail-description">${escapeHtml(product.description)}</p>
     <section class="detail-purchase" aria-label="Añadir producto al carrito"><div class="detail-quantity"><span id="quantity-label">Cantidad</span><div><button type="button" data-quantity-change="-1" aria-label="Disminuir cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>−</button><input id="buy-qty" type="number" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" step="1" aria-labelledby="quantity-label" ${product.stockQuantity < 1 ? 'disabled' : ''} /><button type="button" data-quantity-change="1" aria-label="Aumentar cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>+</button></div></div>

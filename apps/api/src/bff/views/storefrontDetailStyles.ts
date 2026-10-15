@@ -3,6 +3,8 @@ export const storefrontDetailStyles = String.raw`
     .detail-breadcrumb a { color: #424e47; text-decoration: none; }
     .detail-breadcrumb a:hover { color: #16201b; text-decoration: underline; }
     .detail-breadcrumb [aria-current="page"] { color: #16201b; font-weight: 600; }
+    .detail-review-summary { display: inline-flex; align-items: center; gap: .35rem; margin-top: .75rem; color: #1f4d3a; font-size: .9rem; font-weight: 650; text-decoration: none; }
+    .detail-review-summary:hover { text-decoration: underline; }
     .detail-layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr); align-items: start; gap: clamp(2rem, 4vw, 3.5rem); }
     .container:has(.detail-layout) > .products-section { display: none; }
     .detail-gallery-col { min-width: 0; }

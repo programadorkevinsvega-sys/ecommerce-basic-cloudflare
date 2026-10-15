@@ -42,6 +42,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 16. `settings` -> `settings_*`
 17. `notifications` -> `notifications_*`
 18. `audit` -> `audit_*`
+19. `reviews` -> `reviews_*`
 
 ---
 

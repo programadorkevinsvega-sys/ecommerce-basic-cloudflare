@@ -16,6 +16,7 @@ import { CollectionAdminController } from './controllers/catalog/CollectionAdmin
 import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
 import { CollectionPagesController } from './controllers/storefront/CollectionPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
+import { ProductReviewsPageController } from './controllers/storefront/ProductReviewsPageController.js';
 import { StorefrontAdminController } from './controllers/storefront/StorefrontAdminController.js';
 import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
@@ -33,6 +34,9 @@ import { StorefrontCheckoutController } from './controllers/checkout/StorefrontC
 import { InvoicingController } from './controllers/invoicing/InvoicingController.js';
 import { CustomerAccountController } from './controllers/account/CustomerAccountController.js';
 import { AuditController } from './controllers/audit/AuditController.js';
+import { ReviewsController } from './controllers/reviews/ReviewsController.js';
+import { ReviewsAdminController } from './controllers/reviews/ReviewsAdminController.js';
+import { OrderTrackingController } from './controllers/orders/OrderTrackingController.js';
 import { AppCompositionRoot } from '../composition-root.js';
 import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
 import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
@@ -69,6 +73,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway, cRoot.catalogGateway));
+  app.route('/', OrderTrackingController.createRoutes(cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway, cRoot.catalogGateway, cRoot.auditGateway));
   app.route('/', OrdersController.createRoutes(
     cRoot.ordersGateway,
@@ -119,8 +124,10 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.seoGateway,
     cRoot.cmsGateway,
     cRoot.promotionsGateway,
-    cRoot.settingsGateway
+    cRoot.settingsGateway,
+    cRoot.reviewsGateway
   ));
+  app.route('/', ProductReviewsPageController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.reviewsGateway,cRoot.cmsGateway,cRoot.settingsGateway));
   app.route('/', BrandPagesController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.cmsGateway, cRoot.settingsGateway, cRoot.promotionsGateway, cRoot.storefrontGateway));
   app.route('/', CollectionPagesController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.cmsGateway,cRoot.settingsGateway,cRoot.promotionsGateway,cRoot.storefrontGateway));
   app.route('/', CmsBlogPublicController.createRoutes(cRoot.cmsGateway,cRoot.identityGateway,cRoot.settingsGateway,cRoot.storefrontGateway));
@@ -137,6 +144,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CollectionAdminController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.auditGateway));
   app.route('/api/v1', CatalogAuxiliaryAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
+  app.route('/api/v1', ReviewsController.createRoutes(cRoot.catalogGateway, cRoot.reviewsGateway, cRoot.identityGateway));
+  app.route('/api/v1', ReviewsAdminController.createRoutes(cRoot.reviewsGateway,cRoot.catalogGateway,cRoot.identityGateway,cRoot.ordersGateway));
 
   app.notFound(async (c) => {
     if (c.req.method !== 'GET' && c.req.method !== 'HEAD' || c.req.path.startsWith('/api/') || c.req.path.startsWith('/admin') || c.req.path.startsWith('/media/') || c.req.path === '/health') {

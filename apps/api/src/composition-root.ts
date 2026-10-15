@@ -47,6 +47,10 @@ import { OrdersGateway } from './bff/gateways/orders/OrdersGateway.js';
 import { InProcessOrdersGateway } from './bff/gateways/orders/InProcessOrdersGateway.js';
 import { createOrdersModule } from './modules/orders/module.config.js';
 import { OrdersPublicApi } from './modules/orders/module.public-api.js';
+import { ReviewsGateway } from './bff/gateways/reviews/ReviewsGateway.js';
+import { InProcessReviewsGateway } from './bff/gateways/reviews/InProcessReviewsGateway.js';
+import { createReviewsModule } from './modules/reviews/module.config.js';
+import { ReviewsPublicApi } from './modules/reviews/module.public-api.js';
 import { PaymentsGateway } from './bff/gateways/payments/PaymentsGateway.js';
 import { InProcessPaymentsGateway } from './bff/gateways/payments/InProcessPaymentsGateway.js';
 import { createPaymentsModule } from './modules/payments/module.config.js';
@@ -82,6 +86,7 @@ export interface AppCompositionRoot {
   inventoryGateway: InventoryGateway;
   cartGateway: CartGateway;
   ordersGateway: OrdersGateway;
+  reviewsGateway:ReviewsGateway;
   paymentsGateway: PaymentsGateway;
   realtimeGateway: RealtimeGateway;
   invoicingGateway: InvoicingGateway;
@@ -141,6 +146,8 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
 
   const ordersContainer = createOrdersModule(env);
   const ordersGateway = new InProcessOrdersGateway(new OrdersPublicApi(ordersContainer));
+  const reviewsContainer=createReviewsModule(env,ordersGateway);
+  const reviewsGateway=new InProcessReviewsGateway(new ReviewsPublicApi(reviewsContainer));
 
   const paymentsContainer = createPaymentsModule(env);
   const paymentsGateway = new InProcessPaymentsGateway(new PaymentsPublicApi(paymentsContainer));
@@ -173,6 +180,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     inventoryGateway,
     cartGateway,
     ordersGateway,
+    reviewsGateway,
     paymentsGateway,
     realtimeGateway,
     invoicingGateway,

@@ -6,6 +6,7 @@ import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { ReviewsGateway } from '../../gateways/reviews/ReviewsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
@@ -26,7 +27,8 @@ export class StorefrontController {
     seoGateway: SeoGateway,
     cmsGateway: CmsGateway,
     promotionsGateway: PromotionsGateway,
-    settingsGateway: SettingsGateway
+    settingsGateway: SettingsGateway,
+    reviewsGateway: ReviewsGateway
   ): Hono {
     const router = new Hono();
 
@@ -96,7 +98,7 @@ export class StorefrontController {
       ]);
 
       const products = productRecords.slice(0, 24);
-      const discountMap = await resolveProductDiscounts(products, promotionsGateway);
+      const [discountMap, reviewSummaries] = await Promise.all([resolveProductDiscounts(products, promotionsGateway), reviewsGateway.summaries(products.map((product) => product.id)).catch(() => ({}))]);
       const pageHref = (targetPage: number) => {
         const params = new URLSearchParams();
         if (query) params.set('q', query);
@@ -109,7 +111,7 @@ export class StorefrontController {
         page,
         previousHref: page > 1 ? pageHref(page - 1) : undefined,
         nextHref: productRecords.length > 24 ? pageHref(page + 1) : undefined,
-      });
+      }, reviewSummaries);
 
       const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
@@ -140,13 +142,13 @@ export class StorefrontController {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       try {
         const product = await catalogGateway.getProductBySlug(slug);
-        const discount = await promotionsGateway.evaluateProductDiscount({
-          productId: product.id,
-          priceInCents: product.priceInCents,
-        }).catch(() => undefined);
+        const [discount, reviewPage] = await Promise.all([
+          promotionsGateway.evaluateProductDiscount({ productId: product.id, priceInCents: product.priceInCents }).catch(() => undefined),
+          reviewsGateway.list(product.id, 1, 1).catch(() => ({ items: [], total: 0, summary: { average: 0, count: 0, isDemo:false, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } } })),
+        ]);
 
         const marketing = await getPageMarketingContent(storefrontGateway, `product:${product.slug}`, 'Contenido destacado', ['product']);
-        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount)}`;
+        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount, {...reviewPage.summary,demoCount:reviewPage.total})}`;
         const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 
@@ -160,6 +162,8 @@ export class StorefrontController {
           condition: product.condition,
           url: canonical,
           imageUrl: product.mediaIds?.[0] ? `/media/${product.mediaIds[0]}` : undefined,
+          ratingValue: reviewPage.summary.isDemo?0:reviewPage.summary.average,
+          reviewCount: reviewPage.summary.isDemo?0:reviewPage.summary.count,
         });
 
         const breadcrumbsJsonLd = StructuredDataHelper.generateBreadcrumbList([

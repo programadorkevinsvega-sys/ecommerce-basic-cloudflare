@@ -37,6 +37,8 @@ export class UpdateOrderStatusUseCase {
 
     if (cmd.status === 'shipped') {
       order.markShipped();
+    } else if (cmd.status === 'prepared') {
+      order.markPrepared();
     } else if (cmd.status === 'delivered') {
       order.markDelivered();
     } else if (cmd.status === 'cancelled') {

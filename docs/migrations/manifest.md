@@ -165,6 +165,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `orders__0003_pricing_snapshots.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; pedidos históricos conservaron default v1 |
 | `orders__0004_checkout_transaction_fee.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | `c364eb8` | ✅ Expand-only aplicada y verificada; columna `transaction_fee_cents` default 0, 12 pedidos previos intactos |
 | `orders__0004_checkout_transaction_fee.sql` | v4 | D1 temporal / Workers | 2026-10-13 | `c364eb8` | ✅ Aplicación vacía y repetición idempotente verificadas |
+| `orders__0005_secure_order_tracking.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada por runner tras verificar 49 migraciones previas; ledger, tres columnas e índice confirmados. Pedidos existentes: 13 antes y después, sin cambios de filas. Bookmark previo `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. |
 
 ---
 
@@ -175,6 +176,15 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `payments__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `payments__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `payments__0002_expand_columns.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-12 | 1a555ba | ✅ Aplicada con éxito (expand-only: transactions, outbox, webhooks) |
+
+## Módulo: `reviews`
+
+| Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
+|---|---|---|---|---|---|
+| `reviews__0001_init.sql` | v1 | Local (Miniflare/D1) | 2026-10-14 | trabajo actual | ✅ Incluida en las pruebas de persistencia e idempotencia |
+| `reviews__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-15 UTC | trabajo actual | ✅ Aplicada con `wrangler d1 migrations apply` y verificada sin migraciones pendientes; Worker v`e9d2211b-405b-41fa-8d68-03ab5372e04d` desplegado |
+| `reviews__0002_demo_reviews.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada por el runner del proyecto; `source` presente y 16 filas ficticias en 8 productos. Bookmark previo `00000318-00000266-00005105-cfa103f6094be24c97079f7fd66cc420`; posterior `00000318-0000029b-00005105-46375ca8fc9d1f2ad2801e89087b66cc`. Worker v`b35a0d07-8ace-4ec4-beb0-4be85a4ccc0c` desplegado; comprobado el listado público de reseñas y estrellas en `/productos`.
+| `reviews__0003_manual_reviews.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con Wrangler remoto; aditiva y mantiene clasificados como no verificados los registros manuales al hacer rollback.
 
 ---
 

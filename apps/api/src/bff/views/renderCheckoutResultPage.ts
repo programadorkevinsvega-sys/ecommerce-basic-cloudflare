@@ -23,7 +23,7 @@ export function renderCheckoutResultPage(order: Order, ref?: string): string {
 
       <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
         <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Detalles del Envío</h3>
-        <p style="margin-bottom: 0.4rem;">La información de entrega se envió al correo registrado en la compra.</p>
+        <p style="margin-bottom: 0.4rem;">Enviamos al correo registrado la clave privada para consultar el avance del pedido.</p>
         <p style="margin-bottom: 0.4rem;"><strong>Método de Pago:</strong> ${isCod ? '💵 Pago Contra Entrega (Efectivo al recibir)' : '💳 Pago en línea (Wompi)'}</p>
         ${order.transactionFeeCents ? `<p style="margin-bottom:0.4rem;"><strong>Costo de transacción Wompi:</strong> $${(order.transactionFeeCents / 100).toLocaleString('es-CO')} COP</p>` : ''}
         <p style="margin-bottom: 0; font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-top: 0.75rem;">
@@ -33,6 +33,7 @@ export function renderCheckoutResultPage(order: Order, ref?: string): string {
 
       <div style="display: flex; justify-content: center; gap: 1rem;">
         <a href="/" style="padding: 0.8rem 1.5rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;">Volver al Inicio</a>
+        <a href="/seguimiento-pedido?pedido=${encodeURIComponent(order.id)}" style="padding: 0.8rem 1.5rem; border:1px solid var(--border); color:var(--text); text-decoration:none; border-radius:6px; font-weight:600;">Seguir mi pedido</a>
       </div>
     </section>
   `;

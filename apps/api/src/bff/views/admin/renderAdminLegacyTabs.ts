@@ -12,6 +12,7 @@ import { renderCmsManagementSection } from './renderCmsManagementSection.js';
 import { renderPromotionsManagementSection } from './renderPromotionsManagementSection.js';
 import { renderShippingManagementSection } from './renderShippingManagementSection.js';
 import { renderBlogManagementSection } from './renderBlogManagementSection.js';
+import { renderAdminReviewsSection } from './renderAdminReviewsSection.js';
 
 export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
   return `    <div id="tab-products" class="tab-content active">
@@ -54,6 +55,10 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
 
     <div id="tab-blog" class="tab-content">
       ${renderBlogManagementSection()}
+    </div>
+
+    <div id="tab-reviews" class="tab-content">
+      ${renderAdminReviewsSection(props.reviewCanCreate, props.reviewCanEdit, props.reviewCanDelete)}
     </div>
 
     <div id="tab-promotions" class="tab-content">

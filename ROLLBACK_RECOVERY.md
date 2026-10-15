@@ -300,3 +300,11 @@ Para recuperar: conservar las columnas añadidas y filas, y corregir hacia delan
 ### Imágenes opcionales de marca (2026-10-14)
 
 `catalog__0010_brand_image.sql` agrega una columna nullable a `catalog_brands`. Para rollback de Worker, regresar la versión y conservar la columna; el Worker previo la ignora. No borrar medios de R2 si se quita la imagen de una marca. Aplicación productiva verificada: ledger con 44 migraciones y columna presente. Bookmark anterior `00000280-00000319-00005104-84f1213e1c2180147cbcc968ea1511f3`; posterior `00000280-00000325-00005104-1be4680bac0b0e072f56d01855aeaa81`. La recuperación D1 no requiere restaurar el bookmark para este cambio expand-only.
+
+`orders__0005_secure_order_tracking.sql` agrega hash de clave de seguimiento y plazo estimado nullable. Se aplicó en producción el 2026-10-15 después de comprobar 49 migraciones previas y el esquema; la verificación confirmó el ledger, columnas e índice y 13 pedidos intactos. Bookmark anterior: `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior: `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. Pedidos anteriores no reciben una clave ni se exponen a la consulta pública; conservan su acceso autenticado vigente. Si se revierte el Worker, mantener las columnas y claves emitidas; no rotar ni eliminar hashes como parte del rollback.
+
+### Reseñas de productos (`reviews__0001_init.sql`, 2026-10-14)
+
+La migración crea la tabla e índices del prefijo `reviews_` sin claves foráneas hacia `catalog`, `identity` u `orders` y sin modificar datos existentes. Las compras se validan al enviar mediante el Gateway de `orders`. Si se revierte el Worker, conservar la tabla y las opiniones; no ejecutar `DROP TABLE` ni borrar filas. La migración es expand-only.
+
+Producción: `reviews__0001_init.sql` se aplicó el 2026-10-15 UTC después de consultar el bookmark de Time Travel `00000318-0000012e-00005105-4c1dc461dab69b0749040a1c7484b97e`; Wrangler confirmó luego que no quedaban migraciones pendientes. El Worker con la página pública y el API de reseñas quedó desplegado como versión `e9d2211b-405b-41fa-8d68-03ab5372e04d`. Una reversión conserva la tabla y sus opiniones; la tabla no tiene down migration.

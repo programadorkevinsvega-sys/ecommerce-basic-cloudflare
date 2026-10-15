@@ -10,12 +10,8 @@ import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
-import { notifyCodOrderPlaced } from './notifyCodOrderPlaced.js';
-import { normalizeShippingAddress } from './normalizeShippingAddress.js';
-import { calculateOrderPricing } from './calculateOrderPricing.js';
-import { validateOrderPolicy } from './validateOrderPolicy.js';
-import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 import { registerAdminOrderRoutes } from './registerAdminOrderRoutes.js';
+import { registerOrderCreationRoute } from './registerOrderCreationRoute.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -72,110 +68,7 @@ export class OrdersController {
       return c.json({ success: true, policy: result });
     });
 
-    // POST /api/v1/orders
-    app.post('/api/v1/orders', async (c) => {
-      let body: any;
-      try { body = await c.req.json(); }
-      catch { return c.json({ error: 'Body JSON inválido' }, 400); }
-
-      // Validar campos mínimos requeridos
-      if (!body.customerEmail || !body.customerName || !body.customerPhone) {
-        return c.json({ error: 'customerEmail, customerName y customerPhone son requeridos' }, 400);
-      }
-      if (!body.paymentMethod || !['wompi', 'cash_on_delivery'].includes(body.paymentMethod)) {
-        return c.json({ error: 'paymentMethod debe ser wompi o cash_on_delivery' }, 400);
-      }
-      if (!Array.isArray(body.lines) || body.lines.length === 0 || body.lines.length > 50) {
-        return c.json({ error: 'Se requiere al menos una línea de pedido' }, 400);
-      }
-
-      const auth = c.req.header('Authorization'); const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
-      let customerId: string | null = null;
-      if (token) {
-        try {
-          const session = await identityGateway.validateSession(token);
-          if (session.actorType !== 'customer') return c.json({ error: 'No autorizado' }, 403);
-          customerId = session.actorId;
-        } catch { return c.json({ error: 'Sesión inválida' }, 401); }
-      }
-      const guestCartIdHash = customerId ? null : await hashGuestCartId(getCookie(c, 'vega_cart_id'));
-      if (!customerId && !guestCartIdHash) return c.json({ error: 'Carrito invitado inválido' }, 400);
-
-      const zone = await shippingGateway.getZone(String(body.shippingZoneId || ''));
-      if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
-      const shippingCostCents = zone.priceInCents;
-      let pricing;
-      try { pricing = await calculateOrderPricing(catalogGateway, promotionsGateway, settingsGateway, body.lines, body.couponCode, customerId, shippingCostCents, body.paymentMethod); }
-      catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
-
-      // Normalizar shippingAddress al esquema del dominio
-      const shippingAddress = normalizeShippingAddress(body.shippingAddress);
-      const policyError = await validateOrderPolicy(ordersGateway, zone, pricing, body.paymentMethod, shippingAddress.daneCode, shippingGateway);
-      if (policyError) return c.json({ error: policyError }, 400);
-
-      try {
-        const order = await ordersGateway.createOrder({
-          customerId,
-          guestCartIdHash,
-          customerEmail:    body.customerEmail,
-          customerName:     body.customerName,
-          customerPhone:    body.customerPhone,
-          customerTaxId:    body.customerTaxId || null,
-          shippingAddress,
-          shippingZoneId: zone.id,
-          shippingCostCents,
-          subtotalCents: pricing.subtotalCents,
-          discountCents: pricing.discountCents,
-          couponCode: pricing.couponCode,
-          totalCents: pricing.totalCents,
-          taxCents: pricing.taxCents,
-          pricingVersion: pricing.pricingVersion,
-          estimatedPaymentFeeCents: pricing.estimatedPaymentFeeCents,
-          transactionFeeCents: pricing.transactionFeeCents,
-          paymentMethod:    body.paymentMethod,
-          lines: pricing.lines,
-        });
-
-        // Reservar stock para cada línea — reduce availableQuantity al instante
-        if (order.lines?.length) {
-          const stockItems = order.lines.map(l => ({ productId: l.productId, quantity: l.quantity }));
-          try {
-            const reservation = await inventoryGateway.reserveStock(order.id, stockItems, 30);
-            if (!reservation.success) throw new Error('reservation_failed');
-          } catch {
-            await ordersGateway.updateOrderStatus({
-              orderId: order.id,
-              status: 'cancelled',
-              note: 'Reserva de inventario no disponible',
-              actor: 'system',
-            });
-            return c.json({ error: 'No fue posible reservar el inventario. Intenta nuevamente.' }, 409);
-          }
-        }
-
-        // Si es pago contra entrega, notificar al cliente y a la empresa por email
-        if (order.paymentMethod === 'cash_on_delivery') {
-          await notifyCodOrderPlaced(order, notificationsGateway, settingsGateway, (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown');
-        }
-
-        await realtimeGateway.publishNotification({
-          channel: 'admin',
-          eventType: 'orders.new_order',
-          title: `Nuevo Pedido #${order.id}`,
-          body: `Cliente: ${order.customerName} - Total: $${(order.totalCents / 100).toLocaleString('es-CO')} COP`,
-          data: {
-            orderId: order.id,
-            totalCents: order.totalCents,
-            customerName: order.customerName,
-            paymentMethod: order.paymentMethod,
-          },
-        });
-
-        return c.json({ success: true, order: order.toJSON() }, 201);
-      } catch {
-        return c.json({ error: 'No fue posible crear el pedido' }, 400);
-      }
-    });
+    registerOrderCreationRoute(app, { orders: ordersGateway, identity: identityGateway, shipping: shippingGateway, catalog: catalogGateway, realtime: realtimeGateway, inventory: inventoryGateway, notifications: notificationsGateway, settings: settingsGateway, promotions: promotionsGateway });
 
     // GET /api/v1/orders/:orderId
     app.get('/api/v1/orders/:orderId', async (c) => {

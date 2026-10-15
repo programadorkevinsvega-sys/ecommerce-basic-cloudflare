@@ -15,4 +15,6 @@ export interface IOrderRepository {
   save(order: Order): Promise<void>;
   addHistory(record: OrderHistoryRecord): Promise<void>;
   list(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;
+  hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>;
+  getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;
 }

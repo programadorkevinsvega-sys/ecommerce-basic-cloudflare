@@ -127,6 +127,10 @@ export class AdminUiController {
           divipolaLocations,
           settings,
           adminEmail: session.actorId || 'Administrador',
+          reviewCanRead: can('catalog:read'),
+          reviewCanCreate: can('catalog:create'),
+          reviewCanEdit: can('catalog:edit'),
+          reviewCanDelete: can('catalog:delete'),
         });
 
         return c.html(html);

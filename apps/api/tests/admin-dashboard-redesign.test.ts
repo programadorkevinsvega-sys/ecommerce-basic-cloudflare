@@ -11,6 +11,7 @@ const props: AdminDashboardProps = {
     supportEmail: 'soporte@example.com', requireCodVerification: false, updatedAt: '2026-01-01',
   },
   adminEmail: 'admin@example.com',
+  reviewCanRead: true, reviewCanCreate: true, reviewCanEdit: true, reviewCanDelete: true,
 };
 
 describe('admin dashboard presentation', () => {

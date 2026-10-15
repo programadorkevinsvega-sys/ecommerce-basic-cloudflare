@@ -2,6 +2,16 @@
 
 Generada por comparación estática de migraciones fuente y búsqueda textual en repositorios TypeScript. No verifica el estado remoto. Wrangler raíz usa `apps/api/migrations/`; Wrangler de `apps/api` usa `migrations/`.
 
+## `reviews__0001_init.sql` · fuente `apps/api/src/modules/reviews/infrastructure/persistence/d1/migrations/0001_init.sql`
+
+Tablas: 1; índices explícitos: 2. Copias: `migrations/reviews__0001_init.sql` y `apps/api/migrations/reviews__0001_init.sql`.
+
+### `reviews_product_reviews`
+
+Declaraciones: IDs de producto y cliente como referencias simples, puntuación entera de 1 a 5, comentario, estado y fechas; una reseña por producto y cliente. No crea claves foráneas hacia `catalog`, `identity` ni `orders`.
+
+Índices: por producto/estado/fecha y por estado/fecha. `D1ProductReviewRepository` consulta su tabla; la elegibilidad de compra se solicita al Gateway de `orders`, que consulta únicamente sus propias tablas.
+
 ## `catalog__0008_collections.sql` · fuente `apps/api/src/modules/catalog/infrastructure/persistence/d1/migrations/0008_collections.sql`
 
 Tablas: 2; índices explícitos: 2. Copias: `migrations/catalog__0008_collections.sql` y `apps/api/migrations/catalog__0008_collections.sql`.
@@ -702,6 +712,8 @@ Declaraciones de columnas/restricciones:
 - `updated_at TEXT NOT NULL`
 
 Índices: `idx_orders_customer` (customer_id), `idx_orders_status` (status), `idx_orders_created` (created_at)
+
+La migración aditiva `orders__0005_secure_order_tracking.sql` agrega `guest_tracking_token_hash`, `min_estimated_days`, `max_estimated_days` e `idx_orders_tracking_capability`. La clave no se almacena en claro; columnas nullable preservan pedidos previos. Producción verificada el 2026-10-15; ver bookmark y conteo de pedidos antes/después en `manifest.md`.
 
 Repositorios que referencian la tabla: `apps/api/src/modules/orders/infrastructure/persistence/d1/repositories/D1OrderRepository.ts`
 

@@ -1,6 +1,6 @@
 import { OrderLine } from './OrderLine.js';
 
-export type OrderStatus = 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'placed' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled';
 export type OrderPaymentStatus = 'pending' | 'approved' | 'failed' | 'collected';
 
 export interface ShippingAddressSnapshot {
@@ -30,6 +30,9 @@ export interface OrderProps {
   pricingVersion?: number;
   estimatedPaymentFeeCents?: number;
   transactionFeeCents?: number;
+  guestTrackingTokenHash?: string | null;
+  minEstimatedDays?: number | null;
+  maxEstimatedDays?: number | null;
   paymentMethod: 'wompi' | 'cash_on_delivery';
   status?: OrderStatus;
   paymentStatus?: OrderPaymentStatus;
@@ -57,6 +60,9 @@ export class Order {
   public readonly pricingVersion: number;
   public readonly estimatedPaymentFeeCents: number;
   public readonly transactionFeeCents: number;
+  public readonly guestTrackingTokenHash: string | null;
+  public readonly minEstimatedDays: number | null;
+  public readonly maxEstimatedDays: number | null;
   public readonly paymentMethod: 'wompi' | 'cash_on_delivery';
   public status: OrderStatus;
   public paymentStatus: OrderPaymentStatus;
@@ -86,6 +92,9 @@ export class Order {
     this.pricingVersion = props.pricingVersion ?? 1;
     this.estimatedPaymentFeeCents = props.estimatedPaymentFeeCents ?? 0;
     this.transactionFeeCents = props.transactionFeeCents ?? 0;
+    this.guestTrackingTokenHash = props.guestTrackingTokenHash || null;
+    this.minEstimatedDays = props.minEstimatedDays ?? null;
+    this.maxEstimatedDays = props.maxEstimatedDays ?? null;
     this.paymentMethod = props.paymentMethod;
     this.status = props.status || 'placed';
     this.paymentStatus = props.paymentStatus || 'pending';
@@ -108,6 +117,11 @@ export class Order {
 
   public markShipped(): void {
     this.status = 'shipped';
+    this.updatedAt = new Date().toISOString();
+  }
+
+  public markPrepared(): void {
+    this.status = 'prepared';
     this.updatedAt = new Date().toISOString();
   }
 
@@ -140,6 +154,8 @@ export class Order {
       pricingVersion: this.pricingVersion,
       estimatedPaymentFeeCents: this.estimatedPaymentFeeCents,
       transactionFeeCents: this.transactionFeeCents,
+      minEstimatedDays: this.minEstimatedDays,
+      maxEstimatedDays: this.maxEstimatedDays,
       paymentMethod: this.paymentMethod,
       status: this.status,
       paymentStatus: this.paymentStatus,

@@ -111,6 +111,7 @@ export function renderAdminOrderDetailModal(): string {
             <label style="font-size:0.85rem; color:var(--muted, #94a3b8);">Cambiar Estado:</label>
             <select id="modal-change-status-select" style="padding:0.35rem 0.6rem; border:1px solid var(--border, #334155); border-radius:5px; background:var(--input-bg, #0f172a); color:inherit; font-size:0.85rem;">
               <option value="confirmed">Confirmado</option>
+              <option value="prepared">Preparado</option>
               <option value="shipped">Enviado</option>
               <option value="delivered">Entregado</option>
               <option value="cancelled">Cancelado</option>
