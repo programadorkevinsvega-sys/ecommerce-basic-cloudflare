@@ -36,7 +36,7 @@ export class MiPaqueteHttpClient {
         },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('MiPaquete request failed');
+      if (!response.ok) throw new Error(`MiPaquete request failed (${response.status})`);
       return await response.json() as unknown;
     } finally {
       clearTimeout(timeout);
