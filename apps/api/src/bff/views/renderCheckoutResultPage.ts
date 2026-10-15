@@ -27,7 +27,7 @@ export function renderCheckoutResultPage(order: Order, ref?: string): string {
         <p style="margin-bottom: 0.4rem;"><strong>Método de Pago:</strong> ${isCod ? '💵 Pago Contra Entrega (Efectivo al recibir)' : '💳 Pago en línea (Wompi)'}</p>
         ${order.transactionFeeCents ? `<p style="margin-bottom:0.4rem;"><strong>Costo de transacción Wompi:</strong> $${(order.transactionFeeCents / 100).toLocaleString('es-CO')} COP</p>` : ''}
         ${order.shippingCollectionCents ? `<p style="margin-bottom:0.4rem;"><strong>Envío por pagar al recibir:</strong> $${(order.shippingCollectionCents / 100).toLocaleString('es-CO')} COP</p>` : ''}
-        <p style="margin-bottom: 0; font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-top: 0.75rem;">
+        <p style="margin-bottom: 0; font-size: 1.2rem; font-weight: 700; color: #1f4d3a; margin-top: 0.75rem;">
           ${order.shippingCollectionCents ? 'Total del pedido' : 'Total a Pagar'}: ${totalFormatted}${order.shippingCollectionCents ? `<br><small>El envío se cobra aparte al momento de la entrega.</small>` : ''}
         </p>
       </div>
