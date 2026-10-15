@@ -29,11 +29,11 @@ export function renderPaymentsManagementSection(): string {
       <div id="cod-collection-modal" class="payments-modal" hidden>
         <button class="payments-modal-backdrop" type="button" onclick="closeCodCollectionForm()" aria-label="Cerrar formulario de recaudo"></button>
         <section class="payments-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cod-modal-title" tabindex="-1">
-          <header><div><h2 id="cod-modal-title">Crear nuevo recaudo</h2><p>Registra el efectivo recibido para un pedido contra entrega.</p></div><button class="payments-modal-close" type="button" onclick="closeCodCollectionForm()" aria-label="Cerrar">×</button></header>
+          <header><div><h2 id="cod-modal-title">Crear nuevo recaudo</h2><p>Elige un pedido local marcado como entregado y registra el efectivo recibido.</p></div><button class="payments-modal-close" type="button" onclick="closeCodCollectionForm()" aria-label="Cerrar">×</button></header>
           <form class="payments-modal-form" onsubmit="event.preventDefault(); submitCodCollection()">
-            <div class="payments-modal-field"><label for="cod-order-id">ID del pedido *</label><input id="cod-order-id" type="text" placeholder="ord-..." required /></div>
+            <div class="payments-modal-field"><label for="cod-order-id">Entrega local pendiente de recaudo *</label><select id="cod-order-id" required onchange="selectCodCollectionOrder()"><option value="">Cargando entregas…</option></select></div>
             <div class="payments-modal-field"><label for="cod-amount">Monto recibido (COP) *</label><input id="cod-amount" data-cop-input inputmode="numeric" autocomplete="off" type="text" placeholder="50.000" required /></div>
-            <div class="payments-modal-field"><label for="cod-receipt">Recibo / guía</label><input id="cod-receipt" type="text" placeholder="Guía transportadora" /></div>
+            <div class="payments-modal-field"><label for="cod-receipt">Recibo / referencia de entrega local</label><input id="cod-receipt" type="text" maxlength="120" placeholder="Se completa al elegir el pedido" /></div>
             <footer><button type="button" class="payments-secondary-button" onclick="closeCodCollectionForm()">Cancelar</button><button type="submit" class="btn-primary">Registrar recaudo</button></footer>
           </form>
         </section>

@@ -6,6 +6,7 @@ import { UpdateOrderStatusCommand } from './application/use-cases/UpdateOrderSta
 import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from './domain/ports/IOrderTrackingRepository.js';
 import { FreeShippingItemCandidate, FreeShippingRuleCandidate } from './domain/services/OrdersCheckoutPolicy.js';
 import { LocalDeliveryLabelPage } from './domain/ports/LocalDeliveryLabel.js';
+import { LocalCodCollectionCandidate } from './domain/ports/LocalCodCollectionCandidate.js';
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -65,5 +66,9 @@ export class OrdersPublicApi {
 
   public markLocalDeliveryLabelPrinted(orderId: string, actorId: string): Promise<boolean> {
     return this.container.manageLocalDeliveryLabelsUseCase.markPrinted(orderId, actorId);
+  }
+
+  public listLocalCodCollectionCandidates(limit: number, offset: number): Promise<LocalCodCollectionCandidate[]> {
+    return this.container.listLocalCodCollectionCandidatesUseCase.execute(limit, offset);
   }
 }

@@ -13,6 +13,8 @@ import { D1OrderTrackingRepository } from './infrastructure/persistence/d1/repos
 import { EvaluateFreeShippingEligibilityUseCase } from './application/use-cases/EvaluateFreeShippingEligibilityUseCase.js';
 import { D1LocalDeliveryLabelRepository } from './infrastructure/persistence/d1/repositories/D1LocalDeliveryLabelRepository.js';
 import { ManageLocalDeliveryLabelsUseCase } from './application/use-cases/ManageLocalDeliveryLabelsUseCase.js';
+import { D1LocalCodCollectionCandidateRepository } from './infrastructure/persistence/d1/repositories/D1LocalCodCollectionCandidateRepository.js';
+import { ListLocalCodCollectionCandidatesUseCase } from './application/use-cases/ListLocalCodCollectionCandidatesUseCase.js';
 
 export interface OrdersModuleContainer {
   evaluateCheckoutPolicyUseCase: EvaluateCheckoutPolicyUseCase;
@@ -25,6 +27,7 @@ export interface OrdersModuleContainer {
   getOrderTrackingUseCase: GetOrderTrackingUseCase;
   evaluateFreeShippingEligibilityUseCase: EvaluateFreeShippingEligibilityUseCase;
   manageLocalDeliveryLabelsUseCase: ManageLocalDeliveryLabelsUseCase;
+  listLocalCodCollectionCandidatesUseCase: ListLocalCodCollectionCandidatesUseCase;
 }
 
 export function createOrdersModule(env: Env): OrdersModuleContainer {
@@ -32,6 +35,7 @@ export function createOrdersModule(env: Env): OrdersModuleContainer {
   const outbox = new D1OrderOutboxRepository(env.DB);
   const tracking = new D1OrderTrackingRepository(env.DB);
   const localLabels = new D1LocalDeliveryLabelRepository(env.DB);
+  const codCandidates = new D1LocalCodCollectionCandidateRepository(env.DB);
 
   return {
     evaluateCheckoutPolicyUseCase: new EvaluateCheckoutPolicyUseCase(),
@@ -44,5 +48,6 @@ export function createOrdersModule(env: Env): OrdersModuleContainer {
     getOrderTrackingUseCase: new GetOrderTrackingUseCase(tracking),
     evaluateFreeShippingEligibilityUseCase: new EvaluateFreeShippingEligibilityUseCase(),
     manageLocalDeliveryLabelsUseCase: new ManageLocalDeliveryLabelsUseCase(localLabels),
+    listLocalCodCollectionCandidatesUseCase: new ListLocalCodCollectionCandidatesUseCase(codCandidates),
   };
 }

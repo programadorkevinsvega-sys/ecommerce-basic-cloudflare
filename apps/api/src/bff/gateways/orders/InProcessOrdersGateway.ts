@@ -65,4 +65,8 @@ export class InProcessOrdersGateway implements OrdersGateway {
   public markLocalDeliveryLabelPrinted(orderId: string, actorId: string) {
     return this.publicApi.markLocalDeliveryLabelPrinted(orderId, actorId);
   }
+
+  public listLocalCodCollectionCandidates(limit: number, offset: number) {
+    return this.publicApi.listLocalCodCollectionCandidates(limit, offset);
+  }
 }

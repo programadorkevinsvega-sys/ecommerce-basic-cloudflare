@@ -332,7 +332,8 @@ El módulo de crédito aún no existe; su alcance está pendiente en ADR-0009. L
 ### Pago contra entrega
 
 - Es un método de pago más de `payments` (`method = cash_on_delivery`), sin pasar por Wompi.
-- Estados del pedido: `placed → confirmed → shipped → delivered → cash_collected`; el admin (o repartidor) registra el recaudo en `payments_cod_collections`.
+- En una entrega local, el admin solo puede registrar el recaudo después de que el pedido figure como entregado. El panel lista estos pedidos y rellena el importe y la referencia local; el servidor valida el estado y los importes.
+- El recaudo cambia `payment_status` de `pending` a `collected` y el pedido queda `delivered`. La factura comercial interna se emite tras el pago Wompi aprobado o tras registrar este recaudo, no al crear un pedido COD pendiente.
 - Pedidos contra entrega pueden exigir verificación (teléfono/dirección) antes de pasar a `confirmed`; configurable en `settings`.
 
 ### Venta a crédito (pendiente; ADR-0009)

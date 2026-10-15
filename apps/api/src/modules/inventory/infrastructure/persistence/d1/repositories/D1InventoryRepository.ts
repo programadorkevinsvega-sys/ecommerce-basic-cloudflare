@@ -115,8 +115,8 @@ export class D1InventoryRepository implements IInventoryRepository {
          SELECT ?, ?, ?, 'processing', ? WHERE EXISTS (
            SELECT 1 FROM inventory_stocks WHERE product_id = ? AND quantity >= ? AND reserved_quantity >= ?
          ) AND COALESCE((SELECT SUM(quantity) FROM inventory_reservations
-           WHERE order_id = ? AND product_id = ? AND status = 'pending' AND expires_at > ?), 0) >= ?`
-      ).bind(orderId, item.productId, item.quantity, now, item.productId, item.quantity, item.quantity, orderId, item.productId, now, item.quantity));
+           WHERE order_id = ? AND product_id = ? AND status = 'pending'), 0) >= ?`
+      ).bind(orderId, item.productId, item.quantity, now, item.productId, item.quantity, item.quantity, orderId, item.productId, item.quantity));
       statements.push(this.db.prepare(
         `UPDATE inventory_stocks SET quantity = MAX(0, quantity - ?), reserved_quantity = MAX(0, reserved_quantity - ?), updated_at = ?
          WHERE product_id = ? AND EXISTS (SELECT 1 FROM inventory_order_consumptions WHERE order_id = ? AND product_id = ? AND status = 'processing')`

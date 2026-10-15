@@ -1,4 +1,5 @@
 import { renderPaymentRecordDetailsScript } from './renderPaymentRecordDetailsScript.js';
+import { renderCodCollectionAdminScript } from './renderCodCollectionAdminScript.js';
 
 export function renderPaymentsAdminScript(): string {
   return `
@@ -87,28 +88,7 @@ export function renderPaymentsAdminScript(): string {
 
     function filterPaymentTransactions() { window.resetAdminTablePage('payment-transactions'); renderAdminPaymentTransactions(); }
 
-    async function submitCodCollection() {
-      const orderId = document.getElementById('cod-order-id').value.trim();
-      const amountInCents = window.copPesosToCents('cod-amount');
-      const receipt = document.getElementById('cod-receipt').value.trim();
-      if (!orderId || !amountInCents) { alert('Por favor indica ID del pedido y monto en pesos colombianos.'); return; }
-      const res = await fetch('/api/v1/admin/payments/cod/collect', {
-        method: 'POST',
-        headers: adminHeaders(true),
-        body: JSON.stringify({ orderId, amountInCents, receiptNumber: receipt })
-      });
-      if (res.ok) {
-        alert('¡Recaudo registrado con éxito!');
-        document.getElementById('cod-order-id').value = '';
-        document.getElementById('cod-amount').value = '';
-        document.getElementById('cod-receipt').value = '';
-        closeCodCollectionForm();
-        loadAdminPayments();
-        loadAdminOrders();
-      } else {
-        alert('Error al registrar recaudo');
-      }
-    }
+    ${renderCodCollectionAdminScript()}
 
     async function submitSettlementCost() {
       const orderId = document.getElementById('settlement-order-id').value.trim();
@@ -156,7 +136,7 @@ export function renderPaymentsAdminScript(): string {
       const modal = document.getElementById(id);
       if (modal) modal.hidden = true;
     }
-    function openCodCollectionForm() { openPaymentsModal('cod-collection-modal', 'cod-order-id'); }
+    function openCodCollectionForm() { openPaymentsModal('cod-collection-modal', 'cod-order-id'); loadCodEligibleOrders(); }
     function closeCodCollectionForm() { closePaymentsModal('cod-collection-modal'); }
     function openSettlementForm() { openPaymentsModal('settlement-modal', 'settlement-order-id'); }
     function closeSettlementForm() { closePaymentsModal('settlement-modal'); }
@@ -168,6 +148,7 @@ export function renderPaymentsAdminScript(): string {
     window.submitSettlementCorrection = submitSettlementCorrection;
     window.openSettlementCorrection = openSettlementCorrection;
     window.openCodCollectionForm = openCodCollectionForm;
+    window.selectCodCollectionOrder = selectCodCollectionOrder;
     window.closeCodCollectionForm = closeCodCollectionForm;
     window.openSettlementForm = openSettlementForm;
     window.closeSettlementForm = closeSettlementForm;

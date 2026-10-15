@@ -10,11 +10,22 @@ import { NotificationsGateway } from '../../gateways/notifications/Notifications
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
-import { hasReservedStock } from './hasReservedStock.js';
 
 type PaymentRouteDependencies = { paymentsGateway: PaymentsGateway; ordersGateway: OrdersGateway; identityGateway: IdentityGateway; realtimeGateway: RealtimeGateway; inventoryGateway: InventoryGateway; invoicingGateway: InvoicingGateway; notificationsGateway: NotificationsGateway; auditGateway: AuditGateway; settingsGateway: SettingsGateway };
 
 export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: PaymentRouteDependencies): void {
+  app.get('/api/v1/admin/payments/cod/local-deliveries', async (c) => {
+    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    if (!token) return c.json({ error: 'No autorizado' }, 401);
+    const admin = await d.identityGateway.validateSession(token);
+    if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+    if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:collect')) return c.json({ error: 'Permiso insuficiente' }, 403);
+    const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 20);
+    if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
+    const items = await d.ordersGateway.listLocalCodCollectionCandidates(pageSize, (page - 1) * pageSize);
+    return c.json({ success: true, items, page, pageSize });
+  });
+
   app.post('/api/v1/admin/payments/cod/collect', async (c) => {
     const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
     if (!token) return c.json({ error: 'No autorizado' }, 401);
@@ -23,11 +34,14 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:collect')) return c.json({ error: 'Permiso insuficiente' }, 403);
     const body = await c.req.json();
     const order = typeof body.orderId === 'string' ? await d.ordersGateway.getOrder(body.orderId) : null;
-    if (!order || order.paymentMethod !== 'cash_on_delivery' || order.paymentStatus === 'collected' || !Number.isSafeInteger(body.amountInCents) || body.amountInCents !== order.totalCents) return c.json({ error: 'orderId y amountInCents son requeridos' }, 400);
-    if (!await hasReservedStock(d.inventoryGateway, order)) return c.json({ error: 'No hay una reserva de inventario vigente para este pedido' }, 409);
-    const cod = await d.paymentsGateway.recordCodCollection({ orderId: order.id, amountInCents: body.amountInCents, collectedBy: admin.actorId, receiptNumber: body.receiptNumber, notes: body.notes });
+    if (!order || order.paymentMethod !== 'cash_on_delivery' || order.paymentStatus !== 'pending' || order.status !== 'delivered' || order.shippingFulfillmentMethod !== 'merchant_local') return c.json({ error: 'Selecciona una entrega local contra entrega marcada como entregada y aún pendiente de recaudo.' }, 409);
+    const expectedCashAmount = Math.round(order.totalCents / 100) * 100;
+    if (!Number.isSafeInteger(body.amountInCents) || body.amountInCents !== expectedCashAmount) return c.json({ error: 'El monto recibido debe coincidir con el total del pedido, redondeado al peso colombiano.' }, 400);
+    const receiptNumber = typeof body.receiptNumber === 'string' && body.receiptNumber.trim()
+      ? body.receiptNumber.trim().slice(0, 120) : `LOCAL-${order.id.slice(-8).toUpperCase()}`;
+    const cod = await d.paymentsGateway.recordCodCollection({ orderId: order.id, amountInCents: body.amountInCents, collectedBy: admin.actorId, receiptNumber, notes: body.notes });
     await d.ordersGateway.updateOrderStatus({ orderId: order.id, status: 'delivered', paymentStatus: 'collected', note: `Recaudo contra entrega registrado por ${admin.actorId}`, actor: admin.actorId });
-    await processOrderPaymentSuccess({ orderId: order.id, traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown', paymentMethod: 'cash_on_delivery', paymentReference: body.receiptNumber || 'COD-REC', actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
+    await processOrderPaymentSuccess({ orderId: order.id, traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown', paymentMethod: 'cash_on_delivery', paymentReference: receiptNumber, actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
     return c.json({ success: true, collection: cod.toJSON() });
   });
 
