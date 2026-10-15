@@ -3,7 +3,7 @@ import type { AttributeDto, BrandDto, CategoryDto, CatalogProductDto, ProductVar
 export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: CatalogProductDto[], collections:CatalogCollectionDto[]): string {
   return `<section class="taxonomy-screen" aria-label="Gestión del catálogo">
     <header class="taxonomy-heading"><div><h1 id="taxonomy-page-title">Categorías</h1><p id="taxonomy-page-description">Organiza los productos en categorías independientes.</p></div></header>
-    ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products)}${collectionPage(collections)}
+    ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products, attributes)}${collectionPage(collections)}
   </section>`;
 }
 
@@ -37,11 +37,19 @@ function attributePage(items: AttributeDto[]): string {
   return page('attributes', 'Atributos', 'Define características que se pueden asignar a los productos.', items.length, 'Atributo', 'Crear atributo', form, 'newAttributeForm', '<th>Atributo</th><th>Código</th><th>Tipo</th><th>Opciones</th><th>Estado</th><th>Acciones</th>', rows, 'Aún no hay atributos.');
 }
 
-function variantPage(items: ProductVariantDto[], products: CatalogProductDto[]): string {
+function variantPage(items: ProductVariantDto[], products: CatalogProductDto[], attributes: AttributeDto[]): string {
   const names = new Map(products.map((x) => [x.id, x.name]));
   const rows = items.map((x) => `<tr><td><strong>${e(x.name)}</strong><small>${e(Object.entries(x.options).map(([k,v]) => `${k}: ${v}`).join(' · ') || 'Sin opciones')}</small></td><td>${e(names.get(x.productId) || x.productId)}</td><td><code>${e(x.sku)}</code></td><td>${cop(x.priceInCents)} </td><td>${x.stockQuantity}</td><td><span class="taxonomy-status ${x.status}">${x.status === 'active' ? 'Activa' : 'Inactiva'}</span></td></tr>`).join('');
   const options = products.map((x) => `<option value="${e(x.id)}">${e(x.name)} · ${e(x.sku)}</option>`).join('');
-  const form = `<label>Producto<select id="variantProduct" required><option value="">Selecciona un producto</option>${options}</select></label><label>Nombre de la variante<input id="variantName" required maxlength="120" placeholder="Ej. Negro / Talla M"></label><label>SKU<input id="variantSku" required maxlength="60"></label><label>Precio propio (COP)<input id="variantPrice" data-cop-input inputmode="numeric" placeholder="Vacío hereda el precio del producto"></label><label>Stock<input id="variantStock" type="number" min="0" step="1" value="0" required></label><label>Estado<select id="variantStatus"><option value="active">Activa</option><option value="inactive">Inactiva</option></select></label><label class="wide">Opciones (JSON)<textarea id="variantOptions" maxlength="1000" placeholder='{"color":"Negro","talla":"M"}'>{}</textarea></label>`;
+  const optionFields = attributes.filter((attribute) => attribute.status !== 'inactive').map((attribute) => {
+    const id = `variant-option-${e(attribute.code)}`;
+    const input = attribute.options.length
+      ? `<select id="${id}" data-variant-option="${e(attribute.code)}"><option value="">Sin especificar</option>${attribute.options.map((option) => `<option value="${e(option)}">${e(option)}</option>`).join('')}</select>`
+      : `<input id="${id}" data-variant-option="${e(attribute.code)}" type="${attribute.type === 'number' ? 'number' : 'text'}">`;
+    return `<label>${e(attribute.name)}${input}</label>`;
+  }).join('');
+  const optionHelp = optionFields || '<p class="wide">Crea los atributos y sus opciones en Catálogo → Atributos.</p>';
+  const form = `<label>Producto<select id="variantProduct" required><option value="">Selecciona un producto</option>${options}</select></label><label>Nombre de la variante<input id="variantName" required maxlength="120" placeholder="Ej. Negro / Talla M"></label><label>SKU<input id="variantSku" required maxlength="60"></label><label>Precio propio (COP)<input id="variantPrice" data-cop-input inputmode="numeric" placeholder="Vacío hereda el precio del producto"></label><label>Stock<input id="variantStock" type="number" min="0" step="1" value="0" required></label><label>Estado<select id="variantStatus"><option value="active">Activa</option><option value="inactive">Inactiva</option></select></label><div class="wide"><strong>Opciones de la variante</strong><p>Se toman de los atributos que administras en Catálogo → Atributos.</p><div class="taxonomy-fields">${optionHelp}</div><input type="hidden" id="variantOptions" value="{}"></div>`;
   return page('variants', 'Variantes', 'Administra SKU, opciones, precio y stock por variante.', items.length, 'Variante', 'Crear variante', form, 'newVariantForm', '<th>Variante</th><th>Producto</th><th>SKU</th><th>Precio propio</th><th>Stock</th><th>Estado</th><th>Acciones</th>', rows, products.length ? 'Aún no hay variantes. Crea una para ofrecer opciones de producto.' : 'Primero crea un producto para poder asignarle variantes.');
 }
 

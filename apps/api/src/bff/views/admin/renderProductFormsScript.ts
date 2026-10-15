@@ -4,7 +4,13 @@ export function renderProductFormsScript(): string {
     window.currentProductMediaIds = [];
     window.setProductAttributeValues = (specifications = {}) => {
       document.querySelectorAll('[data-product-attribute]').forEach((field) => {
-        field.value = specifications[field.dataset.productAttribute] ?? '';
+        const value = specifications[field.dataset.productAttribute] ?? '';
+        if (field.tagName === 'SELECT' && value && !Array.from(field.options).some((option) => option.value === String(value))) {
+          const legacyOption = document.createElement('option');
+          legacyOption.value = String(value); legacyOption.textContent = String(value) + ' (valor existente)';
+          field.append(legacyOption);
+        }
+        field.value = value;
       });
     };
 

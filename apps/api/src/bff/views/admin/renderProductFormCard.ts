@@ -4,16 +4,16 @@ import { AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 
 export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = []): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national' && z.isActive);
-  const registeredBrands = brands.map((brand) => brand.name);
+  const registeredBrands = brands.filter((brand) => brand.status !== 'inactive').map((brand) => brand.name);
   const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
   const legacyBrands = [...new Set(legacyBrandNames.map((name) => name.trim()).filter((name) => name && !registeredNames.has(name.toLocaleLowerCase())))];
   const brandOptions = `${registeredBrands.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}${legacyBrands.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (marca histórica)</option>`).join('')}`;
   const zoneOptions = localZones.map((z) =>
     `<option value="${escapeHtml(z.id)}">${escapeHtml(z.name)} (${escapeHtml(z.type)})</option>`
   ).join('');
-  const attributeFields = attributes.map((attribute) => {
+  const attributeFields = attributes.filter((attribute) => attribute.status !== 'inactive').map((attribute) => {
     const fieldId = `pAttr-${escapeHtml(attribute.code)}`;
-    const control = attribute.type === 'select'
+    const control = attribute.type === 'select' || attribute.options.length > 0
       ? `<select id="${fieldId}" data-product-attribute="${escapeHtml(attribute.code)}"><option value="">Sin especificar</option>${attribute.options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('')}</select>`
       : `<input id="${fieldId}" data-product-attribute="${escapeHtml(attribute.code)}" type="${attribute.type === 'number' ? 'number' : 'text'}" />`;
     return `<div><label for="${fieldId}">${escapeHtml(attribute.name)}</label>${control}</div>`;
@@ -86,8 +86,8 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div class="form-grid" id="productAttributes">${attributeFields || '<p>No hay atributos configurados. Crea opciones desde Catálogo → Atributos.</p>'}</div>
         </div>
         <div style="margin-bottom: 1rem;">
-          <label>Especificaciones Técnicas (JSON)</label>
-          <textarea id="pSpecs" rows="2" placeholder='{"material": "100% Algodón", "talla": "M"}'></textarea>
+          <input type="hidden" id="pSpecs" value="{}" />
+          <p>Las características del producto se configuran en Catálogo → Atributos y aquí se seleccionan sus valores.</p>
         </div>
 
         <div style="border: 1px dashed #475569; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #0f172a;">
