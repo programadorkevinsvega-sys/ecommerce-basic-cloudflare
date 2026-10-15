@@ -14,6 +14,8 @@ export interface CarrierShipment {
   shippingCostCents: number | null;
   collectionValueCents: number;
   lastSyncedAt: string | null;
+  printedAt: string | null;
+  printedBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,4 +31,6 @@ export interface CarrierShipmentPatch {
   status?: CarrierShipmentStatus;
   shippingCostCents?: number | null;
   lastSyncedAt?: string | null;
+  printedAt?: string | null;
+  printedBy?: string | null;
 }

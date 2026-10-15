@@ -16,6 +16,8 @@ import { reconcileWompiEvent } from './reconcileWompiEvent.js';
 import { registerAdminPaymentRoutes } from './registerAdminPaymentRoutes.js';
 import { hasReservedStock } from './hasReservedStock.js';
 import { hashGuestCartId } from '../../security/GuestCartCapability.js';
+import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
+import { createShipmentForEligibleOrder } from '../shipping/createShipmentForEligibleOrder.js';
 
 export class PaymentsController {
   public static createRoutes(
@@ -27,7 +29,8 @@ export class PaymentsController {
     invoicingGateway: InvoicingGateway,
     notificationsGateway: NotificationsGateway,
     auditGateway: AuditGateway,
-    settingsGateway: SettingsGateway
+    settingsGateway: SettingsGateway,
+    shippingGateway?: ShippingGateway
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
 
@@ -136,6 +139,14 @@ export class PaymentsController {
           note: 'Pago Wompi aprobado y reconciliado',
           actor: 'wompi-webhook',
         });
+
+        try {
+          if (!shippingGateway) throw new Error('Shipping gateway is unavailable');
+          await createShipmentForEligibleOrder(res.orderId, { orders: ordersGateway, settings: settingsGateway, shipping: shippingGateway });
+        } catch (error) {
+          console.error(JSON.stringify({ event: 'shipping.auto_guide_creation_failed',
+            error_name: error instanceof Error ? error.name : 'UnknownError' }));
+        }
 
         await processOrderPaymentSuccess({
           orderId: res.orderId,

@@ -103,7 +103,8 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.invoicingGateway,
     cRoot.notificationsGateway,
     cRoot.auditGateway,
-    cRoot.settingsGateway
+    cRoot.settingsGateway,
+    cRoot.shippingGateway
   ));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway, cRoot.identityGateway));
   app.route('/', InvoicingController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway));

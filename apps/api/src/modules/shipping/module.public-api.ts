@@ -106,6 +106,14 @@ export class ShippingPublicApi {
     return this.container.syncPendingMiPaqueteShipmentsUseCase.execute(10);
   }
 
+  public listCarrierShipments(input: { page: number; pageSize: number; unprinted?: boolean }) {
+    return this.container.listCarrierShipmentsUseCase.execute(input);
+  }
+
+  public async markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipment | null> {
+    return this.container.markCarrierShipmentPrintedUseCase.execute(id, actorId);
+  }
+
   public async checkCoverage(
     daneCode: string,
     shippingScope?: 'national' | 'local',

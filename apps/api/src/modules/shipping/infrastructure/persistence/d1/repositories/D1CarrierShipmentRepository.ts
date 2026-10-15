@@ -6,6 +6,7 @@ interface ShipmentRow {
   carrier_name: string | null; guide_number: string | null; guide_url: string | null; pickup_code: string | null;
   provider_status: string | null; normalized_status: CarrierShipment['status']; shipping_cost_cents: number | null;
   collection_value_cents: number; last_synced_at: string | null; created_at: string; updated_at: string;
+  printed_at: string | null; printed_by: string | null;
 }
 
 export class D1CarrierShipmentRepository implements ICarrierShipmentRepository {
@@ -37,6 +38,7 @@ export class D1CarrierShipmentRepository implements ICarrierShipmentRepository {
       providerShipmentId: 'provider_shipment_id', mipaqueteCode: 'mipaquete_code', carrierName: 'carrier_name',
       guideNumber: 'guide_number', guideUrl: 'guide_url', pickupCode: 'pickup_code', providerStatus: 'provider_status',
       status: 'normalized_status', shippingCostCents: 'shipping_cost_cents', lastSyncedAt: 'last_synced_at',
+      printedAt: 'printed_at', printedBy: 'printed_by',
     };
     const entries = Object.entries(patch).filter(([key]) => key in columns) as [keyof CarrierShipmentPatch, unknown][];
     if (!entries.length) return;
@@ -53,9 +55,10 @@ export class D1CarrierShipmentRepository implements ICarrierShipmentRepository {
     return (result.meta?.changes ?? 0) === 1;
   }
 
-  public async list(input: { limit: number; offset: number; status?: string }): Promise<{ items: CarrierShipment[]; total: number }> {
-    const where = input.status ? ' WHERE normalized_status = ?' : '';
-    const bind = input.status ? [input.status] : [];
+  public async list(input: { limit: number; offset: number; status?: string; unprinted?: boolean }): Promise<{ items: CarrierShipment[]; total: number }> {
+    const clauses = [input.status ? 'normalized_status = ?' : '', input.unprinted ? 'guide_url IS NOT NULL AND printed_at IS NULL' : ''].filter(Boolean);
+    const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
+    const bind = [...(input.status ? [input.status] : [])];
     const [rows, total] = await Promise.all([
       this.db.prepare(`SELECT * FROM shipping_carrier_shipments${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
         .bind(...bind, input.limit, input.offset).all<ShipmentRow>(),
@@ -79,6 +82,7 @@ function mapShipment(row: ShipmentRow): CarrierShipment {
     guideUrl: row.guide_url, pickupCode: row.pickup_code, providerStatus: row.provider_status,
     status: row.normalized_status, shippingCostCents: row.shipping_cost_cents,
     collectionValueCents: row.collection_value_cents, lastSyncedAt: row.last_synced_at,
+    printedAt: row.printed_at, printedBy: row.printed_by,
     createdAt: row.created_at, updatedAt: row.updated_at,
   };
 }

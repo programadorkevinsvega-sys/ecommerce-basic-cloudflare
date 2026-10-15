@@ -128,6 +128,16 @@ export class InProcessShippingGateway implements ShippingGateway {
     return (await this.publicApi.syncPendingMiPaqueteShipments()).map(mapShipment);
   }
 
+  public async listCarrierShipments(input: { page: number; pageSize: number; unprinted?: boolean }) {
+    const result = await this.publicApi.listCarrierShipments(input);
+    return { ...result, items: result.items.map(mapShipment) };
+  }
+
+  public async markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipmentDto | null> {
+    const shipment = await this.publicApi.markCarrierShipmentPrinted(id, actorId);
+    return shipment ? mapShipment(shipment) : null;
+  }
+
   private mapZone(zone: ShippingZone): ShippingZoneDto {
     return {
       id: zone.id,
@@ -160,7 +170,7 @@ function mapShipment(shipment: CarrierShipmentDto): CarrierShipmentDto {
     carrierName: shipment.carrierName, guideNumber: shipment.guideNumber, guideUrl: shipment.guideUrl,
     pickupCode: shipment.pickupCode, providerStatus: shipment.providerStatus, status: shipment.status,
     shippingCostCents: shipment.shippingCostCents, collectionValueCents: shipment.collectionValueCents,
-    lastSyncedAt: shipment.lastSyncedAt };
+    lastSyncedAt: shipment.lastSyncedAt, printedAt: shipment.printedAt, printedBy: shipment.printedBy };
 }
 
 function mapCarrierQuote(quote: Awaited<ReturnType<ShippingPublicApi['getCarrierQuoteForOrder']>> & {}): CarrierShippingQuoteDto {

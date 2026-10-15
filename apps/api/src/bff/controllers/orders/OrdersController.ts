@@ -89,7 +89,7 @@ export class OrdersController {
       return c.json({ success: true, order: order.toJSON() });
     });
 
-    registerAdminOrderRoutes(app, ordersGateway, identityGateway, notificationsGateway);
+    registerAdminOrderRoutes(app, ordersGateway, identityGateway, notificationsGateway, settingsGateway, shippingGateway);
 
     return app;
   }

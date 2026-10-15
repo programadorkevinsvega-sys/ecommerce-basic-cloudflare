@@ -10,6 +10,22 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 export class MiPaqueteShipmentController {
   public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway }): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
+    app.get('/api/v1/admin/shipping/mipaquete/labels', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
+      const page = Number(c.req.query('page') || 1);
+      const pageSize = Number(c.req.query('pageSize') || 20);
+      if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
+      const result = await deps.shipping.listCarrierShipments({ page, pageSize, unprinted: c.req.query('unprinted') === 'true' });
+      return c.json({ success: true, ...result, page, pageSize });
+    });
+    app.post('/api/v1/admin/shipping/mipaquete/:shipmentId/printed', createAuthMiddleware(deps.identity, 'admin', 'shipping:update'), async (c) => {
+      const actorId = String(c.get('actorId') || 'unknown');
+      const shipment = await deps.shipping.markCarrierShipmentPrinted(c.req.param('shipmentId'), actorId);
+      if (!shipment) return c.json({ error: 'Guía imprimible no encontrada' }, 404);
+      await deps.audit.record({ actorId, actorType: 'admin', action: 'shipping.guide.printed',
+        entityType: 'shipping_carrier_shipment', entityId: shipment.id,
+        changes: { orderId: shipment.orderId, printedAt: shipment.printedAt } });
+      return c.json({ success: true, shipment });
+    });
     app.post('/api/v1/admin/orders/:orderId/mipaquete', createAuthMiddleware(deps.identity, 'admin', 'shipping:update'), async (c) => {
       const order = await deps.orders.getOrder(c.req.param('orderId'));
       if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);

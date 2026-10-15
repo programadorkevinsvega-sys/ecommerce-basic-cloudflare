@@ -65,6 +65,7 @@ export interface CarrierShipmentDto {
   guideNumber: string | null; guideUrl: string | null; pickupCode: string | null;
   providerStatus: string | null; status: string; shippingCostCents: number | null;
   collectionValueCents: number; lastSyncedAt: string | null;
+  printedAt: string | null; printedBy: string | null;
 }
 export interface CarrierShipmentCreateRequest {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
@@ -130,4 +131,6 @@ export interface ShippingGateway {
   createMiPaqueteShipment(order: CarrierShipmentCreateRequest): Promise<CarrierShipmentDto>;
   syncMiPaqueteShipment(id: string): Promise<CarrierShipmentDto | null>;
   syncPendingMiPaqueteShipments(): Promise<CarrierShipmentDto[]>;
+  listCarrierShipments(input: { page: number; pageSize: number; unprinted?: boolean }): Promise<{ items: CarrierShipmentDto[]; total: number }>;
+  markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipmentDto | null>;
 }

@@ -6,6 +6,6 @@ export interface ICarrierShipmentRepository {
   createPending(input: { id: string; orderId: string; collectionValueCents: number; requestHash: string; now: string }): Promise<boolean>;
   update(id: string, patch: CarrierShipmentPatch, now: string): Promise<void>;
   addEvent(input: { id: string; shipmentId: string; eventKey: string; providerStatus: string; status: string; occurredAt: string }): Promise<boolean>;
-  list(input: { limit: number; offset: number; status?: string }): Promise<{ items: CarrierShipment[]; total: number }>;
+  list(input: { limit: number; offset: number; status?: string; unprinted?: boolean }): Promise<{ items: CarrierShipment[]; total: number }>;
   listPendingSync(limit: number): Promise<CarrierShipment[]>;
 }

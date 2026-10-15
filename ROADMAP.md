@@ -401,10 +401,11 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Separar valor declarado, valor de mercancía y recaudo COD: el mensajero recauda el total que debe el comprador (IVA incluido y flete si se factura), mientras que el valor de mercancía excluye flete y tarifa de transacción Wompi.
 - [x] Presentar y persistir la opción de transportadora, tarifa y plazo elegidos; las reglas locales de cobertura siguen como autoridad de elegibilidad.
 - [x] Permitir al comprador incluir el flete en el pedido o solicitar su cobro al entregar; la segunda opción queda fuera del total/factura y usa recaudo MiPaquete (flete adicional al COD o solo flete si mercancía ya se pagó por Wompi).
-- [x] Crear guía mediante acción administrativa una sola vez para pedido elegible: Wompi aprobado o contra entrega confirmada/preparada. Una creación ambigua queda pendiente de conciliación y no se reintenta automáticamente.
+- [x] Disparar la creación de guía automáticamente después del webhook Wompi verificado/reconciliado o de la primera confirmación administrativa de contra entrega. No se reprocesan pedidos históricos en lote; el botón manual queda como contingencia idempotente.
 - [x] Persistir en tablas `shipping_*` el identificador, transportadora, guía, URL y estado. El admin puede crear/consultar guía desde gestión de seguimiento; se refleja en el seguimiento público ya autorizado.
+- [x] Mostrar guías en el panel de seguimiento, permitir abrir guías individuales o el lote visible y registrar la confirmación de impresión con actor y fecha.
 - [x] La documentación revisada no describe firma verificable de webhook; no se acepta callback externo. Se consulta `getSendings` con credenciales mediante Cron cada cinco minutos y se permite sincronización administrativa autenticada, con deduplicación de eventos.
-- [ ] Definir cancelación y reconciliación manual de despachos ambiguos; las mutaciones admin pasan por RBAC. Conservar guía manual de contingencia.
+- [ ] Definir cancelación y conciliación con MiPaquete para respuestas ambiguas; el registro pendiente bloquea duplicados, pero aún requiere resolución operativa antes de poder reintentar.
 - [x] Aplicar/verificar migración aditiva `shipping__0002_mipaquete_shipments.sql`; arquitectura, aislamiento, pruebas D1 vacía/idempotente y tests de adaptador/configuración pasan. Quedan pruebas de integración real con proveedor y fallos externos.
 - [ ] Crear una guía real controlada tras confirmar costos y operación; verificar recaudo COD, tracking, alertas y recuperación sin duplicados.
 

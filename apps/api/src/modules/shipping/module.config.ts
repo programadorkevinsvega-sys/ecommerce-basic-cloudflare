@@ -28,6 +28,8 @@ import { CreateMiPaqueteShipmentUseCase } from './application/use-cases/CreateMi
 import { SyncMiPaqueteShipmentUseCase } from './application/use-cases/SyncMiPaqueteShipmentUseCase.js';
 import { SyncPendingMiPaqueteShipmentsUseCase } from './application/use-cases/SyncPendingMiPaqueteShipmentsUseCase.js';
 import { ManageCarrierPackageProfilesUseCase } from './application/use-cases/ManageCarrierPackageProfilesUseCase.js';
+import { ListCarrierShipmentsUseCase } from './application/use-cases/ListCarrierShipmentsUseCase.js';
+import { MarkCarrierShipmentPrintedUseCase } from './application/use-cases/MarkCarrierShipmentPrintedUseCase.js';
 
 export interface ShippingModuleContainer {
   carrierApiConfigured: boolean;
@@ -50,6 +52,8 @@ export interface ShippingModuleContainer {
   syncMiPaqueteShipmentUseCase: SyncMiPaqueteShipmentUseCase;
   syncPendingMiPaqueteShipmentsUseCase: SyncPendingMiPaqueteShipmentsUseCase;
   manageCarrierPackageProfilesUseCase: ManageCarrierPackageProfilesUseCase;
+  listCarrierShipmentsUseCase: ListCarrierShipmentsUseCase;
+  markCarrierShipmentPrintedUseCase: MarkCarrierShipmentPrintedUseCase;
 }
 
 export function createShippingModule(env: Env): ShippingModuleContainer {
@@ -87,5 +91,7 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     syncMiPaqueteShipmentUseCase,
     syncPendingMiPaqueteShipmentsUseCase: new SyncPendingMiPaqueteShipmentsUseCase(carrierShipmentRepo, syncMiPaqueteShipmentUseCase),
     manageCarrierPackageProfilesUseCase: new ManageCarrierPackageProfilesUseCase(carrierConfigRepo),
+    listCarrierShipmentsUseCase: new ListCarrierShipmentsUseCase(carrierShipmentRepo),
+    markCarrierShipmentPrintedUseCase: new MarkCarrierShipmentPrintedUseCase(carrierShipmentRepo),
   };
 }
