@@ -34,6 +34,7 @@ export const storefrontCheckoutStyles = String.raw`
     .checkout-field input:focus, .checkout-field select:focus { border-color: #1f4d3a; box-shadow: 0 0 0 3px #cfe0d5; outline: none; }
     .checkout-field small { color: #5b675f; font-size: .75rem; }
     .checkout-location-suggestions { display: grid; max-height: 13rem; overflow-y: auto; border: 1px solid #c7ccbe; border-radius: 10px; background: #fff; }
+    .checkout-location-suggestions[hidden] { display: none; }
     .checkout-location-option { padding: .7rem .85rem; border: 0; border-bottom: 1px solid #edf0e9; background: #fff; color: #16201b; text-align: left; font: inherit; cursor: pointer; }
     .checkout-location-option:last-child { border-bottom: 0; }
     .checkout-location-option:hover, .checkout-location-option:focus-visible { background: #edf2e8; outline: 2px solid #1f4d3a; outline-offset: -2px; }
