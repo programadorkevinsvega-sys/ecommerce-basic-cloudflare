@@ -51,12 +51,14 @@ import { AdminMutationSnapshotProvider } from './middleware/AdminMutationSnapsho
 import { renderBaseLayout } from './views/renderBaseLayout.js';
 import { renderNotFoundPage } from './views/renderNotFoundPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './controllers/storefront/StorefrontNavigationHelper.js';
+import { PublicHtmlCacheMiddleware } from './middleware/PublicHtmlCacheMiddleware.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
 
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
+  app.use('*', PublicHtmlCacheMiddleware);
   app.use('/api/*', RateLimitMiddleware);
   app.use('/media/upload', RateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);

@@ -19,6 +19,7 @@ Este archivo es un índice para distinguir estado del código, operación y evid
 | Envíos | La zona local del comercio es Medellín y los diez municipios del Valle de Aburrá. Los destinos nacionales, cobertura y tarifas se consultan a MiPaquete. Configuración de transportadora, empaques, seguimiento e impresión son secciones administrativas distintas. |
 | Guías MiPaquete | El código contempla cotización, creación idempotente, consulta/sincronización y captura de impresión. Una respuesta ambigua sin coincidencia confirmada bloquea el segundo despacho. La documentación disponible no acredita aquí una guía de producción procesada de punta a punta. |
 | Flujo tras mutación del admin | La navegación actual se conserva tras guardar/refrescar mediante estado de sesión; ver `AUDIT_PROGRESS.md` y commit `9dfb476`. |
+| Caché pública | Workers Cache cubre HTML SSR anónimo de catálogo, fichas, colecciones, marcas, blog y páginas institucionales; TTL 30 s, `Vary: Cookie`, `private, no-store` para sesión y rutas transaccionales. Workers KV no almacena respuestas HTML. |
 
 ## Migraciones y datos
 

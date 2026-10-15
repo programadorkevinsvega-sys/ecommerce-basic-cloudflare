@@ -120,7 +120,7 @@ Las acciones administrativas dependen del contrato y del valor histórico de cad
 | API / BFF | **Hono** + `@hono/zod-openapi` en un único Worker |
 | Base de datos | **Cloudflare D1** (única, con prefijos por módulo) |
 | Archivos e imágenes | **Cloudflare R2** (keys `<modulo>/...`) + Cloudflare Images / Image Resizing para variantes |
-| Caché | Binding Workers KV configurado; no se encontró uso generalizado en las rutas revisadas |
+| Caché | Workers Cache global y por niveles para HTML SSR público anónimo (TTL 30 s); KV queda para el cursor de mantenimiento R2 |
 | Eventos | **Cloudflare Queues** y consumidor/DLQ configurados; outbox por módulo según cada implementación |
 | Tareas programadas | Cron Trigger cada 5 minutos para los handlers registrados en el Worker |
 | Consistencia fuerte | Actualización condicional en D1; Durable Objects no están configurados |
@@ -440,7 +440,11 @@ El Worker renderiza HTML SSR. No existe un panel general de SEO para todas las e
 
 ## 9. Caché
 
-El binding `CACHE` de Workers KV existe en la configuración de Wrangler, pero no se encontró un uso generalizado de KV o Cache API en los controladores revisados. No se debe asumir que respuestas públicas estén cacheadas ni que haya invalidación por eventos hasta que un handler lo implemente explícitamente.
+El Worker tiene habilitado **Workers Cache** en Wrangler para respuestas HTML SSR públicas y anónimas: inicio, catálogo paginado, detalle de producto, colecciones, marcas, blog, páginas institucionales y `/p/:slug`. El TTL compartido es de 30 segundos; el caché separa versiones del Worker por defecto.
+
+La caché se omite para solicitudes con cookies o `Authorization`, búsquedas de texto, rutas no incluidas explícitamente, y páginas de cuenta, carrito, checkout, seguimiento, opiniones con elegibilidad, admin y APIs. `Vary: Cookie` separa la respuesta anónima de solicitudes con sesión. Solo se cachean respuestas 200 `text/html`; los demás casos llevan `private, no-store`. El HTML puede quedar hasta 30 segundos desactualizado; los precios, stock y permisos del checkout se vuelven a validar en sus flujos autoritativos.
+
+Workers Cache se consulta antes de ejecutar el Worker, tiene caché por niveles y agrupa solicitudes simultáneas por la misma clave. Sus aciertos evitan ejecutar el Worker y consultar D1. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding.
 
 ---
 
@@ -515,7 +519,7 @@ Las migraciones viven en cada módulo (`infrastructure/persistence/d1/migrations
 |---|---|---|
 | `DB` | D1 `ecommerce-vega-production` | Base de datos única con prefijos por módulo. |
 | `MEDIA_BUCKET` | R2 `ecommerce-vega-production` | Objetos de media y documentos. |
-| `CACHE` | KV (ID en Wrangler) | Binding configurado; verificar uso antes de atribuirle caché de un recurso concreto. |
+| `CACHE` | KV (ID en Wrangler) | Cursor temporal de mantenimiento de medios; la caché de HTML usa Cache API y no incrementa métricas KV. |
 | `EVENTS_QUEUE` | Queue `ecommerce-vega-events-production` | Consumidor configurado con DLQ `ecommerce-vega-events-dlq-production`; DLQ no es un binding independiente. |
 | `ANALYTICS` | Dataset `ecommerce_vega_analytics_production` | Binding configurado; ver instrumentación antes de asumir métricas específicas. |
 | `IMAGES` | Cloudflare Images | Binding para operaciones de medios. |
