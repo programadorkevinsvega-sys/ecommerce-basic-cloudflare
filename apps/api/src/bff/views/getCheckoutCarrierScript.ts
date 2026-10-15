@@ -19,8 +19,9 @@ export function getCheckoutCarrierScript(): string {
           const result = await response.json();
           if (requestId !== carrierQuoteRequest) return;
           if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cotizar el envío.');
+          freeShippingRule = result.freeShippingRule || null;
           const fmt = cents => '$' + (cents / 100).toLocaleString('es-CO');
-          const chargeModes = qualifiesForFreeShipping() ? '<p class="checkout-shipping-promo">Envío gratis: la tienda cubre el flete por compras desde $' + (freeShippingThresholdCents / 100).toLocaleString('es-CO') + '.</p>' : '<strong>¿Cómo quieres pagar el envío?</strong>' +
+          const chargeModes = qualifiesForFreeShipping() ? '<p class="checkout-shipping-promo">Envío gratis aplicado: ' + escapeCarrierText(freeShippingRule.name) + '.</p>' : '<strong>¿Cómo quieres pagar el envío?</strong>' +
             '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="included" ' + (shippingChargeMode === 'included' ? 'checked' : '') + '><span><strong>Sumarlo al pedido</strong><small>Lo pagas ahora junto con tu compra.</small></span></label>' +
             '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="collect_at_delivery" ' + (shippingChargeMode === 'collect_at_delivery' ? 'checked' : '') + '><span><strong>Pagarlo al recibir</strong><small>La transportadora cobra el flete al entregar. Este valor no se suma al pago en línea.</small></span></label>';
           if (!result.quotes.length) {

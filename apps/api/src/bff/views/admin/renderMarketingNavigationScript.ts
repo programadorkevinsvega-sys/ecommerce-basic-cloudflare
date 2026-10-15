@@ -6,6 +6,7 @@ export function renderMarketingNavigationScript(): string {
       announcements: ['Anuncios & Barra Superior', 'Mensajes breves para la barra superior y otras ubicaciones.'],
       'promotion-rule': ['Regla de Promoción', 'Descuentos automáticos aplicados según las reglas configuradas.'],
       'discount-coupon': ['Cupón de Descuento', 'Códigos de descuento que los clientes pueden canjear.'],
+      'free-shipping': ['Envío gratis', 'Reglas de envío gratis para productos, categorías, colecciones o todo el catálogo.'],
     };
 
     window.showMarketingPage = (key) => {

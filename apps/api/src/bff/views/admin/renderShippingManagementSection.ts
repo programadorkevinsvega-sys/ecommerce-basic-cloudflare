@@ -5,10 +5,8 @@ import { CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGat
 import { renderMiPaqueteConfigSection } from './renderMiPaqueteConfigSection.js';
 import { renderShippingPackagesSection } from './renderShippingPackagesSection.js';
 import { renderShippingLabelsAdminSection } from './renderShippingLabelsAdminSection.js';
-import { renderFreeShippingPolicySection } from './renderFreeShippingPolicySection.js';
-import { FreeShippingPolicyDto } from '../../gateways/shipping/ShippingGateway.js';
 
-export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = [], carrierConfig?: CarrierIntegrationConfigDto, freeShippingPolicy: FreeShippingPolicyDto = { enabled: true, thresholdCents: 15000000, updatedAt: '' }): string {
+export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = [], carrierConfig?: CarrierIntegrationConfigDto): string {
   const localZones = zones.filter((zone) => zone.type !== 'national');
   const divipolaMap = new Map<string, string>();
   const packageConfig = carrierConfig || { enabled: false, originDaneCode: null, packageWidthCm: null, packageLengthCm: null,
@@ -40,7 +38,6 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
       </div>
     </section>
     <section class="shipping-page-panel" data-shipping-panel="print-labels" hidden>${renderShippingLabelsAdminSection()}</section>
-    ${renderFreeShippingPolicySection(freeShippingPolicy)}
     <div id="shippingZoneModal" class="shipping-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="shFormTitle">
       <button class="shipping-modal-backdrop" type="button" aria-label="Cerrar formulario de zona" onclick="closeShippingZoneModal()"></button>
       <section id="shippingZoneDialog" tabindex="-1" class="shipping-modal-dialog shipping-zone-dialog"><header><div><h2 id="shFormTitle">Crear nueva zona de envío</h2><p>Define cobertura, tarifa, entrega y disponibilidad contra entrega.</p></div><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingZoneModal()">×</button></header>

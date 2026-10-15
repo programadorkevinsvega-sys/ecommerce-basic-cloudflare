@@ -10,7 +10,7 @@ import { CarrierOrderInput } from './application/use-cases/CreateMiPaqueteShipme
 import { CarrierShipment } from './domain/entities/CarrierShipment.js';
 import { PackedOrderItem } from './domain/services/PackOrderIntoConfiguredBox.js';
 import { CarrierPackageProfileInput } from './domain/entities/CarrierPackageProfile.js';
-import { FreeShippingPolicy } from './domain/entities/FreeShippingPolicy.js';
+import { FreeShippingRuleProps } from './domain/entities/FreeShippingRule.js';
 
 export class ShippingPublicApi {
   private readonly container: ShippingModuleContainer;
@@ -73,13 +73,12 @@ export class ShippingPublicApi {
     return this.container.getCarrierConfigUseCase.execute();
   }
 
-  public getFreeShippingPolicy(): Promise<FreeShippingPolicy> {
-    return this.container.getFreeShippingPolicyUseCase.execute();
-  }
-
-  public updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicy> {
-    return this.container.updateFreeShippingPolicyUseCase.execute(input);
-  }
+  public listFreeShippingRules(page: number, pageSize: number) { return this.container.manageFreeShippingRulesUseCase.list(page, pageSize); }
+  public listActiveFreeShippingRules() { return this.container.manageFreeShippingRulesUseCase.listActive(); }
+  public getFreeShippingRule(id: string) { return this.container.manageFreeShippingRulesUseCase.get(id); }
+  public saveFreeShippingRule(input: Omit<FreeShippingRuleProps, 'id' | 'createdAt' | 'updatedAt'>, id?: string) { return this.container.manageFreeShippingRulesUseCase.save(input, id); }
+  public setFreeShippingRuleActive(id: string, active: boolean) { return this.container.manageFreeShippingRulesUseCase.setActive(id, active); }
+  public deleteFreeShippingRule(id: string) { return this.container.manageFreeShippingRulesUseCase.delete(id); }
 
   public async getCarrierAvailability(): Promise<boolean> {
     const config = await this.getCarrierConfig();

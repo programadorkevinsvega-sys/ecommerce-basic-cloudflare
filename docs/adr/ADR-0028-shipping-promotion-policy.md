@@ -9,12 +9,12 @@ El anuncio de envío gratis desde $150.000 COP era texto de marketing y no modif
 
 ## Decisión
 
-El módulo `shipping` mantiene una política única, editable desde Admin → Marketing → Envío gratis. El umbral inicial de $150.000 COP coincide con el anuncio vigente. Se compara contra el subtotal luego de promociones automáticas y cupón. Cuando se cumple, el cliente paga cero por el flete y no puede pedir que se le cobre al recibir.
+El módulo `shipping` mantiene reglas independientes, editables desde Admin → Marketing → Envío gratis. Cada regla puede aplicar al catálogo completo, un producto, categoría o colección, y define mínimo, vigencia, prioridad y estado. La migración convierte la antigua política única en una regla general con el umbral existente. Se evalúa contra el subtotal después de descuentos automáticos y cupón; para alcance específico, todos los productos del pedido deben coincidir con el destino de la regla. Cuando se cumple, la tienda cubre el flete y no se puede cobrar al cliente al recibir.
 
 El pedido conserva `shipping_cost_cents` como costo bruto real del proveedor/local y agrega `shipping_discount_cents` como subsidio de la tienda. El total solo suma la diferencia. Para la guía MiPaquete, la cotización y validación usan el costo bruto; el valor de venta excluye únicamente el flete neto cobrado al cliente.
 
 ## Consecuencias
 
-- La política vive en una tabla `shipping_*`; pedidos solo almacenan la instantánea del descuento.
-- Ambas migraciones son aditivas y el Worker anterior ignora sus columnas/tablas.
-- Si cambia el umbral, el administrador también debe actualizar el texto del anuncio para mantenerlos alineados.
+- Las reglas viven en tablas `shipping_*`; pedidos solo almacenan la instantánea del descuento.
+- Las migraciones son aditivas y el Worker anterior ignora sus columnas/tablas.
+- Los textos de anuncios son informativos y se gestionan por separado; el administrador mantiene su coherencia comercial.

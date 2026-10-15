@@ -21,9 +21,8 @@ export function getCheckoutScript(
       let shippingChargeMode = 'included';
       let zonePolicyAllowsOrder = false;
       let carrierIntegrationEnabled = false;
-      let freeShippingEnabled = false;
-      let freeShippingThresholdCents = 0;
-      const qualifiesForFreeShipping = () => freeShippingEnabled && subtotalCents >= freeShippingThresholdCents;
+      let freeShippingRule = null;
+      const qualifiesForFreeShipping = () => Boolean(freeShippingRule);
       let selectedCarrierQuoteId = null;
       let carrierQuoteRequest = 0;
       const selectedZone = () => document.getElementById('dest-zone').selectedOptions[0];
@@ -56,7 +55,8 @@ export function getCheckoutScript(
         const carrierDelivery = opt?.dataset.type === 'national' && carrierIntegrationEnabled;
         selectedCarrierQuoteId = null;
         carrierFreightCents = 0;
-        if (shippingChargeMode === 'collect_at_delivery' || qualifiesForFreeShipping()) shippingChargeMode = 'included';
+        freeShippingRule = null;
+        if (shippingChargeMode === 'collect_at_delivery') shippingChargeMode = 'included';
         const quoteBox = document.getElementById('carrier-quote-options');
         quoteBox.hidden = true; quoteBox.innerHTML = '';
         const codRadio = document.getElementById('radio-cod');
@@ -72,7 +72,7 @@ export function getCheckoutScript(
           updateTotals();
           return;
         }
-        shippingCostCents = carrierDelivery || qualifiesForFreeShipping() ? 0 : parseInt(opt.getAttribute('data-rate'), 10) || 0;
+        shippingCostCents = carrierDelivery ? 0 : parseInt(opt.getAttribute('data-rate'), 10) || 0;
         zonePolicyAllowsOrder = false;
         btn.disabled = true;
         setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle');
@@ -89,6 +89,7 @@ export function getCheckoutScript(
           const data = await res.json();
           if (!res.ok || !data.success) throw new Error(data.error || 'No fue posible validar la cobertura.');
           if (data.success) {
+            freeShippingRule = data.freeShippingRule || null;
             const p = data.policy;
             if (codHelp) {
               codHelp.textContent = p.allowsCashOnDelivery
@@ -112,7 +113,10 @@ export function getCheckoutScript(
               const minDays = Number(opt.dataset.minDays || 0);
               const maxDays = Number(opt.dataset.maxDays || minDays);
               const delivery = minDays ? ' Entrega estimada: ' + minDays + (maxDays !== minDays ? ' a ' + maxDays : '') + ' días hábiles.' : '';
-              if (carrierDelivery) {
+              if (qualifiesForFreeShipping()) {
+                shippingChargeMode = 'included'; shippingCostCents = 0;
+                setCheckoutStatus('Envío gratis aplicado: ' + freeShippingRule.name + delivery, 'success');
+              } else if (carrierDelivery) {
                 setCheckoutStatus('Destino nacional. Consultando tarifas de MiPaquete…', 'idle');
               } else if (!p.allowsCashOnDelivery) {
                 setCheckoutStatus('Cobertura disponible. El pago contra entrega no aplica a este pedido.' + delivery, 'success');
@@ -131,7 +135,7 @@ export function getCheckoutScript(
             carrierFreightCents = 0;
             shippingCostCents = qualifiesForFreeShipping() ? 0 : parseInt(opt.dataset.rate, 10) || 0;
             updateTotals(); updateSubmitAvailability();
-            setCheckoutStatus('Entrega local gestionada por la tienda.' + delivery, 'success');
+            if (!qualifiesForFreeShipping()) setCheckoutStatus('Entrega local gestionada por la tienda.' + delivery, 'success');
           }
             }
           }
@@ -166,13 +170,6 @@ export function getCheckoutScript(
       fetch('/api/v1/shipping/carrier/availability').then(response => response.json()).then(result => {
         carrierIntegrationEnabled = Boolean(result.enabled);
         if (carrierIntegrationEnabled && document.getElementById('dest-zone').value) handleZoneChange();
-      }).catch(() => {});
-      fetch('/api/v1/shipping/free-shipping-policy').then(response => response.json()).then(result => {
-        const policy = result.data || {};
-        freeShippingEnabled = Boolean(policy.enabled);
-        freeShippingThresholdCents = Number(policy.thresholdCents) || 0;
-        const zone = document.getElementById('dest-zone');
-        if (zone.value) handleZoneChange();
       }).catch(() => {});
       // Inicializar totales al cargar
       updateTotals();

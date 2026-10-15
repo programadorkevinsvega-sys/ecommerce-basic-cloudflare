@@ -9,6 +9,7 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { calculateOrderPricing } from './calculateOrderPricing.js';
 import { validateOrderPolicy } from './validateOrderPolicy.js';
 import { resolveCarrierQuotePackage } from './resolveCarrierQuotePackage.js';
+import { evaluateFreeShippingRule } from './evaluateFreeShippingRule.js';
 
 const CarrierQuoteInput = z.object({
   destinationZoneId: z.string().min(1).max(100), destinationDaneCode: z.string().regex(/^\d{5}$/),
@@ -33,9 +34,8 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
     try {
       const pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
         input.lines, input.couponCode, null, 0, input.paymentMethod);
-      const freeShipping = await deps.shipping.getFreeShippingPolicy();
-      const freeShippingApplies = await deps.orders.evaluateFreeShippingEligibility({ subtotalCents: pricing.subtotalCents,
-        discountCents: pricing.discountCents, enabled: freeShipping.enabled, thresholdCents: freeShipping.thresholdCents });
+      const freeShippingRule = await evaluateFreeShippingRule({ ...deps, lines: input.lines,
+        subtotalCents: pricing.subtotalCents, discountCents: pricing.discountCents });
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,
         input.destinationDaneCode, deps.shipping);
       if (policyError) return c.json({ error: policyError }, 400);
@@ -43,10 +43,10 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
         pricing.subtotalCents, pricing.discountCents);
       const quotes = await deps.shipping.quoteCarrierShipping({
         destinationDaneCode: `${input.destinationDaneCode}000`, paymentMethod: input.paymentMethod,
-        shippingChargeMode: freeShippingApplies ? 'included' : input.shippingChargeMode,
+        shippingChargeMode: freeShippingRule ? 'included' : input.shippingChargeMode,
         ...pack,
       });
-      return c.json({ success: true, quotes });
+      return c.json({ success: true, quotes, freeShippingRule });
     } catch (error) {
       if (error instanceof Error && (error.message.startsWith('Completa ') || error.message.startsWith('Los productos'))) {
         return c.json({ error: error.message }, 422);

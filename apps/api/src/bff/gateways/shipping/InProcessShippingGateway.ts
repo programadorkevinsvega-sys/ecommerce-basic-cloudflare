@@ -11,7 +11,8 @@ import {
   CarrierShipmentCreateRequest,
   ShippingPackageItemDto,
   CarrierPackageProfileInputDto,
-  FreeShippingPolicyDto,
+  FreeShippingRuleDto,
+  FreeShippingRuleInputDto,
 } from './ShippingGateway.js';
 import { ShippingPublicApi } from '../../../modules/shipping/module.public-api.js';
 import { ShippingZone } from '../../../modules/shipping/domain/entities/ShippingZone.js';
@@ -92,13 +93,31 @@ export class InProcessShippingGateway implements ShippingGateway {
     return this.publicApi.getCarrierConfig();
   }
 
-  public getFreeShippingPolicy(): Promise<FreeShippingPolicyDto> {
-    return this.publicApi.getFreeShippingPolicy();
+  public async listFreeShippingRules(page: number, pageSize: number) {
+    const result = await this.publicApi.listFreeShippingRules(page, pageSize);
+    return { items: result.items.map((rule) => rule.toJSON() as FreeShippingRuleDto), total: result.total };
   }
 
-  public updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicyDto> {
-    return this.publicApi.updateFreeShippingPolicy(input);
+  public async listActiveFreeShippingRules(): Promise<FreeShippingRuleDto[]> {
+    return (await this.publicApi.listActiveFreeShippingRules()).map((rule) => rule.toJSON() as FreeShippingRuleDto);
   }
+
+  public async getFreeShippingRule(id: string): Promise<FreeShippingRuleDto | null> {
+    const rule = await this.publicApi.getFreeShippingRule(id);
+    return rule ? rule.toJSON() as FreeShippingRuleDto : null;
+  }
+
+  public async saveFreeShippingRule(input: FreeShippingRuleInputDto, id?: string): Promise<FreeShippingRuleDto> {
+    const rule = await this.publicApi.saveFreeShippingRule(input, id);
+    return rule.toJSON() as FreeShippingRuleDto;
+  }
+
+  public async setFreeShippingRuleActive(id: string, active: boolean): Promise<FreeShippingRuleDto | null> {
+    const rule = await this.publicApi.setFreeShippingRuleActive(id, active);
+    return rule ? rule.toJSON() as FreeShippingRuleDto : null;
+  }
+
+  public deleteFreeShippingRule(id: string): Promise<void> { return this.publicApi.deleteFreeShippingRule(id); }
 
   public updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto> {
     return this.publicApi.updateCarrierConfig(config);

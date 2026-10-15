@@ -209,7 +209,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 ## Fase 7 — Envíos y cobertura
 
-La política de envío gratis se administra aparte de las tarifas del transportista: el umbral inicial de $150.000 COP coincide con el anuncio vigente. El servidor calcula el subsidio sobre el subtotal posterior a promociones/cupón y guarda el flete bruto y su descuento separadamente en el pedido.
+El envío gratis se administra como reglas independientes de las tarifas del transportista, con alcance a catálogo, producto, categoría o colección, mínimo, fechas y prioridad. La migración conserva la regla inicial de $150.000 COP del anuncio. El servidor calcula el subsidio y guarda el flete bruto junto con su descuento en el pedido.
 
 **Módulo:** `shipping`
 **Contrato aplicable:** §4, §6.1 (IDs sin FK), §10 (`ShippingGateway`), §4.7 (ACL).

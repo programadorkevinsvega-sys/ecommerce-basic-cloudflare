@@ -137,7 +137,8 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
-| `shipping__0007_free_shipping_policy.sql` | v7 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Expand-only: crea la política única con envío gratis activo desde $150.000 COP para alinear el anuncio existente. Ledger y valor inicial verificados en producción. |
+| `shipping__0007_free_shipping_policy.sql` | v7 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Migración histórica: crea la configuración única que luego se convierte en regla general por v8. Se conserva para reconstrucción desde cero y rollback compatible. |
+| `shipping__0008_targeted_free_shipping_rules.sql` | v8 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15; verificada en ledger y datos | trabajo actual | Crea reglas independientes por catálogo, producto, categoría o colección y migra el umbral anterior como regla general sin cambiar su estado o valor. Expand-only; la tabla previa permanece intacta. |
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
@@ -150,6 +151,8 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `shipping__0006_medellin_metropolitan_local_delivery.sql` | v6 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada; Medellín y los 10 municipios del Valle de Aburrá quedaron en la zona local activa; Bogotá y Cali inactivas; asociaciones anteriores conservadas |
 
 `shipping__0003_package_profiles_and_quote_snapshot.sql` crea perfiles de empaques en `shipping_*` y agrega dimensiones, peso y huella de contenido a cotizaciones. Es expand-only; el Worker previo ignora las columnas nuevas. No elimina ni cambia cotizaciones anteriores y no habilita automáticamente la integración. Aplicación remota: ledger previo con 53 entradas; posterior con las dos migraciones en v11/v3 y esquema confirmado. Bookmark previo `0000031e-00000006-00005105-0e9bd84f1f1bcd8fda233edfdde8b690`; posterior `0000031e-00000018-00005105-afe4ec3022e54638ad845b8948a965a9`. Ocho productos existentes quedaron sin dimensiones, intencionalmente; se deben completar en el panel antes de activar cotizaciones automáticas.
+
+`shipping__0008_targeted_free_shipping_rules.sql` crea el repositorio de reglas de envío gratis y migra la configuración única previa como una regla de alcance general, conservando umbral y estado. La antigua tabla se conserva para que un Worker de rollback anterior pueda seguir leyendo su configuración. Aplicada en D1 local y producción por `pnpm db:migrate:*`; la consulta posterior confirmó la entrada `shipping__0008_targeted_free_shipping_rules.sql` y la regla activa `shipping-free-default` de 15.000.000 centavos. No borrar la tabla anterior al hacer rollback ni eliminar reglas ya guardadas.
 El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7b55e7a54ef` (100%). `/health` respondió HTTP 200 y `shipping_carrier_config.enabled` continúa en `0`. No se hicieron llamadas a MiPaquete ni se generaron guías.
 
 ---

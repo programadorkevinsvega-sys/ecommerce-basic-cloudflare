@@ -50,7 +50,11 @@ export interface CarrierIntegrationConfigDto {
   updatedAt: string;
 }
 
-export interface FreeShippingPolicyDto { enabled: boolean; thresholdCents: number; updatedAt: string; }
+export interface FreeShippingRuleDto {
+  id: string; name: string; targetType: 'all' | 'product' | 'category' | 'collection'; targetId: string | null;
+  minOrderAmountCents: number; startsAt: string; endsAt: string; isActive: boolean; priority: number; createdAt: string; updatedAt: string;
+}
+export interface FreeShippingRuleInputDto extends Omit<FreeShippingRuleDto, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export type CarrierPackageProfileDto = CarrierIntegrationConfigDto['packageProfiles'][number];
 export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> & { isActive?: boolean };
@@ -121,8 +125,12 @@ export interface ShippingGateway {
     allowedZoneIds?: string[]
   ): Promise<ShippingCoverageDto>;
   getCarrierConfig(): Promise<CarrierIntegrationConfigDto>;
-  getFreeShippingPolicy(): Promise<FreeShippingPolicyDto>;
-  updateFreeShippingPolicy(input: { enabled: boolean; thresholdCents: number }): Promise<FreeShippingPolicyDto>;
+  listFreeShippingRules(page: number, pageSize: number): Promise<{ items: FreeShippingRuleDto[]; total: number }>;
+  listActiveFreeShippingRules(): Promise<FreeShippingRuleDto[]>;
+  getFreeShippingRule(id: string): Promise<FreeShippingRuleDto | null>;
+  saveFreeShippingRule(input: FreeShippingRuleInputDto, id?: string): Promise<FreeShippingRuleDto>;
+  setFreeShippingRuleActive(id: string, active: boolean): Promise<FreeShippingRuleDto | null>;
+  deleteFreeShippingRule(id: string): Promise<void>;
   updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto>;
   listCarrierPackageProfiles(): Promise<CarrierPackageProfileDto[]>;
   getCarrierPackageProfile(id: string): Promise<CarrierPackageProfileDto>;

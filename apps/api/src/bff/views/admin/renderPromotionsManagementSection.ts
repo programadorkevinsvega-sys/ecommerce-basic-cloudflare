@@ -128,6 +128,22 @@ export function renderPromotionsManagementSection(
       </table>
     </div>
 
+    <section class="card" data-marketing-page="free-shipping" hidden>
+      <div class="admin-section-heading"><div><h2>Reglas de envío gratis</h2><p>Asigna el beneficio a todo el catálogo, productos, categorías o colecciones.</p></div><button class="btn-primary" type="button" onclick="openFreeShippingRuleModal()">+ Crear regla</button></div>
+      <div class="table-responsive"><table><thead><tr><th>Regla</th><th>Alcance</th><th>Compra mínima</th><th>Vigencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="free-shipping-rules-body"><tr><td colspan="6">Cargando reglas…</td></tr></tbody></table></div>
+      <nav class="admin-pagination" aria-label="Paginación de reglas de envío gratis"><button class="admin-page-button" id="free-shipping-prev" type="button" onclick="loadFreeShippingRules(freeShippingPage-1)">Anterior</button><span id="free-shipping-page-label">Página 1</span><button class="admin-page-button" id="free-shipping-next" type="button" onclick="loadFreeShippingRules(freeShippingPage+1)">Siguiente</button></nav>
+      <dialog id="free-shipping-rule-modal" class="marketing-modal" aria-labelledby="free-shipping-form-title"><form id="free-shipping-rule-form"><header class="marketing-modal-heading"><h2 id="free-shipping-form-title">Crear regla de envío gratis</h2><button class="marketing-modal-close" type="button" onclick="closeFreeShippingRuleModal()">×</button></header><input type="hidden" id="fs-rule-id"><div class="form-grid">
+        <div><label for="fs-rule-name">Nombre</label><input id="fs-rule-name" required maxlength="120"></div>
+        <div><label for="fs-rule-target-type">Aplicar a</label><select id="fs-rule-target-type"><option value="all">Todo el catálogo</option><option value="product">Producto específico</option><option value="category">Categoría</option><option value="collection">Colección</option></select></div>
+        <div id="fs-rule-target-wrap" hidden><label for="fs-rule-target-search">Buscar destino</label><input id="fs-rule-target-search" type="search" placeholder="Nombre o SKU"><select id="fs-rule-target" size="5" required></select><div class="admin-pagination"><button class="admin-page-button" id="fs-target-prev" type="button">Anterior</button><span id="fs-target-page">Página 1</span><button class="admin-page-button" id="fs-target-next" type="button">Siguiente</button></div></div>
+        <div><label for="fs-rule-minimum">Compra mínima (COP)</label><input id="fs-rule-minimum" type="number" min="0" step="1000" value="0" required></div>
+        <div><label for="fs-rule-start">Válida desde</label><input id="fs-rule-start" type="datetime-local" required></div>
+        <div><label for="fs-rule-end">Válida hasta</label><input id="fs-rule-end" type="datetime-local" required></div>
+        <div><label for="fs-rule-priority">Prioridad</label><input id="fs-rule-priority" type="number" min="0" max="10000" value="10"></div>
+        <label><input id="fs-rule-active" type="checkbox" checked> Regla activa</label>
+      </div><footer class="marketing-modal-actions"><button class="btn-primary" type="submit">Guardar regla</button><button class="btn-secondary" type="button" onclick="closeFreeShippingRuleModal()">Cancelar</button><span id="fs-rule-message" role="status"></span></footer></form></dialog>
+    </section>
+
     <!-- Modales para Ver Detalle -->
     <div id="promoDetailsModal" class="modal-overlay">
       <div class="modal-content">

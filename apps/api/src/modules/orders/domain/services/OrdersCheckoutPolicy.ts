@@ -22,11 +22,26 @@ export interface CheckoutEvaluationResult {
   allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'>;
 }
 
+export interface FreeShippingRuleCandidate {
+  id: string; name: string; targetType: 'all' | 'product' | 'category' | 'collection'; targetId: string | null;
+  minOrderAmountCents: number; startsAt: string; endsAt: string; isActive: boolean; priority: number;
+}
+export interface FreeShippingItemCandidate { productId: string; categoryIds: string[]; collectionIds: string[]; }
+
 export class OrdersCheckoutPolicy {
-  public static qualifiesForFreeShipping(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): boolean {
-    if (!input.enabled || !Number.isSafeInteger(input.subtotalCents) || !Number.isSafeInteger(input.discountCents) ||
-      !Number.isSafeInteger(input.thresholdCents) || input.thresholdCents < 0) return false;
-    return Math.max(0, input.subtotalCents - input.discountCents) >= input.thresholdCents;
+  public static findFreeShippingRule(input: { subtotalCents: number; discountCents: number; rules: FreeShippingRuleCandidate[]; items: FreeShippingItemCandidate[]; now: string }): FreeShippingRuleCandidate | null {
+    if (!Number.isSafeInteger(input.subtotalCents) || !Number.isSafeInteger(input.discountCents) || input.items.length === 0) return null;
+    const eligibleSubtotal = Math.max(0, input.subtotalCents - input.discountCents);
+    return input.rules.find((rule) => rule.isActive && rule.startsAt <= input.now && rule.endsAt >= input.now &&
+      eligibleSubtotal >= rule.minOrderAmountCents && input.items.every((item) => this.itemMatchesFreeShippingRule(item, rule))) || null;
+  }
+
+  private static itemMatchesFreeShippingRule(item: FreeShippingItemCandidate, rule: FreeShippingRuleCandidate): boolean {
+    if (rule.targetType === 'all') return true;
+    if (!rule.targetId) return false;
+    if (rule.targetType === 'product') return item.productId === rule.targetId;
+    if (rule.targetType === 'category') return item.categoryIds.includes(rule.targetId);
+    return item.collectionIds.includes(rule.targetId);
   }
 
   public static evaluate(input: CheckoutEvaluationInput): CheckoutEvaluationResult {

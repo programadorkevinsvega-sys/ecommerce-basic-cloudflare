@@ -19,6 +19,7 @@ import { createOrderTrackingToken, hashOrderTrackingToken } from '../../security
 import { notifyOrderTrackingAccess } from './notifyOrderTrackingAccess.js';
 import { registerCarrierQuoteRoute } from './registerCarrierQuoteRoute.js';
 import { resolveCarrierQuotePackage } from './resolveCarrierQuotePackage.js';
+import { evaluateFreeShippingRule } from './evaluateFreeShippingRule.js';
 
 export function registerOrderCreationRoute(
   app: Hono<{ Bindings: Env }>, deps: {
@@ -72,9 +73,9 @@ export function registerOrderCreationRoute(
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
         body.lines, body.couponCode, customerId, zone.type !== 'national' ? zone.priceInCents : 0, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
-    const freeShippingPolicy = await deps.shipping.getFreeShippingPolicy();
-    const freeShippingApplies = await deps.orders.evaluateFreeShippingEligibility({ subtotalCents: pricing.subtotalCents,
-      discountCents: pricing.discountCents, enabled: freeShippingPolicy.enabled, thresholdCents: freeShippingPolicy.thresholdCents });
+    const freeShippingRule = await evaluateFreeShippingRule({ ...deps, lines: body.lines,
+      subtotalCents: pricing.subtotalCents, discountCents: pricing.discountCents });
+    const freeShippingApplies = Boolean(freeShippingRule);
     const requestedChargeMode = zone.type === 'national' ? shippingChargeMode : 'included';
     const effectiveChargeMode = freeShippingApplies ? 'included' : requestedChargeMode;
     let carrierQuote = null;

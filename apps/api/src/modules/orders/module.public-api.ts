@@ -4,6 +4,7 @@ import { CheckoutEvaluationInput, CheckoutEvaluationResult } from './domain/serv
 import { CreateOrderCommand } from './application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from './application/use-cases/UpdateOrderStatusUseCase.js';
 import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from './domain/ports/IOrderTrackingRepository.js';
+import { FreeShippingItemCandidate, FreeShippingRuleCandidate } from './domain/services/OrdersCheckoutPolicy.js';
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -16,7 +17,7 @@ export class OrdersPublicApi {
     return this.container.evaluateCheckoutPolicyUseCase.execute(input);
   }
 
-  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): boolean {
+  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; rules: FreeShippingRuleCandidate[]; items: FreeShippingItemCandidate[]; now?: string }): FreeShippingRuleCandidate | null {
     return this.container.evaluateFreeShippingEligibilityUseCase.execute(input);
   }
 

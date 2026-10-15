@@ -1,7 +1,7 @@
 import { OrdersGateway } from './OrdersGateway.js';
 import { OrdersPublicApi } from '../../../modules/orders/module.public-api.js';
 import { Order } from '../../../modules/orders/domain/entities/Order.js';
-import { CheckoutEvaluationInput, CheckoutEvaluationResult } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
+import { CheckoutEvaluationInput, CheckoutEvaluationResult, FreeShippingItemCandidate, FreeShippingRuleCandidate } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from '../../../modules/orders/application/use-cases/UpdateOrderStatusUseCase.js';
 import { OrderShippingDetails } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
@@ -17,7 +17,7 @@ export class InProcessOrdersGateway implements OrdersGateway {
     return this.publicApi.evaluateCheckoutPolicy(input);
   }
 
-  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): Promise<boolean> {
+  public evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; rules: FreeShippingRuleCandidate[]; items: FreeShippingItemCandidate[]; now?: string }): Promise<FreeShippingRuleCandidate | null> {
     return Promise.resolve(this.publicApi.evaluateFreeShippingEligibility(input));
   }
 

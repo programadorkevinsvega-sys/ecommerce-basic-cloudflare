@@ -1,12 +1,12 @@
 import { Order } from '../../../modules/orders/domain/entities/Order.js';
-import { CheckoutEvaluationInput, CheckoutEvaluationResult } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
+import { CheckoutEvaluationInput, CheckoutEvaluationResult, FreeShippingItemCandidate, FreeShippingRuleCandidate } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from '../../../modules/orders/application/use-cases/UpdateOrderStatusUseCase.js';
 import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
 
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
-  evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; enabled: boolean; thresholdCents: number }): Promise<boolean>;
+  evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; rules: FreeShippingRuleCandidate[]; items: FreeShippingItemCandidate[]; now?: string }): Promise<FreeShippingRuleCandidate | null>;
   createOrder(cmd: CreateOrderCommand): Promise<Order>;
   getOrder(orderId: string): Promise<Order | null>;
   listOrders(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;

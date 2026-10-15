@@ -12,6 +12,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { registerAdminOrderRoutes } from './registerAdminOrderRoutes.js';
 import { registerOrderCreationRoute } from './registerOrderCreationRoute.js';
+import { evaluateFreeShippingRule } from './evaluateFreeShippingRule.js';
 
 export class OrdersController {
   public static createRoutes(
@@ -64,8 +65,16 @@ export class OrdersController {
         isDestinationCovered,
         items: evaluatedItems,
       });
-
-      return c.json({ success: true, policy: result });
+      const pricingInputs = items.map((it: { productId: string; quantity: number }) => {
+        const product = productsMap.get(it.productId);
+        return product ? { productId: product.id, categoryIds: product.categoryIds, unitPriceCents: product.priceInCents, quantity: it.quantity } : null;
+      }).filter((item): item is NonNullable<typeof item> => item !== null);
+      const discounts = await promotionsGateway.evaluateCartDiscounts(pricingInputs);
+      const discountByProduct = new Map(discounts.map((item) => [item.productId, item]));
+      const subtotalCents = pricingInputs.reduce((sum, item) => sum + (discountByProduct.get(item.productId)?.finalPriceCents ?? item.unitPriceCents) * item.quantity, 0);
+      const freeShippingRule = result.canProceed ? await evaluateFreeShippingRule({ catalog: catalogGateway, orders: ordersGateway,
+        shipping: shippingGateway, lines: pricingInputs.map(({ productId, quantity }) => ({ productId, quantity })), subtotalCents, discountCents: 0 }) : null;
+      return c.json({ success: true, policy: result, freeShippingRule });
     });
 
     registerOrderCreationRoute(app, { orders: ordersGateway, identity: identityGateway, shipping: shippingGateway, catalog: catalogGateway, realtime: realtimeGateway, inventory: inventoryGateway, notifications: notificationsGateway, settings: settingsGateway, promotions: promotionsGateway });
