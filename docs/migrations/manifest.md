@@ -324,7 +324,7 @@ La página independiente **Imprimir guías** quedó publicada desde `b87c543`, v
 
 ### Etiquetas internas de entrega local (`orders__0010_local_delivery_labels.sql`)
 
-Migración expand-only del módulo `orders`. Crea la cola de impresión de etiquetas internas, marca de impresión y backfill idempotente para pedidos locales no cancelados. No crea guías de transportadora ni modifica pedidos. Estado: pendiente de aplicación y verificación en producción.
+Migración expand-only del módulo `orders`. Crea la cola de impresión de etiquetas internas, marca de impresión y backfill idempotente para pedidos locales no cancelados. Aplicada en producción el 2026-10-15 con commit `8f62bea`. Bookmark previo `00000322-00000000-00005105-6b34ebf94e6d0953401acae104ec0763`; posterior `00000322-0000000a-00005105-796f9e1468d9154d397bc388ad8119c9`. La consulta posterior confirmó 1 etiqueta pendiente para 1 pedido local existente; no cambió filas de pedidos. Worker desplegado como `dbb06cf9-35a9-4037-9ae7-f92a5bd4112b`. `https://vega.jnmtortas.com/health` respondió 200 y el host anterior `workers.dev` respondió 404 tras deshabilitarse.
 
 ## Nota de sincronización y limitaciones de evidencia (2026-10-15)
 
