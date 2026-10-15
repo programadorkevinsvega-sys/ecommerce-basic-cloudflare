@@ -21,6 +21,10 @@ Este archivo es un índice para distinguir estado del código, operación y evid
 | Flujo tras mutación del admin | La navegación actual se conserva tras guardar/refrescar mediante estado de sesión; ver `AUDIT_PROGRESS.md` y commit `9dfb476`. |
 | Caché pública | Workers Cache cubre HTML SSR anónimo de catálogo, fichas, colecciones, marcas, blog y páginas institucionales; TTL 30 s, `Vary: Cookie`, `private, no-store` para sesión y rutas transaccionales. Workers KV no almacena respuestas HTML. |
 
+### Verificación de caché en producción
+
+El commit `028304b` se desplegó el 2026-10-15 como Worker `5e170392-bcba-488b-8072-d6300987d39f`. Dos solicitudes GET consecutivas a `/productos` devolvieron `CF-Cache-Status: MISS` y luego `HIT`. Una solicitud con cookie devolvió `BYPASS` y `Cache-Control: private, no-store`; `/checkout` también devolvió `BYPASS`. Esto confirma la activación del caché en las rutas verificadas, no una prueba de carga ni cobertura de todas las ubicaciones.
+
 ## Migraciones y datos
 
 - Las migraciones fuente están en `apps/api/src/modules/<módulo>/infrastructure/persistence/d1/migrations/`; el manifiesto registra su historial conocido en [`migrations/manifest.md`](./migrations/manifest.md).
