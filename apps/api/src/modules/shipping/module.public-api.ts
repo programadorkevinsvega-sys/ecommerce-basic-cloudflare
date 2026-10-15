@@ -9,6 +9,7 @@ import { CarrierShippingQuote } from './domain/entities/CarrierShippingQuote.js'
 import { CarrierOrderInput } from './application/use-cases/CreateMiPaqueteShipmentUseCase.js';
 import { CarrierShipment } from './domain/entities/CarrierShipment.js';
 import { PackedOrderItem } from './domain/services/PackOrderIntoConfiguredBox.js';
+import { CarrierPackageProfileInput } from './domain/entities/CarrierPackageProfile.js';
 
 export class ShippingPublicApi {
   private readonly container: ShippingModuleContainer;
@@ -69,6 +70,13 @@ export class ShippingPublicApi {
   public updateCarrierConfig(config: CarrierIntegrationConfig): Promise<CarrierIntegrationConfig> {
     return this.container.updateCarrierConfigUseCase.execute(config);
   }
+
+  public listCarrierPackageProfiles() { return this.container.manageCarrierPackageProfilesUseCase.list(); }
+  public getCarrierPackageProfile(id: string) { return this.container.manageCarrierPackageProfilesUseCase.get(id); }
+  public createCarrierPackageProfile(input: CarrierPackageProfileInput) { return this.container.manageCarrierPackageProfilesUseCase.create(input); }
+  public updateCarrierPackageProfile(id: string, input: CarrierPackageProfileInput) { return this.container.manageCarrierPackageProfilesUseCase.update(id, input); }
+  public setCarrierPackageProfileActive(id: string, active: boolean) { return this.container.manageCarrierPackageProfilesUseCase.setActive(id, active); }
+  public deleteCarrierPackageProfile(id: string) { return this.container.manageCarrierPackageProfilesUseCase.delete(id); }
 
   public quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: PackedOrderItem[] }): Promise<CarrierShippingQuote[]> {
     return this.container.quoteCarrierShippingUseCase.execute(input);

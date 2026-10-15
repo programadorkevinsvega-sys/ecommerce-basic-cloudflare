@@ -50,6 +50,9 @@ export interface CarrierIntegrationConfigDto {
   updatedAt: string;
 }
 
+export type CarrierPackageProfileDto = CarrierIntegrationConfigDto['packageProfiles'][number];
+export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> & { isActive?: boolean };
+
 export interface CarrierShippingQuoteDto {
   id: string; deliveryCompanyName: string; shippingCostCents: number; providerQuoteId?: string; deliveryCompanyId?: string;
   collectionCommissionCents: number; deliveryMinutes: number; expiresAt: string;
@@ -112,6 +115,12 @@ export interface ShippingGateway {
   ): Promise<ShippingCoverageDto>;
   getCarrierConfig(): Promise<CarrierIntegrationConfigDto>;
   updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto>;
+  listCarrierPackageProfiles(): Promise<CarrierPackageProfileDto[]>;
+  getCarrierPackageProfile(id: string): Promise<CarrierPackageProfileDto>;
+  createCarrierPackageProfile(input: CarrierPackageProfileInputDto): Promise<CarrierPackageProfileDto>;
+  updateCarrierPackageProfile(id: string, input: CarrierPackageProfileInputDto): Promise<CarrierPackageProfileDto>;
+  setCarrierPackageProfileActive(id: string, active: boolean): Promise<CarrierPackageProfileDto>;
+  deleteCarrierPackageProfile(id: string): Promise<void>;
   quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]>;
   getCarrierAvailability(): Promise<boolean>;
   isCarrierApiConfigured(): boolean;

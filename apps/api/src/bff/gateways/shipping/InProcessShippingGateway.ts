@@ -10,6 +10,7 @@ import {
   CarrierShipmentDto,
   CarrierShipmentCreateRequest,
   ShippingPackageItemDto,
+  CarrierPackageProfileInputDto,
 } from './ShippingGateway.js';
 import { ShippingPublicApi } from '../../../modules/shipping/module.public-api.js';
 import { ShippingZone } from '../../../modules/shipping/domain/entities/ShippingZone.js';
@@ -80,6 +81,13 @@ export class InProcessShippingGateway implements ShippingGateway {
   public updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto> {
     return this.publicApi.updateCarrierConfig(config);
   }
+
+  public listCarrierPackageProfiles() { return this.publicApi.listCarrierPackageProfiles(); }
+  public getCarrierPackageProfile(id: string) { return this.publicApi.getCarrierPackageProfile(id); }
+  public createCarrierPackageProfile(input: CarrierPackageProfileInputDto) { return this.publicApi.createCarrierPackageProfile(input); }
+  public updateCarrierPackageProfile(id: string, input: CarrierPackageProfileInputDto) { return this.publicApi.updateCarrierPackageProfile(id, input); }
+  public setCarrierPackageProfileActive(id: string, active: boolean) { return this.publicApi.setCarrierPackageProfileActive(id, active); }
+  public deleteCarrierPackageProfile(id: string) { return this.publicApi.deleteCarrierPackageProfile(id); }
 
   public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]> {
     const quotes = await this.publicApi.quoteCarrierShipping(input);

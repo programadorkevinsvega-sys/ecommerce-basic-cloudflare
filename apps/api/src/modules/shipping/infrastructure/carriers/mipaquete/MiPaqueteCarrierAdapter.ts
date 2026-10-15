@@ -8,8 +8,8 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
 
   public async quote(input: CarrierQuoteRequest) {
     const response = await this.client.quote({
-      originCountryCode: '484', originLocationCode: input.originDaneCode,
-      destinyCountryCode: '484', destinyLocationCode: input.destinationDaneCode,
+      originCountryCode: '170', originLocationCode: input.originDaneCode,
+      destinyCountryCode: '170', destinyLocationCode: input.destinationDaneCode,
       quantity: input.quantity, width: input.widthCm, length: input.lengthCm,
       height: input.heightCm, weight: input.weightKg, declaredValue: input.declaredValueCop,
       ...(input.cashOnDelivery ? { saleValue: input.saleValueCop } : {}),
@@ -34,7 +34,7 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
         productReference: input.orderId,
       },
       locate: { originDaneCode: input.originDaneCode, destinyDaneCode: input.destinationDaneCode,
-        originCountryCode: '484', destinyCountryCode: '484' },
+        originCountryCode: '170', destinyCountryCode: '170' },
       channel: 'Vega Store',
       ...(input.carrierId ? { deliveryCompany: input.carrierId } : { criteria: input.criterion }),
       description: input.description.slice(0, 200), comments: `Pedido ${input.orderId}`.slice(0, 200),
