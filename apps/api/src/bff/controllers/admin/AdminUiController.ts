@@ -136,6 +136,7 @@ export class AdminUiController {
           reviewCanDelete: can('catalog:delete'),
         });
 
+        c.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         return c.html(html);
       } catch {
         return c.redirect('/admin/login');
