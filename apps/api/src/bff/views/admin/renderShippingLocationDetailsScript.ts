@@ -12,7 +12,7 @@ export function renderShippingLocationDetailsScript(): string {
         zone.name + ' · ' + (zone.priceInCents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }) +
         ' · ' + zone.minEstimatedDays + '–' + zone.maxEstimatedDays + ' días · Contra entrega: ' + (zone.allowsCashOnDelivery ? 'sí' : 'no') +
         ' · ' + (zone.isActive ? 'Activa' : 'Inactiva') + ' · Municipios DANE: ' + (zone.locations || []).join(', ')
-      ).join('\n') || 'Sin zona local activa';
+      ).join('\\n') || 'Sin zona local activa';
       dialog.showModal();
     }
   `;

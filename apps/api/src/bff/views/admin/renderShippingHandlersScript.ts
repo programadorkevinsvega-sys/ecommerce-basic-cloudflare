@@ -119,5 +119,10 @@ export function renderShippingHandlersScript(): string {
         alert('Error de conexión');
       }
     }
+    window.parseShippingItemData = parseShippingItemData;
+    window.viewShippingZoneModal = viewShippingZoneModal;
+    window.editShippingZoneModal = editShippingZoneModal;
+    window.toggleShippingZoneStatus = toggleShippingZoneStatus;
+    window.deleteShippingZone = deleteShippingZone;
   `;
 }

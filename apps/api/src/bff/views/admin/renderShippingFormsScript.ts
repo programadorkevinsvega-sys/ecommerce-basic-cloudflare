@@ -14,7 +14,6 @@ export function renderShippingFormsScript(): string {
 
     let shippingDirectoryPage = 1;
     let shippingDirectoryTimer;
-    let shippingSelectTimer;
     async function loadShippingDirectory(page = 1) {
       const body = document.getElementById('shippingLocationsTableBody');
       if (!body) return;
@@ -48,25 +47,17 @@ export function renderShippingFormsScript(): string {
     }
     ${renderShippingLocationDetailsScript()}
     function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
-    async function filterShippingLocations() {
-      clearTimeout(shippingSelectTimer);
-      shippingSelectTimer = setTimeout(async () => {
-        const select = document.getElementById('shLocationsSelect');
-        const search = document.getElementById('shLocSearch').value.trim();
-        if (!select) return;
-        try {
-          const response = await fetch('/api/v1/shipping/locations?q=' + encodeURIComponent(search) + '&limit=25');
-          const result = await response.json();
-          if (!response.ok) return;
-          Array.from(select.options).filter((option) => !option.selected).forEach((option) => option.remove());
-          result.data.forEach((item) => ensureShippingOption(item.daneCode, item.municipality + ' (' + item.department + ') [' + item.daneCode + ']'));
-        } catch { /* La lista conserva las opciones ya seleccionadas. */ }
-      }, 200);
+    function filterShippingLocations() {
+      const select = document.getElementById('shLocationsSelect');
+      const query = (document.getElementById('shLocSearch')?.value || '').trim().toLocaleLowerCase('es-CO');
+      if (!select) return;
+      Array.from(select.options).forEach((option) => { option.hidden = Boolean(query) && !option.textContent.toLocaleLowerCase('es-CO').includes(query); });
     }
     function ensureShippingOption(code, label) {
       const select = document.getElementById('shLocationsSelect');
-      if (!select || Array.from(select.options).some((option) => option.value === code)) return;
-      const option = document.createElement('option'); option.value = code; option.textContent = label || 'Código DANE ' + code + ' (asignado)'; select.append(option);
+      if (!select || !['05001','05079','05088','05129','05212','05266','05308','05360','05380','05631'].includes(code)) return;
+      const option = Array.from(select.options).find((item) => item.value === code);
+      if (option && label) option.textContent = label;
     }
 
     function showAdminShippingPage(page) {
