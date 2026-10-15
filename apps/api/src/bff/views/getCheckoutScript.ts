@@ -1,11 +1,13 @@
 import { getCheckoutSubmitOrderScript } from './getCheckoutSubmitOrderScript.js';
 import { getCheckoutCarrierScript } from './getCheckoutCarrierScript.js';
+import { getCouponApplicationScript } from './renderCouponWidget.js';
 
 export function getCheckoutScript(
   cartItemsJson: string,
   subtotalCents: number,
   taxRatePercent: number,
-  pricingVersion = 1
+  pricingVersion = 1,
+  couponItems: Array<{ productId: string; categoryIds?: string[]; priceCents: number }> = []
 ): string {
   const safeCartItemsJson = cartItemsJson.replace(/[<>&\u2028\u2029]/g, (character) => ({ '<': '\\u003c', '>': '\\u003e', '&': '\\u0026', '\u2028': '\\u2028', '\u2029': '\\u2029' })[character] || character);
   const safeSubtotalCents = Number.isSafeInteger(subtotalCents) ? subtotalCents : 0;
@@ -16,6 +18,7 @@ export function getCheckoutScript(
       const subtotalCents = ${safeSubtotalCents};
       const TAX_RATE = ${safeTaxRatePercent} / 100;
       const TAX_INCLUDED = ${pricingVersion === 2};
+      let couponDiscountCents = 0;
       let shippingCostCents = 0;
       let carrierFreightCents = 0;
       let shippingChargeMode = 'included';
@@ -37,7 +40,8 @@ export function getCheckoutScript(
       function updateCheckoutCta() {
         const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
         const transactionFeeCents = online ? 70000 : 0;
-        const total = subtotalCents + (TAX_INCLUDED ? 0 : calcTax(subtotalCents)) + shippingCostCents + transactionFeeCents;
+        const discountedSubtotal = Math.max(0, subtotalCents - couponDiscountCents);
+        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : calcTax(discountedSubtotal)) + shippingCostCents + transactionFeeCents;
         const format = value => '$' + (value / 100).toLocaleString('es-CO');
         document.getElementById('checkout-cta-label').textContent = online ? 'Pagar ' + format(total) : 'Confirmar pedido';
         document.getElementById('checkout-submit-note').textContent = online
@@ -147,12 +151,16 @@ export function getCheckoutScript(
       }
       ${getCheckoutCarrierScript()}
       function updateTotals() {
-        const taxCents = TAX_INCLUDED ? Math.round(subtotalCents * TAX_RATE / (1 + TAX_RATE)) : calcTax(subtotalCents);
+        const discountedSubtotal = Math.max(0, subtotalCents - couponDiscountCents);
+        const taxCents = TAX_INCLUDED ? Math.round(discountedSubtotal * TAX_RATE / (1 + TAX_RATE)) : calcTax(discountedSubtotal);
         const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
         const transactionFeeCents = online ? 70000 : 0;
-        const total = subtotalCents + (TAX_INCLUDED ? 0 : taxCents) + shippingCostCents + transactionFeeCents;
+        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : taxCents) + shippingCostCents + transactionFeeCents;
         const fmt = v => '$' + (v / 100).toLocaleString('es-CO');
         document.getElementById('txt-subtotal').innerText = fmt(subtotalCents);
+        const couponRow = document.getElementById('checkout-coupon-row');
+        couponRow.hidden = couponDiscountCents <= 0;
+        document.getElementById('txt-coupon-discount').innerText = '−' + fmt(couponDiscountCents);
         if (document.getElementById('txt-tax')) document.getElementById('txt-tax').innerText = fmt(taxCents);
         document.getElementById('txt-shipping').innerText = fmt(shippingCostCents);
         const collectRow = document.getElementById('checkout-shipping-collection-row');
@@ -164,6 +172,10 @@ export function getCheckoutScript(
         document.getElementById('txt-total').innerText    = fmt(total);
         updateCheckoutCta();
       }
+      document.addEventListener('coupon-validated', event => {
+        couponDiscountCents = Math.min(subtotalCents, Number(event.detail.discountCents) || 0);
+        updateTotals();
+      });
       ${getCheckoutSubmitOrderScript()}
       document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', () => { updateSubmitAvailability(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); });
       document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', () => { updateTotals(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); }));
@@ -173,6 +185,7 @@ export function getCheckoutScript(
       }).catch(() => {});
       // Inicializar totales al cargar
       updateTotals();
+      ${getCouponApplicationScript(couponItems, subtotalCents)}
     </script>
   `;
 }

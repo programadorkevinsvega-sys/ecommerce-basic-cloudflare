@@ -39,6 +39,16 @@ export const storefrontCartStyles = String.raw`
     .cart-summary { position: sticky; top: 1rem; padding: 1.25rem; }
     .cart-summary > h2 { margin-bottom: 1rem; font-size: 1.15rem; }
     .cart-summary-row { display: flex; justify-content: space-between; gap: .75rem; padding: .55rem 0; color: #424e47; }
+    .coupon-widget { margin: 1rem 0; padding: .9rem; border: 1px solid #e1e4da; border-radius: 12px; background: #f8f9f6; }
+    .coupon-widget > label { display: block; margin-bottom: .45rem; color: #16201b; font-size: .85rem; font-weight: 650; }
+    .coupon-widget form { display: flex; gap: .45rem; }
+    .coupon-widget input { width: 100%; min-width: 0; min-height: 42px; padding: .55rem .7rem; border: 1px solid #c7ccbe; border-radius: 8px; background: #fff; color: #16201b; font: inherit; text-transform: uppercase; }
+    .coupon-widget button { flex: 0 0 auto; min-height: 42px; padding: 0 .8rem; border: 0; border-radius: 8px; background: #1f4d3a; color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
+    .coupon-widget button:disabled { opacity: .6; cursor: wait; }
+    .coupon-widget p { min-height: 1.1em; margin: .45rem 0 0; color: #65716a; font-size: .78rem; }
+    .coupon-widget p[data-state="success"] { color: #1f4d3a; }
+    .coupon-widget p[data-state="error"] { color: #a8231b; }
+    .cart-coupon-row { color: #1f4d3a; }
     .cart-summary-total { margin-top: .4rem; padding-top: 1rem; border-top: 1px solid #e1e4da; color: #16201b; font-size: 1.1rem; }
     .cart-summary > p { margin: .6rem 0 1.2rem; color: #65716a; font-size: .8rem; line-height: 1.5; }
     .cart-checkout-link, .cart-primary-link { display: flex; min-height: 52px; align-items: center; justify-content: center; gap: .5rem; padding: .7rem 1rem; border-radius: 12px; background: #16201b; color: #fff; font-weight: 700; text-align: center; text-decoration: none; }

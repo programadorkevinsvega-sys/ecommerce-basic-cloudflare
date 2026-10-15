@@ -1,6 +1,7 @@
 import { CartDto } from '../gateways/cart/CartGateway.js';
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
+import { getCouponApplicationScript, renderCouponWidget } from './renderCouponWidget.js';
 
 export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, discounts = new Map<string, ProductDiscountDto>()): string {
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -11,6 +12,7 @@ export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogPr
   const basePriceFor = (productId: string, storedPrice: number) => productsMap.get(productId)?.priceInCents ?? storedPrice;
   const priceFor = (productId: string, basePrice: number) => discounts.get(productId)?.finalPriceCents ?? basePrice;
   const subtotalCents = cart.items.reduce((sum, item) => sum + priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) * item.quantity, 0);
+  const couponScriptItems = cart.items.map((item) => ({ productId: item.productId, categoryIds: productsMap.get(item.productId)?.categoryIds ?? [], priceCents: priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) * item.quantity }));
   const products = cart.items.map((item) => {
     const product = productsMap.get(item.productId);
     const discount = discounts.get(item.productId);
@@ -30,10 +32,10 @@ export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogPr
   return `${breadcrumb}<header class="cart-page-heading"><div><h1>Tu carrito</h1><p>${cart.totalQuantity} ${cart.totalQuantity === 1 ? 'producto' : 'productos'} en tu carrito</p></div><button type="button" class="cart-empty-button" data-clear-cart>Vaciar carrito</button></header>
     <div id="cart-action-message" class="cart-action-message" role="status" aria-live="polite" hidden></div>
     <div class="cart-layout"><section class="cart-products-panel" aria-labelledby="cart-products-title"><h2 id="cart-products-title">Productos <span>(${cart.items.length})</span></h2><ul class="cart-items">${products}</ul><a class="cart-continue-link" href="/productos"><span aria-hidden="true">←</span> Seguir comprando</a></section>
-    <aside class="cart-summary" aria-labelledby="cart-summary-title"><h2 id="cart-summary-title">Resumen del pedido</h2><div class="cart-summary-row"><span>Productos (${cart.totalQuantity})</span><span>${formatPrice(subtotalCents)}</span></div><div class="cart-summary-row cart-summary-total"><strong>Subtotal</strong><strong>${formatPrice(subtotalCents)}</strong></div><p>El envío se calcula en el siguiente paso según tu destino.</p><a class="cart-checkout-link" href="/checkout">Proceder al checkout <span aria-hidden="true">→</span></a><div class="cart-payment-note"><span aria-hidden="true">✓</span><p>Pago en línea seguro. Contra entrega disponible en productos seleccionados.</p></div></aside></div>${confirmation}${renderCartScript()}`;
+    <aside class="cart-summary" aria-labelledby="cart-summary-title"><h2 id="cart-summary-title">Resumen del pedido</h2><div class="cart-summary-row"><span>Productos (${cart.totalQuantity})</span><span>${formatPrice(subtotalCents)}</span></div>${renderCouponWidget()}<div class="cart-summary-row cart-coupon-row" id="cart-coupon-row" hidden><span>Descuento de cupón</span><span id="cart-coupon-discount">−${formatPrice(0)}</span></div><div class="cart-summary-row cart-summary-total"><strong>Subtotal</strong><strong id="cart-subtotal-value">${formatPrice(subtotalCents)}</strong></div><p>El envío se calcula en el siguiente paso según tu destino.</p><a class="cart-checkout-link" href="/checkout">Proceder al checkout <span aria-hidden="true">→</span></a><div class="cart-payment-note"><span aria-hidden="true">✓</span><p>Pago en línea seguro. Contra entrega disponible en productos seleccionados.</p></div></aside></div>${confirmation}${renderCartScript(couponScriptItems, subtotalCents)}`;
 }
 
-function renderCartScript(): string {
+function renderCartScript(couponItems: Array<{ productId: string; categoryIds?: string[]; priceCents: number }> = [], subtotalCents = 0): string {
   return `<script>
     const cartDialog = document.getElementById('cart-confirm-dialog');
     const cartConfirm = document.getElementById('cart-confirm-action');
@@ -83,6 +85,14 @@ function renderCartScript(): string {
       finally { cartConfirm.disabled = false; cartPendingAction = null; }
     });
     cartDialog?.addEventListener('click', event => { if (event.target === cartDialog) cartDialog.close(); });
+    document.addEventListener('coupon-validated', event => {
+      const detail = event.detail; const amount = Math.min(subtotalCents, Number(detail.discountCents) || 0);
+      const row = document.getElementById('cart-coupon-row');
+      row.hidden = amount <= 0;
+      document.getElementById('cart-coupon-discount').textContent = '−' + new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount / 100);
+      document.getElementById('cart-subtotal-value').textContent = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format((subtotalCents - amount) / 100);
+    });
+    ${getCouponApplicationScript(couponItems, subtotalCents)}
   </script>`;
 }
 

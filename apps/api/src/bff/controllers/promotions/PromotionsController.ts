@@ -1,7 +1,16 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
+import { z } from 'zod';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+
+const CouponPreviewInput = z.object({
+  code: z.string().trim().min(1).max(80),
+  orderSubtotalCents: z.number().int().nonnegative().max(100_000_000_000),
+  items: z.array(z.object({ productId: z.string().min(1).max(120), categoryId: z.string().min(1).max(120).optional(),
+    categoryIds: z.array(z.string().min(1).max(120)).max(30).optional(), priceCents: z.number().int().nonnegative().max(100_000_000_000) }).strict()).min(1).max(100),
+}).strict();
 
 export class PromotionsController {
   public static createRoutes(promotionsGateway: PromotionsGateway, identityGateway: IdentityGateway): Hono {
@@ -10,8 +19,17 @@ export class PromotionsController {
     // Validar cupón (Público / Carrito / Checkout)
     router.post('/api/v1/promotions/coupons/validate', async (c) => {
       try {
-        const body = await c.req.json();
-        const res = await promotionsGateway.validateCoupon(body);
+        const parsed = CouponPreviewInput.safeParse(await c.req.json());
+        if (!parsed.success) return c.json({ error: 'Código o contenido del carrito inválido.' }, 400);
+        const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '') || getCookie(c, '__Host-session');
+        let customerId: string | undefined;
+        if (token) {
+          try {
+            const session = await identityGateway.validateSession(token);
+            if (session.actorType === 'customer') customerId = session.actorId;
+          } catch { return c.json({ error: 'Sesión inválida.' }, 401); }
+        }
+        const res = await promotionsGateway.validateCoupon({ ...parsed.data, customerId });
         return c.json({ data: res });
       } catch {
         return c.json({ error: 'No fue posible validar el cupón' }, 400);

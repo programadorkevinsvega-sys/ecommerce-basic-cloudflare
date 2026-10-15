@@ -64,7 +64,10 @@ export async function calculateOrderPricing(
   const couponCode = typeof couponInput === 'string' ? couponInput.trim() : '';
   let discountCents = 0;
   if (couponCode) {
-    const coupon = await promotions.validateCoupon({ code: couponCode, orderSubtotalCents: subtotalCents, customerId: customerId ?? undefined, items: lines.map((line) => ({ productId: line.productId, priceCents: line.unitPriceCents * line.quantity })) });
+    const couponItems = lines.map((line) => ({ productId: line.productId,
+      categoryIds: byId.get(line.productId)?.categoryIds ?? [], priceCents: line.unitPriceCents * line.quantity }));
+    const coupon = await promotions.validateCoupon({ code: couponCode, orderSubtotalCents: subtotalCents,
+      customerId: customerId ?? undefined, items: couponItems });
     if (!coupon.valid || !Number.isSafeInteger(coupon.discountAppliedCents) || coupon.discountAppliedCents < 0) throw new Error('Cupón no válido');
     discountCents = Math.min(subtotalCents, coupon.discountAppliedCents);
   }

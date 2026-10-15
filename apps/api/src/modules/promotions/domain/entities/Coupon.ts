@@ -58,7 +58,7 @@ export class Coupon {
   public canBeUsed(
     orderSubtotalCents: number,
     customerUsageCount = 0,
-    items?: Array<{ productId: string; categoryId?: string; priceCents: number }>,
+    items?: Array<{ productId: string; categoryId?: string; categoryIds?: string[]; priceCents: number }>,
     now = new Date()
   ): { allowed: boolean; reason?: string; eligibleAmountCents?: number } {
     if (!this.props.isActive) {
@@ -84,7 +84,8 @@ export class Coupon {
           return item.productId === this.props.targetId;
         }
         if (this.props.targetType === 'category') {
-          return item.categoryId === this.props.targetId;
+          const categoryId = this.props.targetId;
+          return Boolean(categoryId && (item.categoryId === categoryId || item.categoryIds?.includes(categoryId)));
         }
         return false;
       });

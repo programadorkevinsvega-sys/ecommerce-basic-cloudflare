@@ -31,6 +31,7 @@ export function getCheckoutSubmitOrderScript(): string {
               customerName: name, customerEmail: email, customerPhone: phone, customerTaxId: taxId,
               shippingZoneId: zoneSel.value, shippingCostCents, subtotalCents, taxCents, discountCents: 0,
               ...(carrierDelivery ? { carrierQuoteId: selectedCarrierQuoteId, shippingChargeMode } : {}),
+              couponCode: window.getCurrentCouponCode?.() || null,
               paymentMethod: method,
               shippingAddress: { recipientName: name, phone, department: dept, city: municipality, daneCode: daneCode, addressLine: line },
               lines: cartItems.map(i => ({ productId: i.productId, productName: i.productName || 'Producto', productSku: i.productSku || i.productId.slice(0, 8), quantity: i.quantity, unitPriceCents: i.unitPriceCents }))
@@ -38,7 +39,7 @@ export function getCheckoutSubmitOrderScript(): string {
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Error al crear pedido');
-          const orderId = (window.clearCheckoutDraft?.(), data.order.id);
+          const orderId = (window.clearCheckoutDraft?.(), window.clearCurrentCouponCode?.(), data.order.id);
           await fetch('/api/v1/cart/clear', { method: 'POST' });
           if (method === 'wompi') await redirectToWompi(orderId);
           else window.location.href = '/checkout/resultado?orderId=' + orderId + '&status=cod_placed';

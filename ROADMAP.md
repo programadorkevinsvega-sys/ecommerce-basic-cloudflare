@@ -198,7 +198,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Tipos: porcentaje, monto fijo por producto/categoría/todo el catálogo (**productos con descuento**).
 - [x] Reglas: vigencia (starts_at/ends_at), mínimo de compra, límites de uso por cliente, prioridad de ejecución y estado activo. El mínimo se valida contra el subtotal base del carrito; las reglas con mínimo no aparecen como descuento inmediato en tarjetas de producto.
 - [x] Cupones: códigos únicos en mayúsculas, límite global y límite por cliente con registro de canjes en `promotions_redemptions`.
-- [x] `PromotionsGateway`: evaluación desacoplada de precios de productos y validación server-side de cupones sin confiar en el cliente (`SEC-VAL-06`, `SEC-ORD-05`).
+- [x] `PromotionsGateway`: validar cupones en carrito/checkout con estado visible; el código se conserva durante la sesión y el servidor recalcula el descuento al crear el pedido, sin confiar en el importe del navegador (`SEC-VAL-06`, `SEC-ORD-05`). Los cupones por categoría comparan las categorías actuales del producto.
 - [x] Etiquetas de descuento en listado y detalle (`-XX% OFF`, banner promocional y precio tachado en SSR); promociones automáticas elegibles se reflejan también en carrito, checkout y recálculo autoritativo del pedido.
 - [x] CRUD completo en panel administrativo `/admin` para reglas automáticas y cupones con activación/desactivación y eliminación.
 - [x] Base de datos D1 con prefijo estricto `promotions_*` y outbox de eventos (`promotions_outbox_events`).

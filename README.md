@@ -70,6 +70,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | Gestión de banners | `storefront` | ✅ CRUD | ✅ |
 | Anuncios (home, clientes, productos) | `storefront` | ✅ CRUD | ✅ |
 | Gestión de promociones y cupones | `promotions` | ✅ CRUD | ✅ |
+| Canje de cupones en carrito y checkout | `promotions` + `orders` | — | ✅ Validación visible; descuento recalculado por el servidor al crear el pedido |
 | CMS (páginas, bloques, menús) y Blog (artículos, autores, categorías) | `cms` | ✅ Páginas CMS, Menús y Blog en pantallas separadas | ✅ SSR público para páginas publicadas y blog |
 | Colecciones | `catalog` | ✅ CRUD, imagen opcional y selección/búsqueda de productos | ✅ Directorio y detalle paginados por colección publicada |
 | Seguimiento de pedidos | `orders` + `shipping` | ✅ Seguimiento operativo, historial y guías de transportadora | ✅ Cuenta autenticada por propiedad; invitado mediante clave de capacidad enviada por email |

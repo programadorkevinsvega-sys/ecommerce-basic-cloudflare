@@ -5,7 +5,7 @@ export interface ValidateCouponInput {
   code: string;
   orderSubtotalCents: number;
   customerId?: string;
-  items?: Array<{ productId: string; categoryId?: string; priceCents: number }>;
+  items?: Array<{ productId: string; categoryId?: string; categoryIds?: string[]; priceCents: number }>;
 }
 
 export interface CouponValidationResult {
