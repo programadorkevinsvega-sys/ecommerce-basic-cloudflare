@@ -3,7 +3,7 @@ import { Order } from './domain/entities/Order.js';
 import { CheckoutEvaluationInput, CheckoutEvaluationResult } from './domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from './application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from './application/use-cases/UpdateOrderStatusUseCase.js';
-import { OrderTrackingRecord } from './domain/ports/IOrderTrackingRepository.js';
+import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from './domain/ports/IOrderTrackingRepository.js';
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -39,5 +39,17 @@ export class OrdersPublicApi {
 
   public getCustomerOrderTracking(orderId: string, customerId: string): Promise<OrderTrackingRecord | null> {
     return this.container.getOrderTrackingUseCase.executeForCustomer(orderId, customerId);
+  }
+
+  public getAdminOrderTracking(orderId: string): Promise<AdminOrderTrackingRecord | null> {
+    return this.container.getOrderTrackingUseCase.executeForAdmin(orderId);
+  }
+
+  public listAdminOrderTracking(input: { page: number; pageSize: number; query?: string; status?: string }): Promise<AdminOrderTrackingPage> {
+    return this.container.getOrderTrackingUseCase.listForAdmin(input);
+  }
+
+  public saveOrderShippingDetails(orderId: string, details: OrderShippingDetails): Promise<boolean> {
+    return this.container.getOrderTrackingUseCase.saveShippingDetails(orderId, details);
   }
 }

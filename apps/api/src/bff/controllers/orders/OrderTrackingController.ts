@@ -9,6 +9,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { hashOrderTrackingToken } from '../../security/OrderTrackingCapability.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderOrderTrackingPage } from '../../views/renderOrderTrackingPage.js';
+import { extractAdminToken } from './extractAdminToken.js';
 import { getCustomerActorId, getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 
 const TrackingRequest = z.object({
@@ -53,6 +54,41 @@ export class OrderTrackingController {
       if (!guest) return c.json({ error: 'Pedido no encontrado' }, 404);
       return c.json({ success: true, tracking: publicTracking(guest) });
     });
+    app.get('/api/v1/admin/orders/tracking', async (c) => {
+      c.header('Cache-Control', 'private, no-store');
+      const admin = await adminSession(c, identity);
+      if (!admin) return c.json({ error: 'No autorizado' }, 401);
+      if (!hasPermission(admin.permissions, 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
+      const page = Number(c.req.query('page') || 1);
+      const pageSize = Number(c.req.query('pageSize') || 10);
+      if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) {
+        return c.json({ error: 'Paginación inválida' }, 400);
+      }
+      const result = await orders.listAdminOrderTracking({
+        page, pageSize, query: (c.req.query('q') || '').slice(0, 120), status: c.req.query('status'),
+      });
+      return c.json({ success: true, ...result, page, pageSize });
+    });
+    app.get('/api/v1/admin/orders/tracking/:orderId', async (c) => {
+      c.header('Cache-Control', 'private, no-store');
+      const admin = await adminSession(c, identity);
+      if (!admin) return c.json({ error: 'No autorizado' }, 401);
+      if (!hasPermission(admin.permissions, 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
+      const tracking = await orders.getAdminOrderTracking(c.req.param('orderId'));
+      return tracking ? c.json({ success: true, tracking }) : c.json({ error: 'Pedido no encontrado' }, 404);
+    });
+    app.patch('/api/v1/admin/orders/tracking/:orderId/shipping', async (c) => {
+      const admin = await adminSession(c, identity);
+      if (!admin) return c.json({ error: 'No autorizado' }, 401);
+      if (!hasPermission(admin.permissions, 'orders:edit')) return c.json({ error: 'Permiso insuficiente' }, 403);
+      const parsed = shippingDetailsSchema.safeParse(await c.req.json().catch(() => null));
+      if (!parsed.success) return c.json({ error: 'Revisa los datos de transporte' }, 400);
+      const saved = await orders.saveOrderShippingDetails(c.req.param('orderId'), parsed.data);
+      if (!saved) return c.json({ error: 'Pedido no encontrado' }, 404);
+      const updated = await orders.getAdminOrderTracking(c.req.param('orderId'));
+      if (!updated) return c.json({ error: 'Pedido no encontrado' }, 404);
+      return c.json({ success: true, tracking: updated });
+    });
     return app;
   }
 
@@ -74,6 +110,29 @@ export class OrderTrackingController {
   }
 }
 
+const shippingDetailsSchema = z.object({
+  shippingCarrier: z.string().trim().max(100).nullable(),
+  shippingTrackingNumber: z.string().trim().max(120).nullable(),
+  shippingTrackingUrl: z.string().trim().max(500).nullable(),
+  estimatedDeliveryDate: z.string().date().nullable(),
+}).strict().refine((value) => !value.shippingTrackingUrl || /^https:\/\//i.test(value.shippingTrackingUrl), {
+  message: 'El enlace de seguimiento debe usar HTTPS',
+});
+
+async function adminSession(c: Context, identity: IdentityGateway) {
+  const token = extractAdminToken(c);
+  if (!token) return null;
+  try {
+    const session = await identity.validateSession(token);
+    return session.actorType === 'admin' ? session : null;
+  } catch { return null; }
+}
+
+function hasPermission(permissions: string[], required: string): boolean {
+  const [resource, action] = required.split(':');
+  return permissions.some((permission) => permission === '*' || permission === `${resource}:*` || permission === required || permission === `${resource}:${action}`);
+}
+
 type TrackingResult = NonNullable<Awaited<ReturnType<OrdersGateway['getOrderTracking']>>>;
 
 function publicTracking(tracking: TrackingResult) {
@@ -83,6 +142,10 @@ function publicTracking(tracking: TrackingResult) {
     createdAt: tracking.createdAt,
     minEstimatedDays: tracking.minEstimatedDays,
     maxEstimatedDays: tracking.maxEstimatedDays,
+    shippingCarrier: tracking.shippingCarrier,
+    shippingTrackingNumber: tracking.shippingTrackingNumber,
+    shippingTrackingUrl: tracking.shippingTrackingUrl,
+    estimatedDeliveryDate: tracking.estimatedDeliveryDate,
     events: tracking.events.filter((event) => ['confirmed', 'prepared', 'shipped', 'delivered'].includes(event.status)),
   };
 }

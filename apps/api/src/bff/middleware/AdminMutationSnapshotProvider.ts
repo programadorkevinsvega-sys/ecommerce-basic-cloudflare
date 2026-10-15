@@ -4,6 +4,16 @@ export class AdminMutationSnapshotProvider {
   constructor(private readonly gateways: AppCompositionRoot) {}
 
   public async read(path: string, body?: Record<string, unknown>, token?: string): Promise<unknown> {
+    const trackingMutation = path.match(/^\/api\/v1\/admin\/orders\/tracking\/([^/]+)\/shipping$/);
+    if (trackingMutation?.[1]) {
+      const tracking = await this.gateways.ordersGateway.getAdminOrderTracking(decodeURIComponent(trackingMutation[1]));
+      return tracking ? {
+        orderId: tracking.orderId, shippingCarrier: tracking.shippingCarrier,
+        shippingTrackingNumber: tracking.shippingTrackingNumber,
+        shippingTrackingUrl: tracking.shippingTrackingUrl,
+        estimatedDeliveryDate: tracking.estimatedDeliveryDate,
+      } : null;
+    }
     if (path.startsWith('/api/v1/admin/auth/mfa/') && token) {
       const session = await this.gateways.identityGateway.validateSession(token);
       return { mfaEnabled: session.mfaEnabled === true };

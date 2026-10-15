@@ -2,7 +2,7 @@ import { Order } from '../../../modules/orders/domain/entities/Order.js';
 import { CheckoutEvaluationInput, CheckoutEvaluationResult } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from '../../../modules/orders/application/use-cases/UpdateOrderStatusUseCase.js';
-import { OrderTrackingRecord } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
+import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
 
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
@@ -14,4 +14,7 @@ export interface OrdersGateway {
   getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;
   getOrderTracking(orderId: string, tokenHash: string): Promise<OrderTrackingRecord | null>;
   getCustomerOrderTracking(orderId: string, customerId: string): Promise<OrderTrackingRecord | null>;
+  getAdminOrderTracking(orderId: string): Promise<AdminOrderTrackingRecord | null>;
+  listAdminOrderTracking(input: { page: number; pageSize: number; query?: string; status?: string }): Promise<AdminOrderTrackingPage>;
+  saveOrderShippingDetails(orderId: string, details: OrderShippingDetails): Promise<boolean>;
 }

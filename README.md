@@ -426,7 +426,7 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/terminos-y-condiciones`, `/politica-de-privacidad`, `/politica-de-cookies`, `/tratamiento-de-datos` | Páginas legales editables desde CMS |
 | `/p/:slug` | Ruta histórica del CMS; se conserva por compatibilidad |
 | `/carrito`, `/checkout` | Compra |
-| `/seguimiento-pedido` | Clientes con sesión consultan sus pedidos por propiedad; invitados usan número de pedido y clave enviada al correo |
+| `/seguimiento-pedido` | Clientes con sesión consultan sus pedidos por propiedad; invitados usan número de pedido y clave enviada al correo; estados y datos logísticos administrables desde Envíos en el panel |
 | `/login`, `/registro`, `/recuperar` | Acceso de clientes |
 | `/cuenta`, `/cuenta/pedidos`, `/cuenta/direcciones`, `/cuenta/facturas` | Área del cliente |
 | `/sitemap.xml`, `/sitemap-blog.xml`, `/robots.txt` | Generados dinámicamente |

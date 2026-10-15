@@ -40,6 +40,7 @@ import { renderAdminReviewsCss } from './renderAdminReviewsCss.js';
 import { renderAdminReviewsScript } from './renderAdminReviewsScript.js';
 import { renderMenuAdminCss } from './renderMenuAdminCss.js';
 import { renderMenuAdminScript } from './renderMenuAdminScript.js';
+import { renderOrderTrackingAdminScript } from './renderOrderTrackingAdminScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -96,6 +97,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderPromotionsFormsScript()}</script>
   <script>${renderPromotionsHandlersScript()}</script>
   <script>${renderShippingFormsScript()}</script>
+  <script>${renderOrderTrackingAdminScript()}</script>
   <script>${renderShippingHandlersScript()}</script>
   <script>${renderPhase8AdminScript()}</script>
 </body>

@@ -11,6 +11,7 @@ import { renderStorefrontManagementSection } from './renderStorefrontManagementS
 import { renderCmsManagementSection } from './renderCmsManagementSection.js';
 import { renderPromotionsManagementSection } from './renderPromotionsManagementSection.js';
 import { renderShippingManagementSection } from './renderShippingManagementSection.js';
+import { renderOrderTrackingAdminSection } from './renderOrderTrackingAdminSection.js';
 import { renderBlogManagementSection } from './renderBlogManagementSection.js';
 import { renderAdminReviewsSection } from './renderAdminReviewsSection.js';
 import { renderMenuManagementSection } from './renderMenuManagementSection.js';
@@ -71,6 +72,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
 
     <div id="tab-shipping" class="tab-content">
       ${renderShippingManagementSection(props.shippingZones, props.divipolaLocations)}
+      ${renderOrderTrackingAdminSection()}
     </div>
 
     <div id="tab-settings" class="tab-content">

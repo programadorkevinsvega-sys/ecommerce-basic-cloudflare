@@ -266,3 +266,11 @@ El inventario estático de tablas, columnas, restricciones, índices y referenci
 
 
 La migración adicional `orders__0004_checkout_transaction_fee.sql` se aplicó a producción después de consultar el ledger y `PRAGMA table_info(orders_orders)`: agregó la columna con default cero. La lectura posterior confirmó el ledger, la columna y 12 pedidos previos con suma de cargos cero. No se modificaron pedidos existentes.
+
+### Seguimiento logístico administrable (`orders__0006_admin_shipping_tracking.sql`)
+
+| Archivo | Versión | Entorno | Estado | Motivo / compatibilidad |
+|---|---|---|---|---|
+| `orders__0006_admin_shipping_tracking.sql` | v6 | Producción (`ecommerce-vega-production`) | 2026-10-15 | ✅ Aplicada con el runner; ledger confirmado, cuatro columnas nullable e índice verificados. 13 pedidos antes y después; sin cambios en filas. |
+
+La migración agrega columnas nullable para transportadora, guía, enlace HTTPS de seguimiento y fecha estimada, más un índice para el listado administrativo. Es compatible con pedidos existentes y se puede revertir el Worker sin retirar columnas. El listado consulta D1 con paginación y filtros; cambios de estado pasan por el caso de uso existente de pedidos para mantener historial, notificaciones y auditoría. Bookmark previo `00000319-0000030e-00005105-220c1a7cd88d492b99674d86e8a191e1`; posterior `00000319-00000318-00005105-755b67b38f1b4f4737972576af539a8c`. Las consultas posteriores confirmaron la entrada del ledger, `shipping_carrier`, `shipping_tracking_number`, `shipping_tracking_url`, `estimated_delivery_date` e índice, y 13 pedidos intactos.

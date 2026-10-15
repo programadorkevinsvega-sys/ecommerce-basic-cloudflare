@@ -4,6 +4,7 @@ import { Order } from '../../../modules/orders/domain/entities/Order.js';
 import { CheckoutEvaluationInput, CheckoutEvaluationResult } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from '../../../modules/orders/application/use-cases/UpdateOrderStatusUseCase.js';
+import { OrderShippingDetails } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
 
 export class InProcessOrdersGateway implements OrdersGateway {
   private readonly publicApi: OrdersPublicApi;
@@ -39,5 +40,17 @@ export class InProcessOrdersGateway implements OrdersGateway {
 
   public getCustomerOrderTracking(orderId: string, customerId: string) {
     return this.publicApi.getCustomerOrderTracking(orderId, customerId);
+  }
+
+  public getAdminOrderTracking(orderId: string) {
+    return this.publicApi.getAdminOrderTracking(orderId);
+  }
+
+  public listAdminOrderTracking(input: { page: number; pageSize: number; query?: string; status?: string }) {
+    return this.publicApi.listAdminOrderTracking(input);
+  }
+
+  public saveOrderShippingDetails(orderId: string, details: OrderShippingDetails) {
+    return this.publicApi.saveOrderShippingDetails(orderId, details);
   }
 }
