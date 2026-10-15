@@ -48,6 +48,7 @@ export class InProcessCatalogGateway implements CatalogGateway {
     offset?: number;
     status?: string;
     searchQuery?: string;
+    relatedToId?: string;
   }): Promise<CatalogProductDto[]> {
     const products = await this.publicApi.listProducts(params);
     return products.map((p) => p.toPrimitives());

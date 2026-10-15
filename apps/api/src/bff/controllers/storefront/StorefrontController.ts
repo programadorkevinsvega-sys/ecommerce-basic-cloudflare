@@ -11,6 +11,7 @@ import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
 import { renderProductDetail } from '../../views/renderProductDetail.js';
+import { renderRelatedProducts } from '../../views/renderRelatedProducts.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
 import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
@@ -145,13 +146,14 @@ export class StorefrontController {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       try {
         const product = await catalogGateway.getProductBySlug(slug);
+        const relatedProducts = await catalogGateway.listProducts({ limit: 8, relatedToId: product.id }).catch(() => []);
         const [discount, reviewPage] = await Promise.all([
           promotionsGateway.evaluateProductDiscount({ productId: product.id, categoryIds: product.categoryIds, priceInCents: product.priceInCents }).catch(() => undefined),
           reviewsGateway.list(product.id, 1, 1).catch(() => ({ items: [], total: 0, summary: { average: 0, count: 0, isDemo:false, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } } })),
         ]);
 
         const marketing = await getPageMarketingContent(storefrontGateway, `product:${product.slug}`, 'Contenido destacado', ['product']);
-        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount, {...reviewPage.summary,demoCount:reviewPage.total})}`;
+        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount, {...reviewPage.summary,demoCount:reviewPage.total})}${renderRelatedProducts(relatedProducts)}`;
         const storeUrl = 'https://vega.jnmtortas.com';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 

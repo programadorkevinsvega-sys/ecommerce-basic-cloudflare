@@ -374,7 +374,9 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 
 - [x] Reseñas públicas verificadas por compra entregada, página propia paginada y `AggregateRating` en JSON-LD; reseñas cargadas por migración permanecen internamente marcadas como no verificadas y no se atribuyen a compras.
 - [x] Gestión administrativa de reseñas: listar, buscar/paginar, crear, ver, editar, publicar/ocultar y eliminar; el método de pago solo procede de la verificación del pedido y no se inventa para una reseña editorial.
-- [ ] Lista de deseos y productos relacionados.
+- [ ] Lista de deseos.
+- [x] Productos relacionados en la ficha, seleccionados por etiquetas, marca, tipo de producto y categorías compartidas; no aparecen recomendaciones sin relación.
+- [ ] Guías específicas vinculadas a productos; falta definir si serán documentos/manuales o artículos del blog.
 - [x] Seguimiento seguro: clientes autenticados consultan pedidos de su cuenta; invitados usan una clave aleatoria enviada por correo. Admin puede gestionar estados, historial, datos de envío y guías desde sus secciones operativas.
 - [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.

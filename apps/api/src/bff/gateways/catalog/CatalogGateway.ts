@@ -171,7 +171,7 @@ export interface CatalogGateway {
   deleteProduct(id: string): Promise<void>;
   getProductBySlug(slug: string): Promise<CatalogProductDto>;
   getProductById(id: string): Promise<CatalogProductDto>;
-  listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string }): Promise<CatalogProductDto[]>;
+  listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string; relatedToId?: string }): Promise<CatalogProductDto[]>;
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
   listCategories(query?: CatalogPageQuery): Promise<CategoryDto[]>;
   deleteCategory(id: string): Promise<void>;
