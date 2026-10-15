@@ -301,3 +301,5 @@ Aplicadas en producción el 2026-10-15 UTC. Bookmark anterior `0000031e-0000004e
 ### Impresión de guías de MiPaquete (`shipping__0005_label_print_tracking.sql`)
 
 Migración expand-only: agrega actor y fecha de impresión de guías e índice parcial para localizar pendientes. Aplicada en producción el 2026-10-15 UTC, commit `1b752a0`, después de revisar el bookmark previo `0000031e-00000344-00005105-6cb274debbe41bcd8e881d85090e7406`; ledger y columnas `printed_at`/`printed_by` confirmados. Bookmark posterior `0000031e-0000035c-00005105-668244adf405ef29bf7388edcc03f451`. Worker desplegado como `a61ca513-1224-4a6b-a388-2e9a58f76a83`; `/health` respondió 200. No modifica envíos existentes ni genera despachos.
+
+La página independiente **Imprimir guías** quedó publicada desde `b87c543`, versión Worker `73806e8c-fe6e-4a88-a47f-726a855fa46e`; `/health` volvió a responder 200 con D1, KV, Queue y R2 saludables.
