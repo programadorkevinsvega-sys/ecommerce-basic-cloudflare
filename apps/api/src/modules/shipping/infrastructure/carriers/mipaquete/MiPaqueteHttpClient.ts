@@ -25,7 +25,7 @@ export class MiPaqueteHttpClient {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
-      const response = await this.fetcher(new URL(path, this.config.baseUrl), {
+      const response = await this.fetcher.call(globalThis, new URL(path, this.config.baseUrl), {
         method,
         redirect: 'error',
         signal: controller.signal,
