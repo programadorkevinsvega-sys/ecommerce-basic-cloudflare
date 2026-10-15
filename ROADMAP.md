@@ -43,9 +43,10 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | 10 | Venta a crédito | M | ⏳ Siguiente | Planes, cuotas y abonos (alcance por confirmar) |
 | 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
 | 12 | Evolución | — | 📋 Planificada | Reseñas, wishlist, i18n, extracción de módulos |
+| 13 | Integración de envíos con MiPaquete.com | M | 📋 Planificada | Cotización, creación de guías, trazabilidad y sincronización segura de estados |
 
 ```text
-0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12
+0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12 ─► 13
           │         ▲    ▲         ▲    ▲
           └─────────┴────┘         └────┘  (checkout depende de catalog, promotions y shipping)
 ```
@@ -378,9 +379,32 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
 - [ ] Carritos abandonados y campañas por email.
-- [ ] Integración con transportadoras (guías y seguimiento).
 - [ ] Fidelización y gift cards.
 - [ ] **Extracción de módulos** a Workers propios cuando exista necesidad real, siguiendo la sección 10.1 del contrato (D1 propia, `ServiceBinding<Modulo>Gateway`, un cambio de wiring en `composition-root.ts`).
+
+---
+
+## Fase 13 — Integración de envíos con MiPaquete.com
+
+**Tamaño:** M · **Bounded context:** `shipping`.
+**Contrato aplicable:** §0, §1.bis, §2 (DIP), §4.1, §6.1–6.2, §8 (Queues), §10 (Gateways), §12–13, §16–17 y §19.
+**Seguridad y recuperación:** SEC-SEC-01..05 (credenciales por entorno), SEC-MOD-01..04 (fronteras y Gateways), SEC-ISO-02..06 (propiedad y consultas), SEC-ADM-01..04 (RBAC y auditoría), SEC-ORD-01/04/07 (envío, estados y reglas de pedido), SEC-PAY-03..04 como patrón de autenticidad, idempotencia y reconciliación de webhooks, SEC-WEB-02..04 (cabeceras, HTTPS y no-store), SEC-LOG-01..03 (sin secretos/PII en logs) · `ROLLBACK_RECOVERY.md`: operaciones externas idempotentes, reintentos y reconciliación de guías/estados.
+
+**Objetivo:** integrar la [API v2 de MiPaquete](https://api.documentacion.mipaquete.com/) para cotizar, crear y consultar envíos y reflejar la guía y el tracking en el seguimiento que ya usan clientes y administradores. La documentación del proveedor describe cotizaciones por origen/destino y paquete, generación de envíos y guías, trazabilidad, cancelación, cobertura DANE y notificaciones webhook; confirmar esquemas, autenticación y URL de producción vigentes antes de implementar, porque los ejemplos publicados incluyen hosts de desarrollo.
+
+- [ ] Validar con MiPaquete las credenciales, URL de producción y pruebas, límites, campos requeridos, estados, errores, webhook y proceso de cancelación; guardar ejemplos JSON versionados sin credenciales ni datos personales.
+- [ ] Definir el contrato del adaptador `IShippingCarrierPort` en `shipping`; implementar cliente HTTP con timeout, validación Zod, idempotencia, reintentos acotados y manejo de indisponibilidad. El BFF consume el módulo por `ShippingGateway`; ningún otro módulo importa sus internos.
+- [ ] Administrar las credenciales solo con secrets de Cloudflare separados por entorno; nunca guardarlas en D1, frontend, logs o respuestas. Configurar endpoints/hosts permitidos para evitar SSRF y validar HTTPS.
+- [ ] Cotizar desde servidor usando direcciones/códigos DANE y peso, dimensiones, cantidad y valor declarado del paquete. Definir dónde se administra el perfil de empaque si el catálogo no proporciona esos datos; no asumir medidas ni confiar en cotizaciones recalculadas por el navegador.
+- [ ] Presentar y persistir la opción de transportadora, tarifa y plazo elegidos de acuerdo con la configuración comercial. Mantener reglas locales de cobertura y envío como autoridad de elegibilidad mientras no se apruebe explícitamente su reemplazo.
+- [ ] Crear guía una sola vez después de que el pedido sea elegible: pago en línea únicamente tras confirmación verificada por webhook/reconciliación de Wompi; contra entrega tras aceptar el pedido. Evitar duplicados con outbox/idempotencia y definir compensación para guía creada si falla una etapa posterior.
+- [ ] Persistir en tablas `shipping_*` el identificador externo, transportadora, guía, URL/documento y estado; actualizar la sección administrativa de Envíos y el seguimiento público con estados normalizados, sin exponer información de otros pedidos.
+- [ ] Recibir actualizaciones webhook con autenticidad y protección contra repetición verificadas. Si el proveedor no ofrece firma verificable, consultar la API autenticada para confirmar el evento antes de modificar el pedido. Procesar con esquema versionado, outbox e idempotencia.
+- [ ] Definir la operación administrativa para reintentar, cancelar y reconciliar envíos; auditar cambios y conservar una guía manual para contingencia si MiPaquete no está disponible.
+- [ ] Incorporar migraciones aditivas solo en `shipping_*`, actualizar `docs/migrations/manifest.md`, y probar compatibilidad rollback, aislamiento, callbacks falsos/repetidos, pedidos ajenos, cotizaciones inválidas, reintentos y fallos del proveedor.
+- [ ] Hacer pruebas de integración con ambiente de pruebas y una guía real controlada antes de habilitar producción; verificar costos, recaudo contra entrega, actualización de estado, tracking del cliente, alertas y recuperación sin generar múltiples guías.
+
+**Criterio de salida:** cotización de servidor validada; guía idempotente creada para un pedido elegible; estados del webhook verificados y visibles en admin y en el seguimiento autorizado del cliente; costos y contra entrega conciliados; pruebas de fallos/rollback aprobadas y evidencia documentada antes de activar en producción.
 
 ---
 
@@ -402,7 +426,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 | Límites de CPU o tamaño del Worker | k6 temprano y medición del bundle en CI |
 | Caída de Wompi o Resend | Puertos + adaptadores, timeouts con `AbortController`, reintentos con backoff, DLQ (§16) |
 | SEO deficiente por renderizado en cliente | SSR obligatorio en la tienda; auditoría SEO en admin |
-| Alcance creciente | Cada fase tiene criterio de salida; lo nuevo entra a una fase planificada o a la 12 |
+| Alcance creciente | Cada fase tiene criterio de salida; lo nuevo entra a una fase planificada o a la 12/13 |
 
 ---
 
