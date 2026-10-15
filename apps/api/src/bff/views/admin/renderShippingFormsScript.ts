@@ -41,8 +41,9 @@ export function renderShippingFormsScript(): string {
       const active = local.filter((zone) => zone.isActive);
       const coverage = active.length ? '<span class="shipping-badge active">Entrega local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' : '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>';
       const zone = active[0] || local[0];
-      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar cobertura</button>' : '<button class="shipping-action primary" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" onclick="createZoneForLocation(this)">Crear zona local</button>';
-      const view = '<button class="shipping-action" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" onclick="viewShippingLocation(this)">Ver</button>';
+      const zoneData = encodeURIComponent(JSON.stringify(local));
+      const view = '<button class="shipping-action" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" data-zones="' + escapeHtml(zoneData) + '" onclick="viewShippingLocation(this)">Ver</button>';
+      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar</button><button class="shipping-action danger" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" data-code="' + escapeHtml(item.daneCode) + '" onclick="removeShippingLocationFromZone(this)">Eliminar</button>' : '';
       return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td><div class="shipping-row-actions">' + view + action + '</div></td></tr>';
     }
     ${renderShippingLocationDetailsScript()}
@@ -102,6 +103,23 @@ export function renderShippingFormsScript(): string {
     window.closeShippingZoneModal = closeShippingZoneModal;
     window.createZoneForLocation = createZoneForLocation;
     window.ensureShippingOption = ensureShippingOption;
+    window.removeShippingLocationFromZone = removeShippingLocationFromZone;
+
+    async function removeShippingLocationFromZone(button) {
+      const zone = parseShippingItemData(button);
+      const code = button.dataset.code;
+      if (!zone || !code || !confirm('¿Eliminar este municipio de la zona local ' + zone.name + '? La zona conservará los demás municipios.')) return;
+      const response = await fetch('/api/v1/admin/shipping/zones/' + encodeURIComponent(zone.id), {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations: zone.locations.filter((location) => location !== code) }),
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        alert(result.error || 'No fue posible eliminar la cobertura local.');
+        return;
+      }
+      loadShippingDirectory(1);
+    }
 
     function updateSelectedLocationsCount() {
       const select = document.getElementById('shLocationsSelect');

@@ -40,6 +40,8 @@ La migración `orders__0007_shipping_charge_mode.sql` agrega valores por defecto
 
 `orders__0008_shipping_fulfillment_method.sql` agrega `shipping_fulfillment_method` con default `legacy`. Los pedidos nuevos guardan `merchant_local` o `carrier`, calculados por el servidor desde la zona validada. Versiones anteriores del Worker omiten la columna y siguen escribiendo `legacy`. Para rollback de aplicación, conservar columna y valores; no reclasificar pedidos anteriores automáticamente ni eliminar la columna.
 
+`shipping__0006_medellin_metropolitan_local_delivery.sql` conserva inactivas las zonas locales anteriores de Bogotá y Cali y configura la zona activa de Medellín con los diez municipios del Valle de Aburrá. Un rollback del Worker no reactiva esas zonas ni repone Rionegro; restaurar esa cobertura solo mediante un cambio operativo explícito en Admin, tras confirmar origen y capacidad de entrega local.
+
 ## Estrategia de release
 
 ### Orden de migraciones D1 con Wrangler

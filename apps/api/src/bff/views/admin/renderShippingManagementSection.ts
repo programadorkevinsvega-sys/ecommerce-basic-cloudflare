@@ -16,7 +16,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
   return `<section class="shipping-screen" aria-labelledby="shipping-title">
     <header class="shipping-heading" data-shipping-heading><div><h1 id="shipping-title">Envíos y cobertura</h1><p>Administra entregas locales del comercio. Los destinos nacionales se cotizan con MiPaquete.</p></div><button class="btn-primary" type="button" onclick="openShippingZoneModal()">Crear zona local</button></header>
     <section class="shipping-page-panel" data-shipping-panel="zones" aria-labelledby="shipping-zones-title">
-      <div class="card shipping-zones-card"><div class="shipping-section-heading"><div><h2 id="shipping-zones-title">Entrega local del comercio</h2><p>${localZones.length} zonas locales configuradas</p></div></div>
+      <div class="card shipping-zones-card"><div class="shipping-section-heading"><div><h2 id="shipping-zones-title">Entrega local del comercio</h2><p>${localZones.filter((zone) => zone.isActive).length} zonas locales activas · Medellín y Valle de Aburrá</p></div></div>
         <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Zona local / municipios</th><th>Tipo</th><th>Tarifa</th><th>Plazo</th><th>Condiciones</th><th>Acciones</th></tr></thead><tbody id="shippingZonesTableBody">${renderShippingTableRows(localZones, divipolaMap)}</tbody></table></div>
       </div>
     </section>
@@ -58,7 +58,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
     </div>
     <dialog id="shipping-location-detail" class="shipping-detail-dialog" aria-labelledby="shipping-location-detail-title">
       <header><h2 id="shipping-location-detail-title">Municipio DANE</h2><form method="dialog"><button class="shipping-modal-close" aria-label="Cerrar">×</button></form></header>
-      <dl><div><dt>Municipio</dt><dd id="shipping-detail-name"></dd></div><div><dt>Departamento</dt><dd id="shipping-detail-department"></dd></div><div><dt>Código DANE</dt><dd id="shipping-detail-code"></dd></div><div><dt>Tipo</dt><dd id="shipping-detail-type"></dd></div></dl>
+      <dl><div><dt>Municipio</dt><dd id="shipping-detail-name"></dd></div><div><dt>Departamento</dt><dd id="shipping-detail-department"></dd></div><div><dt>Código DANE</dt><dd id="shipping-detail-code"></dd></div><div><dt>Tipo</dt><dd id="shipping-detail-type"></dd></div><div><dt>Zona y condiciones</dt><dd id="shipping-detail-zones" class="shipping-detail-zones"></dd></div></dl>
     </dialog>
     <div id="shippingDetailsModal" class="shipping-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalShTitle"><button class="shipping-modal-backdrop" type="button" aria-label="Cerrar detalles de zona" onclick="closeShippingDetailsModal()"></button><section class="shipping-modal-dialog"><header><h2 id="modalShTitle">Detalles de zona de envío</h2><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingDetailsModal()">×</button></header><div id="modalShContent" class="shipping-modal-content"></div><footer><button type="button" class="btn-primary" onclick="closeShippingDetailsModal()">Cerrar</button></footer></section></div>
   </section>`;

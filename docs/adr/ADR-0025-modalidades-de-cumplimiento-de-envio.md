@@ -7,6 +7,7 @@
 ## Decisión
 
 - Las zonas `city`, `department` y `municipality` representan exclusivamente entregas locales gestionadas por el comercio. El comercio define municipios, tarifa, plazo y si acepta contra entrega.
+- Para la operación actual con origen en Medellín, la zona local activa comprende únicamente Medellín y los diez municipios del Valle de Aburrá. Otras zonas locales previas se conservan inactivas para trazabilidad y no aparecen como cobertura disponible.
 - El destino nacional se identifica con DANE y se cotiza en MiPaquete. La cobertura, transportadoras disponibles, tarifa y plazo provienen de la cotización del proveedor, no de una tarifa nacional manual.
 - La página de Municipios DANE administra solo las zonas locales. La lista DANE también identifica el destino que se envía a MiPaquete.
 - Cuando el catálogo DANE local tiene menos de 500 municipios, el backend sincroniza `GET /getLocations` de MiPaquete y hace upsert de los códigos municipales en `shipping_divipola`; no modifica zonas ni sus municipios asociados. La sincronización se limita por instancia y continúa sirviendo el catálogo existente si MiPaquete no responde.

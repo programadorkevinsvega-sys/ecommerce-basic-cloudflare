@@ -47,7 +47,7 @@ export class D1DivipolaRepository implements IDivipolaRepository {
       `SELECT DISTINCT d.* FROM shipping_divipola d
        INNER JOIN shipping_zone_locations zl ON zl.dane_code = d.dane_code
        INNER JOIN shipping_zones z ON z.id = zl.zone_id
-       WHERE z.type != 'national' ${where}
+       WHERE z.type != 'national' AND z.is_active = 1 ${where}
        ORDER BY d.department ASC, d.municipality ASC LIMIT ? OFFSET ?`
     ).bind(...bindings).all<DivipolaRow>();
     return (results || []).map((row) => this.hydrate(row));
@@ -63,7 +63,7 @@ export class D1DivipolaRepository implements IDivipolaRepository {
       `SELECT COUNT(DISTINCT d.dane_code) AS total FROM shipping_divipola d
        INNER JOIN shipping_zone_locations zl ON zl.dane_code = d.dane_code
        INNER JOIN shipping_zones z ON z.id = zl.zone_id
-       WHERE z.type != 'national' ${where}`
+       WHERE z.type != 'national' AND z.is_active = 1 ${where}`
     ).bind(...bindings).first<{ total: number }>();
     return row?.total ?? 0;
   }

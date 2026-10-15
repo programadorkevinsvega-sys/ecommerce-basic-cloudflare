@@ -3,7 +3,7 @@ import { BrandDto } from '../../gateways/catalog/CatalogGateway.js';
 import { AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 
 export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = []): string {
-  const localZones = shippingZones.filter((z) => z.type !== 'national');
+  const localZones = shippingZones.filter((z) => z.type !== 'national' && z.isActive);
   const registeredBrands = brands.map((brand) => brand.name);
   const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
   const legacyBrands = [...new Set(legacyBrandNames.map((name) => name.trim()).filter((name) => name && !registeredNames.has(name.toLocaleLowerCase())))];
@@ -28,7 +28,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
       <form id="newProductForm">
         <input type="hidden" id="pEditId" value="" />
         <input type="hidden" id="productTaxRate" value="${taxRatePercent}" />
-        <input type="hidden" id="transactionShippingCents" value="${Math.max(0, ...shippingZones.map((zone) => zone.priceInCents))}" />
+        <input type="hidden" id="transactionShippingCents" value="${Math.max(0, ...shippingZones.filter((zone) => zone.isActive).map((zone) => zone.priceInCents))}" />
         <div class="form-grid">
           <div><label>Nombre</label><input type="text" id="pName" required placeholder="Ej. Camiseta Negra" /></div>
           <div><label>Slug / Handle</label><input type="text" id="pSlug" required placeholder="camiseta-negra" /></div>
