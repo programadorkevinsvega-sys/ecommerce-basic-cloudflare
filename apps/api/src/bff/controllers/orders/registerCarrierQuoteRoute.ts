@@ -51,7 +51,7 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
       console.error(JSON.stringify({
         event: 'shipping.carrier_quote_failed',
         trace_id: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || c.req.header('cf-ray') || 'unknown',
-        reason: error instanceof Error ? error.message.slice(0, 160) : 'unknown',
+        reason: error instanceof Error ? error.message.slice(0, 800) : 'unknown',
       }));
       return c.json({ error: 'No fue posible cotizar el envío con la transportadora' }, 503);
     }
