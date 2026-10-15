@@ -373,7 +373,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Reseñas públicas verificadas por compra entregada, página propia paginada y `AggregateRating` en JSON-LD (Worker desplegado el 2026-10-15 UTC).
 - [ ] Gestión administrativa de reseñas: búsqueda, filtros, paginación, publicación, ocultamiento y eliminación (implementada en el workspace; despliegue pendiente).
 - [ ] Lista de deseos y productos relacionados.
-- [ ] Seguimiento público seguro de pedidos (`/seguimiento-pedido`): clave aleatoria por correo, estados con historial y estimado congelado al comprar (migración aplicada en producción; despliegue del Worker pendiente del push integrado).
+- [ ] Seguimiento público seguro de pedidos (`/seguimiento-pedido`): clave aleatoria por correo, estados con historial y estimado congelado al comprar (migración aplicada; Worker desplegado y ruta responde HTTP 200; consulta completa con un pedido real pendiente de validación).
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
 - [ ] Carritos abandonados y campañas por email.

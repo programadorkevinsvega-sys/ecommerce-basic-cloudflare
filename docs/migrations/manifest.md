@@ -165,7 +165,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `orders__0003_pricing_snapshots.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; pedidos históricos conservaron default v1 |
 | `orders__0004_checkout_transaction_fee.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-13 | `c364eb8` | ✅ Expand-only aplicada y verificada; columna `transaction_fee_cents` default 0, 12 pedidos previos intactos |
 | `orders__0004_checkout_transaction_fee.sql` | v4 | D1 temporal / Workers | 2026-10-13 | `c364eb8` | ✅ Aplicación vacía y repetición idempotente verificadas |
-| `orders__0005_secure_order_tracking.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada por runner tras verificar 49 migraciones previas; ledger, tres columnas e índice confirmados. Pedidos existentes: 13 antes y después, sin cambios de filas. Bookmark previo `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. |
+| `orders__0005_secure_order_tracking.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada por runner tras verificar 49 migraciones previas; ledger, tres columnas e índice confirmados. Pedidos existentes: 13 antes y después, sin cambios de filas. Worker desplegado y al 100% (`7ac9c89a-eb45-433c-93b8-3f9c4aea54ca`); `/seguimiento-pedido` HTTP 200 y `/health` saludable. Bookmark previo `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. |
 
 ---
 
