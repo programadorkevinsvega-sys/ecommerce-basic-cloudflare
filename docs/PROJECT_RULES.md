@@ -11,7 +11,7 @@ Todos los recursos operan directamente en el entorno de producción configurado 
 | Recurso | Nombre en Cloudflare | Binding en Worker |
 |---|---|---|
 | **Worker (BFF + módulos)** | `ecommerce-basic-cloudflare` | `src/index.ts` |
-| **D1 Única** | `ecommerce-vega-production` | `env.DB` |
+| **D1 Única** | `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) | `env.DB` |
 | **R2 Bucket** | `ecommerce-vega-production` | `env.MEDIA_BUCKET` |
 | **KV Cache** | ID `a49472c551f04d438a1b7a082d7468d9` | `env.CACHE` |
 | **Queues Principal** | `ecommerce-vega-events-production` | `env.EVENTS_QUEUE` |

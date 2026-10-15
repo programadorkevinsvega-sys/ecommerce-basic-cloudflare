@@ -4,6 +4,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 
 > Las filas históricas de abajo son afirmaciones heredadas de este manifiesto; no representan evidencia individual de que Wrangler las aplicara. La sección final registra la consulta y reconciliación remota realizada durante esta auditoría.
 
+> **Reinicio de prelanzamiento (2026-10-15):** la D1 anterior (`9b69f19a-cad8-4e53-b0d1-0bd2adb11945`) fue eliminada por el propietario. El binding apunta ahora a la D1 nueva `ecommerce-vega-production` (`372088f2-d700-4155-9057-6595815a005e`); las 69 migraciones y el estado inicial se verificaron según el registro final de esta nota.
+
 ---
 
 ## Módulo: `settings`
@@ -337,3 +339,7 @@ La fila de `cms__0002_institutional_pages.sql` para entorno local se conserva co
 ### Preparación de D1 limpia para prelanzamiento (2026-10-15)
 
 Se retiraron de las fuentes canónicas dos semillas ajenas al catálogo/configuración que se conservarán: el stock fijo de un producto de muestra en `inventory__0001_init.sql` y las 16 opiniones ficticias en `reviews__0002_demo_reviews.sql`. Se mantienen las inicializaciones operativas de roles, secuencia de facturas, cobertura y empaques de envío, menús y contenido CMS/blog solicitados para la nueva instalación. Este cambio solo afecta nuevas aplicaciones de migraciones; no borra ni modifica filas en la D1 actualmente aplicada. Las copias de Wrangler se regeneran con `node scripts/build-migrations.js`.
+
+El propietario creó una D1 nueva vacía (`ecommerce-vega-production`, ID `372088f2-d700-4155-9057-6595815a005e`) después de eliminar la anterior. El binding fue actualizado en ambos archivos Wrangler. El runner remoto aplicó y verificó las 69 migraciones conocidas; durante la primera ejecución hubo un HTTP 502 temporal del host de cargas de Cloudflare después de 25 migraciones. El ledger confirmó el punto de corte y el runner se reintentó de forma segura hasta completar las 69.
+
+Consulta de verificación posterior: `d1_migrations=69`, `catalog_products=0`, `inventory_stocks=0` y `reviews_product_reviews=0`. Se conservaron las semillas/valores operativos previstos: `shipping_divipola=48`, `shipping_zones=4`, `shipping_zone_locations=19`, `shipping_carrier_package_profiles=3`, `cms_pages=9`, `cms_blog_posts=1`, `cms_menus=2`, `identity_roles=4` e `invoicing_sequences=1`. Por tanto, la base está migrada pero aún necesita cargar los productos desde el panel antes de vender. No se modificaron R2, KV, secretos ni otros recursos Cloudflare.
