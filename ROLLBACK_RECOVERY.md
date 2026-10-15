@@ -230,8 +230,9 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 
 ## Caché (KV y Cache API)
 
-- Workers Cache sirve HTML SSR público con TTL máximo de 30 segundos; Cloudflare separa las entradas por versión del Worker por defecto. Las solicitudes con cookies llevan `Vary: Cookie` y las rutas privadas/transaccionales son `private, no-store`.
+- Workers Cache sirve HTML SSR público con TTL máximo de 30 segundos; Cloudflare separa las entradas por versión del Worker por defecto. Las respuestas usan la etiqueta `storefront-public-html`, purgada después de mutaciones relevantes exitosas del BFF y de publicaciones programadas del blog. Las solicitudes con cookies llevan `Vary: Cookie` y las rutas privadas/transaccionales son `private, no-store`.
 - Workers Cache usa niveles globales y agrupa solicitudes simultáneas con la misma clave. Aun así, no se toma como fuente de verdad; el checkout y las mutaciones consultan sus fuentes autoritativas.
+- Si falla una invalidación, el Worker registra un evento estructurado sin bloquear una escritura ya confirmada; el TTL limita el dato potencialmente obsoleto a 30 segundos. Vigilar `cache.public_html_invalidation_failed` y confirmar `CF-Cache-Status` y `Age` tras el despliegue.
 - En rollback, el Worker anterior vuelve a su espacio de caché versionado; las entradas expiradas no requieren un purge global. Confirmar `CF-Cache-Status` y `Age` tras el despliegue.
 - Las solicitudes con cookies o `Authorization`, respuestas privadas y los flujos transaccionales no se almacenan. Verificar SEC-WEB-05 antes de ampliar la lista pública.
 

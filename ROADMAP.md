@@ -139,6 +139,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Detalle de producto muestra las políticas comerciales completas: contra entrega disponible o no, cobertura de envío (nacional / local) y modalidad de venta.
 - [x] Layout público: header con navegación, footer informativo y barra de búsqueda interactiva.
 - [x] Cache API de Cloudflare para HTML SSR público anónimo, con TTL corto, claves versionadas y bypass de sesiones y rutas transaccionales.
+- [x] Etiqueta global y purge inmediato de Workers Cache después de mutaciones de catálogo, inventario, promociones, reseñas, contenido, configuración y pedidos; publicación programada incluida.
 - [x] SEO base por página: `title`, `description`, `canonical`, Open Graph (`og:title`, `og:description`), meta `robots` (index, follow).
 - [x] Autenticación de clientes en la tienda: formulario de login interactivo conectado a la API con cookie segura `__Host-session`.
 

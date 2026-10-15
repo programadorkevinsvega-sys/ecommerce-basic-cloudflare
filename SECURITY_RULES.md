@@ -147,7 +147,7 @@ Complementa el contrato de arquitectura (§0, §3, §6.1, §10, §20).
 - **SEC-WEB-02** Cabeceras en todas las respuestas (Worker y Pages): `Content-Security-Policy` estricta, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `frame-ancestors 'none'` / `X-Frame-Options: DENY`, `Permissions-Policy` mínima.
 - **SEC-WEB-03** Solo HTTPS; "Always Use HTTPS" activo y redirección forzada.
 - **SEC-WEB-04** Respuestas con datos autenticados o privados: `Cache-Control: no-store`.
-- **SEC-WEB-05** **Caché pública sin datos personales:** las respuestas cacheables (Cache API/KV) no dependen de cookies ni incluyen datos del cliente; la clave de caché ignora cookies; las rutas personalizadas nunca se cachean.
+- **SEC-WEB-05** **Caché pública sin datos personales:** las respuestas cacheables no dependen de cookies ni incluyen datos del cliente; las rutas personalizadas nunca se cachean. El HTML público se etiqueta y se purga tras mutaciones relevantes exitosas; si falla la invalidación, el TTL debe acotar la obsolescencia.
 - **SEC-WEB-06** La CSP solo autoriza los dominios estrictamente necesarios (Turnstile, el widget/checkout de Wompi según el modo elegido, proveedores de analítica permitidos). Registrar cada excepción y su justificación.
 
 ## 13. Límite de peticiones y abuso (RATE)

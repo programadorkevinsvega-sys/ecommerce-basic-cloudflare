@@ -1,5 +1,6 @@
 import { MiddlewareHandler } from 'hono';
 import { CMS_INSTITUTIONAL_PAGE_ROUTES } from '../cms/CmsInstitutionalPageRoutes.js';
+import { PUBLIC_HTML_CACHE_TAG } from '../../platform/PublicHtmlCacheTag.js';
 
 const CACHE_TTL_SECONDS = 30;
 const DETAIL_PATHS = [/^\/productos\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
@@ -17,8 +18,10 @@ export const PublicHtmlCacheMiddleware: MiddlewareHandler = async (c, next) => {
   if (c.req.method === 'GET' && anonymous && hasAllowedQuery(c.req.raw)
       && isCacheableHtml(response)) {
     headers.set('Cache-Control', `public, max-age=0, s-maxage=${CACHE_TTL_SECONDS}`);
+    headers.set('Cache-Tag', PUBLIC_HTML_CACHE_TAG);
   } else {
     headers.set('Cache-Control', 'private, no-store');
+    headers.delete('Cache-Tag');
   }
 
   c.res = new Response(response.body, {

@@ -440,11 +440,11 @@ El Worker renderiza HTML SSR. No existe un panel general de SEO para todas las e
 
 ## 9. Caché
 
-El Worker tiene habilitado **Workers Cache** en Wrangler para respuestas HTML SSR públicas y anónimas: inicio, catálogo paginado, detalle de producto, colecciones, marcas, blog, páginas institucionales y `/p/:slug`. El TTL compartido es de 30 segundos; el caché separa versiones del Worker por defecto.
+El Worker tiene habilitado **Workers Cache** en Wrangler para respuestas HTML SSR públicas y anónimas: inicio, catálogo paginado, detalle de producto, colecciones, marcas, blog, páginas institucionales y `/p/:slug`. El TTL compartido es de 30 segundos; el caché separa versiones del Worker por defecto. Todas esas respuestas llevan la etiqueta `storefront-public-html`.
 
 La caché se omite para solicitudes con cookies o `Authorization`, búsquedas de texto, rutas no incluidas explícitamente, y páginas de cuenta, carrito, checkout, seguimiento, opiniones con elegibilidad, admin y APIs. `Vary: Cookie` separa la respuesta anónima de solicitudes con sesión. Solo se cachean respuestas 200 `text/html`; los demás casos llevan `private, no-store`. El HTML puede quedar hasta 30 segundos desactualizado; los precios, stock y permisos del checkout se vuelven a validar en sus flujos autoritativos.
 
-Workers Cache se consulta antes de ejecutar el Worker, tiene caché por niveles y agrupa solicitudes simultáneas por la misma clave. Sus aciertos evitan ejecutar el Worker y consultar D1. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding.
+Después de mutaciones exitosas del catálogo, inventario, promociones, reseñas, contenido, configuración o pedidos, el BFF ejecuta `ctx.cache.purge()` para invalidar globalmente esa etiqueta antes de responder. La publicación programada del blog también la invalida. Si Cloudflare rechaza el purge, se registra un error estructurado y el TTL de 30 segundos limita el tiempo de datos desactualizados; el flujo de compra siempre vuelve a validar precio, stock y condiciones en sus fuentes autoritativas. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding. Ver [ADR-0030](./docs/adr/ADR-0030-invalidacion-workers-cache.md).
 
 ---
 

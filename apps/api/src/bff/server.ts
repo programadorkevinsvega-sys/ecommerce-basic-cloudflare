@@ -52,6 +52,7 @@ import { renderBaseLayout } from './views/renderBaseLayout.js';
 import { renderNotFoundPage } from './views/renderNotFoundPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './controllers/storefront/StorefrontNavigationHelper.js';
 import { PublicHtmlCacheMiddleware } from './middleware/PublicHtmlCacheMiddleware.js';
+import { PublicHtmlCacheInvalidationMiddleware } from './middleware/PublicHtmlCacheInvalidationMiddleware.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -69,6 +70,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.auditGateway,
     mutationSnapshots,
   ));
+  app.use('*', PublicHtmlCacheInvalidationMiddleware);
 
   // Storefront Admin API
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));

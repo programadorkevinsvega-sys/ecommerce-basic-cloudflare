@@ -19,11 +19,13 @@ Este archivo es un índice para distinguir estado del código, operación y evid
 | Envíos | La zona local del comercio es Medellín y los diez municipios del Valle de Aburrá. Los destinos nacionales, cobertura y tarifas se consultan a MiPaquete. Configuración de transportadora, empaques, seguimiento e impresión son secciones administrativas distintas. |
 | Guías MiPaquete | El código contempla cotización, creación idempotente, consulta/sincronización y captura de impresión. Una respuesta ambigua sin coincidencia confirmada bloquea el segundo despacho. La documentación disponible no acredita aquí una guía de producción procesada de punta a punta. |
 | Flujo tras mutación del admin | La navegación actual se conserva tras guardar/refrescar mediante estado de sesión; ver `AUDIT_PROGRESS.md` y commit `9dfb476`. |
-| Caché pública | Workers Cache cubre HTML SSR anónimo de catálogo, fichas, colecciones, marcas, blog y páginas institucionales; TTL 30 s, `Vary: Cookie`, `private, no-store` para sesión y rutas transaccionales. Workers KV no almacena respuestas HTML. |
+| Caché pública | Workers Cache cubre HTML SSR anónimo de catálogo, fichas, colecciones, marcas, blog y páginas institucionales; TTL 30 s y etiqueta `storefront-public-html`. El BFF la purga tras escrituras exitosas relevantes y el Cron tras publicar artículos programados. `Vary: Cookie`, `private, no-store` para sesión y rutas transaccionales. Workers KV no almacena respuestas HTML. |
 
 ### Verificación de caché en producción
 
 El commit `028304b` se desplegó el 2026-10-15 como Worker `5e170392-bcba-488b-8072-d6300987d39f`. Dos solicitudes GET consecutivas a `/productos` devolvieron `CF-Cache-Status: MISS` y luego `HIT`. Una solicitud con cookie devolvió `BYPASS` y `Cache-Control: private, no-store`; `/checkout` también devolvió `BYPASS`. Esto confirma la activación del caché en las rutas verificadas, no una prueba de carga ni cobertura de todas las ubicaciones.
+
+La invalidación por etiqueta se desplegó el 2026-10-15 en Worker `658dcbcb-44b9-45c0-9e08-b1d74a519eed`. El endpoint de detalle de producto respondió `MISS` y luego `HIT` tras el despliegue. Typecheck, lint de arquitectura, `git diff --check` y `wrangler deploy --dry-run` pasaron. La ejecución real de una mutación autenticada para observar el `purge` no se realizó; queda pendiente observar el log/evento en la primera escritura operativa. Si el purge falla, `cache.public_html_invalidation_failed` queda registrado y el TTL sigue limitando obsolescencia a 30 segundos.
 
 ## Migraciones y datos
 

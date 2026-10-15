@@ -4,6 +4,7 @@ import { createBffApp } from './bff/server.js';
 import { JsonLogger } from './platform/JsonLogger.js';
 import { notifyShippingGuideAvailable } from './bff/controllers/shipping/notifyShippingGuideAvailable.js';
 import { notifyOrderStatusChanged } from './bff/controllers/orders/notifyOrderStatusChanged.js';
+import { purgePublicHtmlCache } from './platform/PurgePublicHtmlCache.js';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -42,7 +43,10 @@ export default {
       try {
         const published = await compositionRoot.cmsGateway.publishScheduledBlogPosts(scheduledAt.toISOString(), 50);
         for (const id of published) await compositionRoot.auditGateway.record({ actorId: 'scheduled-blog-publisher', actorType: 'system', action: 'cms.blog_post.published_by_schedule', entityType: 'cms_blog_post', entityId: id, changes: { status: 'published', publishedAt: scheduledAt.toISOString() } });
-        if (published.length) logger.info('Artículos del blog publicados por programación', { count: published.length });
+        if (published.length) {
+          await purgePublicHtmlCache(ctx.cache);
+          logger.info('Artículos del blog publicados por programación', { count: published.length, cacheInvalidated: true });
+        }
       } catch (error) { logger.error('Falló la publicación programada del blog', error); }
     })());
 
