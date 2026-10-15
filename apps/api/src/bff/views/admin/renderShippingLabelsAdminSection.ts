@@ -1,0 +1,5 @@
+export function renderShippingLabelsAdminSection(): string {
+  return `<header class="shipping-heading"><div><h1 id="shipping-labels-title">Imprimir guías</h1><p>Guías listas para impresión. La generación y el seguimiento se gestionan desde sus páginas respectivas.</p></div><button class="shipping-action primary" type="button" onclick="printUnprintedGuideBatch()">Imprimir lote visible</button></header>
+    <section class="card tracking-admin-card"><div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Pedido</th><th>Transportadora</th><th>Guía</th><th>Acción</th></tr></thead><tbody id="shipment-label-body"><tr><td colspan="4" class="shipping-empty">Cargando guías…</td></tr></tbody></table></div>
+    <nav class="admin-pagination" id="shipment-label-pagination"><button class="admin-page-button" type="button" data-page-direction="previous" disabled>Anterior</button><span>Página 1</span><button class="admin-page-button" type="button" data-page-direction="next" disabled>Siguiente</button></nav></section>`;
+}

@@ -74,6 +74,7 @@ export function renderShippingFormsScript(): string {
       document.querySelectorAll('[data-shipping-heading]').forEach(heading => { heading.hidden = page !== 'zones'; });
       if (page === 'locations') loadShippingDirectory(shippingDirectoryPage);
       if (page === 'tracking') loadAdminOrderTracking(1);
+      if (page === 'print-labels') loadShipmentLabels(1);
     }
 
     function closeShippingZoneModal() {

@@ -13,6 +13,7 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('shipping', 'Transportadoras', "switchTab('shipping', this); showAdminShippingPage('carriers')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Empaques', "switchTab('shipping', this); showAdminShippingPage('packages')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Seguimiento de pedidos', "switchTab('shipping', this); showAdminShippingPage('tracking')", false, undefined, undefined, true)}
+        ${navItem('shipping', 'Imprimir guías', "switchTab('shipping', this); showAdminShippingPage('print-labels')", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Pagos y facturas</h2><ul>
         ${navItem('payments', 'Recaudos contra entrega', "switchTab('payments', this); showAdminPaymentPage('collections'); loadAdminPayments()", false, undefined, undefined, true)}

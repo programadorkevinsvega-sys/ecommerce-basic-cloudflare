@@ -4,6 +4,7 @@ import { renderShippingLocationRows } from './renderShippingLocationRows.js';
 import { CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGateway.js';
 import { renderMiPaqueteConfigSection } from './renderMiPaqueteConfigSection.js';
 import { renderShippingPackagesSection } from './renderShippingPackagesSection.js';
+import { renderShippingLabelsAdminSection } from './renderShippingLabelsAdminSection.js';
 
 export function renderShippingManagementSection(zones: ShippingZoneDto[], divipolaLocations: DivipolaLocationDto[] = [], carrierConfig?: CarrierIntegrationConfigDto): string {
   const divipolaMap = new Map<string, string>();
@@ -35,6 +36,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
         <nav class="admin-pagination" id="shipping-locations-pagination" aria-label="Paginación de municipios DANE"><button class="admin-page-button" type="button" data-page-direction="previous" disabled>Anterior</button><span aria-live="polite">Página 1</span><button class="admin-page-button" type="button" data-page-direction="next" disabled>Siguiente</button></nav>
       </div>
     </section>
+    <section class="shipping-page-panel" data-shipping-panel="print-labels" hidden>${renderShippingLabelsAdminSection()}</section>
     <div id="shippingZoneModal" class="shipping-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="shFormTitle">
       <button class="shipping-modal-backdrop" type="button" aria-label="Cerrar formulario de zona" onclick="closeShippingZoneModal()"></button>
       <section class="shipping-modal-dialog shipping-zone-dialog"><header><div><h2 id="shFormTitle">Crear nueva zona de envío</h2><p>Define cobertura, tarifa, entrega y disponibilidad contra entrega.</p></div><button type="button" class="shipping-modal-close" aria-label="Cerrar" onclick="closeShippingZoneModal()">×</button></header>

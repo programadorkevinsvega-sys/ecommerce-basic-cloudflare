@@ -8,11 +8,11 @@ export function renderOrderTrackingAdminScript(): string {
     let labelPage = 1; let labelItems = []; let labelTotal = 0;
     async function loadShipmentLabels(page = labelPage) {
       labelPage = page; const body = document.getElementById('shipment-label-body'); if (!body) return;
-      const params = new URLSearchParams({ page: String(page), pageSize: '10' });
+      const params = new URLSearchParams({ page: String(page), pageSize: '10', unprinted: 'true' });
       try { const response = await fetch('/api/v1/admin/shipping/mipaquete/labels?' + params);
         const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudieron cargar las guías');
         labelItems = data.items || []; labelTotal = data.total || 0;
-        body.innerHTML = labelItems.length ? labelItems.map((item) => '<tr><td>#' + escapeHtml(item.orderId) + '</td><td>' + escapeHtml(item.carrierName || 'MiPaquete') + '</td><td>' + escapeHtml(item.guideNumber || item.mipaqueteCode || 'Pendiente') + '</td><td>' + (item.printedAt ? 'Impresa · ' + escapeHtml(new Date(item.printedAt).toLocaleString('es-CO')) : 'Pendiente') + '</td><td><div class="shipping-row-actions">' + (item.guideUrl ? '<button class="shipping-action" type="button" data-print-id="' + escapeHtml(item.id) + '">Abrir guía</button>' : '') + (!item.printedAt && item.guideUrl ? '<button class="shipping-action" type="button" data-mark-id="' + escapeHtml(item.id) + '">Marcar impresa</button>' : '') + '</div></td></tr>').join('') : '<tr><td colspan="5" class="shipping-empty">Aún no hay guías registradas.</td></tr>';
+        body.innerHTML = labelItems.length ? labelItems.map((item) => '<tr><td>#' + escapeHtml(item.orderId) + '</td><td>' + escapeHtml(item.carrierName || 'MiPaquete') + '</td><td>' + escapeHtml(item.guideNumber || item.mipaqueteCode || '—') + '</td><td><div class="shipping-row-actions"><button class="shipping-action" type="button" data-print-id="' + escapeHtml(item.id) + '">Abrir guía</button><button class="shipping-action" type="button" data-mark-id="' + escapeHtml(item.id) + '">Marcar impresa</button></div></td></tr>').join('') : '<tr><td colspan="4" class="shipping-empty">No hay guías pendientes de impresión.</td></tr>';
         body.querySelectorAll('[data-print-id]').forEach((button) => button.addEventListener('click', () => { const item = labelItems.find((entry) => entry.id === button.dataset.printId); if (item) window.open(item.guideUrl, '_blank', 'noopener'); }));
         body.querySelectorAll('[data-mark-id]').forEach((button) => button.addEventListener('click', () => markShipmentPrinted(button.dataset.markId)));
         const pager = document.getElementById('shipment-label-pagination'); const pages = Math.max(1, Math.ceil(labelTotal / 10));
@@ -130,7 +130,6 @@ export function renderOrderTrackingAdminScript(): string {
     document.getElementById('order-tracking-admin-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadAdminOrderTracking(trackingAdminPage + 1));
     document.getElementById('shipment-label-pagination')?.querySelector('[data-page-direction="previous"]')?.addEventListener('click', () => loadShipmentLabels(Math.max(1, labelPage - 1)));
     document.getElementById('shipment-label-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadShipmentLabels(labelPage + 1));
-    loadShipmentLabels();
     window.loadAdminOrderTracking = loadAdminOrderTracking;
     window.openOrderTrackingEditor = openOrderTrackingEditor;
     window.closeOrderTrackingEditor = closeOrderTrackingEditor;
