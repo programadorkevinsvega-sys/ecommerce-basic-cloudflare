@@ -45,10 +45,10 @@ export function renderMenuAdminScript(): string {
       const target = item.target === '_blank' ? '_blank' : '_self';
       const children = item.children || [];
       const actions = '<div class="menu-row-actions">' +
-        (index ? '<button type="button" aria-label="Subir" onclick="moveAdminMenuItem(\''+id+'\',-1)">↑</button>' : '') +
-        (index < total-1 ? '<button type="button" aria-label="Bajar" onclick="moveAdminMenuItem(\''+id+'\',1)">↓</button>' : '') +
-        (isGroup && depth < 2 ? '<button type="button" onclick="addAdminMenuChild(\''+id+'\',\'link\')">+ Enlace</button><button type="button" onclick="addAdminMenuChild(\''+id+'\',\'group\')">+ Grupo</button>' : '') +
-        '<button type="button" class="menu-remove" onclick="removeAdminMenuItem(\''+id+'\')">Eliminar</button></div>';
+        (index ? '<button type="button" aria-label="Subir" onclick="moveAdminMenuItem(\\''+id+'\\',-1)">↑</button>' : '') +
+        (index < total-1 ? '<button type="button" aria-label="Bajar" onclick="moveAdminMenuItem(\\''+id+'\\',1)">↓</button>' : '') +
+        (isGroup && depth < 2 ? '<button type="button" onclick="addAdminMenuChild(\\''+id+'\\',\\'link\\')">+ Enlace</button><button type="button" onclick="addAdminMenuChild(\\''+id+'\\',\\'group\\')">+ Grupo</button>' : '') +
+        '<button type="button" class="menu-remove" onclick="removeAdminMenuItem(\\''+id+'\\')">Eliminar</button></div>';
       const row = '<article class="menu-item-row" data-depth="'+depth+'" data-menu-id="'+id+'">' +
         '<label>Nombre<input data-menu-field="title" maxlength="80" value="'+title+'" required></label>' +
         '<label>Tipo<select data-menu-field="type"><option value="link" '+(!isGroup?'selected':'')+'>Enlace</option><option value="group" '+(isGroup?'selected':'')+'>Grupo</option></select></label>' +

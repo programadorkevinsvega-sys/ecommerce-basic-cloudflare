@@ -3,6 +3,7 @@ import { CmsMenuAdminController } from '../src/bff/controllers/cms/CmsMenuAdminC
 import { CmsGateway } from '../src/bff/gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js';
 import { renderMenuManagementSection } from '../src/bff/views/admin/renderMenuManagementSection.js';
+import { renderMenuAdminScript } from '../src/bff/views/admin/renderMenuAdminScript.js';
 import { SaveMenuUseCase } from '../src/modules/cms/application/use-cases/SaveMenuUseCase.js';
 import { Menu } from '../src/modules/cms/domain/entities/Menu.js';
 
@@ -38,5 +39,9 @@ describe('CMS menu management', () => {
     expect(html).toContain('Menú principal');
     expect(html).toContain('Pie de página');
     expect(html).toContain('saveAdminMenu()');
+  });
+
+  it('renders a syntactically valid management script', () => {
+    expect(() => new Function(renderMenuAdminScript())).not.toThrow();
   });
 });
