@@ -13,10 +13,22 @@ export function renderFreeShippingRulesScript(): string {
         const response = await fetch('/api/v1/admin/shipping/free-shipping-rules?page=' + freeShippingPage);
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'No se pudieron cargar las reglas.');
-        freeShippingRules.clear(); result.items.forEach(item => freeShippingRules.set(item.id, item));
-        body.innerHTML = result.items.length ? result.items.map(rule => {
-          return '<tr><td><strong>' + escapeHtml(rule.name) + '</strong></td><td>' + escapeHtml(rule.targetName) + '</td><td>' + freeShippingFmt(rule.minOrderAmountCents) + '</td><td>' + new Date(rule.startsAt).toLocaleDateString('es-CO') + ' – ' + new Date(rule.endsAt).toLocaleDateString('es-CO') + '</td><td>' + (rule.isActive ? 'Activa' : 'Inactiva') + '</td><td class="admin-actions"><button class="btn-action btn-action-view" onclick="viewFreeShippingRule(\'' + rule.id + '\')">Ver</button><button class="btn-action btn-action-edit" onclick="editFreeShippingRule(\'' + rule.id + '\')">Editar</button><button class="btn-action btn-action-hide" onclick="toggleFreeShippingRule(\'' + rule.id + '\')">' + (rule.isActive ? 'Desactivar' : 'Activar') + '</button><button class="btn-action btn-action-delete" onclick="deleteFreeShippingRule(\'' + rule.id + '\')">Eliminar</button></td></tr>';
+        freeShippingRules.clear();
+        const items = Array.isArray(result.items) ? result.items : [];
+        items.forEach(item => freeShippingRules.set(item.id, item));
+        body.innerHTML = items.length ? items.map(rule => {
+          return '<tr><td><strong>' + escapeHtml(rule.name) + '</strong></td><td>' + escapeHtml(rule.targetName) + '</td><td>' + freeShippingFmt(rule.minOrderAmountCents) + '</td><td>' + new Date(rule.startsAt).toLocaleDateString('es-CO') + ' – ' + new Date(rule.endsAt).toLocaleDateString('es-CO') + '</td><td>' + (rule.isActive ? 'Activa' : 'Inactiva') + '</td><td class="admin-actions"><button class="btn-action btn-action-view" data-free-shipping-action="view" data-rule-id="' + escapeHtml(rule.id) + '">Ver</button><button class="btn-action btn-action-edit" data-free-shipping-action="edit" data-rule-id="' + escapeHtml(rule.id) + '">Editar</button><button class="btn-action btn-action-hide" data-free-shipping-action="toggle" data-rule-id="' + escapeHtml(rule.id) + '">' + (rule.isActive ? 'Desactivar' : 'Activar') + '</button><button class="btn-action btn-action-delete" data-free-shipping-action="delete" data-rule-id="' + escapeHtml(rule.id) + '">Eliminar</button></td></tr>';
         }).join('') : '<tr><td colspan="6">No hay reglas de envío gratis.</td></tr>';
+        body.querySelectorAll('[data-free-shipping-action]').forEach(button => {
+          button.addEventListener('click', () => {
+            const action = button.dataset.freeShippingAction;
+            const id = button.dataset.ruleId;
+            if (action === 'view') viewFreeShippingRule(id);
+            if (action === 'edit') editFreeShippingRule(id);
+            if (action === 'toggle') toggleFreeShippingRule(id);
+            if (action === 'delete') deleteFreeShippingRule(id);
+          });
+        });
         document.getElementById('free-shipping-page-label').textContent = (result.total ? (freeShippingPage - 1) * 10 + 1 + '–' + Math.min(freeShippingPage * 10, result.total) + ' de ' + result.total : '0 registros') + ' · Página ' + freeShippingPage;
         document.getElementById('free-shipping-prev').disabled = freeShippingPage <= 1;
         document.getElementById('free-shipping-next').disabled = !result.hasMore;
