@@ -57,7 +57,8 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
   const carrierConfigRepo = new D1CarrierConfigRepository(env.DB);
   const carrierQuoteRepo = new D1CarrierQuoteRepository(env.DB);
   const carrierShipmentRepo = new D1CarrierShipmentRepository(env.DB);
-  const carrierConfig = readMiPaqueteApiConfig({ secret: env.MI_PAQUETE_TRANSPORTADORA, apiUrl: env.MI_PAQUETE_API_URL });
+  const carrierConfig = readMiPaqueteApiConfig({ secret: env.MI_PAQUETE_TRANSPORTADORA,
+    apiUrl: env.MI_PAQUETE_API_URL, environment: env.ENVIRONMENT });
   const carrier = carrierConfig
     ? new MiPaqueteCarrierAdapter(new MiPaqueteHttpClient(carrierConfig))
     : new UnavailableShippingCarrierAdapter();

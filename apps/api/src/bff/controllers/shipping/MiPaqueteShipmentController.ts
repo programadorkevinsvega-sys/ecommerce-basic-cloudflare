@@ -5,9 +5,10 @@ import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 
 export class MiPaqueteShipmentController {
-  public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway }): Hono<{ Bindings: Env }> {
+  public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway }): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     app.post('/api/v1/admin/orders/:orderId/mipaquete', createAuthMiddleware(deps.identity, 'admin', 'shipping:update'), async (c) => {
       const order = await deps.orders.getOrder(c.req.param('orderId'));
@@ -29,6 +30,10 @@ export class MiPaqueteShipmentController {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });
+        await deps.audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
+          action: 'shipping.mipaquete.shipment.created_or_retrieved', entityType: 'shipping_carrier_shipment',
+          entityId: shipment.id, changes: { orderId: order.id, mipaqueteCode: shipment.mipaqueteCode,
+            guideNumber: shipment.guideNumber, status: shipment.status } });
         return c.json({ success: true, shipment });
       } catch (error) { return c.json({ error: safeMessage(error) }, 409); }
     });
@@ -50,6 +55,10 @@ export class MiPaqueteShipmentController {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });
+        await deps.audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
+          action: 'shipping.mipaquete.shipment.synced', entityType: 'shipping_carrier_shipment',
+          entityId: shipment.id, changes: { orderId: shipment.orderId, mipaqueteCode: shipment.mipaqueteCode,
+            guideNumber: shipment.guideNumber, status: shipment.status } });
         return c.json({ success: true, shipment });
       } catch { return c.json({ error: 'No se pudo consultar el estado con MiPaquete' }, 502); }
     });

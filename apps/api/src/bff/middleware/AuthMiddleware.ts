@@ -1,6 +1,14 @@
 import { MiddlewareHandler } from 'hono';
 import { IdentityGateway, AuthenticatedSession } from '../gateways/identity/IdentityGateway.js';
 
+declare module 'hono' {
+  interface ContextVariableMap {
+    actorId: string;
+    actorType: 'customer' | 'admin';
+    permissions: string[];
+  }
+}
+
 export function createAuthMiddleware(
   gateway: IdentityGateway,
   requiredActorType: 'customer' | 'admin',

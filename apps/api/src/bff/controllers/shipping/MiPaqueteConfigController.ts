@@ -4,6 +4,7 @@ import { Env } from '../../../platform/Env.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 
 const ConfigInput = z.object({
   enabled: z.boolean(),
@@ -19,7 +20,7 @@ const ConfigInput = z.object({
 }).strict();
 
 export class MiPaqueteConfigController {
-  public static createRoutes(shipping: ShippingGateway, identity: IdentityGateway): Hono<{ Bindings: Env }> {
+  public static createRoutes(shipping: ShippingGateway, identity: IdentityGateway, audit: AuditGateway): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     app.get('/api/v1/admin/shipping/mipaquete/config',
       createAuthMiddleware(identity, 'admin', 'shipping:read'), async (c) => {
@@ -32,8 +33,14 @@ export class MiPaqueteConfigController {
       createAuthMiddleware(identity, 'admin', 'shipping:update'), async (c) => {
         const parsed = ConfigInput.safeParse(await c.req.json().catch(() => null));
         if (!parsed.success) return c.json({ error: 'Revisa los datos logísticos de MiPaquete' }, 400);
+        if (parsed.data.enabled && !shipping.isCarrierApiConfigured()) {
+          return c.json({ error: 'Configura el secret y un host HTTPS productivo válido en Cloudflare antes de activar.' }, 409);
+        }
         try {
           const config = await shipping.updateCarrierConfig({ ...parsed.data, updatedAt: new Date().toISOString() });
+          await audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
+            action: 'shipping.mipaquete.configuration.updated', entityType: 'shipping_carrier_config',
+            entityId: 'default', changes: { ...config } });
           return c.json({ success: true, config });
         } catch {
           return c.json({ error: 'No fue posible guardar la configuración logística' }, 400);

@@ -70,9 +70,10 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', StorefrontAdminController.createRoutes(cRoot.storefrontGateway, cRoot.identityGateway));
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
-  app.route('/', MiPaqueteConfigController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
+  app.route('/', MiPaqueteConfigController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/', MiPaqueteShipmentController.createRoutes({ identity: cRoot.identityGateway,
-    orders: cRoot.ordersGateway, settings: cRoot.settingsGateway, shipping: cRoot.shippingGateway }));
+    orders: cRoot.ordersGateway, settings: cRoot.settingsGateway, shipping: cRoot.shippingGateway,
+    audit: cRoot.auditGateway }));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CmsMenuAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));

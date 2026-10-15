@@ -24,4 +24,8 @@ describe('readMiPaqueteApiConfig', () => {
       expect(readMiPaqueteApiConfig({ secret: 'a'.repeat(32), apiUrl })).toBeNull();
     }
   });
+
+  it('rejects documented development hosts in production', () => {
+    expect(readMiPaqueteApiConfig({ secret: 'a'.repeat(32), apiUrl: 'https://api-v2.dev.mpr.mipaquete.com', environment: 'production' })).toBeNull();
+  });
 });
