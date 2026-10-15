@@ -343,3 +343,16 @@ Se retiraron de las fuentes canónicas dos semillas ajenas al catálogo/configur
 El propietario creó una D1 nueva vacía (`ecommerce-vega-production`, ID `372088f2-d700-4155-9057-6595815a005e`) después de eliminar la anterior. El binding fue actualizado en ambos archivos Wrangler. El runner remoto aplicó y verificó las 69 migraciones conocidas; durante la primera ejecución hubo un HTTP 502 temporal del host de cargas de Cloudflare después de 25 migraciones. El ledger confirmó el punto de corte y el runner se reintentó de forma segura hasta completar las 69.
 
 Consulta de verificación posterior: `d1_migrations=69`, `catalog_products=0`, `inventory_stocks=0` y `reviews_product_reviews=0`. Se conservaron las semillas/valores operativos previstos: `shipping_divipola=48`, `shipping_zones=4`, `shipping_zone_locations=19`, `shipping_carrier_package_profiles=3`, `cms_pages=9`, `cms_blog_posts=1`, `cms_menus=2`, `identity_roles=4` e `invoicing_sequences=1`. Por tanto, la base está migrada pero aún necesita cargar los productos desde el panel antes de vender. No se modificaron R2, KV, secretos ni otros recursos Cloudflare.
+
+### Registros iniciales de gestión de catálogo y marketing (2026-10-15)
+
+Se añadieron y aplicaron cuatro migraciones compatibles hacia adelante:
+
+| Migración | Prefijo | Registros incluidos |
+|---|---|---|
+| `catalog__0013_catalog_management_starter_records.sql` | `catalog_*` | 3 categorías, 3 marcas, 3 atributos, 3 colecciones, 3 productos base en borrador, 3 variantes relacionadas y relaciones de colección/categoría/búsqueda. |
+| `storefront__0004_storefront_management_starter_records.sql` | `storefront_*` | 3 banners promocionales, 3 informativos y 3 anuncios de barra superior. |
+| `promotions__0004_promotion_management_starter_records.sql` | `promotions_*` | 3 reglas de descuento y 3 cupones. |
+| `shipping__0012_free_shipping_starter_rules.sql` | `shipping_*` | 3 reglas de envío gratis. |
+
+Las cuatro migraciones se aplicaron a `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) con el runner remoto. Verificación del ledger: 73 migraciones. Consultas confirmaron tres registros en cada grupo solicitado y cero variantes sin producto. Los productos base están en borrador y sin stock; banners, anuncios, descuentos, cupones y reglas de envío gratis están inactivos, por lo que estos datos no publican contenido ni conceden descuentos/envíos al cliente. Las URLs de las seis imágenes de banner respondieron HTTP 200 al aplicar la migración. Los campos opcionales `image_media_id` y `og_image_id` quedaron nulos porque todavía no hay archivos de marca/colección/producto cargados como activos de Media/R2; no se asignaron identificadores ficticios.

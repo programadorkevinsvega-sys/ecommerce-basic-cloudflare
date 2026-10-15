@@ -1,0 +1,18 @@
+-- Contenido inicial para gestión; permanece inactivo para no alterar la tienda pública.
+INSERT OR IGNORE INTO storefront_banners (
+ id,title,description,banner_type,button_text,placement,image_url,link_url,alt_text,is_active,
+ starts_at,ends_at,sort_order,created_at,updated_at
+) VALUES
+('banner-promo-catalog','Accesorios para acompañar tu día','Descubre diseño y funcionalidad en una selección para todos los días.','promotional','Explorar catálogo','home','https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1600&q=85','/productos','Accesorios de moda y gafas de sol sobre una mesa',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',1,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('banner-promo-collections','Encuentra tu próxima colección','Explora selecciones organizadas para tus planes y tu estilo.','promotional','Ver colecciones','home','https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1600&q=85','/colecciones','Persona con atuendo contemporáneo caminando por la ciudad',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',2,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('banner-promo-brands','Conoce nuestras marcas','Diseños seleccionados para combinar comodidad, calidad y estilo.','promotional','Ver marcas','home','https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1600&q=85','/marcas','Selección de prendas y accesorios de moda',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',3,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('banner-info-quality','Detalles pensados para durar','Conoce materiales, acabados y características de cada producto.','informative','Conocer productos','home','https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=85','/productos','Prendas y accesorios cuidadosamente seleccionados',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',4,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('banner-info-shipping','Opciones de envío claras','Consulta las opciones disponibles para tu municipio durante la compra.','informative','Ver catálogo','home','https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1600&q=85','/productos','Paquete de compra preparado para envío',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',5,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('banner-info-journal','Ideas y novedades Vega Store','Lee guías e información para elegir los productos que van contigo.','informative','Visitar el blog','home','https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1600&q=85','/blog','Espacio de trabajo con cuaderno y elementos de lectura',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z',6,'2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z');
+
+INSERT OR IGNORE INTO storefront_announcements (
+ id,message,placement,link_url,is_active,starts_at,ends_at,created_at,updated_at
+) VALUES
+('announcement-topbar-shipping','Compra en línea y consulta el costo de envío para tu destino.','top_bar','/productos',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z','2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('announcement-topbar-new','Descubre las novedades y selecciones de Vega Store.','top_bar','/colecciones',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z','2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z'),
+('announcement-topbar-support','¿Necesitas ayuda? Revisa nuestras respuestas y canales de atención.','top_bar','/p/atencion-pqrs',0,'2026-10-15T00:00:00.000Z','2030-12-31T23:59:59.000Z','2026-10-15T00:00:00.000Z','2026-10-15T00:00:00.000Z');
