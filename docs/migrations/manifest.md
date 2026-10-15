@@ -104,7 +104,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `cms__0003_blog.sql` | v3 | Local (Miniflare/D1) | 2026-10-14 | Este release | ✅ Desde D1 vacía, upgrade legado y segunda pasada idempotente; publicación/SSR verificadas |
 | `cms__0004_blog_welcome_article.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `8620b98` | ✅ Aplicada con runner; ledger, artículo, autor, categoría y relación verificados; FK check vacío |
 | `cms__0004_blog_welcome_article.sql` | v4 | Local (SQLite/D1) | 2026-10-14 | `8620b98` | ✅ Upgrade legado; semilla repetida sin duplicados; 46 migraciones desde cero y segunda pasada |
-| `cms__0005_menu_management.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-14 | Este release | ✅ Aplicada con el runner; ledger, columna, enlaces previos y seguimiento bajo «Ayuda» verificados |
+| `cms__0005_menu_management.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `9695ab8` | ✅ Aplicada con el runner; ledger, columna, enlaces previos y seguimiento bajo «Ayuda» verificados |
 
 `cms__0005_menu_management.sql` agrega `item_type` con valor predeterminado `link`, conserva los enlaces existentes y crea la navegación inicial solo cuando faltan rutas o menús. Incluye el enlace de seguimiento dentro del grupo `Ayuda` del encabezado y del pie de página. Si se revierte el Worker, no retirar la columna ni el contenido; conservarlos para una siguiente versión.
 
