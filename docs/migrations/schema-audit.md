@@ -316,6 +316,7 @@ Declaraciones de columnas/restricciones:
 - `url TEXT NOT NULL`
 - `sort_order INTEGER NOT NULL DEFAULT 0`
 - `target TEXT DEFAULT '_self'`
+- `item_type TEXT NOT NULL DEFAULT 'link' CHECK (item_type IN ('link', 'group'))` (añadida por `cms__0005_menu_management.sql`)
 - `created_at TEXT NOT NULL`
 
 Índices: `idx_cms_menu_items_menu_id` (menu_id), `idx_cms_menu_items_parent_id` (parent_id)

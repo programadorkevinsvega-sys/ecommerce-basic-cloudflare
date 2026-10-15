@@ -6,12 +6,14 @@ import { Menu } from './domain/entities/Menu.js';
 import { SaveBlogPostInput } from './application/use-cases/SaveBlogPostUseCase.js';
 import { BlogPost, BlogPostStatus } from './domain/entities/BlogPost.js';
 import { BlogAuthor, BlogCategory, BlogTaxonomyInput } from './domain/entities/BlogAuthor.js';
+import { SaveMenuInput } from './application/use-cases/SaveMenuUseCase.js';
 
 export interface ICmsPublicApi {
   createPage(input: CreatePageInput): Promise<Page>;
   updatePageContent(input: UpdatePageContentInput): Promise<Page>;
   getPageBySlug(slug: string): Promise<Page>;
   getMenuByCode(code: string): Promise<Menu>;
+  saveMenu(input: SaveMenuInput): Promise<Menu>;
   listPages(limit?: number, offset?: number, status?: string): Promise<Page[]>;
   deletePage(id: string): Promise<void>;
   saveBlogPost(input: SaveBlogPostInput): Promise<BlogPost>;
@@ -60,6 +62,10 @@ export class CmsPublicApi implements ICmsPublicApi {
     const res = await this.container.getMenuByCodeUseCase.execute(code);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async saveMenu(input: SaveMenuInput): Promise<Menu> {
+    return this.container.saveMenuUseCase.execute(input);
   }
 
   public async listPages(limit?: number, offset?: number, status?: string): Promise<Page[]> {

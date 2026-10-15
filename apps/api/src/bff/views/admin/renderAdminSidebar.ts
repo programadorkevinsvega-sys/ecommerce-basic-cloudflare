@@ -36,6 +36,7 @@ export function renderAdminSidebar(adminLabel: string): string {
       </ul></section>
       <section class="admin-nav-group"><h2>CMS</h2><ul>
         ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
+        ${navItem('menus', 'Menús', "switchTab('menus', this); loadAdminMenus()", false, undefined, undefined, true)}
         ${navItem('blog', 'Blog', "switchTab('blog', this); blogInit()", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Sistema</h2><ul>

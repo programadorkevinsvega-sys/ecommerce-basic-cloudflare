@@ -50,11 +50,7 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
     ]);
 
     const headerMenuItems: LayoutMenuItem[] = headerMenu?.items && headerMenu.items.length > 0
-      ? headerMenu.items.map((it: CmsMenuItemDto) => ({
-          title: it.title,
-          url: it.url,
-          target: it.target,
-        }))
+      ? headerMenu.items.map(mapMenuItem)
       : [
           { title: 'Inicio', url: '/' },
           { title: 'Catálogo', url: '/productos' },
@@ -65,22 +61,9 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
       /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
 
     const cleanHeaderMenuItems = headerMenuItems.filter((item) => !isLegalItem(item));
-    if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/marcas')) {
-      cleanHeaderMenuItems.push({ title: 'Marcas', url: '/marcas' });
-    }
-    if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/colecciones')) {
-      cleanHeaderMenuItems.push({ title: 'Colecciones', url: '/colecciones' });
-    }
-    if (!cleanHeaderMenuItems.some((item) => item.url.split(/[?#]/, 1)[0] === '/blog')) {
-      cleanHeaderMenuItems.push({ title: 'Blog', url: '/blog' });
-    }
 
     const configuredFooterItems: LayoutMenuItem[] = footerMenu?.items && footerMenu.items.length > 0
-      ? footerMenu.items.map((it: CmsMenuItemDto) => ({
-          title: it.title,
-          url: it.url,
-          target: it.target,
-        }))
+      ? footerMenu.items.map(mapMenuItem)
       : [
           { title: 'Inicio', url: '/' },
           { title: 'Catálogo Completo', url: '/productos' },
@@ -103,11 +86,20 @@ export async function getStorefrontNavMenus(cmsGateway: CmsGateway, settingsGate
         { title: 'Catálogo', url: '/productos' },
         { title: 'Marcas', url: '/marcas' },
         { title: 'Blog', url: '/blog' },
+        { title: 'Ayuda', url: '', type: 'group', children: [{ title: 'Seguimiento de pedidos', url: '/seguimiento-pedido' }] },
       ],
       footerMenuItems: [
-        { title: 'Términos y Condiciones', url: '/p/terminos-y-condiciones' },
+        { title: 'Ayuda', url: '', type: 'group', children: [{ title: 'Seguimiento de pedidos', url: '/seguimiento-pedido' }] },
+        { title: 'Información', url: '', type: 'group', children: [{ title: 'Términos y Condiciones', url: '/terminos-y-condiciones' }] },
       ],
       footerStoreProfile: undefined,
     };
   }
+}
+
+function mapMenuItem(item: CmsMenuItemDto): LayoutMenuItem {
+  return {
+    title: item.title, url: item.url, target: item.target, type: item.type || 'link',
+    children: item.children?.map(mapMenuItem),
+  };
 }

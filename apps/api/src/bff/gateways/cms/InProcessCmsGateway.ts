@@ -51,6 +51,11 @@ export class InProcessCmsGateway implements CmsGateway {
     return menu.toPrimitives() as CmsMenuDto;
   }
 
+  public async saveMenu(input: Parameters<CmsGateway['saveMenu']>[0]): Promise<CmsMenuDto> {
+    const menu = await this.publicApi.saveMenu(input as any);
+    return menu.toPrimitives() as CmsMenuDto;
+  }
+
   public async listPages(limit?: number, offset?: number, status?: string): Promise<CmsPageDto[]> {
     const pages = await this.publicApi.listPages(limit, offset, status);
     return pages.map((p) => p.toPrimitives() as CmsPageDto);

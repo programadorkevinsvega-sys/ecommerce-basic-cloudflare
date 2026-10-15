@@ -433,7 +433,7 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 
 ### 6.2 Panel de administración (Pages SPA)
 
-`/admin/login` · `/admin` (dashboard; grupo CMS con pantallas independientes de Páginas CMS y Blog) · `/admin/products` · `/admin/categories` · `/admin/brands` · `/admin/media` · `/admin/carousel` · `/admin/banners` · `/admin/announcements` · `/admin/promotions` · `/admin/coupons` · `/admin/cms/pages` · `/admin/cms/menus` · `/admin/seo` · `/admin/seo/redirects` · `/admin/inventory` · `/admin/shipping` · `/admin/credit` · `/admin/payments` · `/admin/invoices` · `/admin/notifications` · `/admin/orders` · `/admin/customers` · `/admin/users` · `/admin/roles` · `/admin/settings` · `/admin/audit`
+`/admin/login` · `/admin` (dashboard; grupo CMS con pantallas independientes de Páginas CMS, Menús y Blog) · `/admin/products` · `/admin/categories` · `/admin/brands` · `/admin/media` · `/admin/carousel` · `/admin/banners` · `/admin/announcements` · `/admin/promotions` · `/admin/coupons` · `/admin/seo` · `/admin/seo/redirects` · `/admin/inventory` · `/admin/shipping` · `/admin/credit` · `/admin/payments` · `/admin/invoices` · `/admin/notifications` · `/admin/orders` · `/admin/customers` · `/admin/users` · `/admin/roles` · `/admin/settings` · `/admin/audit`
 
 ### 6.3 API (Worker, versionada)
 

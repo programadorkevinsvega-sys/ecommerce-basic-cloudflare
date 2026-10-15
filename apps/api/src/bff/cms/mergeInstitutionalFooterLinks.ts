@@ -14,8 +14,21 @@ export function mergeInstitutionalFooterLinks(
     const item: LayoutMenuItem = {
       title: route.title,
       url: route.path,
+      type: 'link',
       pending: page.status !== 'published',
     };
+    const informationGroup = items.find((candidate) => candidate.type === 'group' && /^(información|legal)$/i.test(candidate.title.trim()));
+    if (informationGroup) {
+      const rootIndex = items.findIndex((candidate) => candidate !== informationGroup &&
+        (normalizeCmsUrl(candidate.url) === route.path || candidate.title === route.title));
+      if (rootIndex >= 0) items.splice(rootIndex, 1);
+      const children = informationGroup.children || [];
+      const childIndex = children.findIndex((candidate) => normalizeCmsUrl(candidate.url) === route.path || candidate.title === route.title);
+      if (childIndex >= 0) children[childIndex] = item;
+      else children.push(item);
+      informationGroup.children = children;
+      continue;
+    }
     const existingIndex = items.findIndex((candidate) =>
       normalizeCmsUrl(candidate.url) === route.path || candidate.title === route.title
     );

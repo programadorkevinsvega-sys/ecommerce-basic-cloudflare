@@ -22,6 +22,7 @@ import { AdminUiController } from './controllers/admin/AdminUiController.js';
 import { SeoController } from './controllers/seo/SeoController.js';
 import { CmsController } from './controllers/cms/CmsController.js';
 import { CmsBlogAdminController } from './controllers/cms/CmsBlogAdminController.js';
+import { CmsMenuAdminController } from './controllers/cms/CmsMenuAdminController.js';
 import { CmsBlogPublicController } from './controllers/cms/CmsBlogPublicController.js';
 import { PromotionsController } from './controllers/promotions/PromotionsController.js';
 import { ShippingController } from './controllers/shipping/ShippingController.js';
@@ -68,6 +69,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', PromotionsController.createRoutes(cRoot.promotionsGateway, cRoot.identityGateway));
   app.route('/', ShippingController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
+  app.route('/', CmsMenuAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));
   app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
 

@@ -17,6 +17,7 @@ interface MenuItemRow {
   url: string;
   sort_order: number;
   target: string;
+  item_type?: 'link' | 'group';
   created_at: string;
 }
 
@@ -44,6 +45,7 @@ export class D1MenuRepository implements IMenuRepository {
       url: r.url,
       sortOrder: r.sort_order,
       target: r.target || '_self',
+      type: r.item_type || 'link',
       createdAt: r.created_at,
     }));
 
@@ -62,29 +64,27 @@ export class D1MenuRepository implements IMenuRepository {
 
   public async save(menu: Menu): Promise<void> {
     const m = menu.toPrimitives();
-    await this.db.prepare(
+    const statements = [this.db.prepare(
       `INSERT INTO cms_menus (id, code, title, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(code) DO UPDATE SET
          title = excluded.title,
          updated_at = excluded.updated_at`
-    ).bind(m.id, m.code, m.title, m.createdAt, m.updatedAt).run();
+    ).bind(m.id, m.code, m.title, m.createdAt, m.updatedAt),
+    this.db.prepare('DELETE FROM cms_menu_items WHERE menu_id = ?').bind(m.id),
+    ...this.flatten(m.items, m.id).map((item) => this.db.prepare(
+      `INSERT INTO cms_menu_items (id, menu_id, parent_id, title, url, sort_order, target, created_at, item_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(item.id, item.menuId, item.parentId ?? null, item.title, item.url, item.sortOrder, item.target, item.createdAt, item.type || 'link')),
+    ];
+    await this.db.batch(statements);
   }
 
-  public async addItem(item: {
-    id: string;
-    menuId: string;
-    parentId?: string;
-    title: string;
-    url: string;
-    sortOrder: number;
-    target: string;
-  }): Promise<void> {
-    const now = new Date().toISOString();
-    await this.db.prepare(
-      `INSERT INTO cms_menu_items (id, menu_id, parent_id, title, url, sort_order, target, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(item.id, item.menuId, item.parentId ?? null, item.title, item.url, item.sortOrder, item.target, now).run();
+  private flatten(items: MenuItemProps[], menuId: string, parentId?: string): MenuItemProps[] {
+    return items.flatMap((item) => {
+      const current = { ...item, menuId, parentId };
+      return [current, ...this.flatten(item.children || [], menuId, item.id)];
+    });
   }
 
   private buildTree(items: MenuItemProps[]): MenuItemProps[] {

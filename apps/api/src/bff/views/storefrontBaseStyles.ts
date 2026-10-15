@@ -71,6 +71,16 @@ export const storefrontBaseStyles = String.raw`    :root {
       transition: background .18s ease, color .18s ease;
     }
     .site-nav a:hover { background: #f0f4e9; color: var(--primary) !important; }
+    .site-nav-group { position:relative; }
+    .site-nav-group summary { display:flex; min-height:42px; align-items:center; padding:.55rem .8rem; border-radius:999px; color:#48564d; font-size:.9rem; font-weight:650; cursor:pointer; list-style:none; }
+    .site-nav-group summary::-webkit-details-marker { display:none; }
+    .site-nav-group summary::after { content:'⌄'; margin-left:.4rem; color:var(--muted); }
+    .site-nav-group[open] summary { background:#f0f4e9; color:var(--primary); }
+    .site-nav-group>div { position:absolute; z-index:20; top:calc(100% + .35rem); right:0; display:grid; min-width:210px; gap:.25rem; padding:.5rem; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:0 16px 38px #17211b20; }
+    .site-nav-group>div a { border-radius:8px; }
+    .site-nav-group>div .site-nav-group { width:100%; }
+    .site-nav-group>div .site-nav-group summary { min-height:38px; border-radius:8px; font-size:.84rem; }
+    .site-nav-group>div .site-nav-group>div { top:0; right:calc(100% + .35rem); }
     .site-nav a[href="/carrito"] { background: var(--primary); color: #fff !important; }
     .site-nav a[href="/carrito"]:hover { background: #2c4134; }
     .site-nav .customer-email { color: var(--muted) !important; font-size: .82rem; padding-inline: .6rem; }

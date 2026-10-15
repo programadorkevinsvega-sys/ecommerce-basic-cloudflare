@@ -12,12 +12,14 @@ import { SaveBlogPostUseCase } from './application/use-cases/SaveBlogPostUseCase
 import { ManageBlogTaxonomyUseCase } from './application/use-cases/ManageBlogTaxonomyUseCase.js';
 import { ListBlogPostsUseCase } from './application/use-cases/ListBlogPostsUseCase.js';
 import { PublishScheduledBlogPostsUseCase } from './application/use-cases/PublishScheduledBlogPostsUseCase.js';
+import { SaveMenuUseCase } from './application/use-cases/SaveMenuUseCase.js';
 
 export interface CmsModuleContainer {
   createPageUseCase: CreatePageUseCase;
   updatePageContentUseCase: UpdatePageContentUseCase;
   getPageBySlugUseCase: GetPageBySlugUseCase;
   getMenuByCodeUseCase: GetMenuByCodeUseCase;
+  saveMenuUseCase: SaveMenuUseCase;
   listPagesUseCase: ListPagesUseCase;
   deletePageUseCase: DeletePageUseCase;
   blogRepository: D1BlogPostRepository;
@@ -37,6 +39,7 @@ export function createCmsModule(env: Env): CmsModuleContainer {
     updatePageContentUseCase: new UpdatePageContentUseCase(pageRepo),
     getPageBySlugUseCase: new GetPageBySlugUseCase(pageRepo),
     getMenuByCodeUseCase: new GetMenuByCodeUseCase(menuRepo),
+    saveMenuUseCase: new SaveMenuUseCase(menuRepo),
     listPagesUseCase: new ListPagesUseCase(pageRepo),
     deletePageUseCase: new DeletePageUseCase(pageRepo),
     blogRepository,

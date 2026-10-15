@@ -34,6 +34,9 @@ def check_fresh_schema() -> None:
     order_columns = {row[1] for row in db.execute("PRAGMA table_info(orders_orders)")}
     assert {"tax_cents", "pricing_version", "estimated_payment_fee_cents"} <= order_columns
     assert "transaction_fee_cents" in order_columns
+    menu_columns = {row[1] for row in db.execute("PRAGMA table_info(cms_menu_items)")}
+    assert "item_type" in menu_columns
+    assert db.execute("SELECT COUNT(*) FROM cms_menu_items i JOIN cms_menus m ON m.id=i.menu_id WHERE m.code='header' AND i.url='/seguimiento-pedido' AND i.item_type='link'").fetchone()[0] == 1
     invoice_columns = {row[1] for row in db.execute("PRAGMA table_info(invoicing_invoices)")}
     assert "tax_included" in invoice_columns
     db.execute("INSERT INTO payments_settlement_costs(order_id,actual_fee_cents,estimated_fee_cents,report_reference,recorded_by,recorded_at) VALUES('ord-1',420,500,'report-row-1','admin-1','t0')")
@@ -70,6 +73,8 @@ def check_legacy_backfills() -> None:
     cms = sqlite3.connect(":memory:")
     cms_path = MIGRATIONS / "cms/infrastructure/persistence/d1/migrations"
     cms.executescript((cms_path / "0001_init.sql").read_text(encoding="utf-8"))
+    cms.execute("INSERT INTO cms_menus(id,code,title,created_at,updated_at) VALUES('legacy-header','header','Enlaces existentes','t0','t0')")
+    cms.execute("INSERT INTO cms_menu_items(id,menu_id,title,url,sort_order,target,created_at) VALUES('legacy-link','legacy-header','Enlace existente','/enlace-existente',0,'_self','t0')")
     cms.execute("INSERT INTO cms_pages(id,title,slug,status,current_version,created_at,updated_at) VALUES('legacy-page','Página existente','sobre-nosotros','published',1,'t0','t0')")
     cms.execute("INSERT INTO cms_page_versions(id,page_id,version_number,title,blocks,created_at) VALUES('legacy-version','legacy-page',1,'Página existente','[]','t0')")
     cms.executescript((cms_path / "0002_institutional_pages.sql").read_text(encoding="utf-8"))
@@ -78,6 +83,7 @@ def check_legacy_backfills() -> None:
     blog_seed = (cms_path / "0004_blog_welcome_article.sql").read_text(encoding="utf-8")
     cms.executescript(blog_seed)
     cms.executescript(blog_seed)
+    cms.executescript((cms_path / "0005_menu_management.sql").read_text(encoding="utf-8"))
     assert cms.execute("SELECT title,status FROM cms_pages WHERE id='legacy-page'").fetchone() == ("Página existente", "published")
     assert {row[0] for row in cms.execute("SELECT name FROM sqlite_master WHERE type='table'")} >= {
         "cms_blog_authors", "cms_blog_categories", "cms_blog_posts", "cms_blog_post_categories",
@@ -85,7 +91,10 @@ def check_legacy_backfills() -> None:
     assert cms.execute("SELECT title,status FROM cms_blog_posts WHERE slug='bienvenido-al-blog-de-vega-store'").fetchone() == ("Bienvenido al blog de Vega Store", "published")
     assert cms.execute("SELECT COUNT(*) FROM cms_blog_posts").fetchone()[0] == 1
     assert cms.execute("SELECT COUNT(*) FROM cms_blog_post_categories").fetchone()[0] == 1
-    print("Legacy CMS upgrade passed (published page preserved; blog schema and welcome seed idempotent).")
+    assert cms.execute("SELECT title,url FROM cms_menu_items WHERE id='legacy-link'").fetchone() == ("Enlace existente", "/enlace-existente")
+    assert cms.execute("SELECT item_type FROM cms_menu_items WHERE url='/seguimiento-pedido' AND menu_id='legacy-header'").fetchone() == ("link",)
+    assert cms.execute("SELECT item_type FROM cms_menu_items WHERE title='Ayuda' AND menu_id='legacy-header'").fetchone() == ("group",)
+    print("Legacy CMS upgrade passed (pages, blog and existing menus preserved; tracking nested in an editable group).")
 
     db = sqlite3.connect(":memory:")
     for module in ("payments", "realtime", "storefront"):

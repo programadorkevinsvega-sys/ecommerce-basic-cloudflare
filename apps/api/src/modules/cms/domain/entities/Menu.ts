@@ -6,6 +6,7 @@ export interface MenuItemProps {
   url: string;
   sortOrder: number;
   target: string;
+  type?: 'link' | 'group';
   createdAt: string;
   children?: MenuItemProps[];
 }

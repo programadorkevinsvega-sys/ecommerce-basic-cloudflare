@@ -25,7 +25,7 @@ export function renderAdminDashboardScript(): string {
       document.querySelector('.admin-main')?.classList.toggle('invoices-page-active', tabId === 'invoices');
       legacy?.classList.toggle('taxonomies-mode', tabId === 'taxonomies');
       document.querySelector('.admin-main')?.classList.toggle('taxonomies-page-active', tabId === 'taxonomies');
-      legacy?.classList.toggle('cms-mode', tabId === 'cms'); legacy?.classList.toggle('blog-mode', tabId === 'blog'); legacy?.classList.toggle('reviews-mode', tabId === 'reviews');
+      legacy?.classList.toggle('cms-mode', tabId === 'cms'); legacy?.classList.toggle('menus-mode', tabId === 'menus'); legacy?.classList.toggle('blog-mode', tabId === 'blog'); legacy?.classList.toggle('reviews-mode', tabId === 'reviews');
       document.querySelector('.admin-main')?.classList.toggle('blog-page-active', tabId === 'blog');
       legacy?.classList.toggle('storefront-mode', tabId === 'storefront');
       legacy?.classList.toggle('promotions-mode', tabId === 'promotions');

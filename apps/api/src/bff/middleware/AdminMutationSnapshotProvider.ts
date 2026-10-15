@@ -9,7 +9,7 @@ export class AdminMutationSnapshotProvider {
       return { mfaEnabled: session.mfaEnabled === true };
     }
     if (path === '/api/v1/settings') return this.gateways.settingsGateway.getSettings();
-    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|cms\/blog\/posts|cms\/blog\/authors|cms\/blog\/categories|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices|reviews)\/([^/]+)(?:\/|$)/);
+    const resource = path.match(/^\/api\/v1\/admin\/(products|categories|brands|attributes|banners|announcements|cms\/pages|cms\/menus|cms\/blog\/posts|cms\/blog\/authors|cms\/blog\/categories|shipping\/zones|promotions\/rules|promotions\/coupons|orders|invoices|reviews)\/([^/]+)(?:\/|$)/);
     if (resource) {
       const kind = resource[1];
       const rawId = resource[2];
@@ -26,6 +26,10 @@ export class AdminMutationSnapshotProvider {
       if (kind === 'banners') return (await this.gateways.storefrontGateway.listBanners()).find((item) => item.id === id) ?? null;
       if (kind === 'announcements') return (await this.gateways.storefrontGateway.listAnnouncements()).find((item) => item.id === id) ?? null;
       if (kind === 'cms/pages') return (await this.gateways.cmsGateway.listPages(500)).find((item) => item.id === id) ?? null;
+      if (kind === 'cms/menus') {
+        const menu = await this.gateways.cmsGateway.getMenuByCode(id);
+        return { code: menu.code, title: menu.title, items: menu.items.map(menuItemSnapshot) };
+      }
       if (kind === 'cms/blog/posts') return this.gateways.cmsGateway.getBlogPostById(id);
       if (kind === 'cms/blog/authors') return this.gateways.cmsGateway.getBlogAuthor(id);
       if (kind === 'cms/blog/categories') return this.gateways.cmsGateway.getBlogCategory(id);
@@ -67,4 +71,13 @@ export class AdminMutationSnapshotProvider {
     ]);
     return collections.has(path) ? `${path}/${encodeURIComponent(id)}` : null;
   }
+}
+
+interface SnapshotMenuItem { id: string; title: string; type?: string; url: string; children?: SnapshotMenuItem[]; }
+
+function menuItemSnapshot(item: SnapshotMenuItem): Record<string, unknown> {
+  return {
+    id: item.id, title: item.title, type: item.type || 'link', url: item.url,
+    children: (item.children || []).map(menuItemSnapshot),
+  };
 }

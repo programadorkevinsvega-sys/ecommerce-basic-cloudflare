@@ -185,6 +185,10 @@ La publicación programada se ejecuta cada cinco minutos y es condicional a `sta
 
 La migración inserta de forma idempotente el autor institucional Vega Store, la categoría Novedades y un artículo de bienvenida publicado con IDs estables. Se verificó antes de aplicarla que producción tenía v3 pero cero autores, categorías y artículos. El contenido se relaciona solo con tablas `cms_*`; no altera páginas CMS ni usa imágenes. Después se verificaron ledger v4, exactamente un artículo publicado, sus relaciones y `PRAGMA foreign_key_check` vacío; `/blog` y el detalle devolvieron HTTP 200. Bookmark Time Travel previo `00000281-00000152-00005104-0d1d5159a6b3435bacb7ba398bedf3ed`; posterior `00000281-0000019a-00005104-201a677cda563d5e1a50a199aacfeec5`. Para rollback del Worker, conservar las filas y el esquema: no borrar el artículo ni su taxonomía automáticamente.
 
+### Gestión de menús CMS (`cms__0005_menu_management.sql`, 2026-10-14)
+
+La migración añadió `item_type` a `cms_menu_items` y creó la navegación inicial solo para enlaces que faltaban. Antes de aplicarla se verificaron los seis enlaces existentes en `header`/`footer`, el ledger hasta v4 y el bookmark `00000319-000001f6-00005105-17ce768350a9b6abc77efada4b7eea20`. Después se comprobó que los enlaces previos seguían presentes, la nueva columna estaba disponible y `/seguimiento-pedido` era hijo del grupo «Ayuda» en ambos menús. Bookmark posterior `00000319-00000206-00005105-ed0e138adbb08005777ea607832f8199`. Para rollback, mantener la columna y los registros; el Worker anterior ignora `item_type` y conserva acceso a las columnas previas.
+
 ## R2
 
 - Mantener el bucket privado y las claves de objeto estables durante el release.

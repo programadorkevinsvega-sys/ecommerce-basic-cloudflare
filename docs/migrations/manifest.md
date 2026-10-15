@@ -104,6 +104,11 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `cms__0003_blog.sql` | v3 | Local (Miniflare/D1) | 2026-10-14 | Este release | ✅ Desde D1 vacía, upgrade legado y segunda pasada idempotente; publicación/SSR verificadas |
 | `cms__0004_blog_welcome_article.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `8620b98` | ✅ Aplicada con runner; ledger, artículo, autor, categoría y relación verificados; FK check vacío |
 | `cms__0004_blog_welcome_article.sql` | v4 | Local (SQLite/D1) | 2026-10-14 | `8620b98` | ✅ Upgrade legado; semilla repetida sin duplicados; 46 migraciones desde cero y segunda pasada |
+| `cms__0005_menu_management.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-14 | Este release | ✅ Aplicada con el runner; ledger, columna, enlaces previos y seguimiento bajo «Ayuda» verificados |
+
+`cms__0005_menu_management.sql` agrega `item_type` con valor predeterminado `link`, conserva los enlaces existentes y crea la navegación inicial solo cuando faltan rutas o menús. Incluye el enlace de seguimiento dentro del grupo `Ayuda` del encabezado y del pie de página. Si se revierte el Worker, no retirar la columna ni el contenido; conservarlos para una siguiente versión.
+
+Aplicada en `ecommerce-vega-production`; la verificación posterior encontró la migración en `d1_migrations`, `item_type` en el esquema y `/seguimiento-pedido` como hijo de «Ayuda» tanto en `header` como en `footer`. Bookmark previo `00000319-000001f6-00005105-17ce768350a9b6abc77efada4b7eea20`; posterior `00000319-00000206-00005105-ed0e138adbb08005777ea607832f8199`.
 
 `cms__0002_institutional_pages.sql` es una migración de contenido aditiva: inserta solo cuando el slug no existe, crea versión 1 únicamente para los IDs de página sembrados y deja cada página en `draft`. No cambia tablas ni elimina datos. La reversión del Worker conserva estas páginas; no borrar las filas para volver a una versión anterior. Los borradores se publican desde Administración → Páginas CMS después de completar y revisar su contenido.
 

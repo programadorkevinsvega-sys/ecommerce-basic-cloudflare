@@ -16,6 +16,7 @@ export interface LayoutMenuItem {
   title: string;
   url: string;
   target?: string;
+  type?: 'link' | 'group';
   children?: LayoutMenuItem[];
   pending?: boolean;
 }
@@ -52,17 +53,16 @@ export function renderBaseLayout(props: LayoutProps): string {
        </div>`;
 
   const headerLinksHtml = (props.headerMenuItems && props.headerMenuItems.length > 0)
-    ? props.headerMenuItems.map((item) => `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`).join('')
+    ? props.headerMenuItems.map(renderHeaderItem).join('')
     : `<a href="/">Inicio</a><a href="/productos">Catálogo</a>`;
 
   const footerItems = props.footerMenuItems || [];
   const isLegalLink = (item: LayoutMenuItem): boolean =>
     /t[eé]rminos|condiciones|privacidad|cookies|legal|tratamiento de datos/i.test(`${item.title} ${item.url}`);
-  const footerNavigation = footerItems.filter((item) => !isLegalLink(item));
-  const footerLegal = footerItems.filter(isLegalLink);
-  const renderFooterItem = (item: LayoutMenuItem): string => item.pending
-    ? `<span class="footer-link-pending">${escapeHtml(item.title)}<small>En preparación</small></span>`
-    : `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}">${escapeHtml(item.title)}</a>`;
+  const groupedFooter = footerItems.some((item) => item.type === 'group');
+  const footerNavigation = groupedFooter ? footerItems.filter((item) => item.type === 'group' && !/^(información|legal)$/i.test(item.title.trim())) : footerItems.filter((item) => !isLegalLink(item));
+  const footerLegal = groupedFooter ? footerItems.filter((item) => isLegalLink(item) || item.type === 'group' && /^(información|legal)$/i.test(item.title.trim())) : footerItems.filter(isLegalLink);
+  const renderFooterItem = (item: LayoutMenuItem): string => renderFooterMenuItem(item);
   const checkoutHeader = `<header class="checkout-header"><div class="checkout-header-inner"><a href="/" class="checkout-brand" aria-label="Vega Store, inicio">VEGA <span>STORE</span></a><p class="checkout-secure"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z"/></svg> Compra segura</p><a class="checkout-back" href="/carrito"><span aria-hidden="true">←</span> Volver al carrito</a></div></header>`;
 
   return `<!DOCTYPE html>
@@ -111,14 +111,29 @@ export function renderBaseLayout(props: LayoutProps): string {
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand"><a href="/" class="brand-link">${escapeHtml(props.footerStoreProfile?.storeName || 'Vega Store')}</a>${renderStoreLegalIdentity(props.footerStoreProfile)}<p>Productos seleccionados para acompañarte todos los días.</p>${renderStoreSocialLinks(props.footerStoreProfile)}</div>
-      <div class="footer-column"><h2>Ayuda</h2>${footerNavigation.map(renderFooterItem).join('')}</div>
-      <div class="footer-column"><h2>Información</h2>${footerLegal.map(renderFooterItem).join('')}</div>
+      <div class="footer-column">${groupedFooter ? footerNavigation.map(renderFooterItem).join('') : `<h2>Ayuda</h2>${footerNavigation.map(renderFooterItem).join('')}`}</div>
+      <div class="footer-column">${groupedFooter ? footerLegal.map(renderFooterItem).join('') : `<h2>Información</h2>${footerLegal.map(renderFooterItem).join('')}`}</div>
       ${renderStoreFooterDetails(props.footerStoreProfile)}
     </div>
     <p class="footer-copyright">&copy; ${new Date().getFullYear()} ${escapeHtml(props.footerStoreProfile?.storeName || 'Vega Store')}${props.footerStoreProfile?.footerCopyrightText ? `. ${escapeHtml(props.footerStoreProfile.footerCopyrightText)}` : ''}</p>
   </footer>
 </body>
 </html>`;
+}
+
+function renderHeaderItem(item: LayoutMenuItem): string {
+  if (item.type === 'group') {
+    return `<details class="site-nav-group"><summary>${escapeHtml(item.title)}</summary><div>${(item.children || []).map(renderHeaderItem).join('')}</div></details>`;
+  }
+  const rel = item.target === '_blank' ? ' rel="noopener noreferrer"' : '';
+  return `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}"${rel}>${escapeHtml(item.title)}</a>`;
+}
+
+function renderFooterMenuItem(item: LayoutMenuItem): string {
+  if (item.pending) return `<span class="footer-link-pending">${escapeHtml(item.title)}<small>En preparación</small></span>`;
+  if (item.type === 'group') return `<div class="footer-menu-group"><h3>${escapeHtml(item.title)}</h3>${(item.children || []).map(renderFooterMenuItem).join('')}</div>`;
+  const rel = item.target === '_blank' ? ' rel="noopener noreferrer"' : '';
+  return `<a href="${escapeHtml(item.url)}" target="${escapeHtml(item.target || '_self')}"${rel}>${escapeHtml(item.title)}</a>`;
 }
 
 function escapeHtml(str: string): string {

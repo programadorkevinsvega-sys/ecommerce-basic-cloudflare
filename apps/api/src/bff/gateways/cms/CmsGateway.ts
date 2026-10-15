@@ -26,6 +26,7 @@ export interface CmsMenuItemDto {
   url: string;
   sortOrder: number;
   target: string;
+  type?: 'link' | 'group';
   children?: CmsMenuItemDto[];
 }
 
@@ -34,6 +35,15 @@ export interface CmsMenuDto {
   code: string;
   title: string;
   items: CmsMenuItemDto[];
+}
+
+export interface CmsMenuItemInputDto {
+  id?: string;
+  title: string;
+  type: 'link' | 'group';
+  url?: string;
+  target?: '_self' | '_blank';
+  children?: CmsMenuItemInputDto[];
 }
 
 export interface BlogPostDto { id:string; title:string; slug:string; excerpt:string; contentHtml:string; authorId:string; authorName:string; authorBio:string; authorImageMediaId?:string; featuredImageMediaId?:string; featuredImageAlt:string; status:'draft'|'scheduled'|'published'|'archived'; scheduledAt?:string; publishedAt?:string; seoTitle:string; seoDescription:string; canonicalUrl?:string; noindex:boolean; categoryIds:string[]; categoryNames:string[]; createdAt:string; updatedAt:string; }
@@ -63,6 +73,7 @@ export interface CmsGateway {
   }): Promise<CmsPageDto>;
   getPageBySlug(slug: string): Promise<CmsPageDto>;
   getMenuByCode(code: string): Promise<CmsMenuDto>;
+  saveMenu(input: { code: 'header' | 'footer'; title: string; items: CmsMenuItemInputDto[] }): Promise<CmsMenuDto>;
   listPages(limit?: number, offset?: number, status?: string): Promise<CmsPageDto[]>;
   deletePage(id: string): Promise<void>;
   saveBlogPost(input: Partial<BlogPostDto> & Pick<BlogPostDto,'title'|'slug'|'excerpt'|'contentHtml'|'authorId'|'status'|'categoryIds'>): Promise<BlogPostDto>;

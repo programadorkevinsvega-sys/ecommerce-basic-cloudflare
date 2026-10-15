@@ -38,6 +38,8 @@ import { renderBlogDashboardCss } from './renderBlogDashboardCss.js';
 import { renderBlogAdminScript } from './renderBlogAdminScript.js';
 import { renderAdminReviewsCss } from './renderAdminReviewsCss.js';
 import { renderAdminReviewsScript } from './renderAdminReviewsScript.js';
+import { renderMenuAdminCss } from './renderMenuAdminCss.js';
+import { renderMenuAdminScript } from './renderMenuAdminScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -46,7 +48,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderBlogDashboardCss()}${renderAdminReviewsCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderBlogDashboardCss()}${renderAdminReviewsCss()}${renderMenuAdminCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
@@ -89,6 +91,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderCmsEditorToolbarScript()}</script>
   <script>${renderCmsFormsScript()}</script>
   <script>${renderBlogAdminScript()}</script>
+  <script>${renderMenuAdminScript()}</script>
   <script>${renderAdminReviewsScript()}</script>
   <script>${renderPromotionsFormsScript()}</script>
   <script>${renderPromotionsHandlersScript()}</script>
