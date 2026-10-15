@@ -138,7 +138,14 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pBrand').value = p.brand || '';
         document.getElementById('pType').value = p.productType || '';
         document.getElementById('pGtin').value = p.barcodeGtin || '';
-        document.getElementById('pTags').value = (p.tags || []).join(', ');
+        const tagSelect = document.getElementById('pTags');
+        const assignedTags = new Set(p.tags || []);
+        (p.tags || []).forEach((name) => {
+          if (!Array.from(tagSelect.options).some((option) => option.value === name)) {
+            const legacyOption = document.createElement('option'); legacyOption.value = name; legacyOption.textContent = name + ' (etiqueta existente)'; tagSelect.append(legacyOption);
+          }
+        });
+        Array.from(tagSelect.options).forEach((option) => { option.selected = assignedTags.has(option.value); });
         document.getElementById('pCod').value = p.salePolicy?.allowsCashOnDelivery ? 'true' : 'false';
         const scope = p.salePolicy?.shippingScope || 'national';
         document.getElementById('pScope').value = scope;

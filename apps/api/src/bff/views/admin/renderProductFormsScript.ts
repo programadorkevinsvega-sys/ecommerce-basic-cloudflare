@@ -61,7 +61,7 @@ export function renderProductFormsScript(): string {
         else delete specs[field.dataset.productAttribute];
       });
 
-      const tags = document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const tags = Array.from(document.getElementById('pTags').selectedOptions).map(option => option.value);
       const payload = {
         name: document.getElementById('pName').value,
         slug: document.getElementById('pSlug').value,
@@ -89,7 +89,7 @@ export function renderProductFormsScript(): string {
         canonicalUrl: document.getElementById('pCanonical').value || undefined,
         noindex: document.getElementById('pNoindex').checked,
         specifications: specs,
-        ...(document.getElementById('pEditId')?.value ? {} : { tags }),
+        tags,
         allowsCashOnDelivery: document.getElementById('pCod').value === 'true',
         shippingScope: document.getElementById('pScope').value,
         localCoverageZones: document.getElementById('pScope').value === 'local' && document.getElementById('pLocalZones')

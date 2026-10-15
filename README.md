@@ -73,7 +73,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | Canje de cupones en carrito y checkout | `promotions` + `orders` | — | ✅ Validación visible; descuento recalculado por el servidor al crear el pedido |
 | CMS (páginas, bloques, menús) y Blog (artículos, autores, categorías) | `cms` | ✅ Páginas CMS, Menús y Blog en pantallas separadas | ✅ SSR público para páginas publicadas y blog |
 | Colecciones | `catalog` | ✅ CRUD, imagen opcional y selección/búsqueda de productos | ✅ Directorio y detalle paginados por colección publicada |
-| Etiquetas de producto | `catalog` | ✅ CRUD, estado y selección/búsqueda de productos; migra etiquetas de producto existentes | ✅ Etiquetas quedan en la ficha del producto |
+| Etiquetas de producto | `catalog` | ✅ CRUD y estado independientes; las etiquetas existentes se asignan al crear o editar cada producto; migra etiquetas existentes | ✅ Etiquetas quedan en la ficha del producto |
 | Seguimiento e impresión de pedidos | `orders` + `shipping` | ✅ Seguimiento operativo; guías MiPaquete y etiquetas internas paginadas para entregas locales | ✅ Cuenta autenticada por propiedad; invitado mediante clave de capacidad enviada por email |
 | SEO | `seo`, `catalog`, `cms` | ✅ Redirecciones y campos SEO específicos existentes | ✅ Metadatos SSR en las rutas que los implementan |
 | Biblioteca de medios | `media` | ✅ CRUD | — |

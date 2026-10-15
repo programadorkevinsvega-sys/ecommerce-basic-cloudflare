@@ -1,8 +1,9 @@
 import { ShippingZoneDto } from '../../gateways/shipping/ShippingGateway.js';
 import { BrandDto } from '../../gateways/catalog/CatalogGateway.js';
 import { AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
+import { CatalogProductTagDto } from '../../gateways/catalog/CatalogGateway.js';
 
-export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = []): string {
+export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = [], productTags: CatalogProductTagDto[] = []): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national' && z.isActive);
   const registeredBrands = brands.filter((brand) => brand.status !== 'inactive').map((brand) => brand.name);
   const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
@@ -18,6 +19,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
       : `<input id="${fieldId}" data-product-attribute="${escapeHtml(attribute.code)}" type="${attribute.type === 'number' ? 'number' : 'text'}" />`;
     return `<div><label for="${fieldId}">${escapeHtml(attribute.name)}</label>${control}</div>`;
   }).join('');
+  const tagOptions = productTags.map((tag) => `<option value="${escapeHtml(tag.name)}" ${tag.status === 'inactive' ? 'disabled' : ''}>${escapeHtml(tag.name)}${tag.status === 'inactive' ? ' (inactiva)' : ''}</option>`).join('');
 
   return `
     <div id="product-modal" class="product-modal" hidden>
@@ -47,7 +49,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div><label>Marca / Fabricante</label><select id="pBrand"><option value="">Sin marca</option>${brandOptions}</select><small>Las marcas se administran en Catálogo → Marcas.</small></div>
           <div><label>Tipo de Producto</label><input type="text" id="pType" placeholder="Ropa / Camisetas" /></div>
           <div><label>Código de Barras (GTIN)</label><input type="text" id="pGtin" placeholder="7701234567890" /></div>
-          <div><input type="hidden" id="pTags" value="" /><label>Etiquetas</label><p>Adminístralas y asígnalas desde Catálogo → Etiquetas.</p></div>
+          <div class="form-field-full"><label for="pTags">Etiquetas</label><select id="pTags" multiple size="4">${tagOptions}</select><small>Selecciona las etiquetas para este producto. Créelas o adminístralas desde Catálogo → Etiquetas.</small></div>
           <fieldset class="form-field-full"><legend>Empaque para transportadora</legend><p>Registra la unidad tal como se enviará dentro de su empaque individual. Se usa para calcular qué caja del inventario de empaques admite el pedido. Las medidas iniciales están estimadas; verifica y corrige con el producto empacado.</p><div class="form-grid"><div><label for="pPackedWidth">Ancho empacado (cm)</label><input id="pPackedWidth" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedLength">Largo empacado (cm)</label><input id="pPackedLength" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedHeight">Alto empacado (cm)</label><input id="pPackedHeight" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedWeight">Peso empacado (gramos)</label><input id="pPackedWeight" type="number" min="1" max="100000" step="1" inputmode="numeric" /></div></div></fieldset>
           <div>
             <label>Contra Entrega</label>

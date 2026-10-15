@@ -19,7 +19,7 @@ import { renderMenuManagementSection } from './renderMenuManagementSection.js';
 export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
   return `    <div id="tab-products" class="tab-content active">
       ${renderProductTable(props.products)}
-      ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent, props.brands, props.products.map((product) => product.brand || ''), props.attributes)}
+      ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent, props.brands, props.products.map((product) => product.brand || ''), props.attributes, props.productTags || [])}
     </div>
 
     <div id="tab-orders" class="tab-content">

@@ -7,7 +7,7 @@ export function renderTaxonomyFormsScript(): string {
       attributes:['Atributos','Define características que se pueden asignar a los productos.'],
       variants:['Variantes','Administra SKU, opciones, precio y stock por variante.'],
       collections:['Colecciones','Organiza productos publicados en páginas con dirección propia.'],
-      tags:['Etiquetas','Crea etiquetas y asígnalas a los productos que quieras destacar.']
+      tags:['Etiquetas','Crea y administra etiquetas para asignarlas desde el formulario de cada producto.']
     };
     const taxonomyPages = Object.create(null), taxonomyEndpoints = { categories:'categories',brands:'brands',providers:'suppliers',attributes:'attributes',variants:'product-variants',collections:'collections',tags:'product-tags' };
     window.catalogPageCopy=catalogPageCopy; window.catalogTaxonomyPages=taxonomyPages;
@@ -72,7 +72,6 @@ export function renderTaxonomyFormsScript(): string {
       if (key === 'brands') window.setBrandImage('');
       modal.querySelectorAll('input[id$="Slug"]').forEach((field) => { delete field.dataset.edited; if (item) field.dataset.edited = 'true'; });
       if (item) fillTaxonomyForm(key, item);
-      if (key === 'tags') { window.resetTagProductPicker(); window.searchTagProducts(''); if (item?.productIds?.length) window.loadTagProductsByIds(item.productIds); }
       if (key === 'collections' && !item) window.openCollectionProductPicker();
       taxonomyFocus = document.activeElement;
       modal.hidden = false;
@@ -96,7 +95,7 @@ export function renderTaxonomyFormsScript(): string {
     }
     window.closeTaxonomyModal = (key) => {
       const modal = document.getElementById('taxonomy-modal-' + key);
-      if (modal) { modal.hidden = true; modal.dataset.editId=''; modal.querySelector('form')?.reset(); modal.querySelector('h2').textContent = modal.dataset.createTitle; if (key === 'collections') window.resetCollectionFormControls(); if (key === 'tags') window.resetTagProductPicker(); }
+      if (modal) { modal.hidden = true; modal.dataset.editId=''; modal.querySelector('form')?.reset(); modal.querySelector('h2').textContent = modal.dataset.createTitle; if (key === 'collections') window.resetCollectionFormControls(); }
       taxonomyEditing = null;
       taxonomyFocus?.focus?.();
     };
@@ -162,6 +161,7 @@ export function renderTaxonomyFormsScript(): string {
       return {productId:document.getElementById('variantProduct').value,name:document.getElementById('variantName').value.trim(),sku:document.getElementById('variantSku').value.trim(),options,priceInCents:price,stockQuantity:Number(document.getElementById('variantStock').value),status:document.getElementById('variantStatus').value};
     }));
     document.getElementById('newCollectionForm')?.addEventListener('submit',(event)=>submitCatalogForm(event,'collections','/api/v1/admin/collections',()=>({name:document.getElementById('collectionName').value.trim(),slug:document.getElementById('collectionSlug').value.trim(),description:document.getElementById('collectionDescription').value.trim(),imageMediaId:optional('collectionImageId')||null,status:document.getElementById('collectionStatus').value,productIds:window.getCollectionProductIds(),seoTitle:optional('collectionSeoTitle'),seoDescription:optional('collectionSeoDescription')})));
+    document.getElementById('newProductTagForm')?.addEventListener('submit',(event)=>submitCatalogForm(event,'tags','/api/v1/admin/product-tags',()=>({name:document.getElementById('tagName').value.trim(),description:document.getElementById('tagDescription').value.trim(),status:document.getElementById('tagStatus').value})));
     function optional(id) { return document.getElementById(id).value.trim() || undefined; }
 
   `;

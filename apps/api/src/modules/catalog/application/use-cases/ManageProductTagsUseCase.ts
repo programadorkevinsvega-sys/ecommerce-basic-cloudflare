@@ -11,11 +11,9 @@ export class ManageProductTagsUseCase {
   public save(input: SaveProductTagInput): Promise<ProductTag> {
     const name = input.name.trim().normalize('NFC');
     const description = input.description.trim();
-    const productIds = [...new Set(input.productIds.map((id) => id.trim()).filter(Boolean))];
     if (name.length < 2 || name.length > 60) throw new Error('El nombre debe tener entre 2 y 60 caracteres.');
     if (description.length > 240) throw new Error('La descripción no puede superar 240 caracteres.');
-    if (productIds.length > 500) throw new Error('Selecciona máximo 500 productos por etiqueta.');
-    return this.repository.save({ ...input, name, description, productIds });
+    return this.repository.save({ ...input, name, description });
   }
 
   public delete(id: string): Promise<void> {

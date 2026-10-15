@@ -114,7 +114,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 - [x] `media`: subida a R2 (validación de tipo/tamaño con magic bytes SEC-R2-04), carpetas, alt text obligatorio, rutas privadas y públicas.
 - [x] `catalog`: productos (simples y con variantes), categorías jerárquicas, atributos, estados (borrador / publicado / archivado).
-- [x] Etiquetas de producto con catálogo propio, CRUD, estado y asignación a productos; migración aditiva que conserva las etiquetas existentes.
+- [x] Etiquetas de producto con catálogo propio, CRUD y estado; asignación de etiquetas existentes desde crear/editar producto; migración aditiva que conserva las etiquetas existentes.
 - [x] **Políticas de venta por producto** (ver README §5.1):
   - [x] `allows_cash_on_delivery` (sí / no).
   - [x] `shipping_scope` (`national` / `local`) y `catalog_product_coverage` con `zone_id` como `TEXT` (sin FK).
