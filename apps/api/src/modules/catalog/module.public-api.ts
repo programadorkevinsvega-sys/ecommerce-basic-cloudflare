@@ -18,6 +18,7 @@ import { CatalogPageQuery } from './domain/ports/CatalogPageQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from './application/use-cases/ManageCatalogTaxonomyUseCase.js';
 import { CollectionInput } from './application/use-cases/ManageCollectionUseCase.js';
 import { Collection } from './domain/entities/Collection.js';
+import { ProductTag, SaveProductTagInput } from './domain/entities/ProductTag.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -46,6 +47,9 @@ export interface ICatalogPublicApi {
   getCollectionById(id: string): Promise<Collection>;
   saveCollection(input: CollectionInput, id?: string): Promise<Collection>;
   deleteCollection(id: string): Promise<void>;
+  listProductTags(includeInactive?: boolean): Promise<ProductTag[]>;
+  saveProductTag(input: SaveProductTagInput): Promise<ProductTag>;
+  deleteProductTag(id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
@@ -169,6 +173,10 @@ export class CatalogPublicApi implements ICatalogPublicApi {
   public getCollectionById(id: string): Promise<Collection> { return this.container.manageCollectionUseCase.getById(id); }
   public saveCollection(input: CollectionInput, id?: string): Promise<Collection> { return this.container.manageCollectionUseCase.save(input, id); }
   public deleteCollection(id: string): Promise<void> { return this.container.manageCollectionUseCase.delete(id); }
+
+  public listProductTags(includeInactive = true): Promise<ProductTag[]> { return this.container.manageProductTagsUseCase.list(includeInactive); }
+  public saveProductTag(input: SaveProductTagInput): Promise<ProductTag> { return this.container.manageProductTagsUseCase.save(input); }
+  public deleteProductTag(id: string): Promise<void> { return this.container.manageProductTagsUseCase.delete(id); }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {
     return this.container.migrateLegacyProductPricesUseCase.preview(taxRateBasisPoints);

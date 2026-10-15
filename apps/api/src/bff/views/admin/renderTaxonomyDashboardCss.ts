@@ -4,8 +4,8 @@ export function renderTaxonomyDashboardCss(): string {
     .admin-main.taxonomies-page-active>.admin-topbar { display:none; }
     .admin-legacy-pane.taxonomies-mode .card { border-color:#e3e6ec; background:#fff; color:#151a23; box-shadow:none; }
     .taxonomy-screen { color:#151a23; }
-    .admin-nav-link[data-tab="taxonomies"].active { background:#eaf0fd; color:#1c3fa8; }
-    .taxonomy-screen button:focus-visible,.taxonomy-modal button:focus-visible,.taxonomy-modal input:focus-visible,.taxonomy-modal select:focus-visible,.taxonomy-modal textarea:focus-visible { outline:3px solid #7296f4; outline-offset:2px; }
+    .admin-nav-link[data-tab="taxonomies"].active { background:#edf3ef; color:#24583e; }
+    .taxonomy-screen button:focus-visible,.taxonomy-modal button:focus-visible,.taxonomy-modal input:focus-visible,.taxonomy-modal select:focus-visible,.taxonomy-modal textarea:focus-visible { outline:3px solid #8aa991; outline-offset:2px; }
     .taxonomy-heading { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:16px; margin:0 0 20px; }
     .taxonomy-heading h1 { margin:0; color:#151a23; font-size:24px; line-height:1.2; }
     .taxonomy-heading p { margin:4px 0 0; color:#636b7b; font-size:13px; }
@@ -45,6 +45,14 @@ export function renderTaxonomyDashboardCss(): string {
     .taxonomy-modal-backdrop { position:absolute; inset:0; border:0; background:#1821198c; }
     .taxonomy-modal-dialog { position:relative; display:flex; width:min(100%,640px); max-height:calc(100vh - 44px); flex-direction:column; overflow:hidden; border:1px solid #e3e6ec; border-radius:15px; background:#fff; color:#151a23; box-shadow:0 24px 64px #151a2347; }
     .taxonomy-page[data-taxonomy-page="collections"] .taxonomy-modal-dialog { width:min(100%,900px); }
+    .taxonomy-page[data-taxonomy-page="tags"] .taxonomy-modal-dialog { width:min(100%,850px); }
+    .tag-product-results { display:grid; max-height:230px; overflow:auto; gap:5px; margin-top:7px; padding:7px; border:1px solid #e3e6ec; border-radius:9px; }
+    .tag-product-results button { display:flex; min-height:42px; flex-direction:column; align-items:flex-start; border:0; border-radius:7px; padding:7px 10px; background:#f8f9fb; color:#283142; text-align:left; cursor:pointer; }
+    .tag-product-results button:disabled { opacity:.55; cursor:default; }
+    .tag-product-results small { margin-top:3px; color:#737b89; font-size:10px; }
+    .tag-product-selected { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+    .tag-product-selected span { display:inline-flex; align-items:center; gap:7px; border:1px solid #dce3dc; border-radius:8px; padding:6px 9px; background:#f2f6f1; color:#344738; font-size:11px; }
+    .tag-product-selected button { border:0; background:transparent; color:#99483e; font-size:17px; cursor:pointer; }
     .taxonomy-modal-dialog>header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border-bottom:1px solid #e8eaf0; padding:19px 22px; }
     .taxonomy-modal-dialog h2 { margin:0; font-size:19px; }
     .taxonomy-modal-dialog header p { margin:5px 0 0; color:#636b7b; font-size:12px; }

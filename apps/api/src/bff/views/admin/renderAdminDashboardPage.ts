@@ -26,6 +26,8 @@ import { renderMiPaqueteConfigScript } from './renderMiPaqueteConfigScript.js';
 import { renderCmsEditorToolbarScript } from './renderCmsEditorToolbarScript.js';
 import { renderShippingHandlersScript } from './renderShippingHandlersScript.js';
 import { renderTaxonomyFormsScript } from './renderTaxonomyFormsScript.js';
+import { renderTaxonomyActionsScript } from './renderTaxonomyActionsScript.js';
+import { renderProductTagScript } from './renderProductTagScript.js';
 import { renderCollectionFormScript } from './renderCollectionFormScript.js';
 import { renderBrandImageScript } from './renderBrandImageScript.js';
 import { renderPhase8AdminScript } from './renderPhase8AdminScript.js';
@@ -90,6 +92,8 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   ${renderProductListScript()}
   <script>${renderProductPriceMigrationScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
+  <script>${renderTaxonomyActionsScript()}</script>
+  <script>${renderProductTagScript()}</script>
   <script>${renderCollectionFormScript()}</script>
   <script>${renderBrandImageScript()}</script>
   <script>${renderMarketingNavigationScript()}</script>

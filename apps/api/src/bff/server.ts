@@ -13,6 +13,7 @@ import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAu
 import { CatalogTaxonomyListController } from './controllers/catalog/CatalogTaxonomyListController.js';
 import { CatalogTaxonomyMutationController } from './controllers/catalog/CatalogTaxonomyMutationController.js';
 import { CollectionAdminController } from './controllers/catalog/CollectionAdminController.js';
+import { ProductTagAdminController } from './controllers/catalog/ProductTagAdminController.js';
 import { BrandPagesController } from './controllers/storefront/BrandPagesController.js';
 import { CollectionPagesController } from './controllers/storefront/CollectionPagesController.js';
 import { StorefrontController } from './controllers/storefront/StorefrontController.js';
@@ -154,6 +155,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1', CatalogTaxonomyListController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CollectionAdminController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.auditGateway));
+  app.route('/api/v1', ProductTagAdminController.createRoutes(cRoot.catalogGateway,cRoot.identityGateway,cRoot.auditGateway));
   app.route('/api/v1', CatalogAuxiliaryAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', ReviewsController.createRoutes(cRoot.catalogGateway, cRoot.reviewsGateway, cRoot.identityGateway));
   app.route('/api/v1', ReviewsAdminController.createRoutes(cRoot.reviewsGateway,cRoot.catalogGateway,cRoot.identityGateway,cRoot.ordersGateway));

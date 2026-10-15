@@ -149,6 +149,10 @@ export class InProcessCatalogGateway implements CatalogGateway {
   }
   public deleteCollection(id: string): Promise<void> { return this.publicApi.deleteCollection(id); }
 
+  public listProductTags(includeInactive = true) { return this.publicApi.listProductTags(includeInactive); }
+  public saveProductTag(input: Parameters<CatalogGateway['saveProductTag']>[0]) { return this.publicApi.saveProductTag(input); }
+  public deleteProductTag(id: string): Promise<void> { return this.publicApi.deleteProductTag(id); }
+
   public async previewLegacyPriceMigration(taxRateBasisPoints: number) {
     return this.publicApi.previewLegacyPriceMigration(taxRateBasisPoints);
   }

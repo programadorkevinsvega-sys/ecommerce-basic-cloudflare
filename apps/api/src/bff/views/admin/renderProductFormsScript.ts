@@ -89,7 +89,7 @@ export function renderProductFormsScript(): string {
         canonicalUrl: document.getElementById('pCanonical').value || undefined,
         noindex: document.getElementById('pNoindex').checked,
         specifications: specs,
-        tags,
+        ...(document.getElementById('pEditId')?.value ? {} : { tags }),
         allowsCashOnDelivery: document.getElementById('pCod').value === 'true',
         shippingScope: document.getElementById('pScope').value,
         localCoverageZones: document.getElementById('pScope').value === 'local' && document.getElementById('pLocalZones')

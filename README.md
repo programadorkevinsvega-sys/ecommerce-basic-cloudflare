@@ -73,6 +73,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | Canje de cupones en carrito y checkout | `promotions` + `orders` | — | ✅ Validación visible; descuento recalculado por el servidor al crear el pedido |
 | CMS (páginas, bloques, menús) y Blog (artículos, autores, categorías) | `cms` | ✅ Páginas CMS, Menús y Blog en pantallas separadas | ✅ SSR público para páginas publicadas y blog |
 | Colecciones | `catalog` | ✅ CRUD, imagen opcional y selección/búsqueda de productos | ✅ Directorio y detalle paginados por colección publicada |
+| Etiquetas de producto | `catalog` | ✅ CRUD, estado y selección/búsqueda de productos; migra etiquetas de producto existentes | ✅ Etiquetas quedan en la ficha del producto |
 | Seguimiento e impresión de pedidos | `orders` + `shipping` | ✅ Seguimiento operativo; guías MiPaquete y etiquetas internas paginadas para entregas locales | ✅ Cuenta autenticada por propiedad; invitado mediante clave de capacidad enviada por email |
 | SEO | `seo`, `catalog`, `cms` | ✅ Redirecciones y campos SEO específicos existentes | ✅ Metadatos SSR en las rutas que los implementan |
 | Biblioteca de medios | `media` | ✅ CRUD | — |
@@ -384,7 +385,7 @@ El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado pa
 
 ### 6.2 Panel de administración
 
-El panel actual se sirve desde `/admin` como una aplicación de dashboard con navegación lateral y secciones seleccionadas en la misma pantalla; no se deben interpretar las etiquetas del menú como rutas URL independientes. Incluye Resumen, Pedidos, Inventario, Envíos y cobertura, Municipios DANE, Transportadoras, Empaques, Seguimiento de pedidos, Imprimir guías (guías oficiales de MiPaquete y etiquetas internas para entrega local), Pagos y facturas, Catálogo (Productos, Colecciones, Categorías, Marcas, Proveedores, Atributos, Variantes, Reseñas), Marketing (Banners, Anuncios, Reglas, Cupones y Envío gratis), CMS (Páginas CMS, Menús, Blog), Auditoría y Configuración. El acceso requiere autenticación administrativa y permisos RBAC según operación.
+El panel actual se sirve desde `/admin` como una aplicación de dashboard con navegación lateral y secciones seleccionadas en la misma pantalla; no se deben interpretar las etiquetas del menú como rutas URL independientes. Incluye Resumen, Pedidos, Inventario, Envíos y cobertura, Municipios DANE, Transportadoras, Empaques, Seguimiento de pedidos, Imprimir guías (guías oficiales de MiPaquete y etiquetas internas para entrega local), Pagos y facturas, Catálogo (Productos, Colecciones, Categorías, Marcas, Proveedores, Atributos, Variantes, Etiquetas y Reseñas), Marketing (Banners, Anuncios, Reglas, Cupones y Envío gratis), CMS (Páginas CMS, Menús, Blog), Auditoría y Configuración. El acceso requiere autenticación administrativa y permisos RBAC según operación.
 
 ### Dominio público de producción
 

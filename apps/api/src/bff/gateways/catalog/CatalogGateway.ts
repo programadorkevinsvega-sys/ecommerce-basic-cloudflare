@@ -1,7 +1,8 @@
 import { LegacyPriceMigrationPreview } from '../../../modules/catalog/application/use-cases/MigrateLegacyProductPricesUseCase.js';
 import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
-
+export interface CatalogProductTagDto { id:string; name:string; description:string; status:'active'|'inactive'; productCount:number; productIds:string[]; createdAt:string; updatedAt:string; }
+export interface SaveCatalogProductTagRequest { id?:string; name:string; description:string; status:'active'|'inactive'; productIds:string[]; }
 export interface CatalogCollectionDto { id:string; name:string; slug:string; description:string; imageMediaId?:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; createdAt:string; updatedAt:string; }
 export interface CatalogCollectionInput { name:string; slug:string; description:string; imageMediaId?:string | null; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; }
 
@@ -191,6 +192,9 @@ export interface CatalogGateway {
   getCollectionById(id: string): Promise<CatalogCollectionDto>;
   saveCollection(input: CatalogCollectionInput, id?: string): Promise<CatalogCollectionDto>;
   deleteCollection(id: string): Promise<void>;
+  listProductTags(includeInactive?: boolean): Promise<CatalogProductTagDto[]>;
+  saveProductTag(input: SaveCatalogProductTagRequest): Promise<CatalogProductTagDto>;
+  deleteProductTag(id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }

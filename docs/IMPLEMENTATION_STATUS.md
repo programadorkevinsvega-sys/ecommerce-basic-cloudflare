@@ -9,7 +9,7 @@ Este archivo es un índice para distinguir estado del código, operación y evid
 | Área | Estado documentado |
 |---|---|
 | Administración | Dashboard en `/admin`, con navegación lateral para Operación, Catálogo, Marketing, CMS y Sistema. Las secciones del menú son vistas de la aplicación, no rutas `/admin/<sección>` independientes. |
-| Catálogo | Productos, categorías, marcas, proveedores, atributos, variantes, colecciones y reseñas tienen pantallas administrativas separadas. El catálogo público tiene paginación del lado servidor. |
+| Catálogo | Productos, categorías, marcas, proveedores, atributos, variantes, colecciones, etiquetas de producto y reseñas tienen pantallas administrativas separadas. Etiquetas usa el CRUD del catálogo y asigna productos conservando `catalog_products.tags`. El catálogo público tiene paginación del lado servidor. |
 | CMS y Blog | Páginas CMS, Menús y Blog son pantallas separadas dentro del grupo CMS. Blog administra artículos, autores y categorías; el storefront tiene `/blog` y `/blog/:slug`. |
 | Reseñas | El producto y su página de opiniones muestran puntuaciones/conteos. Las reseñas verificadas dependen de una compra elegible consultada por Gateway. La fuente de la migración `reviews__0002_demo_reviews.sql` ya no inserta opiniones ficticias en una instalación nueva; las bases previas pueden conservar las filas históricas hasta que se reemplacen o limpien. |
 | Seguimiento | `/seguimiento-pedido`: el cliente autenticado accede a sus pedidos por sesión; un invitado requiere el número de pedido y la clave enviada al correo. La administración tiene gestión de seguimiento y una vista separada para imprimir guías listas. |
