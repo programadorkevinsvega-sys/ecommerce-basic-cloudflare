@@ -59,6 +59,7 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
+    "MI_PAQUETE_API_URL": "https://api-v2.mpr.mipaquete.com",
     "RESEND_FROM_EMAIL": "Vega Store <no-reply@jnmtortas.com>"
   }
 }
