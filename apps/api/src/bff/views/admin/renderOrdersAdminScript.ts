@@ -89,6 +89,9 @@ export function renderOrdersAdminScript(): string {
       document.getElementById('modal-transaction-fee').innerText = '$' + (Number(order.transactionFeeCents || 0) / 100).toLocaleString('es-CO');
       document.getElementById('modal-payment-fee').innerText = '$' + (Number(order.estimatedPaymentFeeCents || 0) / 100).toLocaleString('es-CO') + ' (estimada)';
       document.getElementById('modal-shipping-cost').innerText = '$' + (order.shippingCostCents / 100).toLocaleString('es-CO');
+      const shippingCollectionRow = document.getElementById('modal-shipping-collection-row');
+      shippingCollectionRow.style.display = Number(order.shippingCollectionCents || 0) > 0 ? 'flex' : 'none';
+      document.getElementById('modal-shipping-collection').innerText = '$' + (Number(order.shippingCollectionCents || 0) / 100).toLocaleString('es-CO');
       document.getElementById('modal-total').innerText = '$' + (order.totalCents / 100).toLocaleString('es-CO');
 
       const selectEl = document.getElementById('modal-change-status-select');

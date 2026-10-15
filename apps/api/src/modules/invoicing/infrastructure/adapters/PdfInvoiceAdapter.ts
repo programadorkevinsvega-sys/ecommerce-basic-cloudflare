@@ -93,6 +93,9 @@ export class PdfInvoiceAdapter implements IInvoicePdfPort {
       [invoice.taxIncluded ? 'IVA incluido' : 'IVA', money(invoice.taxCents)],
       ['Envío', money(invoice.shippingCostCents)],
     ];
+    if (invoice.snapshot.shippingCollectionCents) totalLines.push([
+      'Flete a pagar al recibir (fuera del total)', money(invoice.snapshot.shippingCollectionCents),
+    ]);
     if (invoice.discountCents > 0) totalLines.splice(1, 0, ['Descuento', `-${money(invoice.discountCents)}`]);
     if (invoice.snapshot.transactionFeeCents) totalLines.push(['Costo de transacción', money(invoice.snapshot.transactionFeeCents)]);
     const panelHeight = totalLines.length * 18 + 43;

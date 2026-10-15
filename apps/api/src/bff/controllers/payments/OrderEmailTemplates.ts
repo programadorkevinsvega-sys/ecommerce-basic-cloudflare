@@ -48,7 +48,8 @@ export class OrderEmailTemplates {
           <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>$${subtotalFormatted}</span></div>
           ${order.discountCents > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento:</span><span>-$${(order.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;"><span>IVA incluido:</span><span>$${taxFormatted}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span>Envío:</span><span>$${shippingFormatted}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>${order.shippingChargeMode === 'collect_at_delivery' ? 'Envío incluido en factura:' : 'Envío:'}</span><span>$${shippingFormatted}</span></div>
+          ${order.shippingCollectionCents ? `<div style="display:flex;justify-content:space-between;"><span>Envío por pagar al recibir:</span><span>$${(order.shippingCollectionCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;border-top:2px solid #0284c7;font-size:1.1rem;font-weight:700;color:#0284c7;padding-top:0.5rem;margin-top:0.5rem;">
@@ -98,6 +99,7 @@ export class OrderEmailTemplates {
 
   public static renderCustomerCodEmail(order: Order): string {
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
+    const collectionCents = order.totalCents + order.shippingCollectionCents;
     const addr = order.shippingAddress || {} as any;
 
     return `
@@ -105,7 +107,7 @@ export class OrderEmailTemplates {
         <h2 style="color:#0284c7;margin-top:0;">📦 ¡Hemos recibido tu pedido Contra Entrega!</h2>
         <p>Hola <strong>${order.customerName}</strong>, tu pedido <strong>#${order.id}</strong> ha sido registrado.</p>
         <div style="background:#fef3c7;border:1px solid #f59e0b;padding:1rem;border-radius:8px;margin:1rem 0;color:#92400e;">
-          <strong>💵 Pago Contra Entrega:</strong> Pagarás <strong>$${totalFormatted} COP</strong> en efectivo al transportador cuando recibas tu paquete.
+          <strong>💵 Pago Contra Entrega:</strong> Pagarás <strong>$${(collectionCents / 100).toLocaleString('es-CO')} COP</strong> al recibir. ${order.shippingCollectionCents ? `Incluye $${(order.shippingCollectionCents / 100).toLocaleString('es-CO')} de envío, cobrado por separado del valor del pedido.` : `El valor del pedido es $${totalFormatted} COP.`}
         </div>
         <div><strong>Dirección de Envío:</strong> ${addr.addressLine}, ${addr.municipality}, ${addr.department}</div>
         <p style="margin-top:1.5rem;font-size:0.85rem;color:#64748b;">Nos pondremos en contacto contigo si requerimos validar algún dato de entrega.</p>
@@ -114,7 +116,7 @@ export class OrderEmailTemplates {
   }
 
   public static renderAdminCodAlertEmail(order: Order): string {
-    const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
+    const totalFormatted = ((order.totalCents + order.shippingCollectionCents) / 100).toLocaleString('es-CO');
     const addr = order.shippingAddress || {} as any;
 
     return `
@@ -126,6 +128,7 @@ export class OrderEmailTemplates {
         <div><strong>Cliente:</strong> ${order.customerName} (${order.customerEmail}) - Tel: ${order.customerPhone}</div>
         <div><strong>Destino:</strong> ${addr.addressLine}, ${addr.municipality}, ${addr.department}</div>
         <div><strong>Valor a Recaudar:</strong> <strong style="color:#b45309;">$${totalFormatted} COP</strong></div>
+        ${order.shippingCollectionCents ? `<div><strong>Incluye envío por cobrar:</strong> $${(order.shippingCollectionCents / 100).toLocaleString('es-CO')} COP</div>` : ''}
       </div>
     `;
   }

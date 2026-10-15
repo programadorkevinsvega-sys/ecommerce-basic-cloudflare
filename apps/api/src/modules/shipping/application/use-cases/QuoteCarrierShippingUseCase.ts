@@ -14,7 +14,7 @@ export class QuoteCarrierShippingUseCase {
     this.config = config; this.quotes = quotes; this.carrier = carrier;
   }
 
-  public async execute(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: PackedOrderItem[] }): Promise<CarrierShippingQuote[]> {
+  public async execute(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: PackedOrderItem[] }): Promise<CarrierShippingQuote[]> {
     const setup = await this.config.get();
     assertConfigured(setup);
     if (!setup.enabled) throw new Error('Carrier integration is disabled');
@@ -29,7 +29,8 @@ export class QuoteCarrierShippingUseCase {
       widthCm: parcel.widthCm, lengthCm: parcel.lengthCm,
       heightCm: parcel.heightCm, weightKg: parcel.weightKg,
       quantity: 1, declaredValueCop: Math.ceil(input.declaredValueCents / 100),
-      saleValueCop: Math.ceil(input.saleValueCents / 100), cashOnDelivery: input.paymentMethod === 'cash_on_delivery',
+      saleValueCop: Math.ceil(input.saleValueCents / 100),
+      cashOnDelivery: input.paymentMethod === 'cash_on_delivery' || input.shippingChargeMode === 'collect_at_delivery',
     });
     const now = new Date();
     const expiry = new Date(now.getTime() + 10 * 60_000).toISOString();

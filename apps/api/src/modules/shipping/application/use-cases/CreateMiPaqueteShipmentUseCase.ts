@@ -8,6 +8,7 @@ import { IShippingCarrierPort, CarrierParty } from '../ports/out/IShippingCarrie
 export interface CarrierOrderInput {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
   totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
+  shippingCollectionCents?: number; shippingChargeMode?: 'included' | 'collect_at_delivery';
   recipient: CarrierParty; sender: CarrierParty; description: string;
 }
 
@@ -31,6 +32,10 @@ export class CreateMiPaqueteShipmentUseCase {
     assertConfigured(config);
     if (!config.enabled) throw new Error('La integración MiPaquete está desactivada.');
     if (!quote || quote.paymentMethod !== order.paymentMethod) throw new Error('No existe una cotización MiPaquete válida para este pedido.');
+    const collectShippingAtDelivery = order.shippingChargeMode === 'collect_at_delivery';
+    if (collectShippingAtDelivery && (!quote || order.shippingCollectionCents !== quote.shippingCostCents)) {
+      throw new Error('El valor del envío por cobrar al recibir no coincide con la cotización guardada.');
+    }
     if (!quote.packageProfileId || !quote.packageWidthCm || !quote.packageLengthCm || !quote.packageHeightCm ||
         !quote.packageWeightKg || !quote.packageFingerprint) {
       throw new Error('La cotización no tiene una instantánea de empaque válida. Cotiza nuevamente el pedido.');
@@ -43,17 +48,22 @@ export class CreateMiPaqueteShipmentUseCase {
       widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,
       heightCm: quote.packageHeightCm, weightKg: quote.packageWeightKg,
       quantity: 1, declaredValueCop: Math.ceil(quote.declaredValueCents / 100),
-      saleValueCop: Math.ceil(saleValueCents / 100), cashOnDelivery: order.paymentMethod === 'cash_on_delivery',
+      saleValueCop: Math.ceil(saleValueCents / 100),
+      cashOnDelivery: order.paymentMethod === 'cash_on_delivery' || collectShippingAtDelivery,
     });
     const selected = currentOptions.find((option) => option.deliveryCompanyId === quote.deliveryCompanyId);
-    if (!selected || selected.shippingCostCop * 100 > order.shippingCostCents) {
+    const maximumShippingCents = collectShippingAtDelivery ? order.shippingCollectionCents || 0 : order.shippingCostCents;
+    if (!selected || selected.shippingCostCop * 100 > maximumShippingCents) {
       throw new Error('La tarifa vigente supera el envío pagado. Revisa el pedido antes de generar la guía.');
     }
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
     const requestHash = await hashRequest({ orderId: order.orderId, quoteId: quote.id, selected: selected.quoteId });
     const inserted = await this.shipments.createPending({
-      id, orderId: order.orderId, collectionValueCents: order.paymentMethod === 'cash_on_delivery' ? order.totalCents : 0,
+      id, orderId: order.orderId,
+      collectionValueCents: order.paymentMethod === 'cash_on_delivery'
+        ? order.totalCents + (collectShippingAtDelivery ? order.shippingCollectionCents || 0 : 0)
+        : collectShippingAtDelivery ? order.shippingCollectionCents || 0 : 0,
       requestHash, now,
     });
     if (!inserted) throw new Error('Ya existe una guía o creación pendiente para este pedido.');
@@ -64,8 +74,11 @@ export class CreateMiPaqueteShipmentUseCase {
         declaredValueCop: Math.ceil(quote.declaredValueCents / 100) },
       originDaneCode: config.originDaneCode as string, destinationDaneCode: order.destinationDaneCode,
       carrierId: quote.deliveryCompanyId, criterion: config.selectionCriterion as 'price' | 'time' | 'score',
-      paymentType: order.paymentMethod === 'cash_on_delivery' ? config.cashOnDeliveryPaymentType as 101 | 102 : 101,
-      collectionValueCop: order.paymentMethod === 'cash_on_delivery' ? Math.ceil(order.totalCents / 100) : 0,
+      paymentType: order.paymentMethod === 'cash_on_delivery' || collectShippingAtDelivery
+        ? config.cashOnDeliveryPaymentType as 101 | 102 : 101,
+      collectionValueCop: order.paymentMethod === 'cash_on_delivery'
+        ? Math.ceil((order.totalCents + (collectShippingAtDelivery ? order.shippingCollectionCents || 0 : 0)) / 100)
+        : collectShippingAtDelivery ? Math.ceil((order.shippingCollectionCents || 0) / 100) : 0,
       saleValueCop: order.paymentMethod === 'cash_on_delivery' ? Math.ceil(saleValueCents / 100) : 0,
       requestPickup: Boolean(config.requestPickup), description: order.description.slice(0, 200),
     });

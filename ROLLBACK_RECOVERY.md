@@ -36,6 +36,8 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 8. No declarar rollback probado hasta conservar evidencia del ensayo y verificar salud y flujos críticos (incluido un pago de sandbox).
 9. Respetar el aislamiento por módulo: las migraciones y reparaciones de un módulo solo tocan tablas de su prefijo (ADR-0001).
 
+La migración `orders__0007_shipping_charge_mode.sql` agrega valores por defecto `included` / `0`; al volver a la versión anterior conservar ambas columnas y no reescribir pedidos. La opción de cobro del flete en entrega requiere una cotización y un recaudo proveedor que se pueda conciliar antes de habilitarla; el rollback de aplicación no cancela guías ni recaudos ya creados.
+
 ## Estrategia de release
 
 ### Orden de migraciones D1 con Wrangler

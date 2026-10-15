@@ -66,6 +66,7 @@ export interface CarrierShipmentDto {
 export interface CarrierShipmentCreateRequest {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
   totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
+  shippingCollectionCents?: number; shippingChargeMode?: 'included' | 'collect_at_delivery';
   recipient: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
   sender: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
   description: string;
@@ -111,10 +112,10 @@ export interface ShippingGateway {
   ): Promise<ShippingCoverageDto>;
   getCarrierConfig(): Promise<CarrierIntegrationConfigDto>;
   updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto>;
-  quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]>;
+  quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]>;
   getCarrierAvailability(): Promise<boolean>;
   isCarrierApiConfigured(): boolean;
-  getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null>;
+  getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null>;
   getCarrierQuoteForOrder(orderId: string): Promise<CarrierShippingQuoteDto | null>;
   linkCarrierQuoteToOrder(id: string, orderId: string): Promise<boolean>;
   createMiPaqueteShipment(order: CarrierShipmentCreateRequest): Promise<CarrierShipmentDto>;

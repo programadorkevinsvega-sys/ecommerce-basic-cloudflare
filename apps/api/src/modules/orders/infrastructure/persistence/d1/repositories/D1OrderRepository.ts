@@ -1,7 +1,6 @@
 import { Order, OrderPaymentStatus, OrderStatus, ShippingAddressSnapshot } from '../../../../domain/entities/Order.js';
 import { OrderLine } from '../../../../domain/entities/OrderLine.js';
 import { IOrderRepository, OrderHistoryRecord } from '../../../../domain/ports/IOrderRepository.js';
-
 interface OrderRow {
   id: string;
   customer_id: string | null;
@@ -12,6 +11,8 @@ interface OrderRow {
   shipping_address: string;
   shipping_zone_id: string;
   shipping_cost_cents: number;
+  shipping_collection_cents?: number;
+  shipping_charge_mode?: 'included' | 'collect_at_delivery';
   subtotal_cents: number;
   discount_cents: number;
   coupon_code: string | null;
@@ -67,8 +68,8 @@ export class D1OrderRepository implements IOrderRepository {
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
-         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days, shipping_collection_cents, shipping_charge_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
@@ -79,9 +80,9 @@ export class D1OrderRepository implements IOrderRepository {
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
       order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents,
-      order.guestTrackingTokenHash, order.minEstimatedDays, order.maxEstimatedDays
+      order.guestTrackingTokenHash, order.minEstimatedDays, order.maxEstimatedDays,
+      order.shippingCollectionCents, order.shippingChargeMode
     ).run();
-
     await this.db.prepare('DELETE FROM orders_lines WHERE order_id = ?').bind(order.id).run();
 
     for (const l of order.lines) {
@@ -141,7 +142,6 @@ export class D1OrderRepository implements IOrderRepository {
     const row=await this.db.prepare("SELECT o.payment_method FROM orders_orders o JOIN orders_lines l ON l.order_id=o.id WHERE o.customer_id=? AND l.product_id=? AND o.status='delivered' AND o.payment_status IN ('approved','collected') ORDER BY o.updated_at DESC LIMIT 1").bind(customerId,productId).first<{payment_method:'wompi'|'cash_on_delivery'}>();
     return row?.payment_method||null;
   }
-
   private async loadLines(orderId: string): Promise<OrderLine[]> {
     const { results } = await this.db
       .prepare('SELECT * FROM orders_lines WHERE order_id = ?')
@@ -176,6 +176,8 @@ export class D1OrderRepository implements IOrderRepository {
       shippingAddress: parsedAddress as ShippingAddressSnapshot,
       shippingZoneId: row.shipping_zone_id,
       shippingCostCents: row.shipping_cost_cents,
+      shippingCollectionCents: row.shipping_collection_cents ?? 0,
+      shippingChargeMode: row.shipping_charge_mode ?? 'included',
       subtotalCents: row.subtotal_cents,
       discountCents: row.discount_cents,
       couponCode: row.coupon_code,

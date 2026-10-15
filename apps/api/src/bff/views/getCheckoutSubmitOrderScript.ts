@@ -30,6 +30,7 @@ export function getCheckoutSubmitOrderScript(): string {
               customerName: name, customerEmail: email, customerPhone: phone, customerTaxId: taxId,
               shippingZoneId: zoneSel.value, shippingCostCents, subtotalCents, taxCents, discountCents: 0,
               ...(carrierIntegrationEnabled ? { carrierQuoteId: selectedCarrierQuoteId } : {}),
+              ...(carrierIntegrationEnabled ? { shippingChargeMode } : {}),
               paymentMethod: method,
               shippingAddress: { recipientName: name, phone, department: dept, city: municipality, daneCode: daneCode, addressLine: line },
               lines: cartItems.map(i => ({ productId: i.productId, productName: i.productName || 'Producto', productSku: i.productSku || i.productId.slice(0, 8), quantity: i.quantity, unitPriceCents: i.unitPriceCents }))

@@ -38,6 +38,7 @@ export interface InvoiceSnapshot {
   taxCents: number;
   taxIncluded?: boolean;
   shippingCostCents: number;
+  shippingCollectionCents?: number;
   transactionFeeCents?: number;
   discountCents: number;
   totalCents: number;

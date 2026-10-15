@@ -21,6 +21,8 @@ export interface CreateOrderCommand {
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
+  shippingCollectionCents?: number;
+  shippingChargeMode?: 'included' | 'collect_at_delivery';
   subtotalCents: number;
   discountCents?: number;
   couponCode?: string | null;
@@ -73,6 +75,8 @@ export class CreateOrderUseCase {
       shippingAddress: cmd.shippingAddress,
       shippingZoneId: cmd.shippingZoneId,
       shippingCostCents: cmd.shippingCostCents,
+      shippingCollectionCents: cmd.shippingCollectionCents,
+      shippingChargeMode: cmd.shippingChargeMode,
       subtotalCents: cmd.subtotalCents,
       discountCents: cmd.discountCents || 0,
       couponCode: cmd.couponCode,

@@ -22,6 +22,8 @@ export interface OrderProps {
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
+  shippingCollectionCents?: number;
+  shippingChargeMode?: 'included' | 'collect_at_delivery';
   subtotalCents: number;
   discountCents?: number;
   couponCode?: string | null;
@@ -52,6 +54,8 @@ export class Order {
   public readonly shippingAddress: ShippingAddressSnapshot;
   public readonly shippingZoneId: string;
   public readonly shippingCostCents: number;
+  public readonly shippingCollectionCents: number;
+  public readonly shippingChargeMode: 'included' | 'collect_at_delivery';
   public readonly subtotalCents: number;
   public readonly discountCents: number;
   public readonly couponCode: string | null;
@@ -84,6 +88,8 @@ export class Order {
     this.shippingAddress = props.shippingAddress;
     this.shippingZoneId = props.shippingZoneId;
     this.shippingCostCents = props.shippingCostCents;
+    this.shippingCollectionCents = props.shippingCollectionCents ?? 0;
+    this.shippingChargeMode = props.shippingChargeMode ?? 'included';
     this.subtotalCents = props.subtotalCents;
     this.discountCents = props.discountCents || 0;
     this.couponCode = props.couponCode || null;
@@ -146,6 +152,8 @@ export class Order {
       shippingAddress: this.shippingAddress,
       shippingZoneId: this.shippingZoneId,
       shippingCostCents: this.shippingCostCents,
+      shippingCollectionCents: this.shippingCollectionCents,
+      shippingChargeMode: this.shippingChargeMode,
       subtotalCents: this.subtotalCents,
       discountCents: this.discountCents,
       couponCode: this.couponCode,

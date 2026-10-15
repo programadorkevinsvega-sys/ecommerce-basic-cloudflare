@@ -106,6 +106,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
         subtotalCents: order.subtotalCents,
         taxCents,
         shippingCostCents: order.shippingCostCents,
+        shippingCollectionCents: order.shippingCollectionCents,
         transactionFeeCents: order.transactionFeeCents,
         discountCents: order.discountCents,
         totalCents: order.totalCents,

@@ -70,11 +70,11 @@ export class ShippingPublicApi {
     return this.container.updateCarrierConfigUseCase.execute(config);
   }
 
-  public quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: PackedOrderItem[] }): Promise<CarrierShippingQuote[]> {
+  public quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: PackedOrderItem[] }): Promise<CarrierShippingQuote[]> {
     return this.container.quoteCarrierShippingUseCase.execute(input);
   }
 
-  public getAvailableCarrierQuote(input: { id: string; method: 'wompi' | 'cash_on_delivery'; daneCode: string; items: PackedOrderItem[]; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuote | null> {
+  public getAvailableCarrierQuote(input: { id: string; method: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; daneCode: string; items: PackedOrderItem[]; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuote | null> {
     return this.container.getAvailableCarrierQuoteUseCase.execute(input);
   }
 

@@ -6,7 +6,7 @@ import { createCarrierPackageFingerprint } from '../services/CreateCarrierPackag
 export class GetAvailableCarrierQuoteUseCase {
   private readonly repository: ICarrierQuoteRepository;
   public constructor(repository: ICarrierQuoteRepository) { this.repository = repository; }
-  public async execute(input: { id: string; method: 'wompi' | 'cash_on_delivery'; daneCode: string; items: PackedOrderItem[]; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuote | null> {
+  public async execute(input: { id: string; method: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; daneCode: string; items: PackedOrderItem[]; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuote | null> {
     const fingerprint = await createCarrierPackageFingerprint({ ...input, paymentMethod: input.method });
     return this.repository.findAvailable(input.id, input.method, input.daneCode, fingerprint, new Date().toISOString());
   }

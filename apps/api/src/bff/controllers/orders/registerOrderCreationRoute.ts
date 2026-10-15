@@ -40,6 +40,10 @@ export function registerOrderCreationRoute(
     if (!body.paymentMethod || !['wompi', 'cash_on_delivery'].includes(body.paymentMethod)) {
       return c.json({ error: 'paymentMethod debe ser wompi o cash_on_delivery' }, 400);
     }
+    const shippingChargeMode = body.shippingChargeMode === 'collect_at_delivery' ? 'collect_at_delivery' : 'included';
+    if (body.shippingChargeMode !== undefined && !['included', 'collect_at_delivery'].includes(body.shippingChargeMode)) {
+      return c.json({ error: 'Opción de pago del envío inválida' }, 400);
+    }
     if (!Array.isArray(body.lines) || body.lines.length === 0 || body.lines.length > 50) {
       return c.json({ error: 'Se requiere al menos una línea de pedido' }, 400);
     }
@@ -66,7 +70,7 @@ export function registerOrderCreationRoute(
     let pricing;
     try {
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        body.lines, body.couponCode, customerId, zone.priceInCents, body.paymentMethod);
+        body.lines, body.couponCode, customerId, shippingChargeMode === 'included' ? zone.priceInCents : 0, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
     let carrierQuote = null;
     if (carrierQuoteId) {
@@ -74,13 +78,17 @@ export function registerOrderCreationRoute(
         const pack = await resolveCarrierQuotePackage(deps.catalog, deps.shipping, pricing.lines,
           pricing.subtotalCents, pricing.discountCents);
         carrierQuote = await deps.shipping.getAvailableCarrierQuote({ id: carrierQuoteId,
-          paymentMethod: body.paymentMethod, daneCode: `${shippingAddress.daneCode}000`, ...pack });
+          paymentMethod: body.paymentMethod, shippingChargeMode, daneCode: `${shippingAddress.daneCode}000`, ...pack });
       } catch { return c.json({ error: 'Actualiza la cotización del envío con los productos actuales.' }, 409); }
       if (!carrierQuote) return c.json({ error: 'La tarifa venció o ya no corresponde al contenido del carrito. Vuelve a cotizar.' }, 409);
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        body.lines, body.couponCode, customerId, carrierQuote.shippingCostCents, body.paymentMethod);
+        body.lines, body.couponCode, customerId, shippingChargeMode === 'included' ? carrierQuote.shippingCostCents : 0, body.paymentMethod);
     }
-    const shippingCostCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
+    if (shippingChargeMode === 'collect_at_delivery' && !carrierQuote) {
+      return c.json({ error: 'El pago del envío al recibir requiere una cotización de transportadora vigente.' }, 409);
+    }
+    const quotedShippingCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
+    const shippingCostCents = shippingChargeMode === 'included' ? quotedShippingCents : 0;
     const policyError = await validateOrderPolicy(deps.orders, zone, pricing, body.paymentMethod,
       shippingAddress.daneCode, deps.shipping);
     if (policyError) return c.json({ error: policyError }, 400);
@@ -90,7 +98,9 @@ export function registerOrderCreationRoute(
       const order = await deps.orders.createOrder({
         customerId, guestCartIdHash, customerEmail: body.customerEmail, customerName: body.customerName,
         customerPhone: body.customerPhone, customerTaxId: body.customerTaxId || null, shippingAddress,
-        shippingZoneId: zone.id, shippingCostCents, subtotalCents: pricing.subtotalCents,
+        shippingZoneId: zone.id, shippingCostCents,
+        shippingCollectionCents: shippingChargeMode === 'collect_at_delivery' ? quotedShippingCents : 0,
+        shippingChargeMode, subtotalCents: pricing.subtotalCents,
         discountCents: pricing.discountCents, couponCode: pricing.couponCode, totalCents: pricing.totalCents,
         taxCents: pricing.taxCents, pricingVersion: pricing.pricingVersion,
         estimatedPaymentFeeCents: pricing.estimatedPaymentFeeCents,

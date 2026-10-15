@@ -13,6 +13,7 @@ import { resolveCarrierQuotePackage } from './resolveCarrierQuotePackage.js';
 const CarrierQuoteInput = z.object({
   destinationZoneId: z.string().min(1).max(100), destinationDaneCode: z.string().regex(/^\d{5}$/),
   paymentMethod: z.enum(['wompi', 'cash_on_delivery']),
+  shippingChargeMode: z.enum(['included', 'collect_at_delivery']).default('included'),
   lines: z.array(z.object({ productId: z.string().min(1).max(100), quantity: z.number().int().min(1).max(99) }).strict()).min(1).max(50),
   couponCode: z.string().max(80).optional(),
 }).strict();
@@ -31,7 +32,7 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
     if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
     try {
       const pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        input.lines, input.couponCode, null, zone.priceInCents, input.paymentMethod);
+        input.lines, input.couponCode, null, input.shippingChargeMode === 'included' ? zone.priceInCents : 0, input.paymentMethod);
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,
         input.destinationDaneCode, deps.shipping);
       if (policyError) return c.json({ error: policyError }, 400);
@@ -39,6 +40,7 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
         pricing.subtotalCents, pricing.discountCents);
       const quotes = await deps.shipping.quoteCarrierShipping({
         destinationDaneCode: `${input.destinationDaneCode}000`, paymentMethod: input.paymentMethod,
+        shippingChargeMode: input.shippingChargeMode,
         ...pack,
       });
       return c.json({ success: true, quotes });

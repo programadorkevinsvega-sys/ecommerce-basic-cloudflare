@@ -90,6 +90,10 @@ export function renderAdminOrderDetailModal(): string {
               <span style="color:var(--muted, #94a3b8);">Envío:</span>
               <span id="modal-shipping-cost">$0</span>
             </div>
+            <div id="modal-shipping-collection-row" style="display:none; justify-content:space-between;">
+              <span style="color:var(--muted, #94a3b8);">Envío por cobrar al recibir:</span>
+              <span id="modal-shipping-collection">$0</span>
+            </div>
             <div style="display:flex; justify-content:space-between;">
               <span style="color:var(--muted, #94a3b8);">Costo de transacción Wompi cobrado:</span>
               <span id="modal-transaction-fee">$0</span>

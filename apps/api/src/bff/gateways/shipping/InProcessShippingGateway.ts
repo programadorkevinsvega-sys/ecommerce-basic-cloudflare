@@ -81,7 +81,7 @@ export class InProcessShippingGateway implements ShippingGateway {
     return this.publicApi.updateCarrierConfig(config);
   }
 
-  public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]> {
+  public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]> {
     const quotes = await this.publicApi.quoteCarrierShipping(input);
     return quotes.map(({ id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
       packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg }) => ({
@@ -93,8 +93,8 @@ export class InProcessShippingGateway implements ShippingGateway {
   public getCarrierAvailability(): Promise<boolean> { return this.publicApi.getCarrierAvailability(); }
   public isCarrierApiConfigured(): boolean { return this.publicApi.isCarrierApiConfigured(); }
 
-  public async getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null> {
-    const quote = await this.publicApi.getAvailableCarrierQuote({ id: input.id, method: input.paymentMethod, daneCode: input.daneCode, declaredValueCents: input.declaredValueCents, saleValueCents: input.saleValueCents, items: input.items });
+  public async getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null> {
+    const quote = await this.publicApi.getAvailableCarrierQuote({ id: input.id, method: input.paymentMethod, shippingChargeMode: input.shippingChargeMode, daneCode: input.daneCode, declaredValueCents: input.declaredValueCents, saleValueCents: input.saleValueCents, items: input.items });
     return quote ? mapCarrierQuote(quote) : null;
   }
 
