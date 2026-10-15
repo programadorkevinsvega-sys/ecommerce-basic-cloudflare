@@ -305,3 +305,11 @@ Aplicadas en producción el 2026-10-15 UTC. Bookmark anterior `0000031e-0000004e
 Migración expand-only: agrega actor y fecha de impresión de guías e índice parcial para localizar pendientes. Aplicada en producción el 2026-10-15 UTC, commit `1b752a0`, después de revisar el bookmark previo `0000031e-00000344-00005105-6cb274debbe41bcd8e881d85090e7406`; ledger y columnas `printed_at`/`printed_by` confirmados. Bookmark posterior `0000031e-0000035c-00005105-668244adf405ef29bf7388edcc03f451`. Worker desplegado como `a61ca513-1224-4a6b-a388-2e9a58f76a83`; `/health` respondió 200. No modifica envíos existentes ni genera despachos.
 
 La página independiente **Imprimir guías** quedó publicada desde `b87c543`, versión Worker `73806e8c-fe6e-4a88-a47f-726a855fa46e`; `/health` volvió a responder 200 con D1, KV, Queue y R2 saludables.
+
+## Nota de sincronización y limitaciones de evidencia (2026-10-15)
+
+El inventario de nombres de migraciones fuente se cotejó con `apps/api/src/modules/*/infrastructure/persistence/d1/migrations/*.sql`: todas las fuentes presentes aparecen referenciadas en este manifiesto. Este registro contiene evidencias históricas por entorno, pero no sustituye consultar `d1_migrations` antes de aplicar nuevas migraciones.
+
+Hay una inconsistencia cronológica que debe reconciliarse: las filas históricas declaran `reviews__0002_demo_reviews.sql` aplicada en producción el 2026-10-14 y `reviews__0001_init.sql` el 2026-10-15. Como una migración posterior depende de la tabla creada por v1, esas fechas no demuestran por sí solas el orden real de aplicación. Consultar el ledger de producción y corregir este manifiesto con evidencia antes del próximo cambio en el módulo. El nombre histórico `0002_demo_reviews.sql` y `source='demo'` identifican únicamente el origen ficticio de datos autorizados; no describen un modo de ejecución ni una etiqueta mostrada a clientes.
+
+La fila de `cms__0002_institutional_pages.sql` para entorno local se conserva como no verificada: que la migración exista en la fuente y esté aplicada en producción no demuestra que se haya corrido en una D1 local persistente.

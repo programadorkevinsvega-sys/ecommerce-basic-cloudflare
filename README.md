@@ -13,6 +13,7 @@ Plataforma de comercio electrónico completa, con tienda para clientes, panel de
 > A lo largo de este documento, "§N" significa "sección N del contrato de arquitectura".
 
 Plan de trabajo por fases: [`ROADMAP.md`](./ROADMAP.md).
+Estado sincronizado entre código, operación y evidencia: [`docs/IMPLEMENTATION_STATUS.md`](./docs/IMPLEMENTATION_STATUS.md).
 
 ---
 
@@ -44,7 +45,7 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 - Prohibida la lógica de negocio en controladores del BFF y en los frontends.
 - Prohibido confiar en precios, totales, roles o `customerId` enviados por el cliente.
 - Prohibido confirmar pagos por redirección del navegador; solo por webhook verificado y reconciliado con Wompi.
-- Las notificaciones en tiempo real se emiten **solo tras un pago verificado**; las salas las decide el servidor según la sesión, nunca el cliente.
+- Las notificaciones financieras se persisten después de los eventos autorizados; cada lectura REST exige sesión y deriva en el servidor qué actor puede verlas.
 - Prohibido emitir, editar o borrar facturas desde el frontend o con datos del cliente; una factura emitida es inmutable y se corrige con nota crédito. La numeración es consecutiva, atómica e idempotente.
 - Prohibido registrar secretos, datos de tarjeta o PII en logs, y guardarlos en el repositorio.
 - No marcar como "probado", "certificado" o "COMPLETE" nada que no tenga evidencia reproducible (tests o verificación documentada). Los estados de seguridad y rollback están **PENDIENTES** hasta entonces.
@@ -53,7 +54,9 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 
 ---
 
-## 1. Alcance funcional
+## 1. Alcance funcional (estado del código, 2026-10-15)
+
+Este cuadro describe capacidades presentes en el repositorio; no implica por sí solo que cada versión esté desplegada o que la integración externa haya pasado una prueba punta a punta. La evidencia por entorno se registra en [`AUDIT_PROGRESS.md`](./AUDIT_PROGRESS.md), [`ROADMAP.md`](./ROADMAP.md) y [`docs/migrations/manifest.md`](./docs/migrations/manifest.md).
 
 | Requerimiento | Módulo responsable | Admin | Tienda pública |
 |---|---|:---:|:---:|
@@ -62,27 +65,29 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 | Home | `storefront` + `catalog` + `cms` | — | ✅ |
 | Listado de productos, filtros, búsqueda | `catalog` | ✅ CRUD | ✅ |
 | Detalle de producto | `catalog` + `seo` + `promotions` + `reviews` | ✅ CRUD | ✅ |
-| Reseñas y valoraciones | `reviews` + `orders` | ✅ Moderación, edición y reseñas editoriales; el método de pago se consulta solo para compras entregadas y pagadas | ✅ Compradores verificados y opiniones editoriales identificadas como tales |
+| Reseñas y valoraciones | `reviews` + `orders` | ✅ Listar, crear, editar, publicar/ocultar y eliminar; compra/pago se consulta por Gateway | ✅ Ficha y página de opiniones por producto; las opiniones sembradas se mantienen diferenciadas internamente de una compra verificada |
 | Carrusel y su gestión | `storefront` | ✅ CRUD | ✅ |
 | Gestión de banners | `storefront` | ✅ CRUD | ✅ |
 | Anuncios (home, clientes, productos) | `storefront` | ✅ CRUD | ✅ |
 | Gestión de promociones y cupones | `promotions` | ✅ CRUD | ✅ |
-| CMS (páginas, bloques, menús) y Blog (artículos, autores, categorías) | `cms` | ✅ CRUD en pantallas separadas | ✅ SSR público |
-| SEO completo por página | `seo` | ✅ CRUD | ✅ |
+| CMS (páginas, bloques, menús) y Blog (artículos, autores, categorías) | `cms` | ✅ Páginas CMS, Menús y Blog en pantallas separadas | ✅ SSR público para páginas publicadas y blog |
+| Colecciones | `catalog` | ✅ CRUD, imagen opcional y selección/búsqueda de productos | ✅ Directorio y detalle paginados por colección publicada |
+| Seguimiento de pedidos | `orders` + `shipping` | ✅ Seguimiento operativo, historial y guías de transportadora | ✅ Cuenta autenticada por propiedad; invitado mediante clave de capacidad enviada por email |
+| SEO | `seo`, `catalog`, `cms` | ✅ Redirecciones y campos SEO específicos existentes | ✅ Metadatos SSR en las rutas que los implementan |
 | Biblioteca de medios | `media` | ✅ CRUD | — |
 | Carrito, checkout, pedidos | `cart`, `orders`, `inventory` | ✅ | ✅ |
 | Pagos en línea con **Wompi** | `payments` | ✅ | ✅ |
-| **Notificaciones en tiempo real** al recibir un pago, con todos los detalles | `realtime` | ✅ | ✅ (solo su pago) |
+| Notificaciones de pagos | `realtime` | ✅ Lectura incremental autenticada desde D1 | ✅ Solo las asociadas a su sesión/propiedad |
 | **Facturas** generadas y almacenadas con todos los detalles | `invoicing` | ✅ | ✅ (solo las suyas) |
 | **Pago contra entrega** configurable por producto | `catalog` + `orders` + `payments` | ✅ | ✅ |
-| **Envío nacional o solo local** (ciudad / municipio) por producto | `catalog` + `shipping` | ✅ | ✅ |
-| Productos **con descuento** y productos **a crédito** | `promotions`, `credit`, `catalog` | ✅ | ✅ |
+| **Entrega local o envío nacional** | `orders` + `shipping` + `catalog` | ✅ Zonas locales y transportadora configuradas por separado | ✅ Local según zonas de Medellín/Valle de Aburrá; nacional cotizado por MiPaquete |
+| Productos con descuento | `promotions`, `catalog` | ✅ | ✅ |
 | Cuenta del cliente (pedidos, direcciones) | `identity`, `orders` | — | ✅ |
 | Configuración de la tienda | `settings` | ✅ | — |
 | Auditoría de acciones | `audit` | ✅ lectura | — |
-| Notificaciones por email con **Resend** | `notifications` | ✅ plantillas | — |
+| Emails transaccionales con Resend | `notifications` | ✅ Envío desde plantillas implementadas en código | — |
 
-**CRUD completo** (crear, leer, actualizar, eliminar/archivar) para toda entidad administrable. El borrado es lógico (`deleted_at`) salvo en datos sin valor histórico.
+Las acciones administrativas dependen del contrato y del valor histórico de cada entidad; no se asume que todo dato admita borrado físico. Los módulos financieros y de auditoría conservan trazabilidad y usan correcciones/estados en lugar de alterar el historial.
 
 ---
 
@@ -111,22 +116,22 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 | API / BFF | **Hono** + `@hono/zod-openapi` en un único Worker |
 | Base de datos | **Cloudflare D1** (única, con prefijos por módulo) |
 | Archivos e imágenes | **Cloudflare R2** (keys `<modulo>/...`) + Cloudflare Images / Image Resizing para variantes |
-| Caché | **Workers KV** (con TTL) + **Cache API** para respuestas HTTP públicas |
-| Eventos | **Cloudflare Queues** + DLQ, outbox por módulo |
-| Tareas programadas | **Cron Triggers** (outbox relay, publicación programada, limpieza) |
-| Consistencia fuerte (si hace falta) | **Durable Objects** (reservas de stock bajo alta concurrencia) |
-| Rate limiting / bots | Rate Limiting binding + **Turnstile** en login/registro |
-| Observabilidad | Logs JSON, **Workers Analytics Engine**, OpenTelemetry OTLP |
-| Frontend tienda | **Cloudflare Pages** con SSR (propuesta: Astro + islas React) |
-| Frontend admin | **Cloudflare Pages** SPA (propuesta: React + Vite + TanStack Query) |
-| Cliente de API | Generado desde OpenAPI (los frontends no comparten código con el backend) |
+| Caché | Binding Workers KV configurado; no se encontró uso generalizado en las rutas revisadas |
+| Eventos | **Cloudflare Queues** y consumidor/DLQ configurados; outbox por módulo según cada implementación |
+| Tareas programadas | Cron Trigger cada 5 minutos para los handlers registrados en el Worker |
+| Consistencia fuerte | Actualización condicional en D1; Durable Objects no están configurados |
+| Rate limiting | Bindings de rate limit para autenticación, checkout y escrituras; no se encontró integración Turnstile |
+| Observabilidad | Logs y binding Analytics Engine configurado; la instrumentación de cada métrica debe verificarse por handler |
+| Storefront | Rutas HTML SSR integradas al Worker Hono (ver controladores `storefront` y vistas) |
+| Panel admin | Dashboard servido por el Worker en `/admin`, con secciones en una página y scripts del cliente; `apps/admin` es un paquete placeholder, no el frontend desplegado |
+| Cliente de API | Peticiones desde vistas/JS del Worker; no hay un frontend independiente generado desde OpenAPI desplegado |
 | Tests | Vitest, `@cloudflare/vitest-pool-workers` (Miniflare), k6 |
 | Despliegue | Cloudflare Workers Builds (push a `main` despliega automáticamente); GitHub Actions ejecuta CI |
 
 | Pasarela de pago | **Wompi** (adaptador de `IPaymentPort`) |
 | Email transaccional | **Resend** (adaptador de `IEmailPort`) |
-| Tiempo real | **Durable Objects** con WebSockets (Hibernation API); el historial persiste en D1 |
-| PDF de facturas | Generación dentro del Worker con una librería JS pura, detrás de `IInvoicePdfPort` (ADR-0013) |
+| Notificaciones de pagos | Historial en D1 y consulta HTTP autenticada incremental; el panel de pagos consulta periódicamente |
+| Documento de factura | HTML/CSS de impresión almacenado en R2 y servido con acceso autorizado; el Worker no genera un PDF binario (ADR-0013) |
 
 > Wompi y Resend se integran por **HTTP desde el Worker** mediante puertos (`IPaymentPort`, `IEmailPort`) implementados en `infrastructure/` de `payments` y `notifications`. El dominio y la aplicación **no conocen** a ningún proveedor (D de SOLID, §1 y §2); cambiar de proveedor es cambiar un adaptador. Son servicios SaaS externos consumidos por HTTPS, no módulos no-serverless, por lo que la regla de consulta sobre Containers (§0) no se activa.
 
@@ -138,10 +143,8 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
  Clientes / Administradores
         │
         ▼
- Cloudflare Pages
-   ├─ storefront (SSR, SEO)        dominio.com
-   └─ admin (SPA)                  admin.dominio.com   (opcional: Cloudflare Access)
-        │  REST  (/api/* en cada host → mismo origen, sin CORS)
+ Storefront y Admin UI (SSR desde el Worker)
+        │  REST (/api/*, mismo origen)
         ▼
 ┌───────────────────────────────────────────────────────────────────┐
 │  UN SOLO WORKER                                                   │
@@ -150,7 +153,7 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 │     │  Gateways (en proceso hoy → Service Binding si se separa)   │
 │     ▼                                                             │
 │  identity · catalog · media · inventory · cart · orders ·         │
-│  payments · shipping · credit · invoicing · promotions · reviews · │
+│  payments · shipping · invoicing · promotions · reviews · │
 │  storefront · cms · seo · settings · notifications ·              │
 │  realtime · audit                                                 │
 │     │                                                             │
@@ -169,7 +172,7 @@ GET /api/v1/store/products/:slug
       → PromotionsGateway.getActiveForProduct()
       → SeoGateway.getForEntity("product", id)
       → StorefrontGateway.getAnnouncements("product")
-  BFF une los DTOs y responde (cacheable en Cache API/KV)
+  BFF une los DTOs y responde como HTML SSR
 ```
 
 ---
@@ -180,32 +183,31 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 
 | Módulo | Responsabilidad | Tablas principales (D1) |
 |---|---|---|
-| `identity` | Clientes, administradores, roles/permisos (RBAC), sesiones, recuperación de contraseña, direcciones | `identity_customers`, `identity_admins`, `identity_roles`, `identity_role_permissions`, `identity_sessions`, `identity_password_resets`, `identity_addresses` |
-| `catalog` | Productos, variantes, categorías, marcas, proveedores, atributos, búsqueda | `catalog_products`, `catalog_product_variants`, `catalog_categories`, `catalog_brands`, `catalog_suppliers`, `catalog_product_categories`, `catalog_product_images`, `catalog_attributes`, `catalog_product_coverage`, `catalog_products_fts` |
-| `media` | Biblioteca de archivos en R2, carpetas, metadatos y alt text | `media_assets`, `media_folders` |
-| `inventory` | Stock, movimientos, reservas | `inventory_stock`, `inventory_movements`, `inventory_reservations` |
-| `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items` |
-| `orders` | Pedidos, estados, historial | `orders_orders`, `orders_lines`, `orders_history`, `orders_outbox_events` |
+| `identity` | Clientes, administradores, roles/permisos (RBAC), sesiones y direcciones | `identity_customers`, `identity_admins`, `identity_roles`, `identity_sessions`, `identity_addresses`, `identity_outbox_events` |
+| `catalog` | Productos, variantes, categorías, marcas, proveedores, atributos, colecciones y búsqueda | `catalog_products`, `catalog_product_variants`, `catalog_categories`, `catalog_brands`, `catalog_suppliers`, `catalog_product_categories`, `catalog_product_images`, `catalog_attributes`, `catalog_product_coverage`, `catalog_collections`, `catalog_collection_products`, `catalog_products_fts`, `catalog_outbox_events` |
+| `media` | Biblioteca de archivos en R2, carpetas, metadatos y alt text | `media_assets`, `media_folders`, `media_outbox_events` |
+| `inventory` | Stock, movimientos, reservas y consumo idempotente por pedido | `inventory_stocks`, `inventory_movements`, `inventory_reservations`, `inventory_order_consumptions`, `inventory_outbox_events` |
+| `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items`, `cart_outbox_events` |
+| `orders` | Pedidos, líneas, estados, historial, tracking de invitado y modalidad logística | `orders_orders`, `orders_lines`, `orders_history`, `orders_outbox_events` |
 | `reviews` | Opiniones de productos, puntuaciones y agregados | `reviews_product_reviews` |
-| `payments` | Pagos con Wompi y contra entrega, webhooks idempotentes, recaudos | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_outbox_events` |
-| `shipping` | Zonas de cobertura (nacional, ciudad, municipio), tarifas, reglas de contra entrega por zona | `shipping_zones`, `shipping_coverage`, `shipping_rates` |
-| `credit` | Venta a crédito: planes, cuentas, cuotas y abonos *(alcance por confirmar, ADR-0009)* | `credit_plans`, `credit_accounts`, `credit_installments`, `credit_payments` |
-| `invoicing` | Facturas: numeración, emisión, líneas, impuestos, notas crédito, PDF y snapshot inmutable | `invoicing_invoices`, `invoicing_invoice_lines`, `invoicing_invoice_taxes`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |
-| `realtime` | Notificaciones en vivo (admin y cliente), historial y estado de lectura | `realtime_notifications`, `realtime_notification_reads` |
-| `promotions` | Promociones, reglas, cupones, canjes | `promotions_promotions`, `promotions_rules`, `promotions_coupons`, `promotions_redemptions` |
-| `storefront` | Carruseles, slides, banners, anuncios (ubicación, vigencia, audiencia) | `storefront_carousels`, `storefront_slides`, `storefront_banners`, `storefront_announcements` |
-| `cms` | Páginas, bloques, versiones, menús | `cms_pages`, `cms_page_versions`, `cms_blocks`, `cms_menus`, `cms_menu_items` |
-| `seo` | Metadatos por entidad/página, redirecciones 301/302, sitemap, robots | `seo_metadata`, `seo_redirects`, `seo_sitemap_entries` |
-| `settings` | Datos de la tienda, moneda, impuestos, envíos, redes, scripts | `settings_store` |
-| `notifications` | Plantillas y envío de emails transaccionales | `notifications_templates`, `notifications_log` |
+| `payments` | Pagos con Wompi, webhooks, recaudos contra entrega y conciliación de liquidaciones | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_settlement_costs`, `payments_settlement_corrections`, `payments_outbox_events` |
+| `shipping` | Entrega local del comercio, catálogo DANE, paquetes, integración MiPaquete, guías y tracking | `shipping_zones`, `shipping_zone_locations`, `shipping_divipola` y tablas `shipping_*` de transportadora/paquetes |
+| `invoicing` | Facturas inmutables, secuencias, notas crédito y documento HTML de impresión | `invoicing_invoices`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |
+| `realtime` | Notificaciones persistidas y estado de lectura | `realtime_notifications` |
+| `promotions` | Reglas promocionales, cupones y canjes | `promotions_rules`, `promotions_coupons`, `promotions_redemptions`, `promotions_outbox_events` |
+| `storefront` | Banners y anuncios (ubicación y vigencia) | `storefront_banners`, `storefront_announcements`, `storefront_outbox_events` |
+| `cms` | Páginas institucionales versionadas, menús y Blog editorial | `cms_pages`, `cms_page_versions`, `cms_menus`, `cms_menu_items`, `cms_blog_authors`, `cms_blog_categories`, `cms_blog_posts`, `cms_blog_post_categories`, `cms_outbox_events` |
+| `seo` | Metadatos por entidad/página y redirecciones 301/302; el Worker genera robots/sitemaps | `seo_metadata`, `seo_redirects`, `seo_outbox_events` |
+| `settings` | Perfil, moneda, impuestos, datos fiscales/contacto, redes y copyright | `settings_store`, `settings_outbox_events` |
+| `notifications` | Envío transaccional con plantillas en código, log y outbox | `notifications_log`, `notifications_outbox_events` |
 | `audit` | Registro inmutable de acciones administrativas | `audit_logs` |
 
-Cada módulo con escrituras relevantes incluye también `<modulo>_outbox_events`.
+Varios módulos con escrituras de integración mantienen `<modulo>_outbox_events`; verifica la migración del módulo antes de asumirlo.
 
 ### Reglas de datos entre módulos (ejemplos concretos)
 
 - `catalog_product_images.media_id` es un `TEXT` sin FK hacia `media_assets`; la URL se resuelve vía `MediaGateway`.
-- `orders_items` guarda un **snapshot** (nombre, SKU, precio) del producto; no depende del catálogo después de la compra.
+- `orders_lines` guarda un **snapshot** (nombre, SKU, precio) del producto; no depende del catálogo después de la compra.
 - El **sitemap** lo mantiene `seo` consumiendo eventos (`catalog.product.published.v1`, `cms.page.published.v1`, …); nunca consulta tablas de `catalog` o `cms`.
 - El stock se descuenta con `UPDATE ... WHERE stock >= :qty` dentro del propio módulo `inventory`; si la concurrencia lo exige, se pasa a un Durable Object.
 
@@ -240,7 +242,7 @@ En pagos Wompi, el checkout agrega una sola línea de $700 por costo fijo de tra
 La comisión del pedido queda guardada como estimación. En Pagos, un administrador con permiso `payments:edit` puede registrar el importe y la referencia de la liquidación del portal para un pedido aprobado; se muestra la variación frente a la estimación. El webhook no se trata como fuente de comisión real.
 | `shipping_scope` | `national` / `local` | Envío a todo el país o solo a zonas concretas |
 | `catalog_product_coverage` | lista de `zone_id` (`TEXT`, sin FK) | Zonas válidas cuando el alcance es `local` (ciudad o municipio) |
-| `sale_mode` | `cash` / `credit` / `both` | Venta de contado, a crédito o ambas *(ADR-0009)* |
+| `sale_mode` | `cash` / `credit` / `both` | Campo de política de catálogo; no existe todavía gestión de cuotas ni módulo de crédito (ADR-0009 pendiente) |
 | Descuento | vía `promotions` | Los productos con descuento se resuelven por `PromotionsGateway`, no por columnas en `catalog` |
 
 ### Reglas SEO Profesionales (9 Pilares de eCommerce)
@@ -292,18 +294,16 @@ OrdersCheckoutPolicy (dominio de orders), con DTOs obtenidos por Gateways:
   CatalogGateway    → política de cada producto
   ShippingGateway   → ¿la dirección está cubierta? tarifa, ¿la zona admite contra entrega?
   PromotionsGateway → descuentos aplicables
-  CreditGateway     → ¿el cliente puede comprar a crédito? planes disponibles
 
 Reglas:
   1. Producto local-only y dirección fuera de su cobertura  → no se puede enviar (se marca en el carrito).
   2. Contra entrega disponible SOLO si TODOS los productos del carrito lo permiten
      y la zona de destino admite contra entrega.
-  3. Crédito disponible SOLO si todos los productos admiten crédito y el cliente es elegible.
-  4. Carritos mixtos: se informa qué producto bloquea cada método; no se dividen pedidos sin decisión explícita.
-  5. Envío: la entrega local la administra la tienda por zona; los destinos nacionales se cotizan con la transportadora.
+  3. Carritos mixtos: se informa qué producto bloquea cada método; no se dividen pedidos sin decisión explícita.
+  4. Envío: la entrega local la administra la tienda por zona; los destinos nacionales se cotizan con la transportadora.
 ```
 
-Las reglas 2–5 son la propuesta inicial; se confirman en ADR-0010.
+El módulo de crédito aún no existe; su alcance está pendiente en ADR-0009. Las reglas activas de checkout viven en `orders` y se validan en servidor.
 
 ### Cobertura de envío (`shipping`)
 
@@ -329,87 +329,29 @@ Las reglas 2–5 son la propuesta inicial; se confirman en ADR-0010.
 - Estados del pedido: `placed → confirmed → shipped → delivered → cash_collected`; el admin (o repartidor) registra el recaudo en `payments_cod_collections`.
 - Pedidos contra entrega pueden exigir verificación (teléfono/dirección) antes de pasar a `confirmed`; configurable en `settings`.
 
-### Venta a crédito (`credit`)
+### Venta a crédito (pendiente; ADR-0009)
 
-- Interpretado como **venta con financiación propia en cuotas**: plan (número de cuotas, interés, frecuencia), cuenta del cliente, calendario de cuotas y abonos.
-- Cada abono en línea se paga con **Wompi** como un pago independiente que referencia la cuota (`installment_id` como `TEXT`).
-- Recordatorios de cuotas por Cron + **Resend**.
-- **Pendiente de confirmar** el alcance exacto (ver sección 15, ADR-0009).
+No existe un módulo `credit` ni tablas/API de cuotas en la implementación actual. El alcance comercial y legal debe definirse antes de implementar esta modalidad.
 
-### Notificaciones en tiempo real de pagos (`realtime`)
+### Notificaciones de pagos (`realtime`)
 
-Cuando se recibe un pago, el frontend lo ve **al instante y con todos los detalles**, sin recargar la página.
+El módulo conserva notificaciones en D1. La ruta actual `GET /api/v1/realtime/notifications` deriva canal/propietario desde la sesión validada, pagina hasta 30 elementos y acepta el cursor `since`; marcar como leídas vuelve a validar que las notificaciones pertenezcan al actor autorizado. La vista de pagos del admin consulta cada ocho segundos aproximadamente.
 
-- **Transporte:** WebSockets sobre **Durable Objects** (Hibernation API) en el mismo Worker. Es un primitivo nativo de Cloudflare permitido por el contrato (§0.2, §4.4); **no usa Containers**. Si el socket cae, el frontend se reconecta con *backoff* y recupera lo perdido por HTTP (`?since=<notificationId>`).
-- **Quién recibe qué:** el panel admin recibe todos los pagos (sala `admin:payments`); el cliente recibe **solo** los de su propio pedido (sala `customer:{id}`, derivada de su sesión).
-- **Solo tras verificar:** se notifica únicamente cuando el pago ya fue **verificado y reconciliado** con Wompi; nunca por la redirección del navegador.
-
-```text
-Wompi ─webhook─► payments (verifica checksum + reconcilia con la API de Wompi)
-   └─ outbox ─► Queue: payments.payment.confirmed.v1
-        ├─► realtime (consumer, idempotente)
-        │     1. PaymentsGateway / OrdersGateway → detalle del pago y del pedido (ACL)
-        │     2. guarda `realtime_notifications` en D1 (historial y no leídas)
-        │     3. publica al Durable Object REALTIME_HUB
-        │          ├─ admin:payments  → panel de administración
-        │          └─ customer:{id}   → solo el cliente dueño del pago
-        └─► invoicing (consumer) → emite la factura
-              └─ invoicing.invoice.issued.v1 → realtime actualiza la notificación con el número de factura
-```
-
-**Detalles que lleva la notificación** (según el rol; nunca datos de tarjeta):
-
-| Grupo | Campos |
-|---|---|
-| Pago | `paymentId`, referencia, ID de transacción de Wompi, estado, método (tarjeta, PSE, Nequi, contra entrega…), monto, moneda, fecha/hora, IVA/impuestos |
-| Pedido | número de pedido, estado, resumen de productos (nombre, cantidad, precio), descuentos/cupón aplicado, costo y tipo de envío |
-| Cliente | nombre, correo y teléfono (el admin ve el detalle operativo; datos sensibles como el documento solo en el detalle del pedido, con permiso) |
-| Entrega | ciudad/municipio, dirección, tipo (nacional/local), contra entrega sí/no |
-| Factura | número y enlace de descarga (llega en una segunda actualización cuando se emite) |
-
-**Eventos que se notifican:** pago aprobado, rechazado, pendiente, anulado/reembolsado, recaudo contra entrega, abono de crédito y factura emitida.
-
-**Frontend:** *toast* con sonido opcional, contador de no leídas, centro de notificaciones (`/admin/notifications`), feed en vivo en `/admin/payments` y, para el cliente, actualización automática en `/checkout/resultado` y `/cuenta/pedidos/:id`. El cliente **deduplica por `notificationId`** (entrega al menos una vez).
+La confirmación financiera sigue dependiendo del webhook de Wompi verificado y reconciliado; las notificaciones no reemplazan ese proceso. El Worker actual no declara Durable Objects ni endpoints WebSocket para realtime. La decisión original de ADR-0011 describe una arquitectura futura y no el transporte implementado.
 
 ### Facturación (`invoicing`)
 
-Cada pago genera su **factura**, que se **guarda completa** y no se puede alterar.
+Las facturas internas son documentos inmutables emitidos por el módulo `invoicing`. La factura conserva un snapshot del pedido y del emisor disponible al momento de emisión; las correcciones se tramitan mediante nota crédito. El documento actual es HTML/CSS diseñado para impresión y se almacena de forma privada en R2. No se genera un archivo PDF binario desde el Worker y este documento interno no equivale a facturación electrónica DIAN.
 
-- **Cuándo se emite:** pago Wompi aprobado → factura; contra entrega → al registrar el recaudo (`payments.cod.collected.v1`); crédito → según ADR-0009/ADR-0012.
-- **Qué guarda (todos los detalles):**
-
-| Grupo | Campos |
-|---|---|
-| Encabezado | número consecutivo, prefijo/resolución, fecha y hora de emisión, estado (emitida / anulada), moneda |
-| Emisor | razón social, NIT/identificación fiscal, dirección, contacto (desde `settings`) |
-| Cliente | nombre o razón social, tipo y número de documento, correo, teléfono, dirección de facturación |
-| Pedido y envío | número de pedido, dirección y ciudad/municipio de entrega, método y costo de envío |
-| Líneas | por producto: nombre, SKU, cantidad, precio unitario, descuento, base, tarifa e importe de impuesto, total de la línea (todo del *snapshot* del pedido) |
-| Totales | subtotal, descuentos y cupones, impuestos desglosados, envío, **total** |
-| Pago | método, ID de transacción de Wompi, referencia, fecha, estado (o recaudo contra entrega) |
-| Trazabilidad | `eventId`/`paymentId` de origen, usuario/sistema que emitió, fecha de generación del PDF |
-
-- **Dónde se guarda:** datos estructurados y *snapshot* JSON inmutable en D1 (`invoicing_*`); PDF en **R2** bajo un prefijo privado (`private/invoices/{invoiceId}.pdf`), servido solo por el Worker con verificación de propiedad.
-- **Numeración:** consecutiva, sin huecos ni duplicados, asignada de forma **atómica** dentro del módulo, e **idempotente** (un solo documento por pago/pedido aunque el evento se repita).
-- **Correcciones:** una factura emitida **no se edita ni se borra**; se corrige con **nota crédito** (o anulación trazable).
-- **Cuadre obligatorio:** líneas + impuestos + envío − descuentos debe igualar el monto confirmado por Wompi; si no cuadra, **no se emite** y se genera una alerta.
-- **Acceso:** el cliente ve y descarga sus facturas en `/cuenta/facturas` (404 si no son suyas); el admin las gestiona en `/admin/invoices` (búsqueda, descarga, reenvío por email, notas crédito).
-- **PDF:** `IInvoicePdfPort` con una librería JS pura que corra en Workers (ADR-0013). No requiere navegador ni Containers.
-- **Factura electrónica con validez legal:** la emisión inicial es el documento interno completo. Si la operación exige **facturación electrónica ante la autoridad tributaria** (en Colombia, la DIAN, mediante un proveedor tecnológico), se integra detrás de `IElectronicInvoicingPort` y se guardan los identificadores y acuses que devuelva (por ejemplo, el CUFE). **Alcance por confirmar en ADR-0012.**
+El cliente puede consultar sus documentos autenticándose en su cuenta; el admin tiene la pantalla de Facturación. El BFF verifica autorización/propiedad al servir el documento. Los detalles de numeración y snapshot están en ADR-0012 y ADR-0013; no se deben asumir campos o automatismos que no estén en el esquema y los casos de uso actuales.
 
 ### Email con Resend (`notifications`)
 
-- Adaptador HTTP de `IEmailPort`; dominio de envío verificado (SPF/DKIM/DMARC).
-- Envíos desde un consumer de **Cloudflare Queues** (reintentos con backoff, DLQ, `Idempotency-Key` para evitar duplicados).
-- Webhook `POST /api/v1/webhooks/resend` (firma verificada) para registrar entregas, rebotes y quejas en `notifications_log`.
-- Plantillas versionadas y editables desde el admin; la clave de API vive en Cloudflare Secrets.
-- Al emitirse una factura (`invoicing.invoice.issued.v1`) se envía al cliente por email con el PDF adjunto o un enlace seguro que exige sesión.
-
----
+El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado para Resend. Las plantillas utilizadas se implementan en código. No hay webhook de eventos de Resend ni editor general de plantillas en el panel actual; comprobar el flujo de correo y el estado del proveedor antes de afirmar entrega en producción.
 
 ## 6. Rutas
 
-### 6.1 Tienda pública (Pages SSR)
+### 6.1 Tienda pública (SSR del Worker)
 
 | Ruta | Contenido |
 |---|---|
@@ -417,46 +359,40 @@ Cada pago genera su **factura**, que se **guarda completa** y no se puede altera
 | `/productos` | Listado con filtros, orden y paginación |
 | `/productos/:slug` | Detalle de producto |
 | `/productos/:slug/opiniones` | Valoraciones y opiniones paginadas del producto |
-| `/categorias/:slug`, `/marcas/:slug` | Listados por categoría / marca |
+| `/categorias/:slug`, `/marcas`, `/marcas/:slug` | Listados y directorio de categorías/marcas |
 | `/colecciones` | Directorio paginado de colecciones publicadas |
 | `/colecciones/:slug` | Productos publicados de una colección |
 | `/blog` | Artículos públicos paginados con filtro por categoría |
 | `/blog/:slug` | Artículo publicado con metadatos SEO, canonical y JSON-LD |
-| `/buscar?q=` | Búsqueda |
-| `/promociones` | Promociones vigentes |
 | `/sobre-nosotros`, `/contacto`, `/preguntas-frecuentes` | Páginas informativas editables desde CMS |
 | `/politica-de-envios`, `/devoluciones`, `/garantias` | Información de envíos y posventa editable desde CMS |
 | `/terminos-y-condiciones`, `/politica-de-privacidad`, `/politica-de-cookies`, `/tratamiento-de-datos` | Páginas legales editables desde CMS |
 | `/p/:slug` | Ruta histórica del CMS; se conserva por compatibilidad |
 | `/carrito`, `/checkout` | Compra |
 | `/seguimiento-pedido` | Clientes con sesión consultan sus pedidos por propiedad; invitados usan número de pedido y clave enviada al correo; estados y datos logísticos administrables desde Envíos en el panel |
-| `/login`, `/registro`, `/recuperar` | Acceso de clientes |
-| `/cuenta`, `/cuenta/pedidos`, `/cuenta/direcciones`, `/cuenta/facturas` | Área del cliente |
+| `/auth/login` | Inicio de sesión SSR; las operaciones de registro y autenticación se exponen por API |
+| `/cuenta` | Vista de cuenta protegida, con resumen de pedidos y facturas del cliente |
 | `/sitemap.xml`, `/sitemap-blog.xml`, `/robots.txt` | Generados dinámicamente |
+| URL desconocida | Página 404 útil con navegación a la tienda; no es un catálogo de rutas CMS |
 
-### 6.2 Panel de administración (Pages SPA)
+### 6.2 Panel de administración
 
-`/admin/login` · `/admin` (dashboard; grupo CMS con pantallas independientes de Páginas CMS, Menús y Blog) · `/admin/products` · `/admin/categories` · `/admin/brands` · `/admin/media` · `/admin/carousel` · `/admin/banners` · `/admin/announcements` · `/admin/promotions` · `/admin/coupons` · `/admin/seo` · `/admin/seo/redirects` · `/admin/inventory` · `/admin/shipping` · `/admin/credit` · `/admin/payments` · `/admin/invoices` · `/admin/notifications` · `/admin/orders` · `/admin/customers` · `/admin/users` · `/admin/roles` · `/admin/settings` · `/admin/audit`
+El panel actual se sirve desde `/admin` como una aplicación de dashboard con navegación lateral y secciones seleccionadas en la misma pantalla; no se deben interpretar las etiquetas del menú como rutas URL independientes. Incluye Resumen, Pedidos, Inventario, Envíos y cobertura, Municipios DANE, Transportadoras, Empaques, Seguimiento de pedidos, Imprimir guías, Pagos y facturas, Catálogo (Productos, Colecciones, Categorías, Marcas, Proveedores, Atributos, Variantes, Reseñas), Marketing, CMS (Páginas CMS, Menús, Blog), Auditoría y Configuración. El acceso requiere autenticación administrativa y permisos RBAC según operación.
 
-### 6.3 API (Worker, versionada)
+### 6.3 API del Worker (rutas principales)
 
-| Prefijo | Acceso | Uso |
+| Ruta | Acceso | Uso |
 |---|---|---|
-| `/api/v1/store/*` | Público (cacheable) | Datos para la tienda: home, productos, CMS, anuncios, SEO |
-| `/api/v1/auth/*` | Público + rate limit + Turnstile | Registro, login, logout, refresh, recuperación (clientes) |
-| `/api/v1/account/*` | Cliente autenticado | Perfil, direcciones, pedidos |
-| `/api/v1/cart/*`, `/api/v1/checkout/*` | Invitado o cliente | Carrito y compra |
-| `/api/v1/admin/auth/*` | Público + rate limit | Login de administradores |
-| `/api/v1/admin/*` | Admin autenticado + permiso RBAC | CRUD de todos los módulos |
-| `/api/v1/admin/realtime` | Admin con permiso | WebSocket de notificaciones en vivo |
-| `/api/v1/account/realtime` | Cliente autenticado | WebSocket con el estado de sus propios pagos y facturas |
-| `/api/v1/account/invoices/*` | Cliente autenticado | Listado y descarga de sus facturas |
-| `/api/v1/webhooks/wompi` | Firma/checksum verificado | Eventos de transacciones de Wompi |
-| `/api/v1/webhooks/resend` | Firma verificada | Entregas, rebotes y quejas de Resend |
-| `/health` | Interno | Estado de bindings críticos |
-| `/api/docs` | Admin / entorno dev | OpenAPI (Scalar/Swagger UI) |
+| `/api/v1/auth/*` | Público + rate limit | Registro y autenticación de clientes. |
+| `/api/v1/customer/orders`, `/api/v1/customer/invoices` | Cliente autenticado | Consultar pedidos/facturas propios. |
+| `/api/v1/cart/*`, `/api/v1/orders` | Invitado o cliente según operación | Carrito y creación de pedido. |
+| `/api/v1/admin/*` | Admin autenticado + permiso RBAC | Operaciones administrativas de módulos. |
+| `/api/v1/realtime/notifications*` | Sesión admin o cliente autenticada | Lectura incremental y marcado como leído. |
+| `/api/v1/invoices/:id/document` | Propietario/admin autorizado | Servir documento HTML con control de acceso. |
+| `/api/v1/webhooks/wompi` | Firma/checksum verificado | Eventos de transacciones de Wompi. |
+| `/health` | Público/operativo | Salud del Worker y bindings que revisa el controlador. |
 
-Convención CRUD admin por recurso: `GET /` (lista paginada) · `GET /:id` · `POST /` · `PATCH /:id` · `DELETE /:id`, más acciones de negocio explícitas (`POST /:id/publish`, `/archive`, `/reorder`, etc.).
+Las rutas API son contratos implementados, no una promesa de CRUD uniforme. Consultar controladores BFF y OpenAPI para los métodos concretos, permisos, filtros y paginación de cada recurso.
 
 ---
 
@@ -468,36 +404,29 @@ El detalle normativo (IDs `SEC-*`, modelo de amenaza, checklist de PR y matriz d
 - **Sesiones:** token opaco aleatorio (32 bytes) cuyo **hash SHA-256** se guarda en `identity_sessions`; cookies `__Host-session` (clientes) y `__Host-admin-session` (admin), `HttpOnly; Secure; SameSite=Lax; Path=/`, sin `Domain`. Expiración absoluta e inactividad (más estrictas para admin), rotación al login y revocación en el servidor.
 - **Administradores:** MFA (TOTP) obligatoria antes del lanzamiento, re-autenticación en acciones críticas, auditoría de toda mutación.
 - **RBAC:** permisos por recurso y acción (`products:write`, `promotions:publish`…), verificados en el BFF vía `IdentityGateway`; la autorización de negocio vive en el módulo.
-- **Protección:** rate limiting por IP/usuario, Turnstile en formularios públicos, validación Zod en toda entrada, CSP estricta, cabeceras de seguridad, verificación de firma en webhooks, idempotencia en pagos y eventos.
+- **Protección:** rate limiting configurado, validaciones en controladores, CSP/cabeceras y verificación de firma del webhook de Wompi. Turnstile no está configurado; ver controles normativos y pendientes en `SECURITY_RULES.md`.
 - **Datos:** secretos solo en Cloudflare Secrets, PII fuera de logs, subidas a R2 con validación de tipo/tamaño y URLs firmadas para operaciones privadas.
 - **Carga de imágenes:** 10 MiB máximo, 16.384 px por lado y 40 MP; formatos JPEG, PNG, WebP y AVIF. El Worker valida firmas, estructura disponible, dimensiones, CRC de chunks PNG y tamaño remoto con `R2.head()` antes de persistir D1. La decodificación completa de píxeles y la eliminación EXIF/GPS siguen pendientes.
 - **Admin:** opcionalmente detrás de **Cloudflare Access** como capa adicional.
 
 ---
 
-## 8. SEO completo
+## 8. SEO en el código actual
 
-Gestionado por el módulo `seo` y renderizado en el servidor (SSR) para que los crawlers reciban HTML completo.
+El Worker renderiza HTML SSR. No existe un panel general de SEO para todas las entidades.
 
-- **Metadatos por página y por entidad** (producto, categoría, marca, página CMS, home): `title`, `description`, `canonical`, `robots` (index/noindex, follow/nofollow), Open Graph, Twitter Cards. Valores por defecto con plantillas (`{nombre} | {tienda}`) y sobrescritura manual desde el admin.
-- **Datos estructurados JSON-LD:** `Organization`, `WebSite` (con SearchAction), `Product` + `Offer` + `AggregateRating` (cuando existan reseñas), `BreadcrumbList`, `FAQPage` (CMS).
-- **`sitemap.xml`** dinámico (índice + sitemaps por tipo) con `lastmod`, mantenido por eventos.
-- **`robots.txt`** configurable desde el admin (con referencia al sitemap).
-- **Redirecciones** 301/302 gestionables, y redirección automática al cambiar un `slug`.
-- **URLs limpias** y slugs únicos; canonical para filtros y paginación.
-- **Imágenes:** `alt` obligatorio en la biblioteca de medios, formatos modernos (AVIF/WebP), `srcset`, `width/height` y carga diferida.
-- **Rendimiento (Core Web Vitals):** HTML cacheado en el edge, assets inmutables, mínimo JS en la tienda.
-- **Preparado para i18n:** estructura compatible con `hreflang` si se añaden idiomas.
+- Producto: metadatos de catálogo, canonical/noindex, JSON-LD `Product`/`Offer`, BreadcrumbList y AggregateRating cuando el resumen elegible contiene reseñas.
+- Blog: canonical/noindex, Open Graph, JSON-LD `BlogPosting` y sitemap específico.
+- Sitemaps: índice `/sitemap.xml`, páginas estáticas/colecciones, productos y Blog. `robots.txt` es una respuesta estática que apunta al índice; no se edita desde Configuración.
+- Las búsquedas y páginas inexistentes emiten noindex donde corresponde. Listados y detalles configuran canonicals en SSR.
+- El layout emite `hreflang="es-CO"` y `x-default` con la misma URL canonical; esto no es una configuración multirregional.
+- JSON-LD no garantiza resultados enriquecidos en Google. Ver limitaciones y pendientes en [`docs/SEO_ARCHITECTURE.md`](./docs/SEO_ARCHITECTURE.md).
 
 ---
 
-## 9. Caché e invalidación
+## 9. Caché
 
-- Lecturas públicas: **Cache API** (respuesta completa) + **KV** (fragmentos y configuración), siempre tras un `ICachePort`.
-- Keys en KV: `<modulo>:<entidad>:<id>:<subrecurso>`, con TTL explícito.
-- **Invalidación por eventos:** un consumer de Queue purga las entradas afectadas cuando cambia un producto, banner, anuncio o página.
-- KV nunca es fuente de verdad de datos críticos.
-- Degradación elegante: si un módulo secundario falla, se sirve la última versión en caché.
+El binding `CACHE` de Workers KV existe en la configuración de Wrangler, pero no se encontró un uso generalizado de KV o Cache API en los controladores revisados. No se debe asumir que respuestas públicas estén cacheadas ni que haya invalidación por eventos hasta que un handler lo implemente explícitamente.
 
 ---
 
@@ -514,13 +443,11 @@ Contrato común: `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producer
 | `promotions.promotion.changed.v1` | promotions | caché |
 | `inventory.stock.low.v1` | inventory | notifications |
 | `orders.order.placed.v1` | orders | inventory, notifications, audit |
-| `payments.payment.confirmed.v1` / `.failed.v1` | payments | orders, credit, invoicing, realtime, notifications, audit |
+| `payments.payment.confirmed.v1` / `.failed.v1` | payments | orders, invoicing, realtime, notifications, audit |
 | `payments.cod.collected.v1` | payments | orders, invoicing, realtime, audit |
 | `invoicing.invoice.issued.v1` | invoicing | notifications (email), realtime, audit |
 | `invoicing.credit_note.issued.v1` | invoicing | notifications, realtime, audit |
 | `shipping.zone.changed.v1` | shipping | caché |
-| `credit.installment.due.v1` | credit | notifications |
-| `credit.installment.paid.v1` | credit | audit, notifications |
 
 Consumidores idempotentes, `message.ack()` solo tras persistir, `retry({ delaySeconds })` en fallos recuperables y DLQ configurada.
 
@@ -554,8 +481,8 @@ Consumidores idempotentes, `message.ack()` solo tras persistir, `retry({ delaySe
 │  │     ├─ platform/         # logger JSON, telemetría, manejo de errores
 │  │     ├─ composition-root.ts
 │  │     └─ index.ts          # fetch · queue · scheduled
-│  ├─ storefront/             # Pages SSR (tienda)
-│  └─ admin/                  # Pages SPA (panel)
+│  ├─ storefront/             # paquete del storefront; las vistas SSR actuales viven en el Worker
+│  └─ admin/                  # paquete placeholder; la UI efectiva vive en views/admin del Worker
 ├─ tests/
 │  ├─ e2e/
 │  └─ load/                   # k6
@@ -568,17 +495,20 @@ Las migraciones viven en cada módulo (`infrastructure/persistence/d1/migrations
 
 ## 12. Bindings, Variables de Entorno y Secretos de Cloudflare (`apps/api/wrangler.jsonc`)
 
-### 12.1 Bindings de Infraestructura Cloudflare
+### 12.1 Bindings de infraestructura (`apps/api/wrangler.jsonc`)
 
-| Binding | Tipo | Nombre del Recurso en Cloudflare | Uso en la Plataforma |
-|---|---|---|---|
-| `DB` | Cloudflare D1 | `ecommerce-vega-production` | Base de datos SQLite distribuida única (tablas prefijadas `<modulo>_*`) |
-| `MEDIA_BUCKET` | Cloudflare R2 | `ecommerce-vega-production` | Almacenamiento de imágenes de productos, banners, adjuntos de medios |
-| `CACHE` | Workers KV | `ecommerce-vega-cache-production` | Almacenamiento clave-valor de alta velocidad, caché de catálogo y settings |
-| `EVENTS_QUEUE` | Cloudflare Queues | `ecommerce-vega-events-production` | Bus de eventos asíncronos y transaccionales (outbox, emails, auditoría) |
-| `EVENTS_DLQ` | Cloudflare Queues | `ecommerce-vega-events-dlq-production` | Dead Letter Queue para reintentos y tolerancia a fallos |
-| `ANALYTICS` | Analytics Engine | `ecommerce_vega_analytics_production` | Métricas y telemetría de eventos en tiempo real |
-| `crons` | Cron Triggers | `["*/5 * * * *"]` | Tarea programada cada 5 minutos para outbox relay y tareas de mantenimiento |
+| Binding/configuración | Recurso configurado | Nota de uso |
+|---|---|---|
+| `DB` | D1 `ecommerce-vega-production` | Base de datos única con prefijos por módulo. |
+| `MEDIA_BUCKET` | R2 `ecommerce-vega-production` | Objetos de media y documentos. |
+| `CACHE` | KV (ID en Wrangler) | Binding configurado; verificar uso antes de atribuirle caché de un recurso concreto. |
+| `EVENTS_QUEUE` | Queue `ecommerce-vega-events-production` | Consumidor configurado con DLQ `ecommerce-vega-events-dlq-production`; DLQ no es un binding independiente. |
+| `ANALYTICS` | Dataset `ecommerce_vega_analytics_production` | Binding configurado; ver instrumentación antes de asumir métricas específicas. |
+| `IMAGES` | Cloudflare Images | Binding para operaciones de medios. |
+| `AUTH_LIMITER`, `CHECKOUT_LIMITER`, `API_WRITE_LIMITER` | Rate limiting bindings | Límites configurados en Wrangler. |
+| Cron | `*/5 * * * *` | Ejecuta los handlers programados del Worker. |
+
+La configuración versionada apunta al entorno de producción. No hay entorno de staging aislado documentado como operativo.
 
 ### 12.2 Variables de Entorno Públicas / Configurables (`vars` en `wrangler.jsonc`)
 
@@ -586,10 +516,10 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 
 | Variable | Tipo | Valor / Ejemplo | Propósito |
 |---|---|---|---|
-| `ENVIRONMENT` | String | `production` \| `staging` \| `development` | Identifica el entorno de ejecución activo. |
+| `ENVIRONMENT` | String | `production` | Valor versionado actualmente en Wrangler. |
 | `ADMIN_EMAIL` | String | `admin@tudominio.com` | Correo de inicio de sesión del único Superadmin activo. No es un canal de entrega para TOTP. |
-| `RESEND_FROM_EMAIL` | String | `Vega Store <envio@tudominio.com>` | Remitente verificado en Resend para todos los correos transaccionales (confirmación de compra, notificaciones al admin, cambios de estado del pedido). En pruebas se puede usar `Vega Store <onboarding@resend.dev>`. |
-| `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` \| `pub_test_...` | Llave pública de Wompi Colombia para inicializar el widget de checkout en frontend y validaciones. |
+| `RESEND_FROM_EMAIL` | String | Remitente configurado en `wrangler.jsonc` | Remitente del adaptador Resend; validar que el dominio esté verificado en el entorno. |
+| `WOMPI_PUBLIC_KEY` | String | Se configura por entorno | Llave pública que utiliza el checkout de Wompi. |
 
 ### 12.3 Secretos Encriptados (`wrangler secret put` o Dashboard de Cloudflare)
 
@@ -598,9 +528,8 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 
 | Secreto | Proveedor / Servicio | Cómo obtenerlo | Propósito |
 |---|---|---|---|
-| `RESEND_API_KEY` | [Resend](https://resend.com) | Panel de Resend > API Keys (`re_...`) | Autenticación en la API de Resend para el envío de correos transaccionales con plantillas HTML. |
+| `RESEND_API_KEY` | [Resend](https://resend.com) | Panel de Resend > API Keys (`re_...`) | Autenticación en el adaptador de correo transaccional. |
 | `ADMIN_PASSWORD` | Cloudflare Workers | Workers & Pages > Settings > Variables and Secrets > Add secret | Contraseña de inicio de sesión del Superadmin configurado por `ADMIN_EMAIL`. Configurar como secret; nunca enviarla por correo ni guardarla en el repositorio. |
-| `RESEND_WEBHOOK_SECRET` | [Resend](https://resend.com) | Panel de Resend > Webhooks (opcional) | Validación de firmas de eventos de entrega/rebote de correo. |
 | `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
 | `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación SHA-256 del checksum Wompi (`properties` + `timestamp` + secreto), no HMAC. |
@@ -616,8 +545,6 @@ npx wrangler secret put WOMPI_PRIVATE_KEY
 npx wrangler secret put WOMPI_INTEGRITY_SECRET
 npx wrangler secret put WOMPI_EVENTS_SECRET
 pnpm exec wrangler secret put ADMIN_PASSWORD --config wrangler.jsonc
-# Opcional si usas webhook de Resend:
-npx wrangler secret put RESEND_WEBHOOK_SECRET
 ```
 
 ---
@@ -666,24 +593,16 @@ Además, para este proyecto:
 
 ---
 
-## 15. Decisiones abiertas
+## 15. Decisiones abiertas y límites conocidos
 
-Se resolverán como ADR antes de la fase que las necesite:
+Las decisiones ya aceptadas están en [`docs/adr/`](./docs/adr/); no se vuelven a presentar aquí como propuestas pendientes.
 
-| # | Decisión | Propuesta inicial |
-|---|---|---|
-| ADR-0002 | Framework del storefront con SSR | Astro + islas React (alternativa: SvelteKit / Next vía OpenNext) |
-| ADR-0003 | Estrategia de autenticación | Sesiones opacas con hash en D1, cookies `__Host-`, PBKDF2 (100.000 iteraciones), MFA para admin (ver `SECURITY_RULES.md`) |
-| ADR-0004 | Proveedor de pagos (puerto `IPaymentPort`) | ✅ **Decidido: Wompi** |
-| ADR-0005 | Proveedor de email transaccional (`IEmailPort`) | ✅ **Decidido: Resend** |
-| ADR-0006 | Búsqueda de productos | D1 FTS5 dentro de `catalog`; evaluar alternativas si crece |
-| ADR-0007 | Dominio y rutas | El Worker sirve `/api/*` en cada host (tienda y `admin.`), así cada frontend usa su mismo origen y no hay CORS |
-| ADR-0008 | Moneda, impuestos y envíos | COP (por Wompi); IVA configurable en `settings`; envíos en el módulo `shipping` |
-| ADR-0009 | Alcance de "productos a crédito" | **Por confirmar.** Supuesto actual: venta financiada en cuotas con módulo `credit` (alternativa: créditos/saldo a favor del cliente) |
-| ADR-0010 | Reglas de combinación en carritos mixtos (contra entrega, local/nacional, crédito) | Propuesta de la sección 5.1 |
-| ADR-0011 | Transporte de tiempo real | ✅ **Decidido y operativo:** Polling atómico HTTP `?since=` con persistencia de eventos en D1 y broadcast a paneles admin y checkout. |
-| ADR-0012 | Alcance de la facturación | ✅ **Decidido y certificado:** Documento soporte interno inmutable con resolución y consecutivos atómicos en D1 y R2; puerto `IElectronicInvoicingPort` listo para futura conexión DIAN. |
-| ADR-0013 | Generación del documento de facturas | ✅ **Decidido y operativo:** Adaptador HTML formal inmutable almacenado en R2 (`HtmlInvoicePdfAdapter`) servible y descargable de forma segura desde el Worker. |
+| Tema | Estado actual |
+|---|---|
+| Venta a crédito (ADR-0009) | El alcance comercial, financiero y legal sigue pendiente de confirmación antes de habilitar ventas a crédito. |
+| MiPaquete: creación ambigua sin coincidencia en consulta | El sistema mantiene bloqueado el segundo despacho automático para prevenir duplicados. Se requiere conciliación operativa o aclaración contractual del proveedor. |
+| Medidas de empaque | Los datos iniciales son estimaciones; deben reemplazarse por mediciones de los productos y cajas reales antes de tomar sus costos como definitivos. |
+| Release y seguridad | La existencia de funcionalidad o una migración aplicada no equivale a certificación completa. Revisar la evidencia por entorno y el checklist vigente antes de afirmar un estado certificado. |
 
 ---
 
@@ -691,7 +610,7 @@ Se resolverán como ADR antes de la fase que las necesite:
 
 - [`ARQUITECTURA_ARCHITECTURE_NODE_CLOUDFLARE_RULES_ALL_100%_MODULAR.md`](./ARQUITECTURA_ARCHITECTURE_NODE_CLOUDFLARE_RULES_ALL_100%_MODULAR.md): **contrato de arquitectura, de lectura obligatoria y con prioridad sobre este documento.**
 - [`SECURITY_RULES.md`](./SECURITY_RULES.md): reglas de seguridad `SEC-*`, checklist de PR y matriz de certificación (estado: PENDIENTE).
-- [`ROLLBACK_RECOVERY.md`](./ROLLBACK_RECOVERY.md): estrategia de release, rollback de Worker/Pages, D1, R2, Queues, caché y reconciliación de pagos (estado: PENDIENTE).
+- [`ROLLBACK_RECOVERY.md`](./ROLLBACK_RECOVERY.md): estrategia de release, rollback de Worker, D1, R2, Queues, caché y reconciliación de pagos (estado: PENDIENTE).
 - [`ROADMAP.md`](./ROADMAP.md): fases, entregables y criterios de salida (cada fase indica las secciones del contrato y las reglas de seguridad/recuperación que aplican).
 - `docs/PROJECT_RULES.md` (se crea en la Fase 0): nombres reales de Worker, D1, Queues, buckets y contextos.
 

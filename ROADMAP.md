@@ -30,7 +30,7 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 
 | Fase | Nombre | Tamaño | Estado | Resultado |
 |---|---|:---:|:---:|---|
-| 0 | Fundaciones | M | ✅ Completada | Monorepo, Worker base, CI, aislamiento de tablas |
+| 0 | Fundaciones | M | ⚠️ Parcial | Monorepo, Worker base y CI; staging aislado y ensayo de recuperación pendientes |
 | 1 | Identidad y configuración | M | ✅ Completada | Login de admin y clientes, RBAC, ajustes de tienda |
 | 2 | Medios y catálogo | L | ✅ Completada | CRUD de productos con políticas de venta por producto |
 | 3 | Tienda pública base | L | ✅ Completada | Home, listado, detalle, SEO básico en SSR |
@@ -42,8 +42,8 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | 9 | Facturación, email con Resend y cuenta del cliente | L | ✅ Certificada | Facturas completas almacenadas, emails, `/cuenta`, auditoría y datos fiscales dinámicos |
 | 10 | Venta a crédito | M | ⏳ Siguiente | Planes, cuotas y abonos (alcance por confirmar) |
 | 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
-| 12 | Evolución | — | 📋 Planificada | Reseñas, wishlist, i18n, extracción de módulos |
-| 13 | Integración de envíos con MiPaquete.com | M | 🔄 En curso | Cotización, embalaje por productos/cajas, guías, trazabilidad y conciliación |
+| 12 | Evolución | — | 🔄 Parcial | Reseñas y seguimiento implementados; wishlist, i18n y extracción siguen pendientes |
+| 13 | Envíos con MiPaquete | M | 🔄 Operativa con validación pendiente | Cotización nacional, perfiles de empaque, guías, trazabilidad y conciliación ambigua |
 
 ```text
 0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12 ─► 13
@@ -63,7 +63,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Objetivo:** dejar el esqueleto que hace cumplir la arquitectura desde el primer commit.
 
 - [x] Monorepo (`pnpm workspaces`): `apps/api`, `apps/storefront`, `apps/admin`, `docs`, `tests`.
-- [x] `wrangler.jsonc` del Worker único: D1, R2, KV, Queues + DLQ, Analytics Engine, Cron; entornos dev / staging / production.
+- [x] `wrangler.jsonc` del Worker único con bindings de producción para D1, R2, KV, Queue/DLQ, Analytics Engine y Cron. La configuración aislada de staging no está lista.
 - [x] Estructura base de §3: `bff/`, `modules/`, `shared-kernel/`, `platform/`, `composition-root.ts`, `index.ts` (`fetch`, `queue`, `scheduled`).
 - [x] `shared-kernel` mínimo (§11): `Result<T,E>`, `UUID`, `IClock`, errores base.
 - [x] `platform`: logger JSON con `trace_id`/`request_id` (§12), manejo de errores, propagación de `traceparent`.
@@ -72,16 +72,16 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] **Test/lint de aislamiento de tablas** (§6.1, ADR-0001): falla si un módulo referencia tablas de otro prefijo.
 - [x] Lint: dominio/aplicación sin imports de Cloudflare, sin imports entre módulos, límite de 200 líneas, prohibido `utils.ts`/`helpers.ts`.
 - [x] Outbox genérico y relay por Cron; publisher y consumer base de Queues con ack manual (§6.5, §8).
-- [x] CI en GitHub Actions: lint, tipos, tests, aislamiento, deploy a staging.
+- [x] CI en GitHub Actions para las validaciones configuradas; no despliega a staging.
 - [x] `docs/PROJECT_RULES.md` (§22) y ADRs 0002–0013.
 - [x] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
-- [x] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba, según `ROLLBACK_RECOVERY.md`.
+- [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba, según `ROLLBACK_RECOVERY.md`.
 - [x] Escaneo de secretos (gitleaks) y auditoría de dependencias en CI; protección de la rama `main`.
-- [x] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en Worker y Pages (SEC-WEB-02).
+- [x] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en el Worker (SEC-WEB-02).
 - [x] Módulo de referencia (`settings`, mínimo) como plantilla para los demás.
 - [x] Documentar en el repo cómo entregar el contrato como contexto a agentes de IA antes de generar código.
 
-**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando a propósito cuando se introduce una violación. **Estado: completado y probado según confirmación del responsable del proyecto.**
+**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando ante una violación. **Estado parcial:** el repositorio tiene Worker/CI, pero staging aislado y evidencia del ensayo de rollback siguen pendientes; ver `ROLLBACK_RECOVERY.md`.
 
 ---
 
@@ -100,7 +100,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] `settings`: datos de la tienda, moneda **COP**, IVA, contacto, redes, soporte.
 - [x] Decisión cerrada de ADR-0003 (autenticación) conforme a `SECURITY_RULES.md`.
 - [x] Pruebas de acceso cruzado y de separación cliente/admin (SEC-ISO-06, SEC-ISO-07).
-- [x] Admin SPA: UI integrada en `/admin` y `/admin/login` con gestión de catálogo, banners, anuncios, configuración y logout.
+- [x] UI del panel servida por el Worker en `/admin` y `/admin/login`; dashboard con navegación por secciones y scripts para sus interacciones. `apps/admin` todavía no contiene el frontend desplegado.
 
 **Criterio de salida:** un admin inicia sesión, un cliente se registra y entra, y un permiso faltante devuelve `403`. (Completado y verificado en producción).
 
@@ -117,7 +117,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] **Políticas de venta por producto** (ver README §5.1):
   - [x] `allows_cash_on_delivery` (sí / no).
   - [x] `shipping_scope` (`national` / `local`) y `catalog_product_coverage` con `zone_id` como `TEXT` (sin FK).
-  - [x] `sale_mode` (`cash` / `credit` / `both`), activo para el módulo `credit`.
+  - [x] `sale_mode` (`cash` / `credit` / `both`) está almacenado en catálogo; el módulo de crédito y su checkout siguen pendientes (Fase 10 / ADR-0009).
 - [x] Slugs únicos con validación regex para evitar inyecciones y colisiones.
 - [x] Búsqueda con D1 FTS5 dentro del prefijo `catalog_` (ADR-0006).
 - [x] Endpoints BFF públicos para consultar productos por slug/listado y endpoints Admin para creación protegida con RBAC (`catalog:create`, `media:create`).
@@ -131,7 +131,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 **Módulos:** `catalog` (lectura pública), `seo` (mínimo), BFF `store/*`
 **Contrato aplicable:** §7 (KV/Cache API), §9 (BFF), §10 (Gateways), §16 (resiliencia).
-**Seguridad y recuperación:** SEC-WEB-01..06, SEC-FE-01..04, SEC-VAL-05, SEC-CMS-03 · `ROLLBACK_RECOVERY.md`: rollback de Pages y purga de caché.
+**Seguridad y recuperación:** SEC-WEB-01..06, SEC-FE-01..04, SEC-VAL-05, SEC-CMS-03 · `ROLLBACK_RECOVERY.md`: rollback del Worker y purga de caché. El SSR actual no está desplegado como Pages.
 
 - [x] Proyecto `storefront` con SSR (renderizado en servidor 100% Cloudflare Worker y BFF integrado, mismo origen ADR-0007).
 - [x] Páginas: **Home** (`/`), **listado** (`/productos` con filtros y orden), **detalle de producto** (`/productos/:slug`), y **búsqueda** integrada (`/productos?q=`).
@@ -251,14 +251,11 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Estados `placed → confirmed → shipped → delivered → cash_collected`; registro de recaudo en el admin.
 - [x] Verificación opcional previa (teléfono/dirección) configurable en `settings`.
 
-**Notificaciones en tiempo real de pagos (`realtime`)** — ver README §5.1
-- [x] Realtime notifications en D1 con deduplicación por `notificationId`, streaming y polling con `?since=`.
-- [x] Canales `admin` y `customer:{id}` decididos por el servidor con suscripción segura.
-- [x] Publicación y persistencia de eventos de pagos aprobados, fallidos y recaudos contra entrega.
-- [x] Notificación con todos los detalles (pago, pedido, cliente, método de entrega) sin datos de tarjeta.
-- [x] Historial, no leídas y recuperación de perdidas por HTTP (`?since=`); entrega al menos una vez con deduplicación.
-- [x] Frontend admin: campana/badge de notificación en vivo, feed y actualización continua.
-- [x] Frontend cliente: actualización de confirmación en `/checkout/resultado`.
+**Notificaciones de pagos (`realtime`)** — ver README §5.1
+- [x] Persistencia de notificaciones en D1 y consulta REST incremental con cursor `since`.
+- [x] Canal/propietario se derivan en el servidor desde la sesión validada; lectura y marcado de no leídas.
+- [x] El panel de pagos hace polling aproximadamente cada 8 segundos.
+- [ ] WebSockets/Durable Objects y actualización en vivo de otras pantallas no están implementados; requieren decisión y trabajo separado antes de someterlos a pruebas de carga.
 
 **Cliente y admin**
 - [x] Páginas `/carrito` y `/checkout` (selección de dirección, zona con tarifa dinámica, validación de políticas y método de pago).
@@ -284,7 +281,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-INV-01..09, SEC-RT-04..05, SEC-MAIL-01..06, SEC-AUTH-08, SEC-PRIV-01..03, SEC-ADM-03 y 06, SEC-LOG-01..02 · `ROLLBACK_RECOVERY.md`: idempotencia de emails y `notifications_log`.
 
 **Facturación (`invoicing`)** — ver README §5.1
-- [x] Cerrar ADR-0012 (factura interna inmutable; desacoplada de DIAN por el momento, puerto `IElectronicInvoicingPort` listo para futura integración) y ADR-0013 (generación de documentos HTML/PDF en R2).
+- [x] Cerrar ADR-0012 (factura interna inmutable; desacoplada de DIAN por el momento, puerto `IElectronicInvoicingPort` listo para futura integración) y ADR-0013 (documento HTML/CSS para impresión almacenado en R2; no es un PDF binario).
 - [x] Perfil fiscal dinámico del emisor en `settings` (Razón Social, NIT de la empresa, Dirección comercial, régimen común y resolución RES-INT-2026-001) administrable en `/admin`.
 - [x] Captura obligatoria de identificación fiscal / Cédula / NIT del cliente (`customerTaxId`) en checkout tanto para compras de invitado como autenticadas.
 - [x] Datos de facturación del cliente capturados y guardados como *snapshot* inmutable en `invoicing_invoices`.
@@ -350,10 +347,10 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** **Toda** `SECURITY_RULES.md` (matriz de certificación, sección 21) y criterio **COMPLETE** de `ROLLBACK_RECOVERY.md`.
 
 - [ ] **k6** sobre home, listado, detalle, carrito y checkout; p95/p99 y límites de CPU de Workers (§15).
-- [ ] Prueba de carga de **conexiones WebSocket**: máximo por usuario, reconexión masiva, difusión de un pago a todas las sesiones admin y generación de facturas en ráfaga sin huecos de numeración.
+- [ ] Decidir e implementar transporte push (si se requiere); luego probar límites de conexión, reconexión y aislamiento antes de describirlo como tiempo real.
 - [ ] **Chaos / resiliencia** en Miniflare: fallo de D1, saturación de Queues, fallo de Gateways, caída de Wompi o Resend (§17).
 - [ ] Revisión de seguridad y **ejecución de la matriz de regresión** (`SECURITY_RULES.md` §21): IDOR, manipulación de precios, webhooks falsos/repetidos, XSS en CMS, escalada de privilegios, caché con datos personales.
-- [ ] **Ensayo de rollback** en staging (Worker, Pages, D1 *Time Travel*, Queues, purga de caché) y **reconciliación de pagos** con Wompi, con evidencia (`ROLLBACK_RECOVERY.md`).
+- [ ] **Ensayo de rollback** en staging (Worker, D1 *Time Travel*, Queues, purga de caché) y **reconciliación de pagos** con Wompi, con evidencia (`ROLLBACK_RECOVERY.md`).
 - [ ] Revisión legal de privacidad y condiciones de venta (SEC-PRIV-04).
 - [ ] Accesibilidad (WCAG 2.1 AA) en tienda y admin.
 - [ ] Observabilidad completa y SLOs: latencia p50–p99, error rate < 0.1 %, lag de colas (§12, §13).
@@ -372,10 +369,11 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 **Seguridad y recuperación:** SEC-MOD-01..04 · `ROLLBACK_RECOVERY.md` y contrato §10.1 al extraer módulos (D1 propia, migración de datos, reconciliación).
 
-- [x] Reseñas públicas verificadas por compra entregada, página propia paginada y `AggregateRating` en JSON-LD (Worker desplegado el 2026-10-15 UTC).
-- [ ] Gestión administrativa de reseñas: búsqueda, filtros, paginación, publicación, ocultamiento y eliminación (implementada en el workspace; despliegue pendiente).
+- [x] Reseñas públicas verificadas por compra entregada, página propia paginada y `AggregateRating` en JSON-LD; reseñas cargadas por migración permanecen internamente marcadas como no verificadas y no se atribuyen a compras.
+- [x] Gestión administrativa de reseñas: listar, buscar/paginar, crear, ver, editar, publicar/ocultar y eliminar; el método de pago solo procede de la verificación del pedido y no se inventa para una reseña editorial.
 - [ ] Lista de deseos y productos relacionados.
-- [ ] Seguimiento seguro y gestión administrativa de pedidos: clientes autenticados consultan por propiedad de cuenta; invitados usan clave aleatoria enviada por correo; el admin actualiza estados, historial, transportadora, guía y entrega estimada desde Envíos. Pendiente probar el flujo desplegado con un pedido real.
+- [x] Seguimiento seguro: clientes autenticados consultan pedidos de su cuenta; invitados usan una clave aleatoria enviada por correo. Admin puede gestionar estados, historial, datos de envío y guías desde sus secciones operativas.
+- [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
 - [ ] Carritos abandonados y campañas por email.
@@ -390,7 +388,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Contrato aplicable:** §0, §1.bis, §2 (DIP), §4.1, §6.1–6.2, §8 (Queues), §10 (Gateways), §12–13, §16–17 y §19.
 **Seguridad y recuperación:** SEC-SEC-01..05 (credenciales por entorno), SEC-MOD-01..04 (fronteras y Gateways), SEC-ISO-02..06 (propiedad y consultas), SEC-ADM-01..04 (RBAC y auditoría), SEC-ORD-01/04/07 (envío, estados y reglas de pedido), SEC-PAY-03..04 como patrón de autenticidad, idempotencia y reconciliación de webhooks, SEC-WEB-02..04 (cabeceras, HTTPS y no-store), SEC-LOG-01..03 (sin secretos/PII en logs) · `ROLLBACK_RECOVERY.md`: operaciones externas idempotentes, reintentos y reconciliación de guías/estados.
 
-**Objetivo:** integrar la [API v2 de MiPaquete](https://api.documentacion.mipaquete.com/) para cotizar, crear y consultar envíos y reflejar la guía y el tracking en el seguimiento que ya usan clientes y administradores. La documentación del proveedor describe cotizaciones por origen/destino y paquete, generación de envíos y guías, trazabilidad, cancelación, cobertura DANE y notificaciones webhook; confirmar esquemas, autenticación y URL de producción vigentes antes de implementar, porque los ejemplos publicados incluyen hosts de desarrollo.
+**Objetivo:** cotizar, crear y consultar envíos con la [API v2 de MiPaquete](https://api.documentacion.mipaquete.com/) y reflejar guía/tracking en los paneles autorizados. El host de producción indicado por la tienda está configurado; la integración no se considera punta a punta certificada hasta comprobar la creación real de una guía, su impresión, la entrega de email y la sincronización de estados.
 
 - [x] Configurar el host productivo indicado por la tienda (`https://api-v2.mpr.mipaquete.com`) explícitamente en Cloudflare y guardar la credencial como secret; cotizaciones de producción respondieron con tres transportadoras para Medellín y Bogotá.
 - [x] Definir el contrato del adaptador `IShippingCarrierPort` en `shipping`; cliente HTTP con timeout, validación Zod y configuración explícita. El BFF consume el módulo por `ShippingGateway`; ningún otro módulo importa sus internos.
@@ -410,7 +408,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Aplicar/verificar migración aditiva `shipping__0002_mipaquete_shipments.sql`; arquitectura, aislamiento, pruebas D1 vacía/idempotente y tests de adaptador/configuración pasan. Quedan pruebas de integración real con proveedor y fallos externos.
 - [ ] Crear una guía real controlada tras confirmar costos y operación; verificar recaudo COD, tracking, alertas y recuperación sin duplicados.
 
-**Estado:** integración activa en producción. La causa de las tarifas vacías era doble: se enviaba un código de país que no correspondía al código de Colombia de las localidades consultadas y el schema rechazaba importes decimales/comisiones nulas que devuelve el proveedor. Con `170`, la API devuelve tres transportadoras tanto para Medellín como para Bogotá; el backend redondea los fletes hacia arriba a pesos completos antes de convertirlos a centavos COP. Los perfiles y medidas de los productos siguen siendo estimaciones iniciales y deben calibrarse con los paquetes físicos. No se configura webhook porque la documentación no documenta firma verificable; la sincronización consulta API autenticada.
+**Estado:** código y cotizaciones de producción se documentaron como operativos; la comprobación histórica registró tres transportadoras para Medellín y Bogotá usando país `170`. No se afirma que haya una guía real ni un ciclo completo certificado. Los perfiles y medidas iniciales son estimaciones por calibrar. No se acepta webhook sin firma verificable documentada; el estado se consulta mediante API autenticada.
 
 **Criterio de salida:** host productivo validado; cotización y guía real controlada verificadas; estados visibles para admin y cliente; costos COD conciliados; pruebas de fallos/rollback y evidencia registradas antes de activar producción.
 

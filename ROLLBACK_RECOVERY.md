@@ -15,14 +15,14 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 | Componente | Rollback propio | Observaciones |
 |---|---|---|
 | **Worker único** (BFF + módulos) | Sí, por versión/deployment | No deshace D1, R2, KV ni Queues |
-| **Pages: storefront y admin** | Sí, por deployment de Pages | Deben ser compatibles con la versión de API activa |
+| **Interfaz de tienda y admin** | Viaja actualmente dentro del Worker | La UI actual es renderizada por el Worker; `apps/admin` es placeholder. Si más adelante se despliega Pages, deberá documentarse su deployment independiente |
 | **D1 única** | No automático | Migraciones por módulo; restauración es una operación aparte |
 | **R2** (medios y documentos) | No | Nunca se borra para "revertir" |
-| **KV / Cache API** | Invalidar/purgar | Puede contener respuestas de la versión nueva |
+| **KV / Cache API** | Revisar/invalidate solo si el release las usa | El binding KV está configurado, pero no se encontró uso generalizado de caché en el código revisado |
 | **Queues + DLQ** | No | Mensajes ya publicados siguen existiendo |
 | **Cron Triggers** | Con el Worker | Pausar si el cambio los afecta |
 | **Durable Objects** (si existen) | Limitado | Cambios de clase/migración de DO son delicados |
-| **Wompi / Resend** | Configuración externa | URLs de webhook y claves; no se "revierten", se reconcilian |
+| **Wompi / Resend** | Configuración externa | Wompi recibe webhook; Resend se usa para correo. No cambiar claves sin plan de rotación. |
 
 ## Principios obligatorios
 
@@ -75,15 +75,15 @@ Release candidate
       ↓
 Staging: aplicar migraciones compatibles (por módulo)
       ↓
-Staging: Worker + Pages
+Staging: Worker aislado
       ↓
 Smoke / E2E (incluye pago Wompi sandbox y contra entrega)
       ↓
-Confirmar compatibilidad con la versión anterior (Worker, Pages, eventos)
+Confirmar compatibilidad con la versión anterior (Worker, eventos y objetos R2)
       ↓
 Producción: migraciones compatibles
       ↓
-Producción: Worker (API) primero, luego Pages
+Producción: Worker
       ↓
 Health + métricas + revisión de errores, DLQ y pagos pendientes
 ```
@@ -116,9 +116,10 @@ Ante un fallo de aplicación que no requiera revertir datos:
 
 El rollback del Worker no deshace migraciones D1, no restaura R2 y no revierte mensajes ya publicados en una Queue.
 
-## Rollback de Pages (storefront y admin)
+## Rollback de Pages (si se habilita ese despliegue)
 
-- Cada deployment de Pages es inmutable; se puede promover un deployment anterior.
+- En el estado actual no hay un frontend de tienda/admin desplegado desde Pages: el storefront SSR y el dashboard admin viven en el Worker. Por tanto, el rollback de sus vistas se hace con el rollback del Worker descrito arriba.
+- Si en el futuro se incorpora Pages, cada deployment será inmutable y deberá promoverse coordinado con la versión de API compatible.
 - Confirmar que el frontend objetivo funciona con la **versión de API que quedará activa** (el cliente de API se genera desde OpenAPI; una API más antigua puede no tener endpoints nuevos).
 - Tras revertir, verificar rutas críticas (home, detalle, login, checkout) y que las cabeceras de seguridad y la CSP siguen presentes.
 
@@ -203,7 +204,7 @@ La migración añadió `item_type` a `cms_menu_items` y creó la navegación ini
 - Si hace falta migrar objetos, hacerlo por etapas, idempotente y con plan de reintento.
 - No borrar objetos ni ejecutar limpiezas masivas como respuesta automática a un rollback.
 - Verificar consistencia entre metadatos D1 (`media_assets`) y objetos R2 antes de reanudar operaciones críticas (SEC-R2-08).
-- Las facturas con documento histórico conservan su objeto original. La presentación actual genera una copia PDF versionada `-v2.pdf` desde el snapshot inmutable y la reutiliza; un rollback de Worker vuelve a poder leer la clave original. No borrar ni reemplazar los objetos originales durante recuperación.
+- Los documentos de factura actuales son HTML/CSS de impresión en R2. Conservar objetos existentes y sus claves; el Worker anterior debe seguir pudiendo leerlos. No asumir que se genera una copia PDF versionada ni borrar/reemplazar documentos durante recuperación.
 
 ### Procesamiento seguro y recolección de medios
 
@@ -242,7 +243,7 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 
 ### Antes del release
 
-- [ ] Identificar y registrar el deployment estable anterior (Worker y Pages) y el commit correspondiente.
+- [ ] Identificar y registrar el deployment estable anterior del Worker y el commit correspondiente.
 - [ ] Confirmar compatibilidad del esquema D1 con la versión anterior y que no hay migraciones destructivas pendientes.
 - [ ] Confirmar la compatibilidad de la API con los frontends activos y de los eventos con los consumidores.
 - [ ] Confirmar backup/*Time Travel* de D1 y que el procedimiento de restauración se ensayó.
@@ -256,7 +257,7 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 - [ ] Detener nuevos releases y designar responsable del incidente.
 - [ ] Pausar consumidores de Queue y relay de outbox si corresponde.
 - [ ] Confirmar objetivo estable y compatibilidad D1/R2/eventos antes de revertir.
-- [ ] Revertir Pages y/o Worker en el orden correcto con el procedimiento verificado para Wrangler.
+- [ ] Revertir el Worker con el procedimiento verificado para Wrangler. Si Pages se incorpora en el futuro, coordinar su versión API compatible.
 - [ ] No ejecutar migraciones destructivas ni borrar objetos como parte automática del rollback.
 - [ ] Confirmar bindings y secretos compatibles con la versión restaurada.
 - [ ] Purgar caché afectada.
@@ -282,7 +283,7 @@ Guardar en CI/CD o en el registro operativo: fecha, entorno, commit inicial/fina
 La foundation de rollback solo puede declararse **COMPLETE** cuando:
 
 - staging está aislado (Worker, D1, R2, KV, Queues, secretos, Wompi sandbox, Resend de prueba);
-- el procedimiento de despliegue y rollback (Worker y Pages) se ejecuta de extremo a extremo;
+- el procedimiento de despliegue y rollback del Worker se ejecuta de extremo a extremo;
 - la compatibilidad D1/R2/eventos está comprobada;
 - el backup/restauración de D1 y la reconciliación de pagos se han ensayado;
 - la evidencia se conserva.
@@ -326,3 +327,13 @@ La expansión agrega tablas `shipping_*` para configuración, cotizaciones, guí
 El reconciliador se desplegó el 2026-10-15 desde `a6ddb08` como Worker `8ebfc651-16f1-40aa-a4bb-8fdb9344431f`. No requiere migración adicional. La consulta posterior confirmó que `shipping_carrier_shipments` sigue sin registros; el despliegue no creó ni consultó guías históricas. `/health` respondió 200 con D1, KV, Queue y R2 saludables.
 
 `catalog__0011_product_shipping_dimensions.sql` y `shipping__0003_package_profiles_and_quote_snapshot.sql` son expansiones aditivas: las dimensiones de productos existentes quedan `NULL` y no se infieren; perfiles de empaque nuevos no alteran cotizaciones ni guías históricas. La reversión del Worker conserva columnas, perfiles, cotizaciones y snapshots. No activar la integración hasta completar los datos logísticos requeridos; una cotización con producto sin empaque válido falla de forma explícita y no genera guía. En cualquier reintento de guía se emplean las dimensiones/peso guardados en la cotización, nunca una caja nueva leída de configuración.
+
+### Estado y ampliaciones documentadas al 2026-10-15
+
+Las migraciones de logística posteriores a `shipping__0002_mipaquete_shipments.sql` incluyen perfiles de empaque y snapshots de cotización (`shipping__0003`), perfiles iniciales y activación de cotizaciones (`shipping__0004`), marca de impresión y actor (`shipping__0005`) y ajuste de zonas locales al Valle de Aburrá (`shipping__0006`). Las migraciones de catálogo `catalog__0011` y `catalog__0012` agregan medidas/peso empacados y valores iniciales estimados. En rollback de aplicación, conservar las columnas, perfiles, cotizaciones, guías, marcas de impresión y asociaciones locales; no reconstruir zonas ni dimensiones automáticamente. Consultar el detalle por versión en [`docs/migrations/manifest.md`](./docs/migrations/manifest.md).
+
+`reviews__0002_demo_reviews.sql` agrega procedencia y opiniones ficticias autorizadas; `reviews__0003_manual_reviews.sql` diferencia las entradas administrativas. No convertir esos registros en opiniones de clientes ni compras verificadas durante una reversión. Conservar las fuentes y asociaciones existentes. La secuencia de fechas de aplicación anotada para `reviews__0001` y `reviews__0002` en el manifiesto es inconsistente y debe reconciliarse contra `d1_migrations` antes de otra operación remota.
+
+`payments__0005_settlement_corrections.sql` es append-only: conservar cada corrección y registrar una nueva si hay que rectificarla. Las migraciones de `cms` v3-v5 agregan Blog y gestión de menús; en rollback se conserva el contenido y no se ejecutan `DROP`. `orders__0005`–`0008` agregan capacidad de seguimiento invitado, información logística, modo de cobro y modalidad de cumplimiento; conservar hashes, historia y modalidad de pedidos históricos.
+
+Este resumen no certifica que todas las versiones desplegadas o entornos tengan el mismo ledger. El estado de preparación para rollback continúa **PENDIENTE** hasta realizar y registrar un ensayo aislado de staging con evidencia.

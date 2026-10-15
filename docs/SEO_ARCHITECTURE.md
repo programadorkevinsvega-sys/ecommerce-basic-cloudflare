@@ -4,9 +4,9 @@ Este documento consolida la arquitectura, implementación y directivas técnicas
 
 ---
 
-## 1. Estado de la Implementación (Lo que ya está en Producción)
+## 1. Estado en el repositorio (corte 2026-10-15)
 
-A continuación se detalla todo lo construido, desplegado y certificado en el Worker único y D1 (`ecommerce-vega-production`):
+Este apartado describe capacidades encontradas en el código actual. No certifica que la versión esté desplegada en todos los entornos, que el sitemap esté registrado en herramientas externas ni que Google muestre resultados enriquecidos. Para producción se requiere evidencia de despliegue y smoke test; para seguridad, consultar la matriz de [`SECURITY_RULES.md`](../SECURITY_RULES.md).
 
 ### 1.1 Módulo Autónomo `seo` y Base de Datos D1
 - **Tabla `seo_redirects`**:
@@ -52,9 +52,9 @@ Inyectados en el `<head>` del HTML con sanitización de caracteres para prevenir
 - **`Organization`**: Nombre comercial y logotipo.
 - **`ItemList`**: Marcado de colección para el listado de productos en `/productos`.
 
-### 1.5 Migas de Pan (Breadcrumbs) y Localización
+### 1.5 Migas de pan y hreflang
 - Breadcrumbs visuales HTML (`nav[aria-label="Breadcrumb"]`) en la cabecera de la ficha de producto.
-- Etiquetas hreflang multi-región inyectadas:
+- El layout actual emite etiquetas estáticas `hreflang` `es-CO` y `x-default`, ambas con la canonical de la página. Esto no constituye una configuración internacional por país:
   - `<link rel="alternate" hreflang="es-CO" href="...">`
   - `<link rel="alternate" hreflang="x-default" href="...">`
 
@@ -73,26 +73,20 @@ Inyectados en el `<head>` del HTML con sanitización de caracteres para prevenir
 
 ---
 
-## 2. Lo que se Debe Implementar en las Siguientes Fases
+## 2. Capacidades actuales y pendientes
 
-Para alcanzar una optimización SEO de nivel enterprise, las siguientes funcionalidades deben desarrollarse en sus fases correspondientes según el `ROADMAP.md`:
+### 2.1 CMS, Blog y reseñas
 
-### 2.1 Fase 5: CMS y Blog de Contenidos (Inbound Marketing)
-- [ ] **Módulo `cms` con soporte de Blog y Artículos**:
-  - Artículos y guías de compra (`/blog/:slug`) con schema `Article` / `BlogPosting`.
-  - Autor, fecha de publicación, fecha de modificación y tiempo de lectura.
-  - Generación de `sitemap-blog.xml` integrado al sitemap index.
-- [ ] **Páginas de Contenido Estático**:
-  - `/terminos-y-condiciones`, `/politicas-de-privacidad`, `/politicas-de-envio`.
-  - Schema `FAQPage` para páginas de preguntas frecuentes y secciones de ayuda.
-- [ ] **Textos Optimizados en Categorías**:
-  - Párrafo introductorio (H1 y descripción de intención) y párrafo inferior explicativo al pie del catálogo para posicionamiento de términos semánticos.
+- CMS publica páginas institucionales mediante rutas limpias y conserva `/p/:slug` para compatibilidad.
+- Blog tiene listado y detalle SSR, categorías, perfil editorial, metadatos SEO y sitemap propio.
+- Las reseñas se muestran en la ficha y en `/productos/:slug/opiniones`; la elegibilidad de reseñas verificadas se consulta mediante el Gateway de pedidos. Las opiniones sembradas quedan identificadas internamente como no verificadas y se excluyen del JSON-LD.
+- `AggregateRating` en el HTML no garantiza que Google lo muestre como resultado enriquecido. Validar los datos estructurados y las políticas vigentes antes de comunicar elegibilidad o resultados en SERP.
 
-### 2.2 Fase 6: Reseñas de Clientes y Contenido Generado por Usuarios (UGC)
-- [ ] **Módulo `reviews`**:
-  - Reseñas verificadas de compradores.
-  - Esquema `AggregateRating` dinámico (promedio de estrellas y total de reseñas) inyectado en el `Product` de Schema.org para mostrar estrellas doradas en las SERPs de Google.
-  - Preguntas y respuestas (Q&A) de usuarios en la ficha del producto.
+### 2.2 Mejoras SEO pendientes
+
+- Crear contenido introductorio útil para categorías y colecciones, evitando páginas duplicadas o texto genérico.
+- Agregar marcado FAQ solo cuando coincida con contenido visible y se valide contra las directrices de buscadores.
+- Auditar periódicamente canonicals, códigos HTTP, enlaces rotos, Open Graph, JSON-LD y sitemaps sobre URLs desplegadas.
 
 ### 2.3 Variantes y Gestión de Stock Agotado
 - [ ] **Estrategia de Variantes**:
@@ -109,7 +103,7 @@ Para alcanzar una optimización SEO de nivel enterprise, las siguientes funciona
 - [ ] **Cloudflare Web Analytics**:
   - Baliza de telemetría ligera de Cloudflare sin cookies para medición de Core Web Vitals (LCP, CLS, INP) en tiempo real sin impacto en rendimiento.
 
-### 2.5 Internacionalización Multipaís (Fase Avanzada)
+### 2.5 Internacionalización multipaís (futura)
 - [ ] **Rutas por País / Región**:
   - Subdirectorios por país (ej. `/co/`, `/mx/`) o dominios separados gestionados por Workers Routes.
   - Mapeo dinámico de etiquetas `hreflang` en base al catálogo territorial.

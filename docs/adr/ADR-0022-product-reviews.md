@@ -1,4 +1,4 @@
-# ADR-0022 — Reseñas verificadas y datos de demostración
+# ADR-0022 — Reseñas verificadas y opiniones sembradas
 
 - Estado: Aceptada
 - Fecha: 2026-10-14
@@ -16,7 +16,7 @@ La tienda necesita mostrar valoraciones y comentarios en los detalles de product
 - El frontend presenta promedio y total en la ficha, y enlaza a `/productos/:slug/opiniones`, que pagina el listado.
 - La API y el HTML público no revelan email, nombre, teléfono ni ID del cliente. El JSON-LD incluye `AggregateRating` solo cuando existe al menos una reseña.
 - `reviews` consulta pedidos mediante el Gateway público de `orders`; no consulta ni cruza tablas de otros módulos.
-- Excepción aprobada explícitamente por el responsable de la tienda: una migración puede agregar opiniones ficticias para poblar la tienda, que según el responsable aún no tiene compradores reales. Se almacenan con `source='demo'` para conservar la procedencia interna; la interfaz no muestra una etiqueta DEMO y no afirma que esas opiniones provienen de compradores verificados. Si un producto tiene reseñas verificadas, sus ficticias no afectan el promedio; si aún no tiene verificadas, se muestran sus puntuaciones ficticias en la interfaz. El JSON-LD excluye puntuaciones ficticias. La creación normal de reseñas solo produce `source='verified'` después de validar la compra.
+- Excepción aprobada explícitamente por el responsable de la tienda: una migración puede agregar opiniones ficticias porque la tienda aún no tenía compradores reales. Conservan una fuente interna distinta de las opiniones de clientes; no se etiquetan como compra verificada ni se atribuyen a una compra o pago. Si un producto tiene reseñas verificadas, las ficticias no afectan el promedio; si aún no tiene verificadas, se muestran sus puntuaciones en la interfaz. El JSON-LD excluye puntuaciones ficticias. La creación normal de reseñas solo produce `source='verified'` después de validar la compra. El valor interno heredado `source='demo'` y el nombre histórico de la migración no son un modo de producto ni deben exponerse en la interfaz.
 
 ## Consecuencias
 

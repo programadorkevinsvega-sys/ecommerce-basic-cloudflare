@@ -4,19 +4,22 @@ Este documento concreta los nombres, bindings, bounded contexts y convenciones f
 
 ---
 
-## 1. Nombres de Infraestructura en Cloudflare (100% Producción Directa)
+## 1. Nombres de infraestructura (corte `apps/api/wrangler.jsonc`, 2026-10-15)
 
 Todos los recursos operan directamente en el entorno de producción configurado en `apps/api/wrangler.jsonc`:
 
 | Recurso | Nombre en Cloudflare | Binding en Worker |
 |---|---|---|
-| **Worker (BFF + módulos)** | `ecommerce-vega-api` | Entrypoint principal |
+| **Worker (BFF + módulos)** | `ecommerce-basic-cloudflare` | `src/index.ts` |
 | **D1 Única** | `ecommerce-vega-production` | `env.DB` |
 | **R2 Bucket** | `ecommerce-vega-production` | `env.MEDIA_BUCKET` |
-| **KV Cache** | `ecommerce-vega-cache-production` | `env.CACHE` |
+| **KV Cache** | ID `a49472c551f04d438a1b7a082d7468d9` | `env.CACHE` |
 | **Queues Principal** | `ecommerce-vega-events-production` | `env.EVENTS_QUEUE` |
 | **Queues DLQ (Dead Letter Queue)** | `ecommerce-vega-events-dlq-production` | Manejo de mensajes fallidos |
 | **Analytics Engine** | `ecommerce_vega_analytics_production` | `env.ANALYTICS` |
+| **Images** | Cloudflare Images binding | `env.IMAGES` |
+
+Esta configuración referencia recursos de producción. No hay que leer estos nombres como prueba de que un release concreto esté desplegado o saludable; verificar deployments, `/health` y el ledger antes de una operación productiva.
 
 ---
 
@@ -32,17 +35,18 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 6. `orders` -> `orders_*`
 7. `payments` -> `payments_*`
 8. `shipping` -> `shipping_*`
-9. `credit` -> `credit_*`
-10. `invoicing` -> `invoicing_*`
-11. `realtime` -> `realtime_*`
-12. `promotions` -> `promotions_*`
-13. `storefront` -> `storefront_*`
-14. `cms` -> `cms_*`
-15. `seo` -> `seo_*`
-16. `settings` -> `settings_*`
-17. `notifications` -> `notifications_*`
-18. `audit` -> `audit_*`
-19. `reviews` -> `reviews_*`
+9. `invoicing` -> `invoicing_*`
+10. `realtime` -> `realtime_*`
+11. `promotions` -> `promotions_*`
+12. `storefront` -> `storefront_*`
+13. `cms` -> `cms_*`
+14. `seo` -> `seo_*`
+15. `settings` -> `settings_*`
+16. `notifications` -> `notifications_*`
+17. `audit` -> `audit_*`
+18. `reviews` -> `reviews_*`
+
+`credit` aparece en decisiones y el roadmap, pero todavía no existe como módulo ni posee tablas `credit_*`; su implementación requiere cerrar ADR-0009.
 
 ---
 
@@ -71,10 +75,13 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 |---|---|---|
 | `ADMIN_PASSWORD` | Cloudflare Workers | Contraseña del Superadmin identificado por `ADMIN_EMAIL`; se configura solo como secret y nunca se registra ni se sube al repositorio. |
 | `RESEND_API_KEY` | Resend | Token API para el despacho de correos electrónicos transaccionales y facturas. |
-| `RESEND_WEBHOOK_SECRET` | Resend | (Opcional) Validación de firma de webhooks entrantes de Resend. |
 | `WOMPI_PRIVATE_KEY` | Wompi Colombia | Llave privada para reconciliación de pagos contra la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | Wompi Colombia | Secreto para calcular y verificar el hash SHA-256 de integridad de pagos. |
 | `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
+| `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; el host se configura como `MI_PAQUETE_API_URL`. |
+
+`RESEND_WEBHOOK_SECRET` está declarado opcionalmente en el tipo de entorno heredado, pero no hay ruta de webhook de Resend en el Worker actual; no configurarlo como si el webhook estuviera operativo.
+| `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; host HTTPS configurable mediante `MI_PAQUETE_API_URL` y no es un secreto. |
 
 ---
 

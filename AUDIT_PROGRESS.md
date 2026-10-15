@@ -523,3 +523,12 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - La carga existente a R2 no cambió. Abarca los inputs de imágenes de productos, banners, marcas, colecciones, autores y artículos.
 - Pruebas: `pnpm test` (46 archivos/139 pruebas), tests dirigidos de UI (19), typecheck, lint, `git diff --check` y Wrangler dry-run aprobados.
 - Commit `e83bbff` enviado a `main`; Worker desplegado en la versión `b8aabb42-bf58-4b09-a881-833afe3ad16b`. `/health` respondió HTTP 200 tras publicar.
+
+### Sincronización de documentación contra `main` (2026-10-15)
+
+- Actualicé el README para reflejar las entidades presentes, la navegación real del panel bajo `/admin`, y la separación entre entrega local del comercio y envío nacional por MiPaquete. Eliminé la antigua lista de rutas `/admin/*` que no corresponde al dashboard actual y la convención CRUD uniforme que no existe para todos los recursos.
+- Reemplacé estados desactualizados del Blog y reseñas en SEO/Roadmap, y distinguí código implementado de despliegue/certificación verificados.
+- Añadí `docs/IMPLEMENTATION_STATUS.md` como índice de capacidades, riesgos operativos pendientes y fuentes de evidencia; amplié las notas del manifiesto, auditoría de esquema y recuperación.
+- Se hizo visible una contradicción cronológica en las evidencias de `reviews__0001` y `reviews__0002`: debe verificarse contra el ledger remoto antes de afirmar el orden de aplicación. No se alteraron datos ni migraciones.
+- Trabajo únicamente documental; no se requiere migración D1. No se ejecutaron pruebas ni se certificó un despliegue.
+- En la revisión ampliada también corregí el ADR original de Cloudflare Pages y el de WebSockets/Durable Objects: son propuestas históricas que no corresponden a la implementación actual. La factura actual es HTML/CSS de impresión y las notificaciones usan polling HTTP, no PDF binario ni WebSockets.

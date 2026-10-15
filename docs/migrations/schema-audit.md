@@ -1161,3 +1161,24 @@ Tablas: 0; índices explícitos: 0. Copias: `migrations/storefront__0002_banner_
 ## `storefront__0003_banner_types_and_cta.sql` · fuente `apps/api/src/modules/storefront/infrastructure/persistence/d1/migrations/0003_banner_types_and_cta.sql`
 
 Tablas: 0; índices explícitos: 0. Copias: `migrations/storefront__0003_banner_types_and_cta.sql` y `apps/api/migrations/storefront__0003_banner_types_and_cta.sql`.
+
+---
+
+## Alcance de la auditoría y migraciones posteriores al inventario inicial
+
+**Actualización 2026-10-15.** Las secciones anteriores describen tablas iniciales y migraciones seleccionadas; no constituyen actualmente un inventario exhaustivo de todas las columnas, índices y tablas presentes en cada migración. Se cotejaron los nombres de las fuentes SQL con `docs/migrations/manifest.md`, pero falta regenerar la matriz detallada desde todas las fuentes. No uses esta auditoría parcial como sustituto del esquema ejecutable ni como prueba del estado remoto.
+
+| Migraciones fuente | Cambio principal |
+|---|---|
+| `catalog__0004`–`0007` | Metadatos de precio/objetivo, entidades de proveedor y variante, y estados para taxonomías. Ver DDL fuente para columnas, índices y checks exactos. |
+| `catalog__0008`–`0010` | Colecciones, relación colección-producto e imágenes opcionales de colecciones y marcas. |
+| `catalog__0011`–`0012` | Peso y medidas empacadas por producto y estimaciones iniciales para los SKU existentes. |
+| `cms__0002`–`0005` | Páginas institucionales sembradas condicionalmente, tablas del Blog, artículo editorial inicial y tipo de enlace en menús. |
+| `orders__0002`–`0008` | Capacidad guest del carrito, snapshots de precio, cargo de pago, clave segura de seguimiento, datos de transporte, modo de cobro del flete y modalidad local/transportadora. |
+| `payments__0002`–`0005` | Ampliación de transacciones/recaudos, recibos COD, costos de liquidación y correcciones append-only. |
+| `reviews__0002`–`0003` | Procedencia de reseñas sembradas y origen de reseñas creadas desde admin. La semilla no es una compra verificada. |
+| `settings__0002`–`0004` | Datos fiscales/contacto/sociales y texto configurable de copyright. |
+| `shipping__0002`–`0006` | Envíos MiPaquete, snapshot de cotización y perfiles de empaque, configuración inicial, registro de impresión y alcance local de Medellín/Valle de Aburrá. |
+| `storefront__0002`–`0003` | Descripción, tipo de banner y texto CTA. |
+
+Las migraciones de otros módulos que no se detallan en esta matriz pueden consultarse en sus archivos fuente y están enumeradas en [`manifest.md`](./manifest.md). Antes de modificar este documento para certificar aislamiento o esquema, regenerar los detalles desde DDL y repositorios, y verificar en el entorno objetivo con `sqlite_master`, `PRAGMA table_info` e índices.
