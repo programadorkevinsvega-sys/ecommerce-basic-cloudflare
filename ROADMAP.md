@@ -238,7 +238,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 
 **Pedidos y política de checkout**
 - [x] `orders`: creación con snapshot de productos, estados e historial, cancelaciones y devoluciones básicas.
-- [x] `OrdersCheckoutPolicy` en el **dominio** de `orders` (README §5.1): contra entrega solo si todos los productos lo permiten y la zona lo admite; bloqueo de productos locales fuera de cobertura; informar qué producto bloquea cada método.
+- [x] `OrdersCheckoutPolicy` en el **dominio** de `orders` (README §5.1): contra entrega solo si todos los productos lo permiten y la zona lo admite; para cobertura nacional depende de MiPaquete y una cotización COD vigente, mientras que para entrega local depende de la configuración de la zona; bloqueo de productos locales fuera de cobertura; informar qué producto bloquea cada método.
 - [x] Flujo orquestado por eventos y outbox (sin transacciones entre módulos): `order.placed` → reserva → pago → confirmación.
 
 **Pagos con Wompi**
