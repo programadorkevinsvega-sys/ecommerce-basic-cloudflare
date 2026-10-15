@@ -4,6 +4,7 @@ import { CmsGateway } from '../src/bff/gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js';
 import { OrdersGateway } from '../src/bff/gateways/orders/OrdersGateway.js';
 import { SettingsGateway } from '../src/bff/gateways/settings/SettingsGateway.js';
+import { NotificationsGateway } from '../src/bff/gateways/notifications/NotificationsGateway.js';
 import { renderOrderTrackingPage } from '../src/bff/views/renderOrderTrackingPage.js';
 
 const record = {
@@ -13,7 +14,7 @@ const record = {
 
 function routes(identity: Partial<IdentityGateway>, orders: Partial<OrdersGateway>) {
   return OrderTrackingController.createRoutes(
-    orders as OrdersGateway, {} as CmsGateway, identity as IdentityGateway, {} as SettingsGateway,
+    orders as OrdersGateway, {} as CmsGateway, identity as IdentityGateway, {} as SettingsGateway, {} as NotificationsGateway,
   );
 }
 
