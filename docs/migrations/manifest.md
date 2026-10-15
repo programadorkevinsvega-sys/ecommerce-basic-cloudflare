@@ -84,6 +84,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `storefront__0002_banner_description.sql` | v2 | Local (Miniflare) | 2026-10-12 | HEAD | ✅ Verificada y retrocompatible |
 | `storefront__0003_banner_types_and_cta.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (expand-only: banner_type, button_text) |
 | `storefront__0003_banner_types_and_cta.sql` | v3 | Local (Miniflare) | 2026-10-12 | HEAD | ✅ Verificada y retrocompatible |
+| `storefront__0005_place_brand_and_collection_banners.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada; los banners activos quedaron en sus páginas de marcas y colecciones |
 
 ---
 
@@ -352,6 +353,7 @@ Se añadieron y aplicaron cuatro migraciones compatibles hacia adelante:
 |---|---|---|
 | `catalog__0013_catalog_management_starter_records.sql` | `catalog_*` | 3 categorías, 3 marcas, 3 atributos, 3 colecciones, 3 productos base en borrador, 3 variantes relacionadas y relaciones de colección/categoría/búsqueda. |
 | `storefront__0004_storefront_management_starter_records.sql` | `storefront_*` | 3 banners promocionales, 3 informativos y 3 anuncios de barra superior. |
+| `storefront__0005_place_brand_and_collection_banners.sql` | `storefront_*` | Reubica los banners de marcas y colecciones desde `home` a `brands` y `collections`, conservando estado activo y enlaces. |
 | `promotions__0004_promotion_management_starter_records.sql` | `promotions_*` | 3 reglas de descuento y 3 cupones. |
 | `shipping__0012_free_shipping_starter_rules.sql` | `shipping_*` | 3 reglas de envío gratis. |
 
