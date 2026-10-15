@@ -1,10 +1,17 @@
 import { IShippingCarrierPort, CarrierQuoteRequest, CreateCarrierShipmentRequest, CarrierShipmentLookup } from '../../../application/ports/out/IShippingCarrierPort.js';
 import { MiPaqueteHttpClient } from './MiPaqueteHttpClient.js';
-import { MiPaqueteCreateSchema, MiPaqueteQuoteSchema, MiPaqueteSendingsSchema } from './MiPaqueteResponseSchemas.js';
+import { MiPaqueteCreateSchema, MiPaqueteLocationsSchema, MiPaqueteQuoteSchema, MiPaqueteSendingsSchema } from './MiPaqueteResponseSchemas.js';
 
 export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
   private readonly client: MiPaqueteHttpClient;
   public constructor(client: MiPaqueteHttpClient) { this.client = client; }
+
+  public async listLocations() {
+    const response = await this.client.listLocations();
+    const parsed = MiPaqueteLocationsSchema.safeParse(response);
+    if (!parsed.success) throw new Error('Invalid MiPaquete locations response');
+    return parsed.data;
+  }
 
   public async quote(input: CarrierQuoteRequest) {
     const response = await this.client.quote({

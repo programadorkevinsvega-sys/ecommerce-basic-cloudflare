@@ -14,7 +14,7 @@ export async function validateOrderPolicy(
   const coverage = await Promise.all(pricing.policyItems.map((item) => shipping.checkCoverage(
     daneCode,
     item.product.shippingScope,
-    item.product.localCoverageZones,
+    item.product.shippingScope === 'local' ? item.product.localCoverageZones : [zone.id],
   )));
   const covered = coverage.every((result) => result.isCovered && result.zoneId === zone.id);
   const policy = await orders.evaluateCheckoutPolicy({

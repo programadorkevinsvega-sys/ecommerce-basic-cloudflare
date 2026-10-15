@@ -3,6 +3,8 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
+let lastLocationSyncAttempt = 0;
+
 export class ShippingController {
   public static createRoutes(shippingGateway: ShippingGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
@@ -16,6 +18,7 @@ export class ShippingController {
     router.get('/api/v1/shipping/locations', async (c) => {
       const q = c.req.query('q') || '';
       if (q.length > 100) return c.json({ error: 'Búsqueda demasiado larga' }, 400);
+      if (!q) await syncCarrierLocationsIfNeeded(shippingGateway);
       const requestedLimit = Number(c.req.query('limit')) || 25;
       const limit = Math.min(25, Math.max(1, Number.isSafeInteger(requestedLimit) ? requestedLimit : 25));
       const locations = q ? await shippingGateway.searchLocations(q, limit) : await shippingGateway.listLocations({ limit, offset: 0 });
@@ -28,6 +31,7 @@ export class ShippingController {
       if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000 || search.length > 100) {
         return c.json({ error: 'Parámetros de paginación o búsqueda inválidos' }, 400);
       }
+      if (!search && page === 1) await syncCarrierLocationsIfNeeded(shippingGateway);
       const pageSize = 10;
       const [data, total, zones] = await Promise.all([
         shippingGateway.listLocations({ limit: pageSize, offset: (page - 1) * pageSize, search }),
@@ -46,7 +50,8 @@ export class ShippingController {
 
       const shippingScope = c.req.query('shippingScope') as 'national' | 'local' | undefined;
       const allowedZoneIdsStr = c.req.query('allowedZoneIds');
-      const allowedZoneIds = allowedZoneIdsStr ? allowedZoneIdsStr.split(',').map((s) => s.trim()) : undefined;
+      const zoneId = c.req.query('zoneId');
+      const allowedZoneIds = zoneId ? [zoneId] : allowedZoneIdsStr ? allowedZoneIdsStr.split(',').map((s) => s.trim()) : undefined;
 
       const coverage = await shippingGateway.checkCoverage(daneCode, shippingScope, allowedZoneIds);
       return c.json({ data: coverage });
@@ -57,7 +62,7 @@ export class ShippingController {
       '/api/v1/admin/shipping/zones',
       createAuthMiddleware(identityGateway, 'admin', 'shipping:read'),
       async (c) => {
-        const zones = await shippingGateway.listZones();
+        const zones = (await shippingGateway.listZones()).filter((zone) => zone.type !== 'national');
         return c.json({ data: zones });
       }
     );
@@ -69,6 +74,7 @@ export class ShippingController {
       async (c) => {
         try {
           const body = await c.req.json();
+          if (body?.type === 'national') return c.json({ error: 'La cobertura nacional la gestiona la transportadora; configura solo zonas locales.' }, 400);
           const zone = await shippingGateway.createZone(body);
           return c.json({ data: zone }, 201);
         } catch {
@@ -85,6 +91,7 @@ export class ShippingController {
         try {
           const id = c.req.param('id');
           const body = await c.req.json();
+          if (body?.type === 'national') return c.json({ error: 'La cobertura nacional la gestiona la transportadora; configura solo zonas locales.' }, 400);
           const zone = await shippingGateway.updateZone({ ...body, id });
           return c.json({ data: zone });
         } catch {
@@ -125,4 +132,11 @@ export class ShippingController {
 
     return router;
   }
+}
+
+async function syncCarrierLocationsIfNeeded(gateway: ShippingGateway): Promise<void> {
+  const now = Date.now();
+  if (now - lastLocationSyncAttempt < 5 * 60_000) return;
+  lastLocationSyncAttempt = now;
+  await gateway.syncCarrierLocations().catch(() => undefined);
 }

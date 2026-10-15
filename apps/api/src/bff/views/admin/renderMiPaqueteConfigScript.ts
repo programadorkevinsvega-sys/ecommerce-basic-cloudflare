@@ -58,7 +58,7 @@ export function renderMiPaqueteConfigScript(): string {
     async function loadMiPaqueteConfigStatus() {
       const status = document.getElementById('mipaquete-connection-state'); if (!status) return;
       try { const { credentialsReady, endpointReady } = await packageRequest('/api/v1/admin/shipping/mipaquete/config');
-        status.textContent = credentialsReady && endpointReady ? 'Secreto y host HTTPS configurados. La disponibilidad de tarifas depende de la cobertura activa de MiPaquete.' : 'Falta el secreto MI_PAQUETE_TRANSPORTADORA o MI_PAQUETE_API_URL HTTPS válido en Cloudflare.';
+        status.textContent = credentialsReady && endpointReady ? 'La disponibilidad de tarifas depende de la cobertura activa de MiPaquete.' : 'Falta el secreto MI_PAQUETE_TRANSPORTADORA o MI_PAQUETE_API_URL HTTPS válido en Cloudflare.';
         status.classList.toggle('is-ready', credentialsReady && endpointReady);
       } catch { status.textContent = 'No se pudo consultar el estado de la integración.'; }
     }

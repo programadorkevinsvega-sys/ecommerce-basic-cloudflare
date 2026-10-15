@@ -13,6 +13,7 @@ interface OrderRow {
   shipping_cost_cents: number;
   shipping_collection_cents?: number;
   shipping_charge_mode?: 'included' | 'collect_at_delivery';
+  shipping_fulfillment_method?: 'merchant_local' | 'carrier' | 'legacy';
   subtotal_cents: number;
   discount_cents: number;
   coupon_code: string | null;
@@ -68,8 +69,8 @@ export class D1OrderRepository implements IOrderRepository {
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
-         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days, shipping_collection_cents, shipping_charge_mode
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days, shipping_collection_cents, shipping_charge_mode, shipping_fulfillment_method
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
@@ -81,7 +82,7 @@ export class D1OrderRepository implements IOrderRepository {
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
       order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents,
       order.guestTrackingTokenHash, order.minEstimatedDays, order.maxEstimatedDays,
-      order.shippingCollectionCents, order.shippingChargeMode
+      order.shippingCollectionCents, order.shippingChargeMode, order.shippingFulfillmentMethod
     ).run();
     await this.db.prepare('DELETE FROM orders_lines WHERE order_id = ?').bind(order.id).run();
 
@@ -132,7 +133,6 @@ export class D1OrderRepository implements IOrderRepository {
     }
     return orders;
   }
-
   public async hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>{
     const row=await this.db.prepare("SELECT 1 AS found FROM orders_orders o JOIN orders_lines l ON l.order_id=o.id WHERE o.customer_id=? AND l.product_id=? AND o.status='delivered' AND o.payment_status IN ('approved','collected') LIMIT 1").bind(customerId,productId).first<{found:number}>();
     return Boolean(row);
@@ -178,6 +178,7 @@ export class D1OrderRepository implements IOrderRepository {
       shippingCostCents: row.shipping_cost_cents,
       shippingCollectionCents: row.shipping_collection_cents ?? 0,
       shippingChargeMode: row.shipping_charge_mode ?? 'included',
+      shippingFulfillmentMethod: row.shipping_fulfillment_method ?? 'legacy',
       subtotalCents: row.subtotal_cents,
       discountCents: row.discount_cents,
       couponCode: row.coupon_code,

@@ -21,7 +21,11 @@ export class MiPaqueteHttpClient {
     return this.request(`/getSendings/${page}`, 'POST', payload);
   }
 
-  private async request(path: string, method: 'POST', payload: Record<string, unknown>): Promise<unknown> {
+  public listLocations(): Promise<unknown> {
+    return this.request('/getLocations', 'GET');
+  }
+
+  private async request(path: string, method: 'GET' | 'POST', payload?: Record<string, unknown>): Promise<unknown> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
@@ -30,11 +34,11 @@ export class MiPaqueteHttpClient {
         redirect: 'manual',
         signal: controller.signal,
         headers: {
-          'content-type': 'application/json',
+          ...(payload ? { 'content-type': 'application/json' } : {}),
           apikey: this.config.apiKey,
           'session-tracker': crypto.randomUUID(),
         },
-        body: JSON.stringify(payload),
+        ...(payload ? { body: JSON.stringify(payload) } : {}),
       });
       if (!response.ok) throw new Error(`MiPaquete request failed (${response.status})`);
       return await response.json() as unknown;

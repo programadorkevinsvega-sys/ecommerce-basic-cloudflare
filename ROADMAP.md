@@ -214,7 +214,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Seguridad y recuperación:** SEC-ISO-02, SEC-ORD-07, SEC-VAL-04, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: migraciones de zonas y seed idempotentes.
 
 - [x] Seed de divisiones político-administrativas (departamentos, ciudades, municipios; códigos DANE/DIVIPOLA).
-- [x] Zonas `national`, `department`, `city`, `municipality` con tarifas, plazos y **si admiten contra entrega**.
+- [x] Zonas `department`, `city` y `municipality` para entrega local del comercio con tarifa, plazo y regla de contra entrega; MiPaquete determina cobertura y tarifa nacionales.
 - [x] `ShippingGateway`: ¿cobertura para dirección X?, tarifa, ¿zona admite contra entrega?
 - [x] CRUD completo en admin: zonas, cobertura y tarifas; selector de zonas en el formulario de producto (`local`).
 - [x] Validación en detalle de producto: "¿llega a mi ciudad?" por selector de municipio.
@@ -399,7 +399,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Guardar en cada producto dimensiones y peso de su unidad empacada; encajar las unidades en cajas configurables por medidas internas/externas, sumar tara y peso, y guardar la instantánea exacta del paquete en cada cotización.
 - [x] Gestionar los perfiles de caja desde admin con operaciones independientes de listar, ver, crear, editar, activar/desactivar y eliminar.
 - [x] Separar valor declarado, valor de mercancía y recaudo COD: el mensajero recauda el total que debe el comprador (IVA incluido y flete si se factura), mientras que el valor de mercancía excluye flete y tarifa de transacción Wompi.
-- [x] Presentar y persistir la opción de transportadora, tarifa y plazo elegidos; las reglas locales de cobertura siguen como autoridad de elegibilidad.
+- [x] Separar entregas locales gestionadas por la tienda de envíos nacionales cotizados por MiPaquete; cada pedido nuevo guarda su modalidad de cumplimiento y los anteriores quedan `legacy`.
 - [x] Permitir al comprador incluir el flete en el pedido o solicitar su cobro al entregar; la segunda opción queda fuera del total/factura y usa recaudo MiPaquete (flete adicional al COD o solo flete si mercancía ya se pagó por Wompi).
 - [x] Disparar la creación de guía automáticamente después del webhook Wompi verificado/reconciliado o de la primera confirmación administrativa de contra entrega. No se reprocesan pedidos históricos en lote; el botón manual queda como contingencia idempotente.
 - [x] Persistir en tablas `shipping_*` el identificador, transportadora, guía, URL y estado. El admin puede crear/consultar guía desde gestión de seguimiento; se refleja en el seguimiento público ya autorizado.

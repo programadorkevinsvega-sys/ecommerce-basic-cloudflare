@@ -66,6 +66,10 @@ export class InProcessShippingGateway implements ShippingGateway {
     return this.publicApi.countLocations(search);
   }
 
+  public syncCarrierLocations(): Promise<void> {
+    return this.publicApi.syncCarrierLocations();
+  }
+
   public async checkCoverage(
     daneCode: string,
     shippingScope?: 'national' | 'local',

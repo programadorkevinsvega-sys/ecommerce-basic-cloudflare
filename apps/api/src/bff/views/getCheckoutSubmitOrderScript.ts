@@ -20,6 +20,7 @@ export function getCheckoutSubmitOrderScript(): string {
           return;
         }
         const method = document.querySelector('input[name="payment-method"]:checked').value;
+        const carrierDelivery = carrierIntegrationEnabled && zoneSel.selectedOptions[0]?.dataset.type === 'national';
         const taxCents = TAX_INCLUDED ? Math.round(subtotalCents * TAX_RATE / (1 + TAX_RATE)) : calcTax(subtotalCents);
         btn.disabled = true;
         document.getElementById('checkout-cta-label').textContent = 'Procesando pedido…';
@@ -29,8 +30,7 @@ export function getCheckoutSubmitOrderScript(): string {
             body: JSON.stringify({
               customerName: name, customerEmail: email, customerPhone: phone, customerTaxId: taxId,
               shippingZoneId: zoneSel.value, shippingCostCents, subtotalCents, taxCents, discountCents: 0,
-              ...(carrierIntegrationEnabled ? { carrierQuoteId: selectedCarrierQuoteId } : {}),
-              ...(carrierIntegrationEnabled ? { shippingChargeMode } : {}),
+              ...(carrierDelivery ? { carrierQuoteId: selectedCarrierQuoteId, shippingChargeMode } : {}),
               paymentMethod: method,
               shippingAddress: { recipientName: name, phone, department: dept, city: municipality, daneCode: daneCode, addressLine: line },
               lines: cartItems.map(i => ({ productId: i.productId, productName: i.productName || 'Producto', productSku: i.productSku || i.productId.slice(0, 8), quantity: i.quantity, unitPriceCents: i.unitPriceCents }))

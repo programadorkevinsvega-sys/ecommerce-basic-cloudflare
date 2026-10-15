@@ -41,6 +41,11 @@ export class CheckShippingCoverageUseCase {
 
     let matchingZones = await this.zoneRepo.findByDaneCode(cleanCode);
 
+    if (query.allowedZoneIds?.length) {
+      const requested = new Set(query.allowedZoneIds);
+      matchingZones = matchingZones.filter((zone) => requested.has(zone.id));
+    }
+
     if (query.shippingScope === 'local') {
       const allowed = new Set(query.allowedZoneIds || []);
       matchingZones = matchingZones.filter((z) => allowed.has(z.id));

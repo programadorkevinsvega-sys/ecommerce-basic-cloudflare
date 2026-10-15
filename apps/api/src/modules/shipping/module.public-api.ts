@@ -56,6 +56,10 @@ export class ShippingPublicApi {
     return this.container.listDivipolaLocationsUseCase.count(search);
   }
 
+  public syncCarrierLocations(): Promise<void> {
+    return this.container.syncCarrierLocationsUseCase.execute();
+  }
+
   public getCarrierConfig(): Promise<CarrierIntegrationConfig> {
     return this.container.getCarrierConfigUseCase.execute();
   }

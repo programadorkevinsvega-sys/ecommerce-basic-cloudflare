@@ -62,7 +62,7 @@ export function registerOrderCreationRoute(
     const zone = await deps.shipping.getZone(String(body.shippingZoneId || ''));
     if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
     const shippingAddress = normalizeShippingAddress(body.shippingAddress);
-    const carrierEnabled = await deps.shipping.getCarrierAvailability();
+    const carrierEnabled = zone.type === 'national' && await deps.shipping.getCarrierAvailability();
     const carrierQuoteId = typeof body.carrierQuoteId === 'string' && body.carrierQuoteId.length <= 100
       ? body.carrierQuoteId : null;
     if (carrierEnabled && !carrierQuoteId) return c.json({ error: 'Selecciona una tarifa de transportadora vigente.' }, 409);
@@ -70,7 +70,7 @@ export function registerOrderCreationRoute(
     let pricing;
     try {
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        body.lines, body.couponCode, customerId, shippingChargeMode === 'included' ? zone.priceInCents : 0, body.paymentMethod);
+        body.lines, body.couponCode, customerId, zone.type !== 'national' ? zone.priceInCents : 0, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
     let carrierQuote = null;
     if (carrierQuoteId) {
@@ -87,8 +87,9 @@ export function registerOrderCreationRoute(
     if (shippingChargeMode === 'collect_at_delivery' && !carrierQuote) {
       return c.json({ error: 'El pago del envío al recibir requiere una cotización de transportadora vigente.' }, 409);
     }
+    const effectiveChargeMode = zone.type === 'national' ? shippingChargeMode : 'included';
     const quotedShippingCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
-    const shippingCostCents = shippingChargeMode === 'included' ? quotedShippingCents : 0;
+    const shippingCostCents = effectiveChargeMode === 'included' ? quotedShippingCents : 0;
     const policyError = await validateOrderPolicy(deps.orders, zone, pricing, body.paymentMethod,
       shippingAddress.daneCode, deps.shipping);
     if (policyError) return c.json({ error: policyError }, 400);
@@ -99,8 +100,10 @@ export function registerOrderCreationRoute(
         customerId, guestCartIdHash, customerEmail: body.customerEmail, customerName: body.customerName,
         customerPhone: body.customerPhone, customerTaxId: body.customerTaxId || null, shippingAddress,
         shippingZoneId: zone.id, shippingCostCents,
-        shippingCollectionCents: shippingChargeMode === 'collect_at_delivery' ? quotedShippingCents : 0,
-        shippingChargeMode, subtotalCents: pricing.subtotalCents,
+        shippingCollectionCents: effectiveChargeMode === 'collect_at_delivery' ? quotedShippingCents : 0,
+        shippingChargeMode: effectiveChargeMode,
+        shippingFulfillmentMethod: zone.type === 'national' ? (carrierEnabled ? 'carrier' : 'legacy') : 'merchant_local',
+        subtotalCents: pricing.subtotalCents,
         discountCents: pricing.discountCents, couponCode: pricing.couponCode, totalCents: pricing.totalCents,
         taxCents: pricing.taxCents, pricingVersion: pricing.pricingVersion,
         estimatedPaymentFeeCents: pricing.estimatedPaymentFeeCents,

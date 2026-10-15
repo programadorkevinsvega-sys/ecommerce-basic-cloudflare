@@ -42,3 +42,9 @@ export const MiPaqueteSendingsSchema = z.object({
     pdfGuide: z.array(HttpsUrl).optional(),
   }).passthrough()).max(100),
 }).passthrough();
+
+export const MiPaqueteLocationsSchema = z.array(z.object({
+  locationName: Text,
+  departmentOrStateName: Text,
+  locationCode: z.string().regex(/^\d{5,8}$/),
+})).max(2_000);

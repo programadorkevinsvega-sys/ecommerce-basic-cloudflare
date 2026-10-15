@@ -60,6 +60,7 @@ export class OrderEmailTemplates {
           <h4 style="margin:0 0 0.5rem 0;color:#0284c7;text-transform:uppercase;">Dirección de Entrega</h4>
           <div><strong>Dirección:</strong> ${addr.addressLine || 'N/A'}</div>
           <div><strong>Ciudad / Depto:</strong> ${addr.municipality || ''}, ${addr.department || ''}</div>
+          ${order.shippingFulfillmentMethod === 'merchant_local' ? '<div><strong>Entrega:</strong> Domiciliario o vehículo de la tienda</div>' : order.shippingFulfillmentMethod === 'carrier' ? '<div><strong>Entrega:</strong> Transportadora MiPaquete</div>' : ''}
           <div><strong>Teléfono:</strong> ${order.customerPhone}</div>
         </div>
       </div>

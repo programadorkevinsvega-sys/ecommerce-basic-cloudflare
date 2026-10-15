@@ -27,7 +27,11 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
   });
   const itemsJson = JSON.stringify(cartItems);
   const rows = cart.items.map((item) => renderCheckoutItem(item, productsMap.get(item.productId))).join('');
-  const zoneOptions = zones.map((zone) => `<option value="${escapeHtml(zone.id)}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}" data-locations="${escapeHtml(JSON.stringify(zone.locations))}">${escapeHtml(zone.name)} · ${zone.priceInCents === 0 ? 'Envío gratis' : formatPrice(zone.priceInCents)}</option>`).join('');
+  const zoneOptions = zones.map((zone) => {
+    const carrierManaged = zone.type === 'national';
+    const label = carrierManaged ? `${zone.name} · Cotizar con MiPaquete` : `Entrega local · ${zone.name} · ${zone.priceInCents === 0 ? 'Gratis' : formatPrice(zone.priceInCents)}`;
+    return `<option value="${escapeHtml(zone.id)}" data-type="${zone.type}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}" data-locations="${escapeHtml(JSON.stringify(zone.locations))}">${escapeHtml(label)}</option>`;
+  }).join('');
   return `<section class="checkout-page" aria-labelledby="checkout-title">
     <nav class="checkout-steps" aria-label="Progreso de la compra"><ol><li class="checkout-step checkout-step-done"><span class="checkout-step-number" aria-hidden="true">✓</span>Carrito<span class="checkout-sr-only"> (completado)</span></li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step checkout-step-current" aria-current="step"><span class="checkout-step-number" aria-hidden="true">2</span>Datos y pago</li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step"><span class="checkout-step-number" aria-hidden="true">3</span>Confirmación</li></ol></nav>
     <h1 class="checkout-title" id="checkout-title">Finalizar compra</h1><p class="checkout-draft-note">Tus datos se conservan temporalmente en esta pestaña durante 2 horas y se borran al crear el pedido.</p>

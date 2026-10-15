@@ -31,6 +31,7 @@ import { ManageCarrierPackageProfilesUseCase } from './application/use-cases/Man
 import { ListCarrierShipmentsUseCase } from './application/use-cases/ListCarrierShipmentsUseCase.js';
 import { MarkCarrierShipmentPrintedUseCase } from './application/use-cases/MarkCarrierShipmentPrintedUseCase.js';
 import { ReconcilePendingMiPaqueteShipmentUseCase } from './application/use-cases/ReconcilePendingMiPaqueteShipmentUseCase.js';
+import { SyncCarrierLocationsUseCase } from './application/use-cases/SyncCarrierLocationsUseCase.js';
 
 export interface ShippingModuleContainer {
   carrierApiConfigured: boolean;
@@ -55,6 +56,7 @@ export interface ShippingModuleContainer {
   manageCarrierPackageProfilesUseCase: ManageCarrierPackageProfilesUseCase;
   listCarrierShipmentsUseCase: ListCarrierShipmentsUseCase;
   markCarrierShipmentPrintedUseCase: MarkCarrierShipmentPrintedUseCase;
+  syncCarrierLocationsUseCase: SyncCarrierLocationsUseCase;
 }
 
 export function createShippingModule(env: Env): ShippingModuleContainer {
@@ -95,5 +97,6 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     manageCarrierPackageProfilesUseCase: new ManageCarrierPackageProfilesUseCase(carrierConfigRepo),
     listCarrierShipmentsUseCase: new ListCarrierShipmentsUseCase(carrierShipmentRepo),
     markCarrierShipmentPrintedUseCase: new MarkCarrierShipmentPrintedUseCase(carrierShipmentRepo),
+    syncCarrierLocationsUseCase: new SyncCarrierLocationsUseCase(divipolaRepo, carrier),
   };
 }

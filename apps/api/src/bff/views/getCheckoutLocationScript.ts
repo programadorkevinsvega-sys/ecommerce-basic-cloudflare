@@ -61,7 +61,7 @@ export function getCheckoutLocationScript(): string {
       const currentSelection = selectionNumber;
       help.textContent = 'Verificando cobertura para ' + location.fullName + '…';
       try {
-        const response = await fetch('/api/v1/shipping/coverage?daneCode=' + encodeURIComponent(location.daneCode));
+        const response = await fetch('/api/v1/shipping/coverage?daneCode=' + encodeURIComponent(location.daneCode) + '&zoneId=' + encodeURIComponent(zoneSelect.value));
         const result = await response.json();
         if (currentSelection !== selectionNumber) return;
         const coverage = result.data;

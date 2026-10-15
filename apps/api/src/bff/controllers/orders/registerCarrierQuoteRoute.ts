@@ -29,10 +29,10 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
     if (!parsed.success) return c.json({ error: 'Datos de cotización inválidos' }, 400);
     const input = parsed.data;
     const zone = await deps.shipping.getZone(input.destinationZoneId);
-    if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
+    if (!zone?.isActive || zone.type !== 'national') return c.json({ error: 'La cotización de transportadora aplica a destinos nacionales.' }, 400);
     try {
       const pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        input.lines, input.couponCode, null, input.shippingChargeMode === 'included' ? zone.priceInCents : 0, input.paymentMethod);
+        input.lines, input.couponCode, null, 0, input.paymentMethod);
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,
         input.destinationDaneCode, deps.shipping);
       if (policyError) return c.json({ error: policyError }, 400);

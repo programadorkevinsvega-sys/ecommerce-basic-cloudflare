@@ -38,6 +38,8 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 
 La migración `orders__0007_shipping_charge_mode.sql` agrega valores por defecto `included` / `0`; al volver a la versión anterior conservar ambas columnas y no reescribir pedidos. La opción de cobro del flete en entrega requiere una cotización y un recaudo proveedor que se pueda conciliar antes de habilitarla; el rollback de aplicación no cancela guías ni recaudos ya creados.
 
+`orders__0008_shipping_fulfillment_method.sql` agrega `shipping_fulfillment_method` con default `legacy`. Los pedidos nuevos guardan `merchant_local` o `carrier`, calculados por el servidor desde la zona validada. Versiones anteriores del Worker omiten la columna y siguen escribiendo `legacy`. Para rollback de aplicación, conservar columna y valores; no reclasificar pedidos anteriores automáticamente ni eliminar la columna.
+
 ## Estrategia de release
 
 ### Orden de migraciones D1 con Wrangler

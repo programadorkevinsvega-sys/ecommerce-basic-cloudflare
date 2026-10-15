@@ -38,7 +38,14 @@ export type CarrierShipmentLookup =
   | { kind: 'found'; providerShipmentId: string | null; mipaqueteCode: string; guideNumber: string | null; guideUrls: string[]; pickupCode: string | null; carrierName: string | null; status: string }
   | { kind: 'not_found' | 'inconclusive' | 'multiple' };
 
+export interface CarrierLocation {
+  locationCode: string;
+  locationName: string;
+  departmentOrStateName: string;
+}
+
 export interface IShippingCarrierPort {
+  listLocations(): Promise<CarrierLocation[]>;
   quote(request: CarrierQuoteRequest): Promise<CarrierQuote[]>;
   create(request: CreateCarrierShipmentRequest): Promise<CreatedCarrierShipment>;
   getStatus(mipaqueteCode: string): Promise<CarrierShipmentStatus | null>;

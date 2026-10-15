@@ -1,4 +1,4 @@
-import { Order, ShippingAddressSnapshot } from '../../domain/entities/Order.js';
+import { Order, ShippingAddressSnapshot, ShippingFulfillmentMethod } from '../../domain/entities/Order.js';
 import { OrderLine } from '../../domain/entities/OrderLine.js';
 import { IOrderOutboxRepository } from '../../domain/ports/IOrderOutboxRepository.js';
 import { IOrderRepository } from '../../domain/ports/IOrderRepository.js';
@@ -23,6 +23,7 @@ export interface CreateOrderCommand {
   shippingCostCents: number;
   shippingCollectionCents?: number;
   shippingChargeMode?: 'included' | 'collect_at_delivery';
+  shippingFulfillmentMethod?: ShippingFulfillmentMethod;
   subtotalCents: number;
   discountCents?: number;
   couponCode?: string | null;
@@ -77,6 +78,7 @@ export class CreateOrderUseCase {
       shippingCostCents: cmd.shippingCostCents,
       shippingCollectionCents: cmd.shippingCollectionCents,
       shippingChargeMode: cmd.shippingChargeMode,
+      shippingFulfillmentMethod: cmd.shippingFulfillmentMethod,
       subtotalCents: cmd.subtotalCents,
       discountCents: cmd.discountCents || 0,
       couponCode: cmd.couponCode,

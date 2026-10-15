@@ -56,6 +56,17 @@ export class D1DivipolaRepository implements IDivipolaRepository {
     return this.hydrate(row);
   }
 
+  public async upsertLocations(locations: Array<{ daneCode: string; department: string; municipality: string }>): Promise<void> {
+    for (let index = 0; index < locations.length; index += 100) {
+      const batch = locations.slice(index, index + 100).map((location) => this.db.prepare(
+        `INSERT INTO shipping_divipola (dane_code, department, municipality, type)
+         VALUES (?, ?, ?, 'municipio') ON CONFLICT(dane_code) DO UPDATE SET
+         department = excluded.department, municipality = excluded.municipality`
+      ).bind(location.daneCode, location.department, location.municipality));
+      await this.db.batch(batch);
+    }
+  }
+
   private hydrate(row: DivipolaRow): DivipolaLocation {
     return new DivipolaLocation({
       daneCode: row.dane_code,

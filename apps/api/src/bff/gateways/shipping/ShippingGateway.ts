@@ -109,6 +109,7 @@ export interface ShippingGateway {
   searchLocations(query: string, limit?: number): Promise<DivipolaLocationDto[]>;
   listLocations(query: { limit: number; offset: number; search?: string }): Promise<DivipolaLocationDto[]>;
   countLocations(search?: string): Promise<number>;
+  syncCarrierLocations(): Promise<void>;
   checkCoverage(
     daneCode: string,
     shippingScope?: 'national' | 'local',

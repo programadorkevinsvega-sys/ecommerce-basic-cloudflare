@@ -2,6 +2,7 @@ import { OrderLine } from './OrderLine.js';
 
 export type OrderStatus = 'placed' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled';
 export type OrderPaymentStatus = 'pending' | 'approved' | 'failed' | 'collected';
+export type ShippingFulfillmentMethod = 'merchant_local' | 'carrier' | 'legacy';
 
 export interface ShippingAddressSnapshot {
   department: string;
@@ -24,6 +25,7 @@ export interface OrderProps {
   shippingCostCents: number;
   shippingCollectionCents?: number;
   shippingChargeMode?: 'included' | 'collect_at_delivery';
+  shippingFulfillmentMethod?: ShippingFulfillmentMethod;
   subtotalCents: number;
   discountCents?: number;
   couponCode?: string | null;
@@ -56,6 +58,7 @@ export class Order {
   public readonly shippingCostCents: number;
   public readonly shippingCollectionCents: number;
   public readonly shippingChargeMode: 'included' | 'collect_at_delivery';
+  public readonly shippingFulfillmentMethod: ShippingFulfillmentMethod;
   public readonly subtotalCents: number;
   public readonly discountCents: number;
   public readonly couponCode: string | null;
@@ -90,6 +93,7 @@ export class Order {
     this.shippingCostCents = props.shippingCostCents;
     this.shippingCollectionCents = props.shippingCollectionCents ?? 0;
     this.shippingChargeMode = props.shippingChargeMode ?? 'included';
+    this.shippingFulfillmentMethod = props.shippingFulfillmentMethod ?? 'legacy';
     this.subtotalCents = props.subtotalCents;
     this.discountCents = props.discountCents || 0;
     this.couponCode = props.couponCode || null;
@@ -154,6 +158,7 @@ export class Order {
       shippingCostCents: this.shippingCostCents,
       shippingCollectionCents: this.shippingCollectionCents,
       shippingChargeMode: this.shippingChargeMode,
+      shippingFulfillmentMethod: this.shippingFulfillmentMethod,
       subtotalCents: this.subtotalCents,
       discountCents: this.discountCents,
       couponCode: this.couponCode,
