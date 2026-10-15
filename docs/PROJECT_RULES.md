@@ -116,5 +116,5 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
   - Debe corresponder a un dominio verificado con registros SPF, DKIM y DMARC en Resend (ej. `no-reply@tudominio.com`).
   - Para pruebas iniciales, el dominio de desarrollo permitido es `onboarding@resend.dev` (limitado a envíos a la cuenta del titular de Resend).
 - **Entregabilidad y Filtros Anti-Spam:**
-  - Los correos transaccionales (confirmación de compra, despacho `shipped`, entrega `delivered`, cancelación `cancelled`) emplean pie de página corporativo, encabezados conformes a RFC y evitan patrones de spam (asuntos agresivos, exceso de mayúsculas o enlaces acortados).
+  - Los correos transaccionales deben usar remitente y enlaces con dominios públicos coherentes con la tienda, incluir alternativa de texto plano cuando la plantilla la provea y evitar asuntos agresivos, exceso de mayúsculas o enlaces acortados. SPF y DKIM deben aprobar; publicar una política DMARC alineada después de identificar todos los remitentes legítimos del dominio.
 

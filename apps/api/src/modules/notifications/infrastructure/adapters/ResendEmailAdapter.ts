@@ -34,6 +34,7 @@ export class ResendEmailAdapter implements IEmailPort {
           to: [message.to],
           subject: message.subject,
           html: message.html,
+          ...(message.text ? { text: message.text } : {}),
           attachments: message.attachments?.map((attachment) => ({
             filename: attachment.filename,
             content: attachment.content,

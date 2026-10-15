@@ -6,6 +6,7 @@ export interface SendEmailCommand {
   templateName: string;
   subject: string;
   html: string;
+  text?: string;
   idempotencyKey: string;
   attachments?: EmailAttachment[];
 }
@@ -44,6 +45,7 @@ export class SendTransactionalEmailUseCase {
       to: cmd.recipientEmail,
       subject: cmd.subject,
       html: cmd.html,
+      text: cmd.text,
       idempotencyKey: cmd.idempotencyKey,
       attachments: cmd.attachments,
     });

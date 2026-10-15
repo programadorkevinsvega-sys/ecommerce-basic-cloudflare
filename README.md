@@ -353,7 +353,7 @@ El cliente puede consultar sus documentos autenticándose en su cuenta; el admin
 
 ### Email con Resend (`notifications`)
 
-El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado para Resend. Las plantillas utilizadas se implementan en código. No hay webhook de eventos de Resend ni editor general de plantillas en el panel actual; comprobar el flujo de correo y el estado del proveedor antes de afirmar entrega en producción.
+El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado para Resend. Las plantillas utilizadas se implementan en código; el correo de acceso al seguimiento incluye alternativa de texto plano y un asunto corto. El dominio del remitente debe estar verificado y alineado con el dominio público de la tienda; SPF, DKIM y DMARC se configuran y revisan en Resend/DNS, y no garantizan por sí solos la llegada a la bandeja principal. No hay webhook de eventos de Resend ni editor general de plantillas en el panel actual; comprobar el flujo de correo y el estado del proveedor antes de afirmar entrega en producción.
 
 ## 6. Rutas
 
