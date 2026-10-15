@@ -15,7 +15,7 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
       ...(input.cashOnDelivery ? { saleValue: input.saleValueCop } : {}),
     });
     const parsed = MiPaqueteQuoteSchema.safeParse(response);
-    if (!parsed.success) throw new Error(`Invalid MiPaquete quote response: ${describeQuoteResponse(response)}`);
+    if (!parsed.success) throw new Error(`Invalid MiPaquete quote response: ${describeQuoteResponse(response, parsed.error.issues)}`);
     return parsed.data.map((quote) => ({
       quoteId: quote.id, deliveryCompanyId: quote.deliveryCompanyId,
       deliveryCompanyName: quote.deliveryCompanyName, shippingCostCop: quote.shippingCost,
@@ -71,13 +71,17 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
   }
 }
 
-function describeQuoteResponse(response: unknown): string {
-  if (Array.isArray(response)) return `array length=${response.length}`;
+function describeQuoteResponse(response: unknown, issues: Array<{ path: PropertyKey[]; message: string }>): string {
+  const issueSummary = issues.slice(0, 8).map((issue) => `${issue.path.join('.')}:${issue.message}`).join('|');
+  if (Array.isArray(response)) {
+    const first = response[0] && typeof response[0] === 'object' ? Object.keys(response[0]).slice(0, 12).join(',') : typeof response[0];
+    return `array length=${response.length}; first_keys=${first}; issues=${issueSummary}`;
+  }
   if (!response || typeof response !== 'object') return `type=${typeof response}`;
   const body = response as Record<string, unknown>;
   const code = safeScalar(body.code) || safeScalar(body.statusCode) || 'none';
   const message = safeScalar(body.message) || safeScalar(body.error) || 'none';
-  return `keys=${Object.keys(body).slice(0, 8).join(',')}; code=${code}; message=${message}`;
+  return `keys=${Object.keys(body).slice(0, 8).join(',')}; code=${code}; message=${message}; issues=${issueSummary}`;
 }
 
 function safeScalar(value: unknown): string {
