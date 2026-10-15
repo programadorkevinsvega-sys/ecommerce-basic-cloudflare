@@ -40,6 +40,7 @@ export class CollectionPagesController {
         footerStoreProfile: nav.footerStoreProfile,
         announcementMessage: marketing.announcementMessage,
         announcementLink: marketing.announcementLink,
+        announcementItems: marketing.announcementItems,
       }));
     });
     router.get('/colecciones/:slug',async(c)=>{
@@ -52,7 +53,7 @@ export class CollectionPagesController {
       const products=resolved.filter((item):item is NonNullable<typeof item>=>item?.status==='published');
       const [discounts,marketing]=await Promise.all([resolveProductDiscounts(products,promotions),getPageMarketingContent(storefront,`collection:${collection.slug}`,'Contenido de la colección')]);
       const html=marketing.bannersHtml+renderCollectionDetailPage(collection,products,discounts);
-      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://vega.jnmtortas.com/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
+      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://vega.jnmtortas.com/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementItems:marketing.announcementItems}));
     });
     return router;
   }

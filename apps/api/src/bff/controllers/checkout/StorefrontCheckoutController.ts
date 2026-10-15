@@ -109,6 +109,7 @@ export class StorefrontCheckoutController {
         checkoutMode: true,
         announcementMessage: marketing.announcementMessage,
         announcementLink: marketing.announcementLink,
+        announcementItems: marketing.announcementItems,
       });
 
       return c.html(html);

@@ -33,7 +33,7 @@ export function renderProductList(
 
   const renderBanner = (item: BannerItem, index: number): string => {
     const isInformative = item.bannerType === 'informative';
-    const ctaHtml = isInformative ? '' : `<a class="campaign-action" href="${escapeHtml(item.linkUrl)}">${escapeHtml(item.buttonText || 'Explorar colección')} <span aria-hidden="true">↗</span></a>`;
+    const ctaHtml = isInformative || !item.linkUrl?.trim() || !item.buttonText?.trim() ? '' : `<a class="campaign-action" href="${escapeHtml(item.linkUrl)}">${escapeHtml(item.buttonText)} <span aria-hidden="true">↗</span></a>`;
     return `
     <article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="${index + 1} de ${banners.length}">
       <div class="campaign-copy">
@@ -69,7 +69,7 @@ export function renderProductList(
 
   if (products.length === 0) {
     html += `<div style="background: #fff; padding: 3rem; text-align: center; border-radius: 8px; border: 1px solid var(--border);"><h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No se encontraron productos</h3><p style="color: var(--muted);">Intenta buscando con otro término.</p></div>`;
-    return `${html}</section>`;
+    return `${html}</section>${banners.length > 1 ? renderStorefrontCarouselScript('heroCarousel') : ''}`;
   }
 
   html += '<p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p><div class="grid">';

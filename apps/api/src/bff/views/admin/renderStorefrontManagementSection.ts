@@ -24,8 +24,10 @@ export function renderStorefrontManagementSection(
         ? `<button class="btn-action btn-action-hide" onclick="setBannerStatus('${b.id}', false)">Ocultar</button>`
         : `<button class="btn-action btn-action-publish" onclick="setBannerStatus('${b.id}', true)">Publicar</button>`;
 
-      const ctaMeta = isPromo
+      const hasCta = Boolean(b.buttonText?.trim() && b.linkUrl?.trim());
+      const ctaMeta = isPromo && hasCta
         ? `<div style="font-size:0.75rem; color:#6ee7b7;">Botón: "${escapeHtml(b.buttonText || 'Explorar colección')}" → ${escapeHtml(b.linkUrl)}</div>`
+        : isPromo ? '<div style="font-size:0.75rem; color:#94a3b8;">Sin botón CTA</div>'
         : `<div style="font-size:0.75rem; color:#94a3b8;">Informativo (Sin botón de acción)</div>`;
 
       return `
@@ -47,7 +49,7 @@ export function renderStorefrontManagementSection(
             ${b.isActive ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
           </td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-            ${isPromo ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
+            ${isPromo && hasCta ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
             <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
             <button class="btn-action" onclick="duplicateBanner('${b.id}')">Duplicar</button>
             ${toggle}
@@ -73,8 +75,8 @@ export function renderStorefrontManagementSection(
         <div class="form-grid">
           <div><label>Título Promocional</label><input type="text" id="pbTitle" required placeholder="Ej. Colección Verano 2026" /></div>
           <div><label>Descripción / Subtítulo</label><input type="text" id="pbDesc" placeholder="Ej. Aprovecha hasta 30% de descuento..." /></div>
-          <div><label>Texto del Botón (CTA)</label><input type="text" id="pbBtnText" required value="Explorar colección" placeholder="Ej. Comprar Ahora, Ver Ofertas" /></div>
-          <div><label>URL de Destino</label><input type="text" id="pbLink" required value="/productos" /></div>
+          <div><label>Texto del Botón (CTA, opcional)</label><input type="text" id="pbBtnText" value="Explorar colección" placeholder="Déjalo vacío si no necesitas botón" /></div>
+          <div><label>URL de Destino (opcional)</label><input type="text" id="pbLink" value="/productos" placeholder="/productos" /></div>
           <div><label>Texto Alternativo (Alt)</label><input type="text" id="pbAlt" required placeholder="Colección destacada..." /></div>
           <div>
             <label>Ubicación</label>

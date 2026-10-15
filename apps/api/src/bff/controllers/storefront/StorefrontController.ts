@@ -61,6 +61,7 @@ export class StorefrontController {
       const products = productRecords.slice(0, 12);
       const discountMap = await resolveProductDiscounts(products, promotionsGateway);
       const activeAnnouncement = homeAnnouncements[0] || homeContent.announcements[0];
+      const announcementItems = [...new Map([...homeAnnouncements, ...homeContent.announcements].map((item) => [item.id, { message: item.message, linkUrl: item.linkUrl }])).values()];
       const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
       const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands, { page: productsPage, hasNext: productRecords.length > 12 });
 
@@ -77,6 +78,7 @@ export class StorefrontController {
         customerEmail,
         announcementMessage: activeAnnouncement?.message,
         announcementLink: activeAnnouncement?.linkUrl,
+        announcementItems,
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
@@ -131,6 +133,7 @@ export class StorefrontController {
         footerStoreProfile: nav.footerStoreProfile,
         announcementMessage: banners.announcementMessage,
         announcementLink: banners.announcementLink,
+        announcementItems: banners.announcementItems,
       });
 
       return c.html(html);
@@ -185,6 +188,7 @@ export class StorefrontController {
           footerStoreProfile: nav.footerStoreProfile,
           announcementMessage: marketing.announcementMessage,
           announcementLink: marketing.announcementLink,
+          announcementItems: marketing.announcementItems,
         });
 
         return c.html(html);

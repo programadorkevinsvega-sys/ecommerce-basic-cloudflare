@@ -74,7 +74,7 @@ export interface CreateBannerGatewayRequest {
   buttonText?: string;
   placement: string;
   imageUrl: string;
-  linkUrl: string;
+  linkUrl?: string;
   altText: string;
   isActive?: boolean;
   startsAt?: string;

@@ -67,8 +67,8 @@ export function renderStorefrontFormsScript(): string {
         imageUrl: img,
         altText: alt,
         placement,
-        linkUrl: isPromo ? (document.getElementById('pbLink')?.value || '/productos') : '#',
-        buttonText: isPromo ? (document.getElementById('pbBtnText')?.value || 'Explorar colección') : undefined,
+        linkUrl: isPromo ? (document.getElementById('pbLink')?.value?.trim() || '') : '#',
+        buttonText: isPromo ? (document.getElementById('pbBtnText')?.value?.trim() || '') : undefined,
         startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
         endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
         sortOrder

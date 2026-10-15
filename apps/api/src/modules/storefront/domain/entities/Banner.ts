@@ -82,7 +82,7 @@ export class Banner {
     }
     if (updates.placement !== undefined) this.props.placement = updates.placement;
     if (updates.imageUrl !== undefined) this.props.imageUrl = updates.imageUrl;
-    if (updates.linkUrl !== undefined) this.props.linkUrl = updates.linkUrl;
+    if (updates.linkUrl !== undefined) this.props.linkUrl = updates.linkUrl.trim();
     if (updates.isActive !== undefined) this.props.isActive = updates.isActive;
     if (updates.startsAt !== undefined) this.props.startsAt = updates.startsAt;
     if (updates.endsAt !== undefined) this.props.endsAt = updates.endsAt;

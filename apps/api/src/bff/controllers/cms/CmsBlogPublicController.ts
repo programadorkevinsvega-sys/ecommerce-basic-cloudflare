@@ -31,7 +31,7 @@ export class CmsBlogPublicController {
       const html=renderBlogIndexPage(listed.items,categoryPage.items,page,listed.total,pageSize,categorySlug);
       const url=new URL(c.req.url);url.pathname='/blog';
       const canonical=`${url.origin}/blog${page>1?`?page=${page}`:''}${categorySlug?`${page>1?'&':'?'}categoria=${encodeURIComponent(categorySlug)}`:''}`;
-      return c.html(renderBaseLayout({title:categorySlug?`${categoryPage.items.find((item)=>item.slug===categorySlug)?.name} | Blog`: 'Blog | Vega Store',description:'Consejos, novedades e inspiración de Vega Store.',canonicalUrl:canonical,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
+      return c.html(renderBaseLayout({title:categorySlug?`${categoryPage.items.find((item)=>item.slug===categorySlug)?.name} | Blog`: 'Blog | Vega Store',description:'Consejos, novedades e inspiración de Vega Store.',canonicalUrl:canonical,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementItems:marketing.announcementItems}));
     });
     router.get('/blog/:slug',async(c)=>{
       const [post,customerEmail,nav]=await Promise.all([cms.getBlogPostBySlug(c.req.param('slug'),true),getCustomerEmail(c,identity),getStorefrontNavMenus(cms,settings)]);
@@ -40,7 +40,7 @@ export class CmsBlogPublicController {
       const url=new URL(c.req.url);const canonical=post.canonicalUrl||`${url.origin}/blog/${encodeURIComponent(post.slug)}`;
       const image=post.featuredImageMediaId?`${url.origin}/media/${encodeURIComponent(post.featuredImageMediaId)}`:undefined;
       const html=renderBlogArticlePage(post,related);
-      return c.html(renderBaseLayout({title:`${post.seoTitle||post.title} | Blog`,description:post.seoDescription||post.excerpt,canonicalUrl:canonical,ogImageUrl:image,ogType:'article',jsonLd:post.noindex?undefined:blogPostingJsonLd(post,canonical,image),noindex:post.noindex,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
+      return c.html(renderBaseLayout({title:`${post.seoTitle||post.title} | Blog`,description:post.seoDescription||post.excerpt,canonicalUrl:canonical,ogImageUrl:image,ogType:'article',jsonLd:post.noindex?undefined:blogPostingJsonLd(post,canonical,image),noindex:post.noindex,bodyHtml:marketing.bannersHtml+html,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementItems:marketing.announcementItems}));
     });
     return router;
   }

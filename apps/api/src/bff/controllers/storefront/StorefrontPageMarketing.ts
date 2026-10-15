@@ -4,6 +4,7 @@ import { renderStorefrontBanners } from '../../views/renderStorefrontBanners.js'
 export interface PageMarketingContent {
   banners: BannerItemDto[];
   bannersHtml: string;
+  announcementItems: Array<{ message: string; linkUrl?: string }>;
   announcementMessage?: string;
   announcementLink?: string;
 }
@@ -19,10 +20,15 @@ export async function getPageMarketingContent(
     ...[placement, ...aliases, 'top_bar'].map((target) => storefront.getPublicAnnouncements(target)),
   ]);
   const banners = [...new Map(bannerGroups.flat().map((banner) => [banner.id, banner])).values()];
-  const announcement = announcementGroups.flat()[0];
+  const announcementItems = [...new Map(announcementGroups.flat().map((announcement) => [announcement.id, {
+    message: announcement.message,
+    linkUrl: announcement.linkUrl,
+  }])).values()];
+  const announcement = announcementItems[0];
   return {
     banners,
     bannersHtml: renderStorefrontBanners(banners, label),
+    announcementItems,
     announcementMessage: announcement?.message,
     announcementLink: announcement?.linkUrl,
   };

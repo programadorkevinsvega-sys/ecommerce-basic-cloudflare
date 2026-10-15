@@ -48,6 +48,13 @@ export const storefrontBaseStyles = String.raw`    :root {
       letter-spacing: .015em;
     }
     .announcement-bar a { color: var(--accent) !important; margin-left: .45rem; }
+    .announcement-bar-rotator { display:flex; align-items:center; justify-content:center; gap:.8rem; }
+    .announcement-slides { min-width:0; }
+    .announcement-slide:not([hidden]) { animation:announcement-fade .35s ease both; }
+    .announcement-controls { display:inline-flex; align-items:center; gap:.25rem; }
+    .announcement-controls button { min-width:1.8rem; min-height:1.8rem; padding:.1rem .35rem; border:1px solid #ffffff55; border-radius:999px; background:transparent; color:#fff; cursor:pointer; font-size:.75rem; }
+    @keyframes announcement-fade { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+    @media (prefers-reduced-motion:reduce) { .announcement-slide:not([hidden]) { animation:none; } }
     .site-header {
       position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between;
       gap: 1.5rem; padding: 1.05rem max(1.25rem, calc((100vw - var(--content-width)) / 2));

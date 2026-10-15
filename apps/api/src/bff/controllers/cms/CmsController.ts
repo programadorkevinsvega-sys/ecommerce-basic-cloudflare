@@ -31,6 +31,7 @@ export class CmsController {
           bodyHtml: marketing.bannersHtml + rendered.bodyHtml,
           announcementMessage: marketing.announcementMessage,
           announcementLink: marketing.announcementLink,
+          announcementItems: marketing.announcementItems,
           headerMenuItems,
           footerMenuItems,
           footerStoreProfile,

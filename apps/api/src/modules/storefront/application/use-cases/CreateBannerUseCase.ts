@@ -9,7 +9,7 @@ export interface CreateBannerInput {
   buttonText?: string;
   placement: string;
   imageUrl: string;
-  linkUrl: string;
+  linkUrl?: string;
   altText: string;
   isActive?: boolean;
   startsAt?: string;
@@ -35,7 +35,7 @@ export class CreateBannerUseCase {
         buttonText: input.buttonText,
         placement: input.placement,
         imageUrl: input.imageUrl,
-        linkUrl: input.linkUrl,
+        linkUrl: input.linkUrl?.trim() || '',
         altText: input.altText,
         isActive: input.isActive ?? true,
         startsAt: input.startsAt,

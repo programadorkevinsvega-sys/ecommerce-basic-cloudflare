@@ -11,6 +11,7 @@ import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
 import { renderStoreFooterDetails, renderStoreLegalIdentity, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 import { storefrontBlogStyles } from './storefrontBlogStyles.js';
 import { storefrontReviewStyles } from './storefrontReviewStyles.js';
+import { renderAnnouncementBar, type AnnouncementBarItem } from './renderAnnouncementBar.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -33,6 +34,7 @@ export interface LayoutProps {
   customerEmail?: string;
   announcementMessage?: string;
   announcementLink?: string;
+  announcementItems?: AnnouncementBarItem[];
   headerMenuItems?: LayoutMenuItem[];
   footerMenuItems?: LayoutMenuItem[];
   footerStoreProfile?: StorefrontStoreProfile;
@@ -47,10 +49,10 @@ export function renderBaseLayout(props: LayoutProps): string {
   const ogImage = escapeHtml(props.ogImageUrl || 'https://vega.jnmtortas.com/media/og-default.jpg');
   const jsonLdScript = props.jsonLd ? `<script type="application/ld+json">${props.jsonLd}</script>` : '';
 
-  const topBarHtml = `<div class="announcement-bar">
-        ${escapeHtml(props.announcementMessage || 'Explora novedades y productos disponibles en Vega Store.')}
-        ${props.announcementLink ? `<a href="${escapeHtml(props.announcementLink)}">Ver más →</a>` : ''}
-       </div>`;
+  const topBarHtml = renderAnnouncementBar(props.announcementItems?.length ? props.announcementItems : [{
+    message: props.announcementMessage || 'Explora novedades y productos disponibles en Vega Store.',
+    linkUrl: props.announcementLink,
+  }]);
 
   const headerLinksHtml = (props.headerMenuItems && props.headerMenuItems.length > 0)
     ? props.headerMenuItems.map(renderHeaderItem).join('')

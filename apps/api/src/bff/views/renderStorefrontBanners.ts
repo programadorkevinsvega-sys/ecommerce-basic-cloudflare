@@ -5,7 +5,7 @@ export function renderStorefrontBanners(banners: BannerItem[], label: string): s
   if (!banners.length) return '';
   const items = banners.map((banner, index) => {
     const image = `<img src="${escapeHtml(banner.imageUrl)}" alt="${escapeHtml(banner.altText)}" loading="lazy" />`;
-    const action = banner.bannerType === 'informative' ? '' : `<a class="campaign-action" href="${escapeHtml(banner.linkUrl)}">${escapeHtml(banner.buttonText || 'Explorar colección')}</a>`;
+    const action = banner.bannerType === 'informative' || !banner.linkUrl?.trim() || !banner.buttonText?.trim() ? '' : `<a class="campaign-action" href="${escapeHtml(banner.linkUrl)}">${escapeHtml(banner.buttonText)}</a>`;
     return `<article class="campaign-banner" role="group" aria-roledescription="diapositiva" aria-label="${index + 1} de ${banners.length}"><div class="campaign-copy"><span class="eyebrow">${banner.bannerType === 'informative' ? 'Comunicado' : 'Selección de la tienda'}</span><h2>${escapeHtml(banner.title)}</h2>${banner.description ? `<p>${escapeHtml(banner.description)}</p>` : ''}${action}</div><div class="campaign-image">${image}</div></article>`;
   }).join('');
   if (banners.length === 1) return `<section class="campaign-banner-single" aria-label="${escapeHtml(label)}">${items}</section>`;

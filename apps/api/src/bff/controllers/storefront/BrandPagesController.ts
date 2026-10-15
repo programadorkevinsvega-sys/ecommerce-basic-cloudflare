@@ -23,7 +23,7 @@ export class BrandPagesController {
       if (brandRecords.length === 0 && page > 1) return c.redirect('/marcas', 302);
       const brands = brandRecords.slice(0, 12);
       const customerEmail = await getCustomerEmail(c, identity);
-      return c.html(renderBaseLayout({ title: 'Marcas | Vega Store', description: 'Conoce las marcas disponibles y explora sus productos.', canonicalUrl: `https://vega.jnmtortas.com/marcas${page > 1 ? `?page=${page}` : ''}`, bodyHtml: marketing.bannersHtml + renderBrandDirectoryPage(brands, page, brandRecords.length > 12), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementMessage: marketing.announcementMessage, announcementLink: marketing.announcementLink }));
+      return c.html(renderBaseLayout({ title: 'Marcas | Vega Store', description: 'Conoce las marcas disponibles y explora sus productos.', canonicalUrl: `https://vega.jnmtortas.com/marcas${page > 1 ? `?page=${page}` : ''}`, bodyHtml: marketing.bannersHtml + renderBrandDirectoryPage(brands, page, brandRecords.length > 12), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementItems: marketing.announcementItems }));
     });
     router.get('/marcas/:slug', async (c) => {
       const [brands, nav] = await Promise.all([catalog.listBrands(), getStorefrontNavMenus(cms, settings)]);
@@ -33,7 +33,7 @@ export class BrandPagesController {
       const matches = await catalog.listProducts({ limit: 100, status: 'published', searchQuery: brand.name });
       const products = matches.filter((p) => p.status === 'published' && p.brand?.trim().toLocaleLowerCase() === brand.name.trim().toLocaleLowerCase());
       const [discounts, marketing] = await Promise.all([resolveProductDiscounts(products, promotions), getPageMarketingContent(storefront, `brand:${brand.slug}`, 'Contenido de la marca')]);
-      return c.html(renderBaseLayout({ title: `${brand.name} | Marcas | Vega Store`, description: brand.description || `Explora los productos de ${brand.name} en Vega Store.`, canonicalUrl: `https://vega.jnmtortas.com/marcas/${encodeURIComponent(brand.slug)}`, bodyHtml: marketing.bannersHtml + renderBrandDetailPage(brand, products, discounts), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementMessage: marketing.announcementMessage, announcementLink: marketing.announcementLink }));
+      return c.html(renderBaseLayout({ title: `${brand.name} | Marcas | Vega Store`, description: brand.description || `Explora los productos de ${brand.name} en Vega Store.`, canonicalUrl: `https://vega.jnmtortas.com/marcas/${encodeURIComponent(brand.slug)}`, bodyHtml: marketing.bannersHtml + renderBrandDetailPage(brand, products, discounts), customerEmail, headerMenuItems: nav.headerMenuItems, footerMenuItems: nav.footerMenuItems, footerStoreProfile: nav.footerStoreProfile, announcementItems: marketing.announcementItems }));
     });
     return router;
   }
