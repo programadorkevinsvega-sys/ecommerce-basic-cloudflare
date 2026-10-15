@@ -65,7 +65,7 @@ function mapQuote(row: QuoteRow): CarrierShippingQuote {
     collectionCommissionCents: row.collection_commission_cents, deliveryMinutes: row.delivery_minutes,
     paymentMethod: row.payment_method, destinationDaneCode: row.destination_dane_code,
     declaredValueCents: row.declared_value_cents, saleValueCents: row.sale_value_cents,
-    packageProfileId: row.package_profile_id || '', packageWidthCm: row.package_width_cm || 0,
+    packageProfileId: row.package_profile_id, packageWidthCm: row.package_width_cm || 0,
     packageLengthCm: row.package_length_cm || 0, packageHeightCm: row.package_height_cm || 0,
     packageWeightGrams: row.package_weight_grams || 0, packageWeightKg: row.package_weight_kg || 0,
     packageFingerprint: row.package_fingerprint || '',

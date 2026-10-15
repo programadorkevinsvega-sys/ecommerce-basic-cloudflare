@@ -3,7 +3,7 @@ import { CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGat
 export function renderShippingPackagesSection(config: CarrierIntegrationConfigDto): string {
   return `<header class="shipping-heading shipping-package-page-heading"><div><h1>Cajas y sobres</h1><p>Administra los empaques usados para cotizar envíos con MiPaquete.</p></div></header>
     <section class="card shipping-carrier-config-card shipping-package-page-card" aria-labelledby="shipping-packages-title">
-      <div class="shipping-section-heading shipping-package-heading"><div><h2 id="shipping-packages-title">Empaques de MiPaquete</h2><p>El pedido se acomoda en el empaque activo más pequeño compatible. Dimensiones en centímetros y pesos en gramos.</p></div><button type="button" class="shipping-action primary" id="mp-package-create">+ Crear empaque</button></div>
+      <div class="shipping-section-heading shipping-package-heading"><div><h2 id="shipping-packages-title">Empaques de MiPaquete</h2><p>Una unidad se cotiza con su empaque individual. Para pedidos de varias unidades se usa el empaque activo más pequeño que las contenga. Dimensiones en centímetros y pesos en gramos.</p></div><button type="button" class="shipping-action primary" id="mp-package-create">+ Crear empaque</button></div>
       <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Empaque</th><th>Dimensión interna</th><th>Dimensión externa</th><th>Peso tara / máximo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="mp-package-rows">${config.packageProfiles.map(renderProfileRow).join('') || '<tr><td colspan="6" class="shipping-empty">No hay empaques registrados.</td></tr>'}</tbody></table></div>
     </section>
     ${renderPackageDialog()}`;

@@ -75,7 +75,7 @@ export class ShippingPublicApi {
   public async getCarrierAvailability(): Promise<boolean> {
     const config = await this.getCarrierConfig();
     return this.container.carrierApiConfigured && config.enabled && Boolean(config.originDaneCode &&
-      config.packageProfiles.some((profile) => profile.isActive) && config.declaredValueMode &&
+      config.declaredValueMode &&
       config.cashOnDeliveryPaymentType && config.requestPickup !== null && config.selectionCriterion);
   }
 

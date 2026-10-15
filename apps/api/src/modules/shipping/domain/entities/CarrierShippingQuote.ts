@@ -10,7 +10,7 @@ export interface CarrierShippingQuote {
   destinationDaneCode: string;
   declaredValueCents: number;
   saleValueCents: number;
-  packageProfileId: string;
+  packageProfileId: string | null;
   packageWidthCm: number;
   packageLengthCm: number;
   packageHeightCm: number;

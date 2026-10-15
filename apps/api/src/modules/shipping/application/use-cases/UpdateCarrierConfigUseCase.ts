@@ -20,7 +20,6 @@ export class UpdateCarrierConfigUseCase {
         throw new Error('Revisa dimensiones internas/externas y capacidad de los empaques.');
       }
     }
-    if (input.enabled && !input.packageProfiles.some((profile) => profile.isActive)) throw new Error('Agrega al menos un empaque activo antes de habilitar cotizaciones.');
     if (!['cost', 'sale_value'].includes(input.declaredValueMode || '')) throw new Error('Modo de valor declarado inválido');
     if (![101, 102].includes(input.cashOnDeliveryPaymentType || 0)) throw new Error('Forma de pago del flete inválida');
     if (typeof input.requestPickup !== 'boolean') throw new Error('Debe indicar si solicita recolección');

@@ -29,24 +29,14 @@ export class ManageCarrierPackageProfilesUseCase {
   }
 
   public async setActive(id: string, active: boolean): Promise<CarrierPackageProfile> {
-    const current = await this.get(id);
-    if (!active && current.isActive) {
-      const config = await this.repository.get();
-      if (config.enabled && (await this.repository.listProfiles()).filter((profile) => profile.isActive).length <= 1) {
-        throw new Error('Mantén al menos un empaque activo mientras las cotizaciones estén habilitadas.');
-      }
-    }
+    await this.get(id);
     const updated = await this.repository.setProfileActive(id, active, new Date().toISOString());
     if (!updated) throw new Error('Tipo de empaque no encontrado');
     return updated;
   }
 
   public async delete(id: string): Promise<void> {
-    const current = await this.get(id);
-    if (current.isActive && (await this.repository.get()).enabled &&
-      (await this.repository.listProfiles()).filter((profile) => profile.isActive).length <= 1) {
-      throw new Error('Desactiva las cotizaciones o agrega otra caja activa antes de eliminar esta.');
-    }
+    await this.get(id);
     if (!await this.repository.deleteProfile(id)) throw new Error('Tipo de empaque no encontrado');
   }
 }

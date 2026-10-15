@@ -42,7 +42,7 @@ export class CreateMiPaqueteShipmentUseCase {
     if (collectShippingAtDelivery && (!quote || order.shippingCollectionCents !== quote.shippingCostCents)) {
       throw new Error('El valor del envío por cobrar al recibir no coincide con la cotización guardada.');
     }
-    if (!quote.packageProfileId || !quote.packageWidthCm || !quote.packageLengthCm || !quote.packageHeightCm ||
+    if (!quote.packageWidthCm || !quote.packageLengthCm || !quote.packageHeightCm ||
         !quote.packageWeightKg || !quote.packageFingerprint) {
       throw new Error('La cotización no tiene una instantánea de empaque válida. Cotiza nuevamente el pedido.');
     }
@@ -121,7 +121,7 @@ function assertOrderEligible(order: CarrierOrderInput): void {
 }
 
 function assertConfigured(config: CarrierIntegrationConfig): void {
-  if (!config.originDaneCode || !config.packageProfiles.some((profile) => profile.isActive) ||
+  if (!config.originDaneCode ||
       !config.cashOnDeliveryPaymentType || !config.selectionCriterion || config.requestPickup === null) {
     throw new Error('Completa la configuración logística de MiPaquete.');
   }

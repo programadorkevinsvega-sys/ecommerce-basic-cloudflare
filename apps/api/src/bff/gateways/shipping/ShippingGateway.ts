@@ -56,6 +56,7 @@ export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' 
 export interface CarrierShippingQuoteDto {
   id: string; deliveryCompanyName: string; shippingCostCents: number; providerQuoteId?: string; deliveryCompanyId?: string;
   collectionCommissionCents: number; deliveryMinutes: number; expiresAt: string;
+  packageProfileId: string | null;
   packageWidthCm: number; packageLengthCm: number; packageHeightCm: number; packageWeightGrams: number; packageWeightKg: number;
 }
 export interface ShippingPackageItemDto { productId: string; widthCm: number; lengthCm: number; heightCm: number; weightGrams: number; quantity: number; }

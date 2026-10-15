@@ -56,7 +56,7 @@ export class QuoteCarrierShippingUseCase {
 }
 
 function assertConfigured(config: CarrierIntegrationConfig): void {
-  if (!config.originDaneCode || !config.packageProfiles.some((profile) => profile.isActive)) {
+  if (!config.originDaneCode) {
     throw new Error('Carrier setup incomplete');
   }
 }

@@ -30,7 +30,8 @@ export function getCheckoutCarrierScript(): string {
           }
           const firstQuote = result.quotes[0];
           const packageNote = firstQuote
-            ? '<small class="checkout-carrier-package-note">Tarifa calculada con el empaque configurado: ' +
+            ? '<small class="checkout-carrier-package-note">Tarifa calculada con ' +
+              (firstQuote.packageProfileId ? 'el empaque configurado' : 'el empaque individual del producto') + ': ' +
               Number(firstQuote.packageWidthCm) + ' × ' + Number(firstQuote.packageLengthCm) + ' × ' +
               Number(firstQuote.packageHeightCm) + ' cm · peso cotizado: ' +
               Number(firstQuote.packageWeightKg).toLocaleString('es-CO') + ' kg.</small>'

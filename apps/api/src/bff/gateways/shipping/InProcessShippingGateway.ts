@@ -105,8 +105,9 @@ export class InProcessShippingGateway implements ShippingGateway {
   public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; shippingChargeMode?: 'included' | 'collect_at_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]> {
     const quotes = await this.publicApi.quoteCarrierShipping(input);
     return quotes.map(({ id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
-      packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg }) => ({
+      packageProfileId, packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg }) => ({
       id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
+      packageProfileId,
       packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg,
     }));
   }
@@ -189,6 +190,7 @@ function mapShipment(shipment: CarrierShipmentDto): CarrierShipmentDto {
 function mapCarrierQuote(quote: Awaited<ReturnType<ShippingPublicApi['getCarrierQuoteForOrder']>> & {}): CarrierShippingQuoteDto {
   return {
     id: quote.id, deliveryCompanyName: quote.deliveryCompanyName, shippingCostCents: quote.shippingCostCents,
+    packageProfileId: quote.packageProfileId,
     packageWidthCm: quote.packageWidthCm, packageLengthCm: quote.packageLengthCm, packageHeightCm: quote.packageHeightCm,
     packageWeightGrams: quote.packageWeightGrams, packageWeightKg: quote.packageWeightKg,
     collectionCommissionCents: quote.collectionCommissionCents, deliveryMinutes: quote.deliveryMinutes,
