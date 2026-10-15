@@ -40,7 +40,7 @@ export function registerAdminOrderRoutes(
     });
     if (previous?.paymentMethod === 'cash_on_delivery' && ['confirmed', 'prepared'].includes(updated.status) &&
         !['confirmed', 'prepared', 'shipped', 'delivered'].includes(previous.status)) {
-      try { await createShipmentForEligibleOrder(updated.id, { orders, settings, shipping }); }
+      try { await createShipmentForEligibleOrder(updated.id, { orders, settings, shipping, notifications }); }
       catch (error) { console.error(JSON.stringify({ event: 'shipping.auto_guide_creation_failed',
         error_name: error instanceof Error ? error.name : 'UnknownError' })); }
     }

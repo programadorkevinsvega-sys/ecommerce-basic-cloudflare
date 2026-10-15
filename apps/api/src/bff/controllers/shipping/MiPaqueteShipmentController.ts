@@ -6,9 +6,12 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
+import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
+import { notifyShippingGuideAvailable } from './notifyShippingGuideAvailable.js';
+import { notifyOrderStatusChanged } from '../orders/notifyOrderStatusChanged.js';
 
 export class MiPaqueteShipmentController {
-  public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway }): Hono<{ Bindings: Env }> {
+  public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway; notifications: NotificationsGateway }): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     app.get('/api/v1/admin/shipping/mipaquete/labels', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
       const page = Number(c.req.query('page') || 1);
@@ -48,6 +51,7 @@ export class MiPaqueteShipmentController {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });
+        if (shipment.guideNumber) await notifyShippingGuideAvailable(order.id, deps.orders, deps.notifications);
         await deps.audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
           action: 'shipping.mipaquete.shipment.created_or_retrieved', entityType: 'shipping_carrier_shipment',
           entityId: shipment.id, changes: { orderId: order.id, mipaqueteCode: shipment.mipaqueteCode,
@@ -63,16 +67,18 @@ export class MiPaqueteShipmentController {
         if (order && order.status !== 'cancelled') {
           const nextStatus = shipment.status === 'delivered' ? 'delivered'
             : shipment.status === 'in_transit' ? 'shipped' : null;
-          if (nextStatus && order.status !== nextStatus) await deps.orders.updateOrderStatus({
-            orderId: order.id, status: nextStatus,
-            note: `Estado confirmado por consulta autenticada a MiPaquete: ${shipment.providerStatus || shipment.status}`,
-            actor: 'mipaquete:authenticated_sync',
-          });
+          if (nextStatus && order.status !== nextStatus) {
+            const note = `Estado confirmado por consulta autenticada a MiPaquete: ${shipment.providerStatus || shipment.status}`;
+            const updated = await deps.orders.updateOrderStatus({ orderId: order.id, status: nextStatus,
+              note, actor: 'mipaquete:authenticated_sync' });
+            await notifyOrderStatusChanged(updated, nextStatus, undefined, deps.notifications, 'mipaquete:authenticated_sync');
+          }
         }
         if (shipment.guideNumber) await deps.orders.saveOrderShippingDetails(shipment.orderId, {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });
+        if (shipment.guideNumber) await notifyShippingGuideAvailable(shipment.orderId, deps.orders, deps.notifications);
         await deps.audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
           action: 'shipping.mipaquete.shipment.synced', entityType: 'shipping_carrier_shipment',
           entityId: shipment.id, changes: { orderId: shipment.orderId, mipaqueteCode: shipment.mipaqueteCode,

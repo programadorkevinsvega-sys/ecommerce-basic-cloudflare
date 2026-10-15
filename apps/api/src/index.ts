@@ -2,6 +2,8 @@ import { Env } from './platform/Env.js';
 import { AppCompositionRoot, buildCompositionRoot } from './composition-root.js';
 import { createBffApp } from './bff/server.js';
 import { JsonLogger } from './platform/JsonLogger.js';
+import { notifyShippingGuideAvailable } from './bff/controllers/shipping/notifyShippingGuideAvailable.js';
+import { notifyOrderStatusChanged } from './bff/controllers/orders/notifyOrderStatusChanged.js';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -73,15 +75,17 @@ async function reconcileCarrierShipments(root: AppCompositionRoot): Promise<void
       if (!order || order.status === 'cancelled') continue;
       const nextStatus = shipment.status === 'delivered' ? 'delivered'
         : shipment.status === 'in_transit' ? 'shipped' : null;
-      if (nextStatus && order.status !== nextStatus) await root.ordersGateway.updateOrderStatus({
-        orderId: order.id, status: nextStatus,
-        note: `Estado confirmado por consulta autenticada a MiPaquete: ${shipment.providerStatus || shipment.status}`,
-        actor: 'mipaquete:scheduled_sync',
-      });
+      if (nextStatus && order.status !== nextStatus) {
+        const note = `Estado confirmado por consulta autenticada a MiPaquete: ${shipment.providerStatus || shipment.status}`;
+        const updated = await root.ordersGateway.updateOrderStatus({ orderId: order.id, status: nextStatus,
+          note, actor: 'mipaquete:scheduled_sync' });
+        await notifyOrderStatusChanged(updated, nextStatus, undefined, root.notificationsGateway, 'mipaquete:scheduled_sync');
+      }
       if (shipment.guideNumber) await root.ordersGateway.saveOrderShippingDetails(order.id, {
         shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
         shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
       });
+      if (shipment.guideNumber) await notifyShippingGuideAvailable(order.id, root.ordersGateway, root.notificationsGateway);
     }
   } catch { /* La siguiente ejecución programada reintenta la sincronización. */ }
 }

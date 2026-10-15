@@ -142,7 +142,7 @@ export class PaymentsController {
 
         try {
           if (!shippingGateway) throw new Error('Shipping gateway is unavailable');
-          await createShipmentForEligibleOrder(res.orderId, { orders: ordersGateway, settings: settingsGateway, shipping: shippingGateway });
+          await createShipmentForEligibleOrder(res.orderId, { orders: ordersGateway, settings: settingsGateway, shipping: shippingGateway, notifications: notificationsGateway });
         } catch (error) {
           console.error(JSON.stringify({ event: 'shipping.auto_guide_creation_failed',
             error_name: error instanceof Error ? error.name : 'UnknownError' }));

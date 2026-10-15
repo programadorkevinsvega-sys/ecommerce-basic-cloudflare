@@ -1,9 +1,11 @@
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
+import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
+import { notifyShippingGuideAvailable } from './notifyShippingGuideAvailable.js';
 
 export async function createShipmentForEligibleOrder(orderId: string, deps: {
-  orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway;
+  orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; notifications: NotificationsGateway;
 }): Promise<void> {
   const order = await deps.orders.getOrder(orderId);
   if (!order || order.status === 'cancelled') return;
@@ -25,6 +27,7 @@ export async function createShipmentForEligibleOrder(orderId: string, deps: {
     shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
     shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
   });
+  if (shipment.guideNumber) await notifyShippingGuideAvailable(order.id, deps.orders, deps.notifications);
 }
 
 function makeParty(name: string, identification: string | undefined | null, phone: string | undefined,

@@ -11,6 +11,8 @@ import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderOrderTrackingPage } from '../../views/renderOrderTrackingPage.js';
 import { extractAdminToken } from './extractAdminToken.js';
 import { getCustomerActorId, getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
+import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
+import { notifyShippingGuideAvailable } from '../shipping/notifyShippingGuideAvailable.js';
 
 const TrackingRequest = z.object({
   orderId: z.string().min(8).max(80),
@@ -18,7 +20,7 @@ const TrackingRequest = z.object({
 }).strict();
 
 export class OrderTrackingController {
-  public static createRoutes(orders: OrdersGateway, cms: CmsGateway, identity: IdentityGateway, settings: SettingsGateway): Hono {
+  public static createRoutes(orders: OrdersGateway, cms: CmsGateway, identity: IdentityGateway, settings: SettingsGateway, notifications: NotificationsGateway): Hono {
     const app = new Hono();
     app.get('/seguimiento-pedido', async (c) => {
       c.header('Cache-Control', 'private, no-store');
@@ -87,6 +89,7 @@ export class OrderTrackingController {
       if (!saved) return c.json({ error: 'Pedido no encontrado' }, 404);
       const updated = await orders.getAdminOrderTracking(c.req.param('orderId'));
       if (!updated) return c.json({ error: 'Pedido no encontrado' }, 404);
+      if (updated.shippingTrackingNumber) await notifyShippingGuideAvailable(updated.orderId, orders, notifications);
       return c.json({ success: true, tracking: updated });
     });
     return app;
@@ -144,7 +147,9 @@ function publicTracking(tracking: TrackingResult) {
     maxEstimatedDays: tracking.maxEstimatedDays,
     shippingCarrier: tracking.shippingCarrier,
     shippingTrackingNumber: tracking.shippingTrackingNumber,
-    shippingTrackingUrl: tracking.shippingTrackingUrl,
+    // El URL guardado es el PDF de la etiqueta para impresión administrativa,
+    // no un enlace público de rastreo para el comprador.
+    shippingTrackingUrl: null,
     estimatedDeliveryDate: tracking.estimatedDeliveryDate,
     events: tracking.events.filter((event) => ['confirmed', 'prepared', 'shipped', 'delivered'].includes(event.status)),
   };

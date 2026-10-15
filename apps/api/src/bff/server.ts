@@ -73,7 +73,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', MiPaqueteConfigController.createRoutes(cRoot.shippingGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/', MiPaqueteShipmentController.createRoutes({ identity: cRoot.identityGateway,
     orders: cRoot.ordersGateway, settings: cRoot.settingsGateway, shipping: cRoot.shippingGateway,
-    audit: cRoot.auditGateway }));
+    audit: cRoot.auditGateway, notifications: cRoot.notificationsGateway }));
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CmsMenuAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));
@@ -81,7 +81,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway, cRoot.catalogGateway));
-  app.route('/', OrderTrackingController.createRoutes(cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway));
+  app.route('/', OrderTrackingController.createRoutes(cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.notificationsGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway, cRoot.catalogGateway, cRoot.auditGateway));
   app.route('/', OrdersController.createRoutes(
     cRoot.ordersGateway,
