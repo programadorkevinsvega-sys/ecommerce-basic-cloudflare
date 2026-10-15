@@ -60,6 +60,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `catalog__0009_collection_image.sql` | v9 | Local temporal | 2026-10-14 | `bda5afd` | ✅ Aplicación desde cero/actualización legacy aprobadas y persistencia D1 de imagen verificada en Workers. |
 | `catalog__0009_collection_image.sql` | v9 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `bda5afd` | ✅ Aplicada por runner tras confirmar 42 migraciones previas; ledger y columna `image_media_id` verificados. No se modificaron filas existentes. |
 | `catalog__0010_brand_image.sql` | v10 | Local temporal | 2026-10-14 | trabajo actual | ✅ Aplicación completa desde cero y segunda pasada idempotente verificadas; columna nullable sin afectar marcas existentes. |
+| `catalog__0011_product_shipping_dimensions.sql` | v11 | Local temporal | 2026-10-14 | trabajo actual | ✅ D1 temporal limpia: aplicada desde cero e idempotencia verificada |
+| `catalog__0011_product_shipping_dimensions.sql` | v11 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada después de verificar 53 migraciones anteriores; columnas confirmadas, 8 productos previos conservados |
 | `catalog__0010_brand_image.sql` | v10 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada después de confirmar 43 entradas y columna ausente; ledger y `PRAGMA table_info` verificaron la columna nullable. Bookmark antes `00000280-00000319-00005104-84f1213e1c2180147cbcc968ea1511f3`, después `00000280-00000325-00005104-1be4680bac0b0e072f56d01855aeaa81`. |
 
 `catalog__0008_collections.sql` crea `catalog_collections` y `catalog_collection_products`. El estado inicial queda `inactive` para que una colección nueva no se publique por accidente. El rollback del Worker no requiere retirar las tablas: la versión anterior no las consulta. No ejecutar `DROP TABLE` como rollback, porque eliminaría las colecciones configuradas. Para aplicar en local: `pnpm db:migrate:local`; en producción, después de respaldo y revisión del ledger: `ALLOW_REMOTE_D1_MIGRATIONS=1 pnpm db:migrate:remote`. En esta ejecución se aplicó en producción y la comprobación posterior confirmó el ledger, las tablas y todas sus columnas. No se insertó contenido.
@@ -138,6 +140,10 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `shipping__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `shipping__0002_mipaquete_shipments.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-15 | HEAD | ✅ Aplicada con el runner; ledger y cuatro tablas verificadas |
 | `shipping__0002_mipaquete_shipments.sql` | v2 | Local temporal | 2026-10-15 | HEAD | ✅ D1 vacía; 53 migraciones aplicadas y segunda pasada idempotente |
+| `shipping__0003_package_profiles_and_quote_snapshot.sql` | v3 | Local temporal | 2026-10-14 | trabajo actual | ✅ D1 temporal limpia: aplicada desde cero e idempotencia verificada |
+| `shipping__0003_package_profiles_and_quote_snapshot.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada después de verificar 53 migraciones anteriores; siete columnas de snapshot confirmadas |
+
+`shipping__0003_package_profiles_and_quote_snapshot.sql` crea perfiles de empaques en `shipping_*` y agrega dimensiones, peso y huella de contenido a cotizaciones. Es expand-only; el Worker previo ignora las columnas nuevas. No elimina ni cambia cotizaciones anteriores y no habilita automáticamente la integración. Aplicación remota: ledger previo con 53 entradas; posterior con las dos migraciones en v11/v3 y esquema confirmado. Bookmark previo `0000031e-00000006-00005105-0e9bd84f1f1bcd8fda233edfdde8b690`; posterior `0000031e-00000018-00005105-afe4ec3022e54638ad845b8948a965a9`. Ocho productos existentes quedaron sin dimensiones, intencionalmente; se deben completar en el panel antes de activar cotizaciones automáticas.
 
 ---
 

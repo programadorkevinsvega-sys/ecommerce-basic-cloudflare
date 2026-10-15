@@ -22,7 +22,8 @@ export class MiPaqueteShipmentController {
         const shipment = await deps.shipping.createMiPaqueteShipment({
           orderId: order.id, status: order.status, paymentStatus: order.paymentStatus,
           paymentMethod: order.paymentMethod, totalCents: order.totalCents,
-          shippingCostCents: order.shippingCostCents, destinationDaneCode: `${order.shippingAddress.daneCode}000`,
+          shippingCostCents: order.shippingCostCents, transactionFeeCents: order.transactionFeeCents,
+          destinationDaneCode: `${order.shippingAddress.daneCode}000`,
           destinationAddress: order.shippingAddress.addressLine, recipient, sender,
           description: order.lines.map((line) => `${line.quantity}x ${line.productName}`).join(', ').slice(0, 200),
         });

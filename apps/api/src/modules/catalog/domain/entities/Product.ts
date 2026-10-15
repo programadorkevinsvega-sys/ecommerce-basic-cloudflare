@@ -13,6 +13,10 @@ export interface ProductProps {
   targetMarginBasisPoints?: number;
   pricingTargetType?: 'margin' | 'profit';
   targetProfitCents?: number | null;
+  packedWidthCm?: number | null;
+  packedLengthCm?: number | null;
+  packedHeightCm?: number | null;
+  packedWeightGrams?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   pricingVersion?: number;
   legacyPriceBeforeTaxCents?: number | null;
@@ -56,6 +60,10 @@ export class Product {
   public get targetMarginBasisPoints(): number { return this.props.targetMarginBasisPoints ?? 2000; }
   public get pricingTargetType(): 'margin' | 'profit' { return this.props.pricingTargetType ?? 'margin'; }
   public get targetProfitCents(): number | null { return this.props.targetProfitCents ?? null; }
+  public get packedWidthCm(): number | null { return this.props.packedWidthCm ?? null; }
+  public get packedLengthCm(): number | null { return this.props.packedLengthCm ?? null; }
+  public get packedHeightCm(): number | null { return this.props.packedHeightCm ?? null; }
+  public get packedWeightGrams(): number | null { return this.props.packedWeightGrams ?? null; }
   public get allowedPaymentMethods(): Array<'wompi' | 'cash_on_delivery'> { return [...(this.props.allowedPaymentMethods ?? ['wompi', 'cash_on_delivery'])]; }
   public get pricingVersion(): number { return this.props.pricingVersion ?? 1; }
   public get legacyPriceBeforeTaxCents(): number | null { return this.props.legacyPriceBeforeTaxCents ?? null; }
@@ -99,6 +107,10 @@ export class Product {
     if (updates.targetMarginBasisPoints !== undefined) this.props.targetMarginBasisPoints = updates.targetMarginBasisPoints;
     if (updates.pricingTargetType !== undefined) this.props.pricingTargetType = updates.pricingTargetType;
     if (updates.targetProfitCents !== undefined) this.props.targetProfitCents = updates.targetProfitCents;
+    if (updates.packedWidthCm !== undefined) this.props.packedWidthCm = updates.packedWidthCm;
+    if (updates.packedLengthCm !== undefined) this.props.packedLengthCm = updates.packedLengthCm;
+    if (updates.packedHeightCm !== undefined) this.props.packedHeightCm = updates.packedHeightCm;
+    if (updates.packedWeightGrams !== undefined) this.props.packedWeightGrams = updates.packedWeightGrams;
     if (updates.allowedPaymentMethods !== undefined) this.props.allowedPaymentMethods = [...updates.allowedPaymentMethods];
     if (updates.pricingVersion !== undefined) this.props.pricingVersion = updates.pricingVersion;
     if (updates.legacyPriceBeforeTaxCents !== undefined) this.props.legacyPriceBeforeTaxCents = updates.legacyPriceBeforeTaxCents;
@@ -134,6 +146,10 @@ export class Product {
       targetMarginBasisPoints: this.targetMarginBasisPoints,
       pricingTargetType: this.pricingTargetType,
       targetProfitCents: this.targetProfitCents,
+      packedWidthCm: this.packedWidthCm,
+      packedLengthCm: this.packedLengthCm,
+      packedHeightCm: this.packedHeightCm,
+      packedWeightGrams: this.packedWeightGrams,
       allowedPaymentMethods: this.allowedPaymentMethods,
       pricingVersion: this.pricingVersion,
       legacyPriceBeforeTaxCents: this.legacyPriceBeforeTaxCents,

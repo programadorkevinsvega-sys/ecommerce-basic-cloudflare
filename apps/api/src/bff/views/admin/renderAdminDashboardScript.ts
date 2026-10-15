@@ -129,8 +129,8 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pMargin').value = Number(p.targetMarginBasisPoints || 2000) / 100;
         document.getElementById('pTargetType').value = p.pricingTargetType || 'margin';
         window.setCopInputValue('pTargetProfit', p.targetProfitCents == null ? '' : Math.round(p.targetProfitCents / 100));
-        const paymentMethods = p.allowedPaymentMethods || ['wompi', 'cash_on_delivery'];
-        document.getElementById('pPayWompi').checked = paymentMethods.includes('wompi');
+        [['pPackedWidth', p.packedWidthCm], ['pPackedLength', p.packedLengthCm], ['pPackedHeight', p.packedHeightCm], ['pPackedWeight', p.packedWeightGrams]].forEach(([id, value]) => { document.getElementById(id).value = value ?? ''; });
+        const paymentMethods = p.allowedPaymentMethods || ['wompi', 'cash_on_delivery']; document.getElementById('pPayWompi').checked = paymentMethods.includes('wompi');
         window.updateProductPricingTargetFields?.();
         window.updateRecommendedProductPrice?.();
         document.getElementById('pStock').value = p.stockQuantity ?? 10;

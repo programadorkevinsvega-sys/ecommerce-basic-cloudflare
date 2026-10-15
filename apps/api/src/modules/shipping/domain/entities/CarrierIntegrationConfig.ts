@@ -1,3 +1,5 @@
+import { CarrierPackageProfile } from './CarrierPackageProfile.js';
+
 export type CarrierSelectionCriterion = 'price' | 'time' | 'score';
 export type CarrierDeclaredValueMode = 'cost' | 'sale_value';
 
@@ -12,5 +14,6 @@ export interface CarrierIntegrationConfig {
   cashOnDeliveryPaymentType: 101 | 102 | null;
   requestPickup: boolean | null;
   selectionCriterion: CarrierSelectionCriterion | null;
+  packageProfiles: CarrierPackageProfile[];
   updatedAt: string;
 }

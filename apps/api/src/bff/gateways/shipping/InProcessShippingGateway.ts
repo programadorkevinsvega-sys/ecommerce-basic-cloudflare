@@ -9,6 +9,7 @@ import {
   CarrierShippingQuoteDto,
   CarrierShipmentDto,
   CarrierShipmentCreateRequest,
+  ShippingPackageItemDto,
 } from './ShippingGateway.js';
 import { ShippingPublicApi } from '../../../modules/shipping/module.public-api.js';
 import { ShippingZone } from '../../../modules/shipping/domain/entities/ShippingZone.js';
@@ -80,18 +81,20 @@ export class InProcessShippingGateway implements ShippingGateway {
     return this.publicApi.updateCarrierConfig(config);
   }
 
-  public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuoteDto[]> {
+  public async quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]> {
     const quotes = await this.publicApi.quoteCarrierShipping(input);
-    return quotes.map(({ id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt }) => ({
+    return quotes.map(({ id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
+      packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg }) => ({
       id, deliveryCompanyName, shippingCostCents, collectionCommissionCents, deliveryMinutes, expiresAt,
+      packageWidthCm, packageLengthCm, packageHeightCm, packageWeightGrams, packageWeightKg,
     }));
   }
 
   public getCarrierAvailability(): Promise<boolean> { return this.publicApi.getCarrierAvailability(); }
   public isCarrierApiConfigured(): boolean { return this.publicApi.isCarrierApiConfigured(); }
 
-  public async getAvailableCarrierQuote(id: string, paymentMethod: 'wompi' | 'cash_on_delivery', daneCode: string): Promise<CarrierShippingQuoteDto | null> {
-    const quote = await this.publicApi.getAvailableCarrierQuote(id, paymentMethod, daneCode);
+  public async getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null> {
+    const quote = await this.publicApi.getAvailableCarrierQuote({ id: input.id, method: input.paymentMethod, daneCode: input.daneCode, declaredValueCents: input.declaredValueCents, saleValueCents: input.saleValueCents, items: input.items });
     return quote ? mapCarrierQuote(quote) : null;
   }
 
@@ -155,6 +158,8 @@ function mapShipment(shipment: CarrierShipmentDto): CarrierShipmentDto {
 function mapCarrierQuote(quote: Awaited<ReturnType<ShippingPublicApi['getCarrierQuoteForOrder']>> & {}): CarrierShippingQuoteDto {
   return {
     id: quote.id, deliveryCompanyName: quote.deliveryCompanyName, shippingCostCents: quote.shippingCostCents,
+    packageWidthCm: quote.packageWidthCm, packageLengthCm: quote.packageLengthCm, packageHeightCm: quote.packageHeightCm,
+    packageWeightGrams: quote.packageWeightGrams, packageWeightKg: quote.packageWeightKg,
     collectionCommissionCents: quote.collectionCommissionCents, deliveryMinutes: quote.deliveryMinutes,
     expiresAt: quote.expiresAt, providerQuoteId: quote.providerQuoteId, deliveryCompanyId: quote.deliveryCompanyId,
   };

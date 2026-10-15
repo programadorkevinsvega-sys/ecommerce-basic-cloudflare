@@ -1,5 +1,18 @@
 export function renderMiPaqueteConfigScript(): string {
   return `
+    function addMiPaqueteProfile() {
+      const profile = document.createElement('fieldset');
+      profile.className = 'shipping-package-profile'; profile.dataset.packageProfile = ''; profile.dataset.id = crypto.randomUUID();
+      profile.innerHTML = '<legend>Nuevo empaque</legend><div class="shipping-package-grid">' +
+        packageField('name', 'Nombre', 'text') + packageField('innerWidthCm', 'Ancho interno (cm)') +
+        packageField('innerLengthCm', 'Largo interno (cm)') + packageField('innerHeightCm', 'Alto interno (cm)') +
+        packageField('outerWidthCm', 'Ancho externo (cm)') + packageField('outerLengthCm', 'Largo externo (cm)') +
+        packageField('outerHeightCm', 'Alto externo (cm)') + packageField('tareWeightGrams', 'Peso de caja (g)') +
+        packageField('maxWeightGrams', 'Peso máximo total (g)') + '<label>Estado<select data-profile-field="isActive"><option value="true">Activo</option><option value="false">Inactivo</option></select></label></div>' +
+        '<button type="button" class="shipping-action danger" onclick="this.closest(\'[data-package-profile]\').remove()">Quitar</button>';
+      document.getElementById('mp-package-profiles').append(profile);
+    }
+    function packageField(key, label, type = 'number') { return '<label>' + label + '<input data-profile-field="' + key + '" type="' + type + '" min="1" step="1" required></label>'; }
     async function loadMiPaqueteConfigStatus() {
       const status = document.getElementById('mipaquete-connection-state');
       if (!status) return;
@@ -24,8 +37,16 @@ export function renderMiPaqueteConfigScript(): string {
       const payload = {
         enabled: document.getElementById('mp-enabled').value === 'true',
         originDaneCode: document.getElementById('mp-origin').value.trim(),
-        packageWidthCm: getNumber('mp-width'), packageLengthCm: getNumber('mp-length'),
-        packageHeightCm: getNumber('mp-height'), packageWeightKg: getNumber('mp-weight'),
+        packageWidthCm: null, packageLengthCm: null, packageHeightCm: null, packageWeightKg: null,
+        packageProfiles: Array.from(document.querySelectorAll('[data-package-profile]')).map((card) => {
+          const profile = { id: card.dataset.id, isActive: card.querySelector('[data-profile-field="isActive"]').value === 'true',
+            createdAt: card.dataset.createdAt || new Date().toISOString() };
+          card.querySelectorAll('[data-profile-field]').forEach((field) => {
+            const key = field.dataset.profileField;
+            if (key !== 'isActive') profile[key] = key === 'name' ? field.value.trim() : Number(field.value);
+          });
+          return profile;
+        }),
         declaredValueMode: document.getElementById('mp-declared').value,
         cashOnDeliveryPaymentType: getNumber('mp-cod-payment'),
         requestPickup: document.getElementById('mp-pickup').value === 'true',
@@ -44,5 +65,6 @@ export function renderMiPaqueteConfigScript(): string {
       }
     });
     loadMiPaqueteConfigStatus();
+    window.addMiPaqueteProfile = addMiPaqueteProfile;
   `;
 }

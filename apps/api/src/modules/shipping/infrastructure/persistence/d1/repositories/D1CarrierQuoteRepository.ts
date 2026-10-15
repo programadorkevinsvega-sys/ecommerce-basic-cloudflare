@@ -6,6 +6,9 @@ interface QuoteRow {
   shipping_cost_cents: number; collection_commission_cents: number; delivery_minutes: number;
   payment_method: 'wompi' | 'cash_on_delivery'; destination_dane_code: string;
   declared_value_cents: number; sale_value_cents: number; status: 'available' | 'used' | 'expired';
+  package_profile_id: string | null; package_width_cm: number | null; package_length_cm: number | null;
+  package_height_cm: number | null; package_weight_grams: number | null; package_weight_kg: number | null;
+  package_fingerprint: string | null;
   order_id: string | null; expires_at: string; created_at: string;
 }
 
@@ -17,19 +20,22 @@ export class D1CarrierQuoteRepository implements ICarrierQuoteRepository {
     const statements = quotes.map((quote) => this.db.prepare(`INSERT INTO shipping_carrier_quotes
       (id, provider_quote_id, delivery_company_id, delivery_company_name, shipping_cost_cents,
        collection_commission_cents, delivery_minutes, payment_method, destination_dane_code,
-       declared_value_cents, sale_value_cents, status, expires_at, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'available', ?, ?)`)
+       declared_value_cents, sale_value_cents, package_profile_id, package_width_cm, package_length_cm,
+       package_height_cm, package_weight_grams, package_weight_kg, package_fingerprint, status, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'available', ?, ?)`)
       .bind(quote.id, quote.providerQuoteId, quote.deliveryCompanyId, quote.deliveryCompanyName,
         quote.shippingCostCents, quote.collectionCommissionCents, quote.deliveryMinutes,
         quote.paymentMethod, quote.destinationDaneCode, quote.declaredValueCents,
-        quote.saleValueCents, quote.expiresAt, quote.createdAt));
+        quote.saleValueCents, quote.packageProfileId, quote.packageWidthCm, quote.packageLengthCm,
+        quote.packageHeightCm, quote.packageWeightGrams, quote.packageWeightKg, quote.packageFingerprint,
+        quote.expiresAt, quote.createdAt));
     if (statements.length) await this.db.batch(statements);
   }
 
-  public async findAvailable(id: string, paymentMethod: 'wompi' | 'cash_on_delivery', destinationDaneCode: string, now: string): Promise<CarrierShippingQuote | null> {
+  public async findAvailable(id: string, paymentMethod: 'wompi' | 'cash_on_delivery', destinationDaneCode: string, fingerprint: string, now: string): Promise<CarrierShippingQuote | null> {
     const row = await this.db.prepare(`SELECT * FROM shipping_carrier_quotes
-      WHERE id = ? AND payment_method = ? AND destination_dane_code = ? AND status = 'available' AND expires_at > ?`)
-      .bind(id, paymentMethod, destinationDaneCode, now).first<QuoteRow>();
+      WHERE id = ? AND payment_method = ? AND destination_dane_code = ? AND package_fingerprint = ? AND status = 'available' AND expires_at > ?`)
+      .bind(id, paymentMethod, destinationDaneCode, fingerprint, now).first<QuoteRow>();
     return row ? mapQuote(row) : null;
   }
 
@@ -59,6 +65,10 @@ function mapQuote(row: QuoteRow): CarrierShippingQuote {
     collectionCommissionCents: row.collection_commission_cents, deliveryMinutes: row.delivery_minutes,
     paymentMethod: row.payment_method, destinationDaneCode: row.destination_dane_code,
     declaredValueCents: row.declared_value_cents, saleValueCents: row.sale_value_cents,
+    packageProfileId: row.package_profile_id || '', packageWidthCm: row.package_width_cm || 0,
+    packageLengthCm: row.package_length_cm || 0, packageHeightCm: row.package_height_cm || 0,
+    packageWeightGrams: row.package_weight_grams || 0, packageWeightKg: row.package_weight_kg || 0,
+    packageFingerprint: row.package_fingerprint || '',
     status: row.status, orderId: row.order_id, expiresAt: row.expires_at, createdAt: row.created_at,
   };
 }

@@ -9,10 +9,15 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 const ConfigInput = z.object({
   enabled: z.boolean(),
   originDaneCode: z.string().regex(/^\d{8}$/),
-  packageWidthCm: z.number().int().min(1).max(1000),
-  packageLengthCm: z.number().int().min(1).max(1000),
-  packageHeightCm: z.number().int().min(1).max(1000),
-  packageWeightKg: z.number().int().min(1).max(1000),
+  packageWidthCm: z.number().int().min(1).max(1000).nullable().optional(),
+  packageLengthCm: z.number().int().min(1).max(1000).nullable().optional(),
+  packageHeightCm: z.number().int().min(1).max(1000).nullable().optional(),
+  packageWeightKg: z.number().int().min(1).max(1000).nullable().optional(),
+  packageProfiles: z.array(z.object({ id: z.string().min(1).max(80), name: z.string().min(1).max(100),
+    innerWidthCm: z.number().int().min(1).max(300), innerLengthCm: z.number().int().min(1).max(300), innerHeightCm: z.number().int().min(1).max(300),
+    outerWidthCm: z.number().int().min(1).max(300), outerLengthCm: z.number().int().min(1).max(300), outerHeightCm: z.number().int().min(1).max(300),
+    tareWeightGrams: z.number().int().min(0).max(100000), maxWeightGrams: z.number().int().min(1).max(1000000),
+    isActive: z.boolean(), createdAt: z.string().optional() }).strict()).max(20),
   declaredValueMode: z.enum(['cost', 'sale_value']),
   cashOnDeliveryPaymentType: z.union([z.literal(101), z.literal(102)]),
   requestPickup: z.boolean(),
@@ -37,7 +42,11 @@ export class MiPaqueteConfigController {
           return c.json({ error: 'Configura el secret y un host HTTPS productivo válido en Cloudflare antes de activar.' }, 409);
         }
         try {
-          const config = await shipping.updateCarrierConfig({ ...parsed.data, updatedAt: new Date().toISOString() });
+          const updatedAt = new Date().toISOString();
+          const config = await shipping.updateCarrierConfig({ ...parsed.data,
+            packageWidthCm: parsed.data.packageWidthCm ?? null, packageLengthCm: parsed.data.packageLengthCm ?? null,
+            packageHeightCm: parsed.data.packageHeightCm ?? null, packageWeightKg: parsed.data.packageWeightKg ?? null,
+            packageProfiles: parsed.data.packageProfiles.map((profile) => ({ ...profile, createdAt: profile.createdAt || updatedAt, updatedAt })), updatedAt });
           await audit.record({ actorId: String(c.get('actorId') || 'unknown'), actorType: 'admin',
             action: 'shipping.mipaquete.configuration.updated', entityType: 'shipping_carrier_config',
             entityId: 'default', changes: { ...config } });

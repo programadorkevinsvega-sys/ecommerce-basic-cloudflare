@@ -10,6 +10,13 @@ export interface CarrierShippingQuote {
   destinationDaneCode: string;
   declaredValueCents: number;
   saleValueCents: number;
+  packageProfileId: string;
+  packageWidthCm: number;
+  packageLengthCm: number;
+  packageHeightCm: number;
+  packageWeightGrams: number;
+  packageWeightKg: number;
+  packageFingerprint: string;
   status: 'available' | 'used' | 'expired';
   orderId: string | null;
   expiresAt: string;

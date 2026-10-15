@@ -1,5 +1,6 @@
 export function renderProductFormsScript(): string {
   return `
+    function readOptionalInteger(id) { const value = document.getElementById(id).value.trim(); return value ? Number(value) : null; }
     window.currentProductMediaIds = [];
     window.setProductAttributeValues = (specifications = {}) => {
       document.querySelectorAll('[data-product-attribute]').forEach((field) => {
@@ -64,6 +65,10 @@ export function renderProductFormsScript(): string {
         pricingTargetType: document.getElementById('pTargetType').value,
         targetMarginBasisPoints: Math.round(Number(document.getElementById('pMargin').value) * 100),
         targetProfitCents: document.getElementById('pTargetType').value === 'profit' ? window.copPesosToCents('pTargetProfit') : null,
+        packedWidthCm: readOptionalInteger('pPackedWidth'),
+        packedLengthCm: readOptionalInteger('pPackedLength'),
+        packedHeightCm: readOptionalInteger('pPackedHeight'),
+        packedWeightGrams: readOptionalInteger('pPackedWeight'),
         allowedPaymentMethods: [
           ...(document.getElementById('pPayWompi').checked ? ['wompi'] : []),
           ...(document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : [])

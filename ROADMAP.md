@@ -43,7 +43,7 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | 10 | Venta a crédito | M | ⏳ Siguiente | Planes, cuotas y abonos (alcance por confirmar) |
 | 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
 | 12 | Evolución | — | 📋 Planificada | Reseñas, wishlist, i18n, extracción de módulos |
-| 13 | Integración de envíos con MiPaquete.com | M | 📋 Planificada | Cotización, creación de guías, trazabilidad y sincronización segura de estados |
+| 13 | Integración de envíos con MiPaquete.com | M | 🔄 En curso | Cotización, embalaje por productos/cajas, guías, trazabilidad y conciliación |
 
 ```text
 0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12 ─► 13
@@ -392,10 +392,12 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 **Objetivo:** integrar la [API v2 de MiPaquete](https://api.documentacion.mipaquete.com/) para cotizar, crear y consultar envíos y reflejar la guía y el tracking en el seguimiento que ya usan clientes y administradores. La documentación del proveedor describe cotizaciones por origen/destino y paquete, generación de envíos y guías, trazabilidad, cancelación, cobertura DANE y notificaciones webhook; confirmar esquemas, autenticación y URL de producción vigentes antes de implementar, porque los ejemplos publicados incluyen hosts de desarrollo.
 
-- [ ] Validar con MiPaquete la URL de producción, credenciales, campos, estados, costos, webhook y cancelación. La documentación pública revisada está desactualizada y solo muestra host de desarrollo; no activar producción hasta confirmar el host por canal oficial.
+- [x] Configurar el host productivo indicado por la tienda (`https://api-v2.mpr.mipaquete.com`) explícitamente en Cloudflare; credenciales y costos aún requieren una cotización controlada con el proveedor antes de activar producción.
 - [x] Definir el contrato del adaptador `IShippingCarrierPort` en `shipping`; cliente HTTP con timeout, validación Zod y configuración explícita. El BFF consume el módulo por `ShippingGateway`; ningún otro módulo importa sus internos.
 - [x] Leer la credencial del secret `MI_PAQUETE_TRANSPORTADORA` en runtime y exigir `MI_PAQUETE_API_URL` HTTPS explícita; no guardarlos en D1, frontend, logs o respuestas.
 - [x] Cotizar desde servidor usando DANE, paquete y valor declarado; perfil de empaque se configura en Envíos y Cobertura. La tarifa y transportadora elegidas se guardan al crear el pedido y el servidor vuelve a validar su vigencia.
+- [x] Guardar en cada producto dimensiones y peso de su unidad empacada; encajar las unidades en cajas configurables por medidas internas/externas, sumar tara y peso, y guardar la instantánea exacta del paquete en cada cotización.
+- [x] Separar valor declarado, valor de mercancía y recaudo COD: el mensajero recauda el total que debe el comprador (IVA incluido y flete si se factura), mientras que el valor de mercancía excluye flete y tarifa de transacción Wompi.
 - [x] Presentar y persistir la opción de transportadora, tarifa y plazo elegidos; las reglas locales de cobertura siguen como autoridad de elegibilidad.
 - [x] Crear guía mediante acción administrativa una sola vez para pedido elegible: Wompi aprobado o contra entrega confirmada/preparada. Una creación ambigua queda pendiente de conciliación y no se reintenta automáticamente.
 - [x] Persistir en tablas `shipping_*` el identificador, transportadora, guía, URL y estado. El admin puede crear/consultar guía desde gestión de seguimiento; se refleja en el seguimiento público ya autorizado.
@@ -404,7 +406,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Aplicar/verificar migración aditiva `shipping__0002_mipaquete_shipments.sql`; arquitectura, aislamiento, pruebas D1 vacía/idempotente y tests de adaptador/configuración pasan. Quedan pruebas de integración real con proveedor y fallos externos.
 - [ ] Probar credenciales y cotización en host de pruebas y crear una guía real controlada solo tras verificar cuenta, costos y autorización operativa; verificar recaudo COD, tracking, alertas y recuperación sin duplicados.
 
-**Estado:** implementación en curso. Cotización, selección al checkout, configuración logística, creación explícita e idempotente y sincronización autenticada están implementadas. Producción permanece deshabilitada hasta confirmar host productivo y validar credenciales/costos con MiPaquete. No se configura webhook porque la documentación no documenta firma verificable; la sincronización consulta API autenticada.
+**Estado:** implementación en curso. Cotización, empaque por unidades/cajas, selección al checkout, configuración logística, creación explícita e idempotente y sincronización autenticada están implementadas. Producción permanece deshabilitada hasta ingresar perfiles de caja y dimensiones de productos, y validar credenciales/costos mediante cotización controlada. No se configura webhook porque la documentación no documenta firma verificable; la sincronización consulta API autenticada.
 
 **Criterio de salida:** host productivo validado; cotización y guía real controlada verificadas; estados visibles para admin y cliente; costos COD conciliados; pruebas de fallos/rollback y evidencia registradas antes de activar producción.
 

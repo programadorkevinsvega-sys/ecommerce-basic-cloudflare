@@ -18,6 +18,7 @@ import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 import { createOrderTrackingToken, hashOrderTrackingToken } from '../../security/OrderTrackingCapability.js';
 import { notifyOrderTrackingAccess } from './notifyOrderTrackingAccess.js';
 import { registerCarrierQuoteRoute } from './registerCarrierQuoteRoute.js';
+import { resolveCarrierQuotePackage } from './resolveCarrierQuotePackage.js';
 
 export function registerOrderCreationRoute(
   app: Hono<{ Bindings: Env }>, deps: {
@@ -62,16 +63,24 @@ export function registerOrderCreationRoute(
       ? body.carrierQuoteId : null;
     if (carrierEnabled && !carrierQuoteId) return c.json({ error: 'Selecciona una tarifa de transportadora vigente.' }, 409);
     if (!carrierEnabled && body.carrierQuoteId) return c.json({ error: 'La tarifa de transportadora ya no está disponible.' }, 409);
-    const carrierQuote = carrierQuoteId
-      ? await deps.shipping.getAvailableCarrierQuote(carrierQuoteId, body.paymentMethod, `${shippingAddress.daneCode}000`)
-      : null;
-    if (carrierQuoteId && !carrierQuote) return c.json({ error: 'La tarifa venció. Vuelve a cotizar el envío.' }, 409);
-    const shippingCostCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
     let pricing;
     try {
       pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        body.lines, body.couponCode, customerId, shippingCostCents, body.paymentMethod);
+        body.lines, body.couponCode, customerId, zone.priceInCents, body.paymentMethod);
     } catch { return c.json({ error: 'No fue posible calcular el pedido' }, 400); }
+    let carrierQuote = null;
+    if (carrierQuoteId) {
+      try {
+        const pack = await resolveCarrierQuotePackage(deps.catalog, deps.shipping, pricing.lines,
+          pricing.subtotalCents, pricing.discountCents);
+        carrierQuote = await deps.shipping.getAvailableCarrierQuote({ id: carrierQuoteId,
+          paymentMethod: body.paymentMethod, daneCode: `${shippingAddress.daneCode}000`, ...pack });
+      } catch { return c.json({ error: 'Actualiza la cotización del envío con los productos actuales.' }, 409); }
+      if (!carrierQuote) return c.json({ error: 'La tarifa venció o ya no corresponde al contenido del carrito. Vuelve a cotizar.' }, 409);
+      pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
+        body.lines, body.couponCode, customerId, carrierQuote.shippingCostCents, body.paymentMethod);
+    }
+    const shippingCostCents = carrierQuote?.shippingCostCents ?? zone.priceInCents;
     const policyError = await validateOrderPolicy(deps.orders, zone, pricing, body.paymentMethod,
       shippingAddress.daneCode, deps.shipping);
     if (policyError) return c.json({ error: policyError }, 400);

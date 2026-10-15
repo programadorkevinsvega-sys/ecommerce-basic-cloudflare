@@ -8,6 +8,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { calculateOrderPricing } from './calculateOrderPricing.js';
 import { validateOrderPolicy } from './validateOrderPolicy.js';
+import { resolveCarrierQuotePackage } from './resolveCarrierQuotePackage.js';
 
 const CarrierQuoteInput = z.object({
   destinationZoneId: z.string().min(1).max(100), destinationDaneCode: z.string().regex(/^\d{5}$/),
@@ -34,23 +35,17 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,
         input.destinationDaneCode, deps.shipping);
       if (policyError) return c.json({ error: policyError }, 400);
-      const config = await deps.shipping.getCarrierConfig();
-      let declaredValueCents = pricing.subtotalCents - pricing.discountCents;
-      if (config.declaredValueMode === 'cost') {
-        const products = await Promise.all(input.lines.map((line) => deps.catalog.getProductById(line.productId)));
-        const byId = new Map(products.map((product) => [product.id, product]));
-        declaredValueCents = input.lines.reduce((sum, line) => {
-          const cost = byId.get(line.productId)?.supplierCostCents;
-          if (!Number.isSafeInteger(cost)) throw new Error('Product cost missing');
-          return sum + (cost as number) * line.quantity;
-        }, 0);
-      }
+      const pack = await resolveCarrierQuotePackage(deps.catalog, deps.shipping, pricing.lines,
+        pricing.subtotalCents, pricing.discountCents);
       const quotes = await deps.shipping.quoteCarrierShipping({
         destinationDaneCode: `${input.destinationDaneCode}000`, paymentMethod: input.paymentMethod,
-        declaredValueCents, saleValueCents: pricing.subtotalCents - pricing.discountCents,
+        ...pack,
       });
       return c.json({ success: true, quotes });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && (error.message.startsWith('Completa ') || error.message.startsWith('Los productos'))) {
+        return c.json({ error: error.message }, 422);
+      }
       return c.json({ error: 'No fue posible cotizar el envío con la transportadora' }, 503);
     }
   });

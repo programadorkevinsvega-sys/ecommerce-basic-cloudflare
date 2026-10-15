@@ -14,6 +14,10 @@ export interface UpdateProductInput {
   targetMarginBasisPoints?: number;
   pricingTargetType?: 'margin' | 'profit';
   targetProfitCents?: number | null;
+  packedWidthCm?: number | null;
+  packedLengthCm?: number | null;
+  packedHeightCm?: number | null;
+  packedWeightGrams?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;

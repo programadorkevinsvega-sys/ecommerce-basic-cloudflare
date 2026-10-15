@@ -14,6 +14,10 @@ export interface CreateProductInput {
   targetMarginBasisPoints?: number;
   pricingTargetType?: 'margin' | 'profit';
   targetProfitCents?: number | null;
+  packedWidthCm?: number | null;
+  packedLengthCm?: number | null;
+  packedHeightCm?: number | null;
+  packedWeightGrams?: number | null;
   allowedPaymentMethods?: Array<'wompi' | 'cash_on_delivery'>;
   taxRateBasisPoints?: number;
   transactionShippingCents?: number;
@@ -79,6 +83,10 @@ export class CreateProductUseCase {
         targetMarginBasisPoints: input.targetMarginBasisPoints ?? 2000,
         pricingTargetType: input.pricingTargetType ?? 'margin',
         targetProfitCents: input.targetProfitCents ?? null,
+        packedWidthCm: input.packedWidthCm ?? null,
+        packedLengthCm: input.packedLengthCm ?? null,
+        packedHeightCm: input.packedHeightCm ?? null,
+        packedWeightGrams: input.packedWeightGrams ?? null,
         allowedPaymentMethods,
         pricingVersion: pricing ? 2 : 1,
         sku: input.sku,

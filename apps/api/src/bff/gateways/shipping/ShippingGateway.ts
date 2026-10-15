@@ -46,13 +46,16 @@ export interface CarrierIntegrationConfigDto {
   cashOnDeliveryPaymentType: 101 | 102 | null;
   requestPickup: boolean | null;
   selectionCriterion: 'price' | 'time' | 'score' | null;
+  packageProfiles: Array<{ id: string; name: string; innerWidthCm: number; innerLengthCm: number; innerHeightCm: number; outerWidthCm: number; outerLengthCm: number; outerHeightCm: number; tareWeightGrams: number; maxWeightGrams: number; isActive: boolean; createdAt: string; updatedAt: string }>;
   updatedAt: string;
 }
 
 export interface CarrierShippingQuoteDto {
   id: string; deliveryCompanyName: string; shippingCostCents: number; providerQuoteId?: string; deliveryCompanyId?: string;
   collectionCommissionCents: number; deliveryMinutes: number; expiresAt: string;
+  packageWidthCm: number; packageLengthCm: number; packageHeightCm: number; packageWeightGrams: number; packageWeightKg: number;
 }
+export interface ShippingPackageItemDto { productId: string; widthCm: number; lengthCm: number; heightCm: number; weightGrams: number; quantity: number; }
 
 export interface CarrierShipmentDto {
   id: string; orderId: string; mipaqueteCode: string | null; carrierName: string | null;
@@ -62,7 +65,7 @@ export interface CarrierShipmentDto {
 }
 export interface CarrierShipmentCreateRequest {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
-  totalCents: number; shippingCostCents: number; destinationDaneCode: string; destinationAddress: string;
+  totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
   recipient: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
   sender: { name: string; surname: string; phone: string; email: string; address: string; identification: string; identificationType: 'CC' | 'NIT' };
   description: string;
@@ -108,10 +111,10 @@ export interface ShippingGateway {
   ): Promise<ShippingCoverageDto>;
   getCarrierConfig(): Promise<CarrierIntegrationConfigDto>;
   updateCarrierConfig(config: CarrierIntegrationConfigDto): Promise<CarrierIntegrationConfigDto>;
-  quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number }): Promise<CarrierShippingQuoteDto[]>;
+  quoteCarrierShipping(input: { destinationDaneCode: string; paymentMethod: 'wompi' | 'cash_on_delivery'; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto[]>;
   getCarrierAvailability(): Promise<boolean>;
   isCarrierApiConfigured(): boolean;
-  getAvailableCarrierQuote(id: string, paymentMethod: 'wompi' | 'cash_on_delivery', daneCode: string): Promise<CarrierShippingQuoteDto | null>;
+  getAvailableCarrierQuote(input: { id: string; paymentMethod: 'wompi' | 'cash_on_delivery'; daneCode: string; declaredValueCents: number; saleValueCents: number; items: ShippingPackageItemDto[] }): Promise<CarrierShippingQuoteDto | null>;
   getCarrierQuoteForOrder(orderId: string): Promise<CarrierShippingQuoteDto | null>;
   linkCarrierQuoteToOrder(id: string, orderId: string): Promise<boolean>;
   createMiPaqueteShipment(order: CarrierShipmentCreateRequest): Promise<CarrierShipmentDto>;

@@ -159,5 +159,5 @@ function emptySettings(): StoreSettingsResponse {
 function emptyCarrierConfig() {
   return { enabled: false, originDaneCode: null, packageWidthCm: null, packageLengthCm: null, packageHeightCm: null,
     packageWeightKg: null, declaredValueMode: null, cashOnDeliveryPaymentType: null,
-    requestPickup: null, selectionCriterion: null, updatedAt: '' };
+    requestPickup: null, selectionCriterion: null, packageProfiles: [], updatedAt: '' };
 }

@@ -192,8 +192,8 @@ export class CatalogController {
   }
 }
 
-function publicCatalogProduct(product: CatalogProductDto): Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion'> {
+function publicCatalogProduct(product: CatalogProductDto): Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion' | 'packedWidthCm' | 'packedLengthCm' | 'packedHeightCm' | 'packedWeightGrams'> {
   const publicProduct: Record<string, unknown> = { ...product };
-  for (const field of ['supplierCostCents', 'targetMarginBasisPoints', 'pricingTargetType', 'targetProfitCents', 'pricingVersion', 'legacyPriceBeforeTaxCents']) delete publicProduct[field];
-  return publicProduct as Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion'>;
+  for (const field of ['supplierCostCents', 'targetMarginBasisPoints', 'pricingTargetType', 'targetProfitCents', 'pricingVersion', 'legacyPriceBeforeTaxCents', 'packedWidthCm', 'packedLengthCm', 'packedHeightCm', 'packedWeightGrams']) delete publicProduct[field];
+  return publicProduct as Omit<CatalogProductDto, 'supplierCostCents' | 'targetMarginBasisPoints' | 'pricingTargetType' | 'targetProfitCents' | 'pricingVersion' | 'packedWidthCm' | 'packedLengthCm' | 'packedHeightCm' | 'packedWeightGrams'>;
 }

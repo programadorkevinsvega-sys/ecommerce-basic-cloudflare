@@ -11,6 +11,10 @@ export interface ProductRow {
   target_margin_basis_points: number;
   pricing_target_type: string;
   target_profit_cents: number | null;
+  packed_width_cm?: number | null;
+  packed_length_cm?: number | null;
+  packed_height_cm?: number | null;
+  packed_weight_grams?: number | null;
   allowed_payment_methods: string;
   pricing_version: number;
   legacy_price_before_tax_cents: number | null;
@@ -48,6 +52,10 @@ export class D1ProductMapper {
       targetMarginBasisPoints: row.target_margin_basis_points,
       pricingTargetType: row.pricing_target_type === 'profit' ? 'profit' : 'margin',
       targetProfitCents: row.target_profit_cents,
+      packedWidthCm: row.packed_width_cm ?? null,
+      packedLengthCm: row.packed_length_cm ?? null,
+      packedHeightCm: row.packed_height_cm ?? null,
+      packedWeightGrams: row.packed_weight_grams ?? null,
       allowedPaymentMethods: parsePaymentMethods(row.allowed_payment_methods),
       pricingVersion: row.pricing_version, legacyPriceBeforeTaxCents: row.legacy_price_before_tax_cents,
       sku: row.sku, stockQuantity: row.stock_quantity, status: row.status as ProductStatus,

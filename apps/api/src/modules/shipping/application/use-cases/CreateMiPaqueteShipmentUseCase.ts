@@ -7,7 +7,7 @@ import { IShippingCarrierPort, CarrierParty } from '../ports/out/IShippingCarrie
 
 export interface CarrierOrderInput {
   orderId: string; status: string; paymentStatus: string; paymentMethod: 'wompi' | 'cash_on_delivery';
-  totalCents: number; shippingCostCents: number; destinationDaneCode: string; destinationAddress: string;
+  totalCents: number; shippingCostCents: number; transactionFeeCents: number; destinationDaneCode: string; destinationAddress: string;
   recipient: CarrierParty; sender: CarrierParty; description: string;
 }
 
@@ -31,11 +31,17 @@ export class CreateMiPaqueteShipmentUseCase {
     assertConfigured(config);
     if (!config.enabled) throw new Error('La integración MiPaquete está desactivada.');
     if (!quote || quote.paymentMethod !== order.paymentMethod) throw new Error('No existe una cotización MiPaquete válida para este pedido.');
-    const saleValueCents = Math.max(0, order.totalCents - order.shippingCostCents);
+    if (!quote.packageProfileId || !quote.packageWidthCm || !quote.packageLengthCm || !quote.packageHeightCm ||
+        !quote.packageWeightKg || !quote.packageFingerprint) {
+      throw new Error('La cotización no tiene una instantánea de empaque válida. Cotiza nuevamente el pedido.');
+    }
+    // MiPaquete separa el valor de mercancía del recaudo. La mercancía usa el
+    // subtotal final (con IVA incluido en el precio) y no suma flete ni tarifa Wompi.
+    const saleValueCents = Math.max(0, order.totalCents - order.shippingCostCents - order.transactionFeeCents);
     const currentOptions = await this.carrier.quote({
       originDaneCode: config.originDaneCode as string, destinationDaneCode: order.destinationDaneCode,
-      widthCm: config.packageWidthCm as number, lengthCm: config.packageLengthCm as number,
-      heightCm: config.packageHeightCm as number, weightKg: config.packageWeightKg as number,
+      widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,
+      heightCm: quote.packageHeightCm, weightKg: quote.packageWeightKg,
       quantity: 1, declaredValueCop: Math.ceil(quote.declaredValueCents / 100),
       saleValueCop: Math.ceil(saleValueCents / 100), cashOnDelivery: order.paymentMethod === 'cash_on_delivery',
     });
@@ -53,8 +59,8 @@ export class CreateMiPaqueteShipmentUseCase {
     if (!inserted) throw new Error('Ya existe una guía o creación pendiente para este pedido.');
     const created = await this.carrier.create({
       orderId: order.orderId, sender: order.sender, recipient: order.recipient,
-      package: { widthCm: config.packageWidthCm as number, lengthCm: config.packageLengthCm as number,
-        heightCm: config.packageHeightCm as number, weightKg: config.packageWeightKg as number, quantity: 1,
+      package: { widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,
+        heightCm: quote.packageHeightCm, weightKg: quote.packageWeightKg, quantity: 1,
         declaredValueCop: Math.ceil(quote.declaredValueCents / 100) },
       originDaneCode: config.originDaneCode as string, destinationDaneCode: order.destinationDaneCode,
       carrierId: quote.deliveryCompanyId, criterion: config.selectionCriterion as 'price' | 'time' | 'score',
@@ -86,8 +92,8 @@ function assertOrderEligible(order: CarrierOrderInput): void {
 }
 
 function assertConfigured(config: CarrierIntegrationConfig): void {
-  if (!config.originDaneCode || !config.packageWidthCm || !config.packageLengthCm || !config.packageHeightCm ||
-      !config.packageWeightKg || !config.cashOnDeliveryPaymentType || !config.selectionCriterion || config.requestPickup === null) {
+  if (!config.originDaneCode || !config.packageProfiles.some((profile) => profile.isActive) ||
+      !config.cashOnDeliveryPaymentType || !config.selectionCriterion || config.requestPickup === null) {
     throw new Error('Completa la configuración logística de MiPaquete.');
   }
 }

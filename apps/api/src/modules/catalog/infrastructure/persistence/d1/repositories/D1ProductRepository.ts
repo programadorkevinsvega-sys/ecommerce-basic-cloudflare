@@ -26,11 +26,11 @@ export class D1ProductRepository implements IProductRepository {
     await this.db.batch([
       this.db.prepare(
         `INSERT INTO catalog_products (
-          id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, pricing_target_type, target_profit_cents, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
+          id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, pricing_target_type, target_profit_cents, packed_width_cm, packed_length_cm, packed_height_cm, packed_weight_grams, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
           status, condition, specifications, brand, product_type, tags, barcode_gtin,
           seo_title, seo_description, canonical_url, og_image_id, noindex,
           allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
@@ -40,6 +40,10 @@ export class D1ProductRepository implements IProductRepository {
           target_margin_basis_points = excluded.target_margin_basis_points,
           pricing_target_type = excluded.pricing_target_type,
           target_profit_cents = excluded.target_profit_cents,
+          packed_width_cm = excluded.packed_width_cm,
+          packed_length_cm = excluded.packed_length_cm,
+          packed_height_cm = excluded.packed_height_cm,
+          packed_weight_grams = excluded.packed_weight_grams,
           allowed_payment_methods = excluded.allowed_payment_methods,
           pricing_version = excluded.pricing_version,
           legacy_price_before_tax_cents = excluded.legacy_price_before_tax_cents,
@@ -63,7 +67,8 @@ export class D1ProductRepository implements IProductRepository {
           updated_at = excluded.updated_at`
       ).bind(
         p.id, p.name, p.slug, p.description, p.priceInCents, p.supplierCostCents, p.targetMarginBasisPoints,
-        p.pricingTargetType, p.targetProfitCents,
+        p.pricingTargetType, p.targetProfitCents, p.packedWidthCm, p.packedLengthCm,
+        p.packedHeightCm, p.packedWeightGrams,
         JSON.stringify(p.allowedPaymentMethods), p.pricingVersion, p.legacyPriceBeforeTaxCents, p.sku, p.stockQuantity,
         p.status, p.condition, JSON.stringify(p.specifications), p.brand ?? null,
         p.productType ?? null, JSON.stringify(p.tags), p.barcodeGtin ?? null,

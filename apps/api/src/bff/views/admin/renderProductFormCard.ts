@@ -48,6 +48,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div><label>Tipo de Producto</label><input type="text" id="pType" placeholder="Ropa / Camisetas" /></div>
           <div><label>Código de Barras (GTIN)</label><input type="text" id="pGtin" placeholder="7701234567890" /></div>
           <div><label>Etiquetas (separadas por coma)</label><input type="text" id="pTags" placeholder="verano, algodon, basico" /></div>
+          <fieldset class="form-field-full"><legend>Empaque para transportadora</legend><p>Registra la unidad tal como se enviará dentro de su empaque individual. Se usa para calcular qué caja del inventario de empaques admite el pedido.</p><div class="form-grid"><div><label for="pPackedWidth">Ancho empacado (cm)</label><input id="pPackedWidth" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedLength">Largo empacado (cm)</label><input id="pPackedLength" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedHeight">Alto empacado (cm)</label><input id="pPackedHeight" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedWeight">Peso empacado (gramos)</label><input id="pPackedWeight" type="number" min="1" max="100000" step="1" inputmode="numeric" /></div></div></fieldset>
           <div>
             <label>Contra Entrega</label>
             <select id="pCod"><option value="true">Sí (Permitido)</option><option value="false">No (Anticipado)</option></select>
