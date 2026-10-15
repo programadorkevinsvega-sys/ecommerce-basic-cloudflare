@@ -27,7 +27,7 @@ export class MiPaqueteHttpClient {
     try {
       const response = await this.fetcher.call(globalThis, new URL(path, this.config.baseUrl), {
         method,
-        redirect: 'error',
+        redirect: 'manual',
         signal: controller.signal,
         headers: {
           'content-type': 'application/json',
