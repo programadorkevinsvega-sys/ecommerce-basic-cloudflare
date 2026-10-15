@@ -9,7 +9,7 @@ El anuncio de envío gratis desde $150.000 COP era texto de marketing y no modif
 
 ## Decisión
 
-El módulo `shipping` mantiene una política única, editable desde Admin → Envío gratis. El umbral inicial de $150.000 COP coincide con el anuncio vigente. Se compara contra el subtotal luego de promociones automáticas y cupón. Cuando se cumple, el cliente paga cero por el flete y no puede pedir que se le cobre al recibir.
+El módulo `shipping` mantiene una política única, editable desde Admin → Marketing → Envío gratis. El umbral inicial de $150.000 COP coincide con el anuncio vigente. Se compara contra el subtotal luego de promociones automáticas y cupón. Cuando se cumple, el cliente paga cero por el flete y no puede pedir que se le cobre al recibir.
 
 El pedido conserva `shipping_cost_cents` como costo bruto real del proveedor/local y agrega `shipping_discount_cents` como subsidio de la tienda. El total solo suma la diferencia. Para la guía MiPaquete, la cotización y validación usan el costo bruto; el valor de venta excluye únicamente el flete neto cobrado al cliente.
 

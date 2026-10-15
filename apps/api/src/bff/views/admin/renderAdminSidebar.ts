@@ -14,7 +14,6 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('shipping', 'Empaques', "switchTab('shipping', this); showAdminShippingPage('packages')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Seguimiento de pedidos', "switchTab('shipping', this); showAdminShippingPage('tracking')", false, undefined, undefined, true)}
         ${navItem('shipping', 'Imprimir guías', "switchTab('shipping', this); showAdminShippingPage('print-labels')", false, undefined, undefined, true)}
-        ${navItem('shipping', 'Envío gratis', "switchTab('shipping', this); showAdminShippingPage('free-shipping')", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Pagos y facturas</h2><ul>
         ${navItem('payments', 'Recaudos contra entrega', "switchTab('payments', this); showAdminPaymentPage('collections'); loadAdminPayments()", false, undefined, undefined, true)}
@@ -38,6 +37,7 @@ export function renderAdminSidebar(adminLabel: string): string {
         ${navItem('storefront', 'Anuncios & Barra Superior', "switchTab('storefront', this); showMarketingPage('announcements')", false, undefined, undefined, true)}
         ${navItem('promotions', 'Regla de Promoción', "switchTab('promotions', this); showMarketingPage('promotion-rule')", false, undefined, undefined, true)}
         ${navItem('promotions', 'Cupón de Descuento', "switchTab('promotions', this); showMarketingPage('discount-coupon')", false, undefined, undefined, true)}
+        ${navItem('shipping', 'Envío gratis', "switchTab('shipping', this); showAdminShippingPage('free-shipping')", false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>CMS</h2><ul>
         ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
