@@ -114,6 +114,16 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
         changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash'] },
       });
     },
+    recordConfiguredAdminProvision: async (adminId, stage) => {
+      await auditGateway.record({
+        actorId: adminId,
+        actorType: 'admin',
+        action: 'identity.admin_configured_credentials.provisioned',
+        entityType: 'identity_admin',
+        entityId: adminId,
+        changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash', 'role_id'] },
+      });
+    },
   });
   const identityGateway = new InProcessIdentityGateway(new IdentityPublicApi(identityContainer));
 

@@ -4,6 +4,7 @@ import { PasswordHasher } from '../../domain/services/PasswordHasher.js';
 import { TotpService } from '../../domain/services/TotpService.js';
 import { SessionTokenGenerator } from '../../domain/services/SessionTokenGenerator.js';
 import { Session } from '../../domain/entities/Session.js';
+import { AdminUser } from '../../domain/entities/AdminUser.js';
 import { ConfiguredSecretComparator } from '../../domain/services/ConfiguredSecretComparator.js';
 import { IConfiguredAdminCredentialAuditPort } from '../ports/IConfiguredAdminCredentialAuditPort.js';
 import { Result } from '../../../../shared-kernel/Result.js';
@@ -50,9 +51,39 @@ export class LoginAdminUseCase {
 
   public async execute(input: LoginAdminInput): Promise<Result<LoginAdminOutput, Error>> {
     const configuredCredentials = Boolean(this.configuredEmail && this.configuredPassword);
-    const admin = configuredCredentials
+    let admin = configuredCredentials
       ? await this.adminRepo.findSoleActiveSuperadmin()
       : await this.adminRepo.findByEmail(input.email);
+
+    let provisioned = false;
+    if (!admin && configuredCredentials && await this.adminRepo.countAdmins() === 0
+      && this.matchesConfiguredCredentials(input)) {
+      if (!this.credentialAudit?.recordConfiguredAdminProvision) {
+        return Result.fail(new Error('Auditoría de aprovisionamiento no configurada'));
+      }
+      const now = new Date().toISOString();
+      const candidate = AdminUser.create({
+        id: crypto.randomUUID(),
+        email: this.configuredEmail as string,
+        passwordHash: await PasswordHasher.hash(this.configuredPassword as string),
+        fullName: 'Superadmin',
+        roleId: 'role_superadmin',
+        mfaEnabled: false,
+        failedLoginAttempts: 0,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await this.credentialAudit.recordConfiguredAdminProvision(candidate.id, 'before');
+      provisioned = await this.adminRepo.provisionConfiguredSuperadminIfEmpty(candidate);
+      if (provisioned) {
+        admin = candidate;
+        await this.credentialAudit.recordConfiguredAdminProvision(candidate.id, 'after');
+      } else {
+        admin = await this.adminRepo.findSoleActiveSuperadmin();
+      }
+    }
+
     if (!admin || !admin.isActive) {
       return Result.fail(new Error('Credenciales inválidas'));
     }
@@ -62,8 +93,7 @@ export class LoginAdminUseCase {
     }
 
     const isPasswordValid = configuredCredentials
-      ? input.email.trim().toLowerCase() === this.configuredEmail
-        && ConfiguredSecretComparator.matches(input.password, this.configuredPassword as string)
+      ? this.matchesConfiguredCredentials(input)
       : await PasswordHasher.verify(input.password, admin.passwordHash);
     if (!isPasswordValid) {
       admin.registerFailedAttempt();
@@ -87,7 +117,7 @@ export class LoginAdminUseCase {
       }
     }
 
-    if (configuredCredentials) {
+    if (configuredCredentials && !provisioned) {
       if (!this.credentialAudit) return Result.fail(new Error('Auditoría de credenciales no configurada'));
       await this.credentialAudit.recordCredentialSync(admin.id, 'before');
       const passwordHash = await PasswordHasher.hash(this.configuredPassword as string);
@@ -96,7 +126,9 @@ export class LoginAdminUseCase {
 
     admin.resetFailedAttempts();
     await this.adminRepo.save(admin);
-    if (configuredCredentials) await this.credentialAudit?.recordCredentialSync(admin.id, 'after');
+    if (configuredCredentials && !provisioned) {
+      await this.credentialAudit?.recordCredentialSync(admin.id, 'after');
+    }
 
     const rawToken = SessionTokenGenerator.generateRawToken();
     const tokenHash = await SessionTokenGenerator.hashToken(rawToken);
@@ -130,5 +162,11 @@ export class LoginAdminUseCase {
         mfaEnabled: admin.mfaEnabled,
       },
     });
+  }
+
+  private matchesConfiguredCredentials(input: LoginAdminInput): boolean {
+    return Boolean(this.configuredEmail && this.configuredPassword)
+      && input.email.trim().toLowerCase() === this.configuredEmail
+      && ConfiguredSecretComparator.matches(input.password, this.configuredPassword as string);
   }
 }

@@ -27,6 +27,25 @@ export class D1AdminUserRepository implements IAdminUserRepository {
     return this.mapToEntity(results[0] as Record<string, unknown>);
   }
 
+  public async countAdmins(): Promise<number> {
+    const row = await this.db.prepare('SELECT COUNT(*) AS count FROM identity_admins').first();
+    return Number(row?.count || 0);
+  }
+
+  public async provisionConfiguredSuperadminIfEmpty(admin: AdminUser): Promise<boolean> {
+    const s = admin.toSnapshot();
+    const result = await this.db.prepare(`
+      INSERT INTO identity_admins (
+        id, email, password_hash, full_name, role_id, mfa_secret, mfa_enabled,
+        failed_login_attempts, locked_until, is_active, created_at, updated_at
+      )
+      SELECT ?, ?, ?, ?, 'role_superadmin', NULL, 0, 0, NULL, 1, ?, ?
+      WHERE NOT EXISTS (SELECT 1 FROM identity_admins)
+        AND EXISTS (SELECT 1 FROM identity_roles WHERE id = 'role_superadmin')
+    `).bind(s.id, s.email, s.passwordHash, s.fullName, s.createdAt, s.updatedAt).run();
+    return Number(result.meta?.changes || 0) === 1;
+  }
+
   public async countSuperadmins(): Promise<number> {
     const query = `
       SELECT COUNT(*) as count 
