@@ -3,6 +3,7 @@ import type { CatalogProductTagDto } from '../../gateways/catalog/CatalogGateway
 import type { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import type { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
 import type { CmsPageDto } from '../../gateways/cms/CmsGateway.js';
+import type { BlogPostDto } from '../../gateways/cms/CmsGateway.js';
 import type { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
 import type { ShippingZoneDto, DivipolaLocationDto, CarrierIntegrationConfigDto } from '../../gateways/shipping/ShippingGateway.js';
 
@@ -17,6 +18,7 @@ export interface AdminDashboardProps {
   variants: ProductVariantDto[];
   collections: CatalogCollectionDto[];
   productTags?: CatalogProductTagDto[];
+  blogPosts?: BlogPostDto[];
   banners: BannerItemDto[];
   marketingDestinations?: MarketingDestinationOption[];
   announcements: AnnouncementItemDto[];

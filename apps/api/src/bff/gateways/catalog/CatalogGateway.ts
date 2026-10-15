@@ -29,7 +29,7 @@ export interface CreateProductGatewayRequest {
   specifications?: Record<string, unknown>;
   brand?: string;
   productType?: string;
-  tags?: string[];
+  tags?: string[]; guideTitle?: string; guideContent?: string; relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -68,7 +68,7 @@ export interface UpdateProductGatewayRequest {
   specifications?: Record<string, unknown>;
   brand?: string;
   productType?: string;
-  tags?: string[];
+  tags?: string[]; guideTitle?: string; guideContent?: string; relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -106,7 +106,7 @@ export interface CatalogProductDto {
   specifications: Record<string, unknown>;
   brand?: string;
   productType?: string;
-  tags: string[];
+  tags: string[]; guideTitle?: string; guideContent?: string; relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;

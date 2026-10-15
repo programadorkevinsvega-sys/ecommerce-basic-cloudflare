@@ -2,8 +2,9 @@ import { ShippingZoneDto } from '../../gateways/shipping/ShippingGateway.js';
 import { BrandDto } from '../../gateways/catalog/CatalogGateway.js';
 import { AttributeDto } from '../../gateways/catalog/CatalogGateway.js';
 import { CatalogProductTagDto } from '../../gateways/catalog/CatalogGateway.js';
+import { BlogPostDto } from '../../gateways/cms/CmsGateway.js';
 
-export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = [], productTags: CatalogProductTagDto[] = []): string {
+export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], taxRatePercent = 19, brands: BrandDto[] = [], legacyBrandNames: string[] = [], attributes: AttributeDto[] = [], productTags: CatalogProductTagDto[] = [], blogPosts: BlogPostDto[] = []): string {
   const localZones = shippingZones.filter((z) => z.type !== 'national' && z.isActive);
   const registeredBrands = brands.filter((brand) => brand.status !== 'inactive').map((brand) => brand.name);
   const registeredNames = new Set(registeredBrands.map((name) => name.toLocaleLowerCase()));
@@ -20,6 +21,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
     return `<div><label for="${fieldId}">${escapeHtml(attribute.name)}</label>${control}</div>`;
   }).join('');
   const tagOptions = productTags.map((tag) => `<option value="${escapeHtml(tag.name)}" ${tag.status === 'inactive' ? 'disabled' : ''}>${escapeHtml(tag.name)}${tag.status === 'inactive' ? ' (inactiva)' : ''}</option>`).join('');
+  const blogPostOptions = blogPosts.filter((post) => post.status === 'published').map((post) => `<option value="${escapeHtml(post.id)}">${escapeHtml(post.title)}</option>`).join('');
 
   return `
     <div id="product-modal" class="product-modal" hidden>
@@ -50,6 +52,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div><label>Tipo de Producto</label><input type="text" id="pType" placeholder="Ropa / Camisetas" /></div>
           <div><label>Código de Barras (GTIN)</label><input type="text" id="pGtin" placeholder="7701234567890" /></div>
           <div class="form-field-full"><label for="pTags">Etiquetas</label><select id="pTags" multiple size="4">${tagOptions}</select><small>Selecciona las etiquetas para este producto. Créelas o adminístralas desde Catálogo → Etiquetas.</small></div>
+          <fieldset class="form-field-full"><legend>Guía específica del producto</legend><label for="pGuideTitle">Título de la guía</label><input id="pGuideTitle" maxlength="140" placeholder="Ej. Cómo elegir la talla"></input><label for="pGuideContent">Contenido de la guía</label><textarea id="pGuideContent" rows="5" maxlength="12000" placeholder="Escribe instrucciones, recomendaciones de uso o cuidado. El contenido se mostrará como texto seguro en la ficha."></textarea><label for="pRelatedBlogPosts">Artículos del blog relacionados</label><select id="pRelatedBlogPosts" multiple size="5">${blogPostOptions}</select><small>Se mostrarán enlaces a artículos publicados. Administra su contenido en Marketing → Blog.</small>${blogPostOptions ? '' : '<small>Aún no hay artículos publicados para asociar.</small>'}</fieldset>
           <fieldset class="form-field-full"><legend>Empaque para transportadora</legend><p>Registra la unidad tal como se enviará dentro de su empaque individual. Se usa para calcular qué caja del inventario de empaques admite el pedido. Las medidas iniciales están estimadas; verifica y corrige con el producto empacado.</p><div class="form-grid"><div><label for="pPackedWidth">Ancho empacado (cm)</label><input id="pPackedWidth" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedLength">Largo empacado (cm)</label><input id="pPackedLength" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedHeight">Alto empacado (cm)</label><input id="pPackedHeight" type="number" min="1" max="300" step="1" inputmode="numeric" /></div><div><label for="pPackedWeight">Peso empacado (gramos)</label><input id="pPackedWeight" type="number" min="1" max="100000" step="1" inputmode="numeric" /></div></div></fieldset>
           <div>
             <label>Contra Entrega</label>

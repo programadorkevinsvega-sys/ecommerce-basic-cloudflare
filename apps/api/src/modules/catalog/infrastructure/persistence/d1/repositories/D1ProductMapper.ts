@@ -26,6 +26,9 @@ export interface ProductRow {
   brand?: string;
   product_type?: string;
   tags: string;
+  guide_title?: string | null;
+  guide_content?: string | null;
+  related_blog_post_ids?: string;
   barcode_gtin?: string;
   seo_title?: string;
   seo_description?: string;
@@ -61,6 +64,7 @@ export class D1ProductMapper {
       sku: row.sku, stockQuantity: row.stock_quantity, status: row.status as ProductStatus,
       condition: (row.condition || 'new') as ProductCondition, specifications: parseObject(row.specifications),
       brand: row.brand, productType: row.product_type, tags: parseArray(row.tags), barcodeGtin: row.barcode_gtin,
+      guideTitle: row.guide_title ?? undefined, guideContent: row.guide_content ?? undefined, relatedBlogPostIds: parseArray(row.related_blog_post_ids || '[]'),
       seoTitle: row.seo_title, seoDescription: row.seo_description, canonicalUrl: row.canonical_url,
       ogImageId: row.og_image_id, noindex: row.noindex === 1,
       salePolicy: new ProductSalePolicy({

@@ -10,15 +10,12 @@ import { ReviewsGateway } from '../../gateways/reviews/ReviewsGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
-import { renderProductDetail } from '../../views/renderProductDetail.js';
-import { renderRelatedProducts } from '../../views/renderRelatedProducts.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
-import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
-import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 import { getPageMarketingContent } from './StorefrontPageMarketing.js';
+import { ProductDetailController } from './ProductDetailController.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -140,73 +137,7 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    router.get('/productos/:slug', async (c) => {
-      const customerEmail = await getCustomerEmail(c, identityGateway);
-      const slug = c.req.param('slug');
-      const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
-      try {
-        const product = await catalogGateway.getProductBySlug(slug);
-        const relatedProducts = await catalogGateway.listProducts({ limit: 8, relatedToId: product.id }).catch(() => []);
-        const [discount, reviewPage] = await Promise.all([
-          promotionsGateway.evaluateProductDiscount({ productId: product.id, categoryIds: product.categoryIds, priceInCents: product.priceInCents }).catch(() => undefined),
-          reviewsGateway.list(product.id, 1, 1).catch(() => ({ items: [], total: 0, summary: { average: 0, count: 0, isDemo:false, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } } })),
-        ]);
-
-        const marketing = await getPageMarketingContent(storefrontGateway, `product:${product.slug}`, 'Contenido destacado', ['product']);
-        const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount, {...reviewPage.summary,demoCount:reviewPage.total})}${renderRelatedProducts(relatedProducts)}`;
-        const storeUrl = 'https://vega.jnmtortas.com';
-        const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
-
-        const productJsonLd = ProductSeoHelper.generateJsonLd({
-          name: product.name,
-          description: product.description,
-          priceInCents: discount?.hasDiscount ? discount.finalPriceCents : product.priceInCents,
-          sku: product.sku,
-          brand: product.brand,
-          stockQuantity: product.stockQuantity,
-          condition: product.condition,
-          url: canonical,
-          imageUrl: product.mediaIds?.[0] ? `/media/${product.mediaIds[0]}` : undefined,
-          ratingValue: reviewPage.summary.isDemo?0:reviewPage.summary.average,
-          reviewCount: reviewPage.summary.isDemo?0:reviewPage.summary.count,
-        });
-
-        const breadcrumbsJsonLd = StructuredDataHelper.generateBreadcrumbList([
-          { name: 'Inicio', url: `${storeUrl}/` },
-          { name: 'Catálogo', url: `${storeUrl}/productos` },
-          { name: product.name, url: canonical },
-        ]);
-
-        const html = renderBaseLayout({
-          title: ProductSeoHelper.resolveTitle(product.seoTitle, product.name),
-          description: ProductSeoHelper.resolveDescription(product.seoDescription, product.description),
-          canonicalUrl: canonical,
-          noindex: product.noindex,
-          jsonLd: `[${productJsonLd}, ${breadcrumbsJsonLd}]`,
-          bodyHtml,
-          customerEmail,
-          headerMenuItems: nav.headerMenuItems,
-          footerMenuItems: nav.footerMenuItems,
-          footerStoreProfile: nav.footerStoreProfile,
-          announcementMessage: marketing.announcementMessage,
-          announcementLink: marketing.announcementLink,
-          announcementItems: marketing.announcementItems,
-        });
-
-        return c.html(html);
-      } catch {
-        const notFoundHtml = renderBaseLayout({
-          title: 'Producto no encontrado',
-          description: 'El producto solicitado no existe o fue retirado del catálogo.',
-          bodyHtml: renderNotFoundPage(`/productos/${slug}`),
-          customerEmail,
-          headerMenuItems: nav.headerMenuItems,
-          footerMenuItems: nav.footerMenuItems,
-          footerStoreProfile: nav.footerStoreProfile,
-        });
-        return c.html(notFoundHtml, 404);
-      }
-    });
+    router.route('/', ProductDetailController.createRoutes(catalogGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
 
     router.get('/auth/login', async (c) => {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);

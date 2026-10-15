@@ -376,7 +376,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [x] Gestión administrativa de reseñas: listar, buscar/paginar, crear, ver, editar, publicar/ocultar y eliminar; el método de pago solo procede de la verificación del pedido y no se inventa para una reseña editorial.
 - [ ] Lista de deseos.
 - [x] Productos relacionados en la ficha, seleccionados por etiquetas, marca, tipo de producto y categorías compartidas; no aparecen recomendaciones sin relación.
-- [ ] Guías específicas vinculadas a productos; falta definir si serán documentos/manuales o artículos del blog.
+- [x] Guías textuales por producto y enlaces a artículos publicados del blog desde la ficha; sin archivos PDF ni referencias SQL entre módulos.
 - [x] Seguimiento seguro: clientes autenticados consultan pedidos de su cuenta; invitados usan una clave aleatoria enviada por correo. Admin puede gestionar estados, historial, datos de envío y guías desde sus secciones operativas.
 - [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.

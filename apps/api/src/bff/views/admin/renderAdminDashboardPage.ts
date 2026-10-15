@@ -46,6 +46,7 @@ import { renderMenuAdminScript } from './renderMenuAdminScript.js';
 import { renderOrderTrackingAdminScript } from './renderOrderTrackingAdminScript.js';
 import { renderOrderTrackingAdminCss } from './renderOrderTrackingAdminCss.js';
 import { renderAdminNavigationStateScript } from './renderAdminNavigationStateScript.js';
+import { renderProductEditorialFieldsScript } from './renderProductEditorialFieldsScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -84,6 +85,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderCopInputScript()}</script>
   <script>${renderAdminNavigationStateScript()}</script>
   <script>${renderProductPricingScript()}</script>
+  <script>${renderProductEditorialFieldsScript()}</script>
   <script>${renderAdminDashboardScript()}</script>
   <script>${renderAdminSummaryScript()}</script>
   <script>${renderStorefrontActionsScript()}</script>

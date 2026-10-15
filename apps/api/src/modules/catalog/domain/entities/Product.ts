@@ -28,6 +28,9 @@ export interface ProductProps {
   brand?: string;
   productType?: string;
   tags: string[];
+  guideTitle?: string;
+  guideContent?: string;
+  relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -75,6 +78,9 @@ export class Product {
   public get brand(): string | undefined { return this.props.brand; }
   public get productType(): string | undefined { return this.props.productType; }
   public get tags(): string[] { return [...this.props.tags]; }
+  public get guideTitle(): string | undefined { return this.props.guideTitle; }
+  public get guideContent(): string | undefined { return this.props.guideContent; }
+  public get relatedBlogPostIds(): string[] { return [...(this.props.relatedBlogPostIds || [])]; }
   public get barcodeGtin(): string | undefined { return this.props.barcodeGtin; }
   public get seoTitle(): string | undefined { return this.props.seoTitle; }
   public get seoDescription(): string | undefined { return this.props.seoDescription; }
@@ -122,6 +128,9 @@ export class Product {
     if (updates.brand !== undefined) this.props.brand = updates.brand;
     if (updates.productType !== undefined) this.props.productType = updates.productType;
     if (updates.tags !== undefined) this.props.tags = [...updates.tags];
+    if (updates.guideTitle !== undefined) this.props.guideTitle = updates.guideTitle;
+    if (updates.guideContent !== undefined) this.props.guideContent = updates.guideContent;
+    if (updates.relatedBlogPostIds !== undefined) this.props.relatedBlogPostIds = [...updates.relatedBlogPostIds];
     if (updates.barcodeGtin !== undefined) this.props.barcodeGtin = updates.barcodeGtin;
     if (updates.seoTitle !== undefined) this.props.seoTitle = updates.seoTitle;
     if (updates.seoDescription !== undefined) this.props.seoDescription = updates.seoDescription;
@@ -155,6 +164,7 @@ export class Product {
       legacyPriceBeforeTaxCents: this.legacyPriceBeforeTaxCents,
       specifications: { ...this.props.specifications },
       tags: [...this.props.tags],
+      relatedBlogPostIds: this.relatedBlogPostIds,
       categoryIds: [...this.props.categoryIds],
       mediaIds: [...this.props.mediaIds],
       salePolicy: this.props.salePolicy.toPrimitives(),

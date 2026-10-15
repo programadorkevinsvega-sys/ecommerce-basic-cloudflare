@@ -27,10 +27,10 @@ export class D1ProductRepository implements IProductRepository {
       this.db.prepare(
         `INSERT INTO catalog_products (
           id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, pricing_target_type, target_profit_cents, packed_width_cm, packed_length_cm, packed_height_cm, packed_weight_grams, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
-          status, condition, specifications, brand, product_type, tags, barcode_gtin,
+          status, condition, specifications, brand, product_type, tags, guide_title, guide_content, related_blog_post_ids, barcode_gtin,
           seo_title, seo_description, canonical_url, og_image_id, noindex,
           allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
@@ -55,6 +55,9 @@ export class D1ProductRepository implements IProductRepository {
           brand = excluded.brand,
           product_type = excluded.product_type,
           tags = excluded.tags,
+          guide_title = excluded.guide_title,
+          guide_content = excluded.guide_content,
+          related_blog_post_ids = excluded.related_blog_post_ids,
           barcode_gtin = excluded.barcode_gtin,
           seo_title = excluded.seo_title,
           seo_description = excluded.seo_description,
@@ -71,7 +74,7 @@ export class D1ProductRepository implements IProductRepository {
         p.packedHeightCm, p.packedWeightGrams,
         JSON.stringify(p.allowedPaymentMethods), p.pricingVersion, p.legacyPriceBeforeTaxCents, p.sku, p.stockQuantity,
         p.status, p.condition, JSON.stringify(p.specifications), p.brand ?? null,
-        p.productType ?? null, JSON.stringify(p.tags), p.barcodeGtin ?? null,
+        p.productType ?? null, JSON.stringify(p.tags), p.guideTitle ?? null, p.guideContent ?? null, JSON.stringify(p.relatedBlogPostIds), p.barcodeGtin ?? null,
         p.seoTitle ?? null, p.seoDescription ?? null, p.canonicalUrl ?? null,
         p.ogImageId ?? null, p.noindex ? 1 : 0,
         p.salePolicy.allowsCashOnDelivery ? 1 : 0, p.salePolicy.shippingScope,

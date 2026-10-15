@@ -29,6 +29,9 @@ export interface UpdateProductInput {
   brand?: string;
   productType?: string;
   tags?: string[];
+  guideTitle?: string;
+  guideContent?: string;
+  relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;

@@ -62,6 +62,7 @@ export function renderProductFormsScript(): string {
       });
 
       const tags = Array.from(document.getElementById('pTags').selectedOptions).map(option => option.value);
+      const relatedBlogPostIds = Array.from(document.getElementById('pRelatedBlogPosts').selectedOptions).map(option => option.value);
       const payload = {
         name: document.getElementById('pName').value,
         slug: document.getElementById('pSlug').value,
@@ -90,6 +91,9 @@ export function renderProductFormsScript(): string {
         noindex: document.getElementById('pNoindex').checked,
         specifications: specs,
         tags,
+        guideTitle: document.getElementById('pGuideTitle').value.trim(),
+        guideContent: document.getElementById('pGuideContent').value.trim(),
+        relatedBlogPostIds,
         allowsCashOnDelivery: document.getElementById('pCod').value === 'true',
         shippingScope: document.getElementById('pScope').value,
         localCoverageZones: document.getElementById('pScope').value === 'local' && document.getElementById('pLocalZones')

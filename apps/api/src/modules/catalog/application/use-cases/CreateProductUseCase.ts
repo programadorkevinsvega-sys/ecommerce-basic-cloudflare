@@ -29,6 +29,9 @@ export interface CreateProductInput {
   brand?: string;
   productType?: string;
   tags?: string[];
+  guideTitle?: string;
+  guideContent?: string;
+  relatedBlogPostIds?: string[];
   barcodeGtin?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -97,6 +100,9 @@ export class CreateProductUseCase {
         brand: input.brand,
         productType: input.productType,
         tags: input.tags || [],
+        guideTitle: input.guideTitle,
+        guideContent: input.guideContent,
+        relatedBlogPostIds: input.relatedBlogPostIds || [],
         barcodeGtin: input.barcodeGtin,
         seoTitle: input.seoTitle,
         seoDescription: input.seoDescription,
