@@ -145,7 +145,7 @@ export function registerOrderCreationRoute(
         await notifyCodOrderPlaced(order, deps.notifications, deps.settings, traceId);
       }
       await notifyOrderTrackingAccess(order, trackingToken, deps.notifications,
-        'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev', traceId);
+        'https://vega.jnmtortas.com', traceId);
       await deps.realtime.publishNotification({
         channel: 'admin', eventType: 'orders.new_order', title: `Nuevo Pedido #${order.id}`,
         body: `Cliente: ${order.customerName} - Total: $${(order.totalCents / 100).toLocaleString('es-CO')} COP`,

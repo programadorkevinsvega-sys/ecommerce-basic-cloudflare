@@ -9,10 +9,28 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { notifyShippingGuideAvailable } from './notifyShippingGuideAvailable.js';
 import { notifyOrderStatusChanged } from '../orders/notifyOrderStatusChanged.js';
+import { renderLocalDeliveryLabel } from '../../views/admin/renderLocalDeliveryLabel.js';
 
 export class MiPaqueteShipmentController {
   public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway; notifications: NotificationsGateway }): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
+    app.get('/api/v1/admin/shipping/local/labels', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
+      const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 10);
+      if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
+      return c.json({ success: true, ...await deps.orders.listLocalDeliveryLabels(page, pageSize, c.req.query('unprinted') !== 'false'), page, pageSize });
+    });
+    app.get('/api/v1/admin/shipping/local/labels/:orderId/print', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
+      const order = await deps.orders.getOrder(c.req.param('orderId'));
+      if (!order || order.shippingFulfillmentMethod !== 'merchant_local') return c.text('Etiqueta local no encontrada', 404);
+      return c.html(renderLocalDeliveryLabel(order), 200, { 'Cache-Control': 'private, no-store' });
+    });
+    app.post('/api/v1/admin/shipping/local/labels/:orderId/printed', createAuthMiddleware(deps.identity, 'admin', 'shipping:update'), async (c) => {
+      const actorId = String(c.get('actorId') || 'unknown'); const orderId = c.req.param('orderId');
+      if (!await deps.orders.markLocalDeliveryLabelPrinted(orderId, actorId)) return c.json({ error: 'Etiqueta local no encontrada o ya impresa' }, 404);
+      await deps.audit.record({ actorId, actorType: 'admin', action: 'shipping.local_delivery_label.printed',
+        entityType: 'orders_local_delivery_label', entityId: orderId, changes: { orderId } });
+      return c.json({ success: true });
+    });
     app.get('/api/v1/admin/shipping/mipaquete/labels', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
       const page = Number(c.req.query('page') || 1);
       const pageSize = Number(c.req.query('pageSize') || 20);

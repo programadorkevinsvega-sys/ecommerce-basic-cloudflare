@@ -3,6 +3,7 @@ import { CheckoutEvaluationInput, CheckoutEvaluationResult, FreeShippingItemCand
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
 import { UpdateOrderStatusCommand } from '../../../modules/orders/application/use-cases/UpdateOrderStatusUseCase.js';
 import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails, OrderTrackingRecord } from '../../../modules/orders/domain/ports/IOrderTrackingRepository.js';
+import { LocalDeliveryLabelPage } from '../../../modules/orders/domain/ports/LocalDeliveryLabel.js';
 
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
@@ -18,4 +19,6 @@ export interface OrdersGateway {
   getAdminOrderTracking(orderId: string): Promise<AdminOrderTrackingRecord | null>;
   listAdminOrderTracking(input: { page: number; pageSize: number; query?: string; status?: string }): Promise<AdminOrderTrackingPage>;
   saveOrderShippingDetails(orderId: string, details: OrderShippingDetails): Promise<boolean>;
+  listLocalDeliveryLabels(page: number, pageSize: number, unprinted?: boolean): Promise<LocalDeliveryLabelPage>;
+  markLocalDeliveryLabelPrinted(orderId: string, actorId: string): Promise<boolean>;
 }

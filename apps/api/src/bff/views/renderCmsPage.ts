@@ -13,7 +13,7 @@ export function renderCmsPage(page: CmsPageDto): {
   return {
     title: page.seoTitle || page.title,
     description: page.seoDescription || `Información oficial de Vega Store: ${page.title}.`,
-    canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev${path}`,
+    canonicalUrl: `https://vega.jnmtortas.com${path}`,
     bodyHtml: `
       <article class="cms-page-shell">
         <nav class="cms-breadcrumb" aria-label="Migas de pan">

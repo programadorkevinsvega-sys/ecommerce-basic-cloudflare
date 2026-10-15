@@ -31,7 +31,7 @@ export async function notifyShippingGuideAvailable(
         minEstimatedDays: tracking.minEstimatedDays,
         maxEstimatedDays: tracking.maxEstimatedDays,
         amountToCollectCents,
-        trackingUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/seguimiento-pedido?pedido=${encodeURIComponent(order.id)}`,
+        trackingUrl: `https://vega.jnmtortas.com/seguimiento-pedido?pedido=${encodeURIComponent(order.id)}`,
       }),
     });
     if (!result.success) throw new Error('Email provider rejected guide message');

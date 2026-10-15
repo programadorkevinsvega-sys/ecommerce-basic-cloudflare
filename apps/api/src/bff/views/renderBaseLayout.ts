@@ -42,9 +42,9 @@ export interface LayoutProps {
 export function renderBaseLayout(props: LayoutProps): string {
   const safeTitle = escapeHtml(props.title);
   const safeDesc = escapeHtml(props.description);
-  const canonical = escapeHtml(props.canonicalUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/');
+  const canonical = escapeHtml(props.canonicalUrl || 'https://vega.jnmtortas.com/');
   const robots = props.noindex ? 'noindex, nofollow' : 'index, follow';
-  const ogImage = escapeHtml(props.ogImageUrl || 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/media/og-default.jpg');
+  const ogImage = escapeHtml(props.ogImageUrl || 'https://vega.jnmtortas.com/media/og-default.jpg');
   const jsonLdScript = props.jsonLd ? `<script type="application/ld+json">${props.jsonLd}</script>` : '';
 
   const topBarHtml = `<div class="announcement-bar">

@@ -22,7 +22,7 @@ export class CmsController {
         if (page.status !== 'published') throw new Error('Página no publicada');
         const rendered = renderCmsPage(page);
         const marketing = await getPageMarketingContent(storefront, `cms:${slug}`, 'Contenido destacado');
-        const canonical = `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev${requestedPath}`;
+        const canonical = `https://vega.jnmtortas.com${requestedPath}`;
 
         const html = renderBaseLayout({
           title: rendered.title,

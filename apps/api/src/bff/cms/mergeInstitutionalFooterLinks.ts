@@ -41,8 +41,8 @@ export function mergeInstitutionalFooterLinks(
 function normalizeCmsUrl(url: string): string {
   let pathname = url;
   try {
-    const parsed = new URL(url, 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev');
-    if (parsed.origin !== 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev') return url;
+    const parsed = new URL(url, 'https://vega.jnmtortas.com');
+    if (parsed.origin !== 'https://vega.jnmtortas.com') return url;
     pathname = parsed.pathname;
   } catch {
     return url;

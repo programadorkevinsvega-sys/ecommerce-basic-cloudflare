@@ -94,6 +94,10 @@ export class D1OrderRepository implements IOrderRepository {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(l.id, order.id, l.productId, l.productName, l.productSku, l.quantity, l.unitPriceCents, l.totalCents).run();
     }
+    if (order.shippingFulfillmentMethod === 'merchant_local' && order.status !== 'cancelled') {
+      await this.db.prepare('INSERT OR IGNORE INTO orders_local_delivery_labels (order_id, created_at) VALUES (?, ?)')
+        .bind(order.id, order.createdAt).run();
+    }
   }
 
   public async addHistory(record: OrderHistoryRecord): Promise<void> {

@@ -57,4 +57,12 @@ export class InProcessOrdersGateway implements OrdersGateway {
   public saveOrderShippingDetails(orderId: string, details: OrderShippingDetails) {
     return this.publicApi.saveOrderShippingDetails(orderId, details);
   }
+
+  public listLocalDeliveryLabels(page: number, pageSize: number, unprinted = true) {
+    return this.publicApi.listLocalDeliveryLabels(page, pageSize, unprinted);
+  }
+
+  public markLocalDeliveryLabelPrinted(orderId: string, actorId: string) {
+    return this.publicApi.markLocalDeliveryLabelPrinted(orderId, actorId);
+  }
 }

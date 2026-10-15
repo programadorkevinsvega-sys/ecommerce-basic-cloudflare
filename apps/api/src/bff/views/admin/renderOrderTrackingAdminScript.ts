@@ -6,6 +6,23 @@ export function renderOrderTrackingAdminScript(): string {
     let trackingAdminTimer;
     let trackingEditingStatus = '';
     let labelPage = 1; let labelItems = []; let labelTotal = 0;
+    let localLabelPage = 1; let localLabelItems = []; let localLabelTotal = 0;
+    async function loadLocalDeliveryLabels(page = localLabelPage) {
+      localLabelPage = page; const body = document.getElementById('local-label-body'); if (!body) return;
+      try { const params = new URLSearchParams({ page: String(page), pageSize: '10', unprinted: 'true' });
+        const response = await fetch('/api/v1/admin/shipping/local/labels?' + params); const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudieron cargar las etiquetas locales');
+        localLabelItems = data.items || []; localLabelTotal = data.total || 0;
+        body.innerHTML = localLabelItems.length ? localLabelItems.map((item) => '<tr><td>#' + escapeHtml(item.orderId) + '</td><td>' + escapeHtml(item.customerName) + '<small>' + escapeHtml(item.customerPhone) + '</small></td><td>' + escapeHtml(item.municipality) + '<small>' + escapeHtml(item.addressLine) + '</small></td><td><div class="shipping-row-actions"><button class="shipping-action" type="button" data-local-print="' + escapeHtml(item.orderId) + '">Imprimir etiqueta</button><button class="shipping-action" type="button" data-local-mark="' + escapeHtml(item.orderId) + '">Marcar impresa</button></div></td></tr>').join('') : '<tr><td colspan="4" class="shipping-empty">No hay etiquetas locales pendientes de impresión.</td></tr>';
+        body.querySelectorAll('[data-local-print]').forEach((button) => button.addEventListener('click', () => { window.open('/api/v1/admin/shipping/local/labels/' + encodeURIComponent(button.dataset.localPrint) + '/print', '_blank', 'noopener'); }));
+        body.querySelectorAll('[data-local-mark]').forEach((button) => button.addEventListener('click', () => markLocalLabelPrinted(button.dataset.localMark)));
+        const pager = document.getElementById('local-label-pagination'); const pages = Math.max(1, Math.ceil(localLabelTotal / 10));
+        pager.querySelector('span').textContent = (localLabelTotal ? (page - 1) * 10 + 1 : 0) + '–' + Math.min(page * 10, localLabelTotal) + ' de ' + localLabelTotal + ' · Página ' + page + ' de ' + pages;
+        pager.querySelector('[data-page-direction="previous"]').disabled = page <= 1; pager.querySelector('[data-page-direction="next"]').disabled = page >= pages;
+      } catch (error) { body.innerHTML = '<tr><td colspan="4" class="shipping-empty">' + escapeHtml(error.message || 'Error al cargar etiquetas') + '</td></tr>'; }
+    }
+    async function markLocalLabelPrinted(orderId) { const response = await fetch('/api/v1/admin/shipping/local/labels/' + encodeURIComponent(orderId) + '/printed', { method: 'POST', headers: adminHeaders(true) }); if (!response.ok) { alert('No se pudo registrar la impresión'); return; } await loadLocalDeliveryLabels(localLabelPage); }
+    async function printLocalLabelBatch() { const pending = localLabelItems; if (!pending.length) { alert('No hay etiquetas locales pendientes en esta página.'); return; } pending.forEach((item) => window.open('/api/v1/admin/shipping/local/labels/' + encodeURIComponent(item.orderId) + '/print', '_blank', 'noopener')); if (confirm('¿Confirmas que imprimiste las ' + pending.length + ' etiquetas abiertas?')) for (const item of pending) await markLocalLabelPrinted(item.orderId); }
     async function loadShipmentLabels(page = labelPage) {
       labelPage = page; const body = document.getElementById('shipment-label-body'); if (!body) return;
       const params = new URLSearchParams({ page: String(page), pageSize: '10', unprinted: 'true' });
@@ -130,6 +147,8 @@ export function renderOrderTrackingAdminScript(): string {
     document.getElementById('order-tracking-admin-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadAdminOrderTracking(trackingAdminPage + 1));
     document.getElementById('shipment-label-pagination')?.querySelector('[data-page-direction="previous"]')?.addEventListener('click', () => loadShipmentLabels(Math.max(1, labelPage - 1)));
     document.getElementById('shipment-label-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadShipmentLabels(labelPage + 1));
+    document.getElementById('local-label-pagination')?.querySelector('[data-page-direction="previous"]')?.addEventListener('click', () => loadLocalDeliveryLabels(Math.max(1, localLabelPage - 1)));
+    document.getElementById('local-label-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadLocalDeliveryLabels(localLabelPage + 1));
     window.loadAdminOrderTracking = loadAdminOrderTracking;
     window.openOrderTrackingEditor = openOrderTrackingEditor;
     window.closeOrderTrackingEditor = closeOrderTrackingEditor;

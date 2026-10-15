@@ -31,7 +31,7 @@ export class CollectionPagesController {
       return c.html(renderBaseLayout({
         title: 'Colecciones',
         description: 'Explora las colecciones disponibles de Vega Store.',
-        canonicalUrl: `https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones${page > 1 ? `?page=${page}` : ''}`,
+        canonicalUrl: `https://vega.jnmtortas.com/colecciones${page > 1 ? `?page=${page}` : ''}`,
         noindex: collections.length === 0,
         bodyHtml: marketing.bannersHtml + (collections.length?renderCollectionDirectoryPage(collections,page,records.length>12):renderCollectionsUnavailablePage()),
         customerEmail,
@@ -52,7 +52,7 @@ export class CollectionPagesController {
       const products=resolved.filter((item):item is NonNullable<typeof item>=>item?.status==='published');
       const [discounts,marketing]=await Promise.all([resolveProductDiscounts(products,promotions),getPageMarketingContent(storefront,`collection:${collection.slug}`,'Contenido de la colección')]);
       const html=marketing.bannersHtml+renderCollectionDetailPage(collection,products,discounts);
-      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
+      return c.html(renderBaseLayout({title:`${collection.seoTitle||collection.name} | Colecciones`,description:collection.seoDescription||collection.description,canonicalUrl:`https://vega.jnmtortas.com/colecciones/${encodeURIComponent(collection.slug)}`,bodyHtml:html+renderProductCardActionsScript,customerEmail,headerMenuItems:nav.headerMenuItems,footerMenuItems:nav.footerMenuItems,footerStoreProfile:nav.footerStoreProfile,announcementMessage:marketing.announcementMessage,announcementLink:marketing.announcementLink}));
     });
     return router;
   }

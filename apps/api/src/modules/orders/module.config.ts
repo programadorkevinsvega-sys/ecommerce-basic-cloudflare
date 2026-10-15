@@ -11,6 +11,8 @@ import { GetDeliveredProductPaymentMethodUseCase } from './application/use-cases
 import { GetOrderTrackingUseCase } from './application/use-cases/GetOrderTrackingUseCase.js';
 import { D1OrderTrackingRepository } from './infrastructure/persistence/d1/repositories/D1OrderTrackingRepository.js';
 import { EvaluateFreeShippingEligibilityUseCase } from './application/use-cases/EvaluateFreeShippingEligibilityUseCase.js';
+import { D1LocalDeliveryLabelRepository } from './infrastructure/persistence/d1/repositories/D1LocalDeliveryLabelRepository.js';
+import { ManageLocalDeliveryLabelsUseCase } from './application/use-cases/ManageLocalDeliveryLabelsUseCase.js';
 
 export interface OrdersModuleContainer {
   evaluateCheckoutPolicyUseCase: EvaluateCheckoutPolicyUseCase;
@@ -22,12 +24,14 @@ export interface OrdersModuleContainer {
   getDeliveredProductPaymentMethodUseCase: GetDeliveredProductPaymentMethodUseCase;
   getOrderTrackingUseCase: GetOrderTrackingUseCase;
   evaluateFreeShippingEligibilityUseCase: EvaluateFreeShippingEligibilityUseCase;
+  manageLocalDeliveryLabelsUseCase: ManageLocalDeliveryLabelsUseCase;
 }
 
 export function createOrdersModule(env: Env): OrdersModuleContainer {
   const repo = new D1OrderRepository(env.DB);
   const outbox = new D1OrderOutboxRepository(env.DB);
   const tracking = new D1OrderTrackingRepository(env.DB);
+  const localLabels = new D1LocalDeliveryLabelRepository(env.DB);
 
   return {
     evaluateCheckoutPolicyUseCase: new EvaluateCheckoutPolicyUseCase(),
@@ -39,5 +43,6 @@ export function createOrdersModule(env: Env): OrdersModuleContainer {
     getDeliveredProductPaymentMethodUseCase: new GetDeliveredProductPaymentMethodUseCase(repo),
     getOrderTrackingUseCase: new GetOrderTrackingUseCase(tracking),
     evaluateFreeShippingEligibilityUseCase: new EvaluateFreeShippingEligibilityUseCase(),
+    manageLocalDeliveryLabelsUseCase: new ManageLocalDeliveryLabelsUseCase(localLabels),
   };
 }

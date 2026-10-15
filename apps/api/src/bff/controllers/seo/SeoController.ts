@@ -16,7 +16,7 @@ export class SeoController {
         'Disallow: /admin',
         'Disallow: /api/',
         '',
-        'Sitemap: https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev/sitemap.xml',
+        'Sitemap: https://vega.jnmtortas.com/sitemap.xml',
       ].join('\n');
 
       return c.text(robots, 200, {
@@ -27,7 +27,7 @@ export class SeoController {
 
     // sitemap.xml principal (Sitemap Index)
     router.get('/sitemap.xml', (c) => {
-      const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const baseUrl = 'https://vega.jnmtortas.com';
       const today = new Date().toISOString().split('T')[0];
 
       const xml = [
@@ -56,7 +56,7 @@ export class SeoController {
 
     // sitemap-pages.xml (Páginas estáticas y colecciones)
     router.get('/sitemap-pages.xml', async (c) => {
-      const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const baseUrl = 'https://vega.jnmtortas.com';
       const today = new Date().toISOString().split('T')[0];
       const collections = await catalogGateway.listCollections({ limit: 1000, offset: 0 });
 
@@ -81,7 +81,7 @@ export class SeoController {
 
     // sitemap-products.xml (Productos publicados e indexables)
     router.get('/sitemap-products.xml', async (c) => {
-      const baseUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const baseUrl = 'https://vega.jnmtortas.com';
       const products = await catalogGateway.listProducts({ limit: 1000, status: 'published' });
       const indexableProducts = products.filter((p: CatalogProductDto) => !p.noindex);
 

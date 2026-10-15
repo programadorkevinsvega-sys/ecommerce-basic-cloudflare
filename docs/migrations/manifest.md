@@ -322,6 +322,10 @@ Migración expand-only: agrega actor y fecha de impresión de guías e índice p
 
 La página independiente **Imprimir guías** quedó publicada desde `b87c543`, versión Worker `73806e8c-fe6e-4a88-a47f-726a855fa46e`; `/health` volvió a responder 200 con D1, KV, Queue y R2 saludables.
 
+### Etiquetas internas de entrega local (`orders__0010_local_delivery_labels.sql`)
+
+Migración expand-only del módulo `orders`. Crea la cola de impresión de etiquetas internas, marca de impresión y backfill idempotente para pedidos locales no cancelados. No crea guías de transportadora ni modifica pedidos. Estado: pendiente de aplicación y verificación en producción.
+
 ## Nota de sincronización y limitaciones de evidencia (2026-10-15)
 
 El inventario de nombres de migraciones fuente se cotejó con `apps/api/src/modules/*/infrastructure/persistence/d1/migrations/*.sql`: todas las fuentes presentes aparecen referenciadas en este manifiesto. Este registro contiene evidencias históricas por entorno, pero no sustituye consultar `d1_migrations` antes de aplicar nuevas migraciones.

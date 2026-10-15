@@ -64,7 +64,7 @@ export class StorefrontController {
       const brandLinks = new Map(brands.map((brand) => [brand.name.trim().toLocaleLowerCase(), `/marcas/${encodeURIComponent(brand.slug)}`]));
       const bodyHtml = renderProductList(products, undefined, homeContent.banners, discountMap, brandLinks, brands, { page: productsPage, hasNext: productRecords.length > 12 });
 
-      const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const storeUrl = 'https://vega.jnmtortas.com';
       const webSiteJsonLd = StructuredDataHelper.generateWebSiteSchema(storeUrl, 'Vega Store');
       const orgJsonLd = StructuredDataHelper.generateOrganizationSchema(storeUrl, 'Vega Store');
 
@@ -113,7 +113,7 @@ export class StorefrontController {
         nextHref: productRecords.length > 24 ? pageHref(page + 1) : undefined,
       }, reviewSummaries);
 
-      const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+      const storeUrl = 'https://vega.jnmtortas.com';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
         products.map((p, idx) => ({ name: p.name, url: `${storeUrl}/productos/${p.slug}`, position: idx + 1 }))
       );
@@ -149,7 +149,7 @@ export class StorefrontController {
 
         const marketing = await getPageMarketingContent(storefrontGateway, `product:${product.slug}`, 'Contenido destacado', ['product']);
         const bodyHtml = `${renderProductList([], undefined, marketing.banners)}${renderProductDetail(product, discount, {...reviewPage.summary,demoCount:reviewPage.total})}`;
-        const storeUrl = 'https://ecommerce-basic-cloudflare.programadorkevinsvega.workers.dev';
+        const storeUrl = 'https://vega.jnmtortas.com';
         const canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
 
         const productJsonLd = ProductSeoHelper.generateJsonLd({
