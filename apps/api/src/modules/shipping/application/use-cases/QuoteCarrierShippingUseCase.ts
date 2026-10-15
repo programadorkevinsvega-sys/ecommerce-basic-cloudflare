@@ -32,6 +32,10 @@ export class QuoteCarrierShippingUseCase {
       saleValueCop: Math.ceil(input.saleValueCents / 100),
       cashOnDelivery: input.paymentMethod === 'cash_on_delivery' || input.shippingChargeMode === 'collect_at_delivery',
     });
+    if (options.length === 0) console.info(JSON.stringify({ event: 'shipping.mipaquete.quote_empty',
+      origin_dane_code: setup.originDaneCode, destination_dane_code: input.destinationDaneCode,
+      country_code: '170', package_profile_id: parcel.profileId, package_dimensions_cm: [parcel.widthCm, parcel.lengthCm, parcel.heightCm],
+      package_weight_kg: parcel.weightKg, payment_mode: input.paymentMethod === 'cash_on_delivery' || input.shippingChargeMode === 'collect_at_delivery' ? 'collection' : 'prepaid' }));
     const now = new Date();
     const expiry = new Date(now.getTime() + 10 * 60_000).toISOString();
     const stored = options.map((option) => ({
