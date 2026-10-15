@@ -15,9 +15,3 @@ CREATE TABLE IF NOT EXISTS shipping_free_shipping_rules (
 
 CREATE INDEX IF NOT EXISTS idx_shipping_free_shipping_rules_active
   ON shipping_free_shipping_rules(is_active, starts_at, ends_at, priority);
-
-INSERT OR IGNORE INTO shipping_free_shipping_rules
-  (id, name, target_type, target_id, min_order_amount_cents, starts_at, ends_at, is_active, priority, created_at, updated_at)
-SELECT 'shipping-free-default', 'Envío gratis a toda Colombia en compras superiores a $150.000',
-  'all', NULL, threshold_cents, '2026-01-01T00:00:00.000Z', '2099-12-31T23:59:59.000Z', enabled, 0, updated_at, updated_at
-FROM shipping_free_shipping_policy WHERE id = 'default';

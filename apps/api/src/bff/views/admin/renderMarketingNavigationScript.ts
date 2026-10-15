@@ -21,6 +21,7 @@ export function renderMarketingNavigationScript(): string {
         title.textContent = page[0];
         description.textContent = page[1];
       }
+      if (key === 'free-shipping' && typeof window.loadFreeShippingRules === 'function') window.loadFreeShippingRules(1);
     };
 
     const marketingFormPages = {
