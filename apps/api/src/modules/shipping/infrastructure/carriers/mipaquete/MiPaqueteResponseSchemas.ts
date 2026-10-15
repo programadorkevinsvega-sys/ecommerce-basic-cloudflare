@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const Money = z.number().int().nonnegative();
+const CarrierAmount = z.number().finite().nonnegative();
 const Text = z.string().trim().min(1).max(500);
 const HttpsUrl = z.string().url().refine((value) => {
   const url = new URL(value);
@@ -12,10 +12,10 @@ export const MiPaqueteQuoteSchema = z.array(z.object({
   id: Text,
   deliveryCompanyId: Text,
   deliveryCompanyName: Text,
-  shippingCost: Money,
-  collectionCommissionWithRate: Money.optional(),
-  collectionCommissionWithOutRate: Money.optional(),
-  shippingTime: Money,
+  shippingCost: CarrierAmount,
+  collectionCommissionWithRate: CarrierAmount.nullable().optional(),
+  collectionCommissionWithOutRate: CarrierAmount.nullable().optional(),
+  shippingTime: CarrierAmount,
 }).passthrough()).max(50);
 
 export const MiPaqueteCreateSchema = z.object({
