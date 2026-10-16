@@ -38,6 +38,7 @@ import { RealtimeController } from './controllers/realtime/RealtimeController.js
 import { StorefrontCheckoutController } from './controllers/checkout/StorefrontCheckoutController.js';
 import { InvoicingController } from './controllers/invoicing/InvoicingController.js';
 import { CustomerAccountController } from './controllers/account/CustomerAccountController.js';
+import { CustomerAccountSecurityController } from './controllers/account/CustomerAccountSecurityController.js';
 import { AuditController } from './controllers/audit/AuditController.js';
 import { ReviewsController } from './controllers/reviews/ReviewsController.js';
 import { ReviewsAdminController } from './controllers/reviews/ReviewsAdminController.js';
@@ -120,6 +121,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado) y Cuenta del cliente (/cuenta)
   app.route('/', StorefrontCheckoutController.createRoutes(cRoot.cartGateway, cRoot.catalogGateway, cRoot.shippingGateway, cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway, cRoot.promotionsGateway));
   app.route('/', CustomerAccountController.createRoutes(cRoot.identityGateway, cRoot.ordersGateway, cRoot.invoicingGateway));
+  app.route('/', CustomerAccountSecurityController.createRoutes(cRoot.identityGateway));
 
   // Panel Visual Administrativo
   app.route('/admin', AdminUiController.createRoutes(

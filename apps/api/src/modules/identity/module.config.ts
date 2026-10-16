@@ -12,6 +12,10 @@ import { GetCustomerProfileUseCase } from './application/use-cases/GetCustomerPr
 import { BeginAdminMfaEnrollmentUseCase } from './application/use-cases/BeginAdminMfaEnrollmentUseCase.js';
 import { ConfirmAdminMfaEnrollmentUseCase } from './application/use-cases/ConfirmAdminMfaEnrollmentUseCase.js';
 import { IConfiguredAdminCredentialAuditPort } from './application/ports/IConfiguredAdminCredentialAuditPort.js';
+import { UpdateCustomerProfileUseCase } from './application/use-cases/UpdateCustomerProfileUseCase.js';
+import { ChangeCustomerPasswordUseCase } from './application/use-cases/ChangeCustomerPasswordUseCase.js';
+import { ListCustomerSessionsUseCase } from './application/use-cases/ListCustomerSessionsUseCase.js';
+import { RevokeCustomerSessionUseCase } from './application/use-cases/RevokeCustomerSessionUseCase.js';
 
 export interface IdentityModuleContainer {
   registerCustomerUseCase: RegisterCustomerUseCase;
@@ -22,6 +26,10 @@ export interface IdentityModuleContainer {
   getCustomerProfileUseCase: GetCustomerProfileUseCase;
   beginAdminMfaEnrollmentUseCase: BeginAdminMfaEnrollmentUseCase;
   confirmAdminMfaEnrollmentUseCase: ConfirmAdminMfaEnrollmentUseCase;
+  updateCustomerProfileUseCase: UpdateCustomerProfileUseCase;
+  changeCustomerPasswordUseCase: ChangeCustomerPasswordUseCase;
+  listCustomerSessionsUseCase: ListCustomerSessionsUseCase;
+  revokeCustomerSessionUseCase: RevokeCustomerSessionUseCase;
 }
 
 export function createIdentityModule(env: Env, credentialAudit?: IConfiguredAdminCredentialAuditPort): IdentityModuleContainer {
@@ -45,5 +53,9 @@ export function createIdentityModule(env: Env, credentialAudit?: IConfiguredAdmi
       password: env.ADMIN_PASSWORD,
     }),
     confirmAdminMfaEnrollmentUseCase: new ConfirmAdminMfaEnrollmentUseCase(adminRepo),
+    updateCustomerProfileUseCase: new UpdateCustomerProfileUseCase(customerRepo),
+    changeCustomerPasswordUseCase: new ChangeCustomerPasswordUseCase(customerRepo, sessionRepo),
+    listCustomerSessionsUseCase: new ListCustomerSessionsUseCase(sessionRepo),
+    revokeCustomerSessionUseCase: new RevokeCustomerSessionUseCase(sessionRepo),
   };
 }

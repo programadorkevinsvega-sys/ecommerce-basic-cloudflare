@@ -43,6 +43,10 @@ export class Session {
     return this.props.expiresAt;
   }
 
+  public get userAgent(): string | undefined { return this.props.userAgent; }
+  public get createdAt(): string { return this.props.createdAt; }
+  public get lastActiveAt(): string { return this.props.lastActiveAt; }
+
   public isExpired(): boolean {
     return new Date(this.props.expiresAt).getTime() <= Date.now();
   }

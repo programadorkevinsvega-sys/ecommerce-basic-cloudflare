@@ -86,7 +86,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | **Pago contra entrega** configurable por producto | `catalog` + `orders` + `payments` | ✅ | ✅ |
 | **Entrega local o envío nacional** | `orders` + `shipping` + `catalog` | ✅ Zonas locales y transportadora configuradas por separado | ✅ Local según zonas de Medellín/Valle de Aburrá; nacional cotizado por MiPaquete |
 | Productos con descuento | `promotions`, `catalog` | ✅ | ✅ |
-| Cuenta del cliente (pedidos, direcciones) | `identity`, `orders` | — | ✅ |
+| Cuenta del cliente (perfil, pedidos, direcciones) | `identity`, `orders` | — | ✅ Perfil editable con reautenticación; pedidos y facturas propios |
 | Configuración de la tienda | `settings` | ✅ | — |
 | Auditoría de acciones | `audit` | ✅ lectura | — |
 | Emails transaccionales con Resend | `notifications` | ✅ Envío desde plantillas implementadas en código | — |
@@ -398,6 +398,8 @@ La tienda y API se publican en `https://vega.jnmtortas.com`, configurado como Cu
 | Ruta | Acceso | Uso |
 |---|---|---|
 | `/api/v1/auth/*` | Público + rate limit | Registro y autenticación de clientes. |
+| `/cuenta/perfil`, `/cuenta/seguridad` | Cliente autenticado | Editar nombre/teléfono, cambiar contraseña y listar/revocar sesiones propias. |
+| `PATCH /api/v1/customer/profile`, `POST /api/v1/customer/password`, `/api/v1/customer/sessions*` | Cliente autenticado + CSRF + límite de escritura | Reautenticación con contraseña actual; cambio de contraseña rota el token y cierra las otras sesiones. |
 | `/api/v1/customer/orders`, `/api/v1/customer/invoices` | Cliente autenticado | Consultar pedidos/facturas propios. |
 | `/api/v1/cart/*`, `/api/v1/orders` | Invitado o cliente según operación | Carrito y creación de pedido. |
 | `/api/v1/admin/*` | Admin autenticado + permiso RBAC | Operaciones administrativas de módulos. |
@@ -415,7 +417,8 @@ Las rutas API son contratos implementados, no una promesa de CRUD uniforme. Cons
 El detalle normativo (IDs `SEC-*`, modelo de amenaza, checklist de PR y matriz de certificación) está en [`SECURITY_RULES.md`](./SECURITY_RULES.md). Resumen:
 
 - **Contraseñas:** PBKDF2 (Web Crypto) con sal por usuario y parámetros versionados; migrable a otro algoritmo sin romper sesiones.
-- **Sesiones:** token opaco aleatorio (32 bytes) cuyo **hash SHA-256** se guarda en `identity_sessions`; cookies `__Host-session` (clientes) y `__Host-admin-session` (admin), `HttpOnly; Secure; SameSite=Lax; Path=/`, sin `Domain`. Expiración absoluta e inactividad (más estrictas para admin), rotación al login y revocación en el servidor.
+- **Sesiones:** token opaco aleatorio (32 bytes) cuyo **hash SHA-256** se guarda en `identity_sessions`; cookies `__Host-session` (clientes) y `__Host-admin-session` (admin), `HttpOnly; Secure; SameSite=Lax; Path=/`, sin `Domain`. Expiración absoluta e inactividad (más estrictas para admin), rotación al login/cambio de contraseña y revocación en el servidor. El cliente puede cerrar sesiones propias; no se devuelve IP ni token en el listado.
+- **Cuenta del cliente:** `/cuenta/perfil` permite actualizar nombre y teléfono tras confirmar la contraseña actual. `/cuenta/seguridad` permite cambiar contraseña y revisar/revocar sesiones. El correo permanece de solo lectura hasta contar con confirmación de la nueva dirección.
 - **Administradores:** MFA (TOTP) obligatoria antes del lanzamiento, re-autenticación en acciones críticas, auditoría de toda mutación.
 - **RBAC:** permisos por recurso y acción (`products:write`, `promotions:publish`…), verificados en el BFF vía `IdentityGateway`; la autorización de negocio vive en el módulo.
 - **Protección:** rate limiting configurado, validaciones en controladores, CSP/cabeceras y verificación de firma del webhook de Wompi. Turnstile no está configurado; ver controles normativos y pendientes en `SECURITY_RULES.md`.

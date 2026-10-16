@@ -39,7 +39,7 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
   <div class="nav">
     <a href="/" class="brand">VEGA STORE</a>
     <div>
-      <span style="margin-right: 1rem; color: var(--muted);">👤 ${customer.email}</span>
+        <span style="margin-right: 1rem; color: var(--muted);">👤 ${escapeHtml(customer.email)}</span>
       <a href="/" class="btn btn-outline">Volver a la Tienda</a>
     </div>
   </div>
@@ -50,8 +50,12 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
     <div class="card">
       <h2>👤 Mis Datos</h2>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.95rem;">
-        <div><strong>Email:</strong> ${customer.email}</div>
-        <div><strong>Nombre:</strong> ${customer.fullName || 'No especificado'}</div>
+        <div><strong>Email:</strong> ${escapeHtml(customer.email)}</div>
+        <div><strong>Nombre:</strong> ${escapeHtml(customer.fullName || 'No especificado')}</div>
+      </div>
+      <div style="display:flex;gap:.65rem;flex-wrap:wrap;margin-top:1.25rem">
+        <a class="btn btn-outline" href="/cuenta/perfil">Editar perfil</a>
+        <a class="btn btn-outline" href="/cuenta/seguridad">Seguridad y sesiones</a>
       </div>
     </div>
 
@@ -105,4 +109,8 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
   </div>
 </body>
 </html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
 }

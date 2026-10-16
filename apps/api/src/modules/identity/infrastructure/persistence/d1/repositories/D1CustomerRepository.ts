@@ -1,5 +1,6 @@
 import { ICustomerRepository } from '../../../../domain/repositories/ICustomerRepository.js';
 import { Customer } from '../../../../domain/entities/Customer.js';
+import { Session } from '../../../../domain/entities/Session.js';
 
 export class D1CustomerRepository implements ICustomerRepository {
   private readonly db: D1Database;
@@ -50,6 +51,28 @@ export class D1CustomerRepository implements ICustomerRepository {
         s.updatedAt
       )
       .run();
+  }
+
+  public async changePasswordAndRotateSessions(customer: Customer, session: Session): Promise<void> {
+    const c = customer.toSnapshot();
+    const s = session.toSnapshot();
+    await this.db.batch([
+      this.db.prepare('UPDATE identity_customers SET password_hash = ?, updated_at = ? WHERE id = ?')
+        .bind(c.passwordHash, c.updatedAt, c.id),
+      this.db.prepare('DELETE FROM identity_sessions WHERE actor_type = ? AND actor_id = ?')
+        .bind('customer', c.id),
+      this.db.prepare(`INSERT INTO identity_sessions
+        (id, token_hash, actor_type, actor_id, expires_at, ip_address, user_agent, created_at, last_active_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .bind(s.id, s.tokenHash, s.actorType, s.actorId, s.expiresAt, s.ipAddress || null,
+          s.userAgent || null, s.createdAt, s.lastActiveAt),
+    ]);
+  }
+
+  public async updateProfile(customerId: string, expectedPasswordHash: string, fullName: string, phone?: string): Promise<boolean> {
+    const result = await this.db.prepare('UPDATE identity_customers SET full_name = ?, phone = ?, updated_at = ? WHERE id = ? AND password_hash = ? AND is_active = 1')
+      .bind(fullName, phone || null, new Date().toISOString(), customerId, expectedPasswordHash).run();
+    return (result.meta?.changes || 0) > 0;
   }
 
   private mapToEntity(row: Record<string, unknown>): Customer {

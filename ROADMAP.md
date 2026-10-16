@@ -93,6 +93,8 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 - [x] Administradores: login con **MFA (TOTP)**, logout, sesiones opacas con hash (`__Host-admin-session`), bloqueo progresivo por intentos, cambio de contraseña, re-autenticación en acciones críticas.
 - [x] Clientes: registro, login, verificación de contraseña con PBKDF2 100k iteraciones, sesiones opacas (`__Host-session`).
+- [x] Cuenta del cliente: edición de nombre/teléfono con confirmación de contraseña, cambio de contraseña con rotación de sesión y cierre de las demás sesiones; listado/revocación de sesiones propias.
+- [x] Rutas `/cuenta/perfil` y `/cuenta/seguridad`; el cambio de correo queda fuera hasta implementar verificación de la nueva dirección.
 - [x] Roles y permisos (RBAC, denegar por defecto, protección del último Superadmin); roles base sembrados (Superadmin, Editor, Ventas, Soporte).
 - [x] Middleware de autenticación/autorización en el BFF vía `IdentityGateway`.
 - [x] Rate limiting básico por intentos fallidos en auth.

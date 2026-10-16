@@ -1,10 +1,11 @@
-export function renderAuthPage(): string {
+export function renderAuthPage(redirectTo = '/'): string {
   return `
     <div style="max-width: 450px; margin: 2rem auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 2rem;">
       <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Iniciar Sesión</h1>
       <p style="color: var(--muted); text-align: center; margin-bottom: 1.5rem;">Accede a tu cuenta para gestionar tus pedidos y compras.</p>
       
       <form id="loginForm" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="hidden" id="redirectTo" value="${escapeHtml(redirectTo)}">
         <div>
           <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">Correo Electrónico</label>
           <input type="email" id="email" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;" />
@@ -38,7 +39,7 @@ export function renderAuthPage(): string {
             body: JSON.stringify({ email, password })
           });
           if (res.ok) {
-            window.location.href = '/';
+            window.location.href = document.getElementById('redirectTo').value || '/';
           } else {
             const data = await res.json();
             errDiv.textContent = data.error || 'Credenciales inválidas';
@@ -51,4 +52,8 @@ export function renderAuthPage(): string {
       });
     </script>
   `;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
 }

@@ -4,6 +4,9 @@ import { LoginCustomerInput, LoginCustomerOutput } from './application/use-cases
 import { LoginAdminInput, LoginAdminOutput } from './application/use-cases/LoginAdminUseCase.js';
 import { AuthenticatedActor } from './application/use-cases/ValidateSessionUseCase.js';
 import { CustomerProfileOutput } from './application/use-cases/GetCustomerProfileUseCase.js';
+import { UpdateCustomerProfileInput } from './application/use-cases/UpdateCustomerProfileUseCase.js';
+import { ChangeCustomerPasswordInput } from './application/use-cases/ChangeCustomerPasswordUseCase.js';
+import { CustomerSessionView } from './application/use-cases/ListCustomerSessionsUseCase.js';
 
 export interface IIdentityPublicApi {
   registerCustomer(input: RegisterCustomerInput): Promise<RegisterCustomerOutput>;
@@ -12,6 +15,10 @@ export interface IIdentityPublicApi {
   validateSession(rawToken: string): Promise<AuthenticatedActor>;
   logout(rawToken: string): Promise<void>;
   getCustomerProfile(customerId: string): Promise<CustomerProfileOutput>;
+  updateCustomerProfile(input: UpdateCustomerProfileInput): Promise<{ fullName: string; phone?: string }>;
+  changeCustomerPassword(input: ChangeCustomerPasswordInput): Promise<{ rawToken: string; expiresAt: string }>;
+  listCustomerSessions(customerId: string, currentToken: string): Promise<CustomerSessionView[]>;
+  revokeCustomerSession(sessionId: string, customerId: string): Promise<boolean>;
   beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }>;
   confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void>;
 }
@@ -55,6 +62,26 @@ export class IdentityPublicApi implements IIdentityPublicApi {
     const res = await this.container.getCustomerProfileUseCase.execute(customerId);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public async updateCustomerProfile(input: UpdateCustomerProfileInput) {
+    const res = await this.container.updateCustomerProfileUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async changeCustomerPassword(input: ChangeCustomerPasswordInput) {
+    const res = await this.container.changeCustomerPasswordUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public listCustomerSessions(customerId: string, currentToken: string) {
+    return this.container.listCustomerSessionsUseCase.execute(customerId, currentToken);
+  }
+
+  public revokeCustomerSession(sessionId: string, customerId: string) {
+    return this.container.revokeCustomerSessionUseCase.execute(sessionId, customerId);
   }
 
   public async beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }> {

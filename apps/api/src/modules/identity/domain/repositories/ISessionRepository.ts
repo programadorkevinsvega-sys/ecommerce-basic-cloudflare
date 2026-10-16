@@ -5,4 +5,6 @@ export interface ISessionRepository {
   save(session: Session): Promise<void>;
   deleteByTokenHash(tokenHash: string): Promise<void>;
   deleteAllForActor(actorId: string): Promise<void>;
+  listForActor(actorId: string): Promise<Session[]>;
+  deleteOwnedSession(sessionId: string, actorId: string): Promise<boolean>;
 }

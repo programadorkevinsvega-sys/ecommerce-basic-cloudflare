@@ -36,6 +36,10 @@ export interface CustomerProfile {
   createdAt: string;
 }
 
+export interface CustomerSessionInfo {
+  id: string; createdAt: string; lastActiveAt: string; expiresAt: string; device: string; current: boolean;
+}
+
 export interface IdentityGateway {
   registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ id: string; email: string; fullName: string }>;
   loginCustomer(input: LoginCustomerGatewayInput): Promise<{ rawToken: string; expiresAt: string }>;
@@ -45,4 +49,8 @@ export interface IdentityGateway {
   validateSession(rawToken: string): Promise<AuthenticatedSession>;
   logout(rawToken: string): Promise<void>;
   getCustomerProfile(customerId: string): Promise<CustomerProfile>;
+  updateCustomerProfile(input: { customerId: string; fullName: string; phone?: string; currentPassword: string }): Promise<{ fullName: string; phone?: string }>;
+  changeCustomerPassword(input: { customerId: string; currentPassword: string; newPassword: string; currentSessionToken: string; ipAddress?: string; userAgent?: string }): Promise<{ rawToken: string; expiresAt: string }>;
+  listCustomerSessions(customerId: string, currentToken: string): Promise<CustomerSessionInfo[]>;
+  revokeCustomerSession(sessionId: string, customerId: string): Promise<boolean>;
 }

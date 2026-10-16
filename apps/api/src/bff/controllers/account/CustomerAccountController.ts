@@ -30,7 +30,7 @@ export class CustomerAccountController {
     app.get('/cuenta', async (c) => {
       const session = await getCustomerSession(c);
       if (!session) {
-        return c.redirect('/cuenta/login?redirect=/cuenta');
+        return c.redirect('/auth/login?redirect=/cuenta');
       }
 
       const [profile, orders, invoices] = await Promise.all([
@@ -43,11 +43,12 @@ export class CustomerAccountController {
         customer: {
           id: session.actorId,
           email: profile.email,
+          fullName: profile.fullName,
         },
         orders: orders.map((o) => o.toJSON()),
         invoices: invoices.map((i) => i.toJSON()),
       });
-
+      c.header('Cache-Control', 'private, no-store');
       return c.html(html);
     });
 

@@ -144,7 +144,7 @@ export class StorefrontController {
       const html = renderBaseLayout({
         title: 'Iniciar Sesión',
         description: 'Accede a tu cuenta de cliente en Vega Store.',
-        bodyHtml: renderAuthPage(),
+        bodyHtml: renderAuthPage(safeLocalRedirect(c.req.query('redirect'))),
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
@@ -154,4 +154,12 @@ export class StorefrontController {
 
     return router;
   }
+}
+
+function safeLocalRedirect(value?: string): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '/';
+  try {
+    const parsed = new URL(value, 'https://vega.jnmtortas.com');
+    return parsed.origin === 'https://vega.jnmtortas.com' ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/';
+  } catch { return '/'; }
 }

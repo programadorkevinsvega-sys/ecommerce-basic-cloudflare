@@ -51,6 +51,18 @@ export class D1SessionRepository implements ISessionRepository {
     await this.db.prepare(query).bind(actorId).run();
   }
 
+  public async listForActor(actorId: string): Promise<Session[]> {
+    const result = await this.db.prepare("SELECT * FROM identity_sessions WHERE actor_type = 'customer' AND actor_id = ? AND expires_at > ? ORDER BY last_active_at DESC LIMIT 50")
+      .bind(actorId, new Date().toISOString()).all();
+    return (result.results || []).map((row) => this.mapToEntity(row));
+  }
+
+  public async deleteOwnedSession(sessionId: string, actorId: string): Promise<boolean> {
+    const result = await this.db.prepare("DELETE FROM identity_sessions WHERE id = ? AND actor_type = 'customer' AND actor_id = ?")
+      .bind(sessionId, actorId).run();
+    return (result.meta?.changes || 0) > 0;
+  }
+
   private mapToEntity(row: Record<string, unknown>): Session {
     return Session.create({
       id: row.id as string,

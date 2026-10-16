@@ -69,6 +69,14 @@ export class Customer {
     this.props.updatedAt = new Date().toISOString();
   }
 
+  public updateProfile(fullName: string, phone?: string): void {
+    const cleanName = fullName.trim();
+    if (cleanName.length < 2 || cleanName.length > 100) throw new Error('Nombre inválido');
+    this.props.fullName = cleanName;
+    this.props.phone = phone?.trim() || undefined;
+    this.props.updatedAt = new Date().toISOString();
+  }
+
   public markEmailVerified(): void {
     this.props.emailVerified = true;
     this.props.updatedAt = new Date().toISOString();

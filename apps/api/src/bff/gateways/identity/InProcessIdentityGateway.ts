@@ -47,4 +47,20 @@ export class InProcessIdentityGateway implements IdentityGateway {
   public async getCustomerProfile(customerId: string) {
     return this.publicApi.getCustomerProfile(customerId);
   }
+
+  public updateCustomerProfile(input: { customerId: string; fullName: string; phone?: string; currentPassword: string }) {
+    return this.publicApi.updateCustomerProfile(input);
+  }
+
+  public changeCustomerPassword(input: { customerId: string; currentPassword: string; newPassword: string; currentSessionToken: string; ipAddress?: string; userAgent?: string }) {
+    return this.publicApi.changeCustomerPassword(input);
+  }
+
+  public listCustomerSessions(customerId: string, currentToken: string) {
+    return this.publicApi.listCustomerSessions(customerId, currentToken);
+  }
+
+  public revokeCustomerSession(sessionId: string, customerId: string) {
+    return this.publicApi.revokeCustomerSession(sessionId, customerId);
+  }
 }
