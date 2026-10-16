@@ -4,6 +4,7 @@ import { renderCustomerRegisterPage } from '../src/bff/views/renderCustomerRegis
 import { renderAuthPage } from '../src/bff/views/renderAuthPage.js';
 import { AdminAuthController } from '../src/bff/controllers/auth/AdminAuthController.js';
 import { renderAdminLoginPage } from '../src/bff/views/admin/renderAdminLoginPage.js';
+import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 
 const gateway = {
   registerCustomer: vi.fn(async () => ({ id: 'customer-1', email: 'person@example.com', fullName: 'Client Person' })),
@@ -27,6 +28,13 @@ describe('customer registration', () => {
   it('renders Turnstile on both customer and admin login forms', () => {
     expect(renderAuthPage('/', 'public-site-key')).toContain('data-sitekey="public-site-key"');
     expect(renderAdminLoginPage('public-site-key')).toContain('data-sitekey="public-site-key"');
+  });
+
+  it('redirects a regular customer to the account and links the signed-in header to it', () => {
+    expect(renderAuthPage()).toContain('id="redirectTo" value="/cuenta"');
+    const layout = renderBaseLayout({ title: 'Inicio', description: 'Tienda', bodyHtml: '', customerEmail: 'buyer@example.com' });
+    expect(layout).toContain('href="/cuenta" class="customer-email account-link"');
+    expect(layout).toContain('>Mi cuenta</a>');
   });
 
   it('requires server verified Turnstile and excludes its token from customer data', async () => {

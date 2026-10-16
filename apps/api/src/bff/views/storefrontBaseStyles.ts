@@ -89,6 +89,7 @@ export const storefrontBaseStyles = String.raw`    :root {
     .site-nav a[href="/carrito"] { background: var(--primary); color: #fff !important; }
     .site-nav a[href="/carrito"]:hover { background: #2c4134; }
     .site-nav .customer-email { color: var(--muted) !important; font-size: .82rem; padding-inline: .6rem; }
+    .site-nav .account-link { color: var(--primary) !important; font-weight: 700; text-decoration: none; }
     .container { width: min(100% - 3rem, var(--content-width)); margin: 0 auto; padding: 2.5rem 0 4rem; }
     .page-intro { max-width: 760px; margin: 0 auto 2.25rem 0; }
     .eyebrow {

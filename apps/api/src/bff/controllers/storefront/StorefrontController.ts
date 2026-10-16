@@ -173,9 +173,10 @@ export class StorefrontController {
 }
 
 function safeLocalRedirect(value?: string): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '/';
+  if (!value) return '/cuenta';
+  if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '/cuenta';
   try {
     const parsed = new URL(value, 'https://vega.jnmtortas.com');
-    return parsed.origin === 'https://vega.jnmtortas.com' ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/';
-  } catch { return '/'; }
+    return parsed.origin === 'https://vega.jnmtortas.com' ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/cuenta';
+  } catch { return '/cuenta'; }
 }

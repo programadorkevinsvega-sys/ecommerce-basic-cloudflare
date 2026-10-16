@@ -1,4 +1,4 @@
-export function renderAuthPage(redirectTo = '/', siteKey?: string): string {
+export function renderAuthPage(redirectTo = '/cuenta', siteKey?: string): string {
   return `
     <div style="max-width: 450px; margin: 2rem auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 2rem;">
       <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Iniciar Sesión</h1>

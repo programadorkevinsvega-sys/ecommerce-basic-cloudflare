@@ -103,7 +103,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     </form>
     <nav class="site-nav" aria-label="Navegación principal">
       ${headerLinksHtml}
-      ${props.customerEmail ? `<span class="customer-email">${escapeHtml(props.customerEmail)}</span>` : '<a href="/auth/login">Ingresar</a>'}
+      ${props.customerEmail ? `<a href="/cuenta" class="customer-email account-link" title="${escapeHtml(props.customerEmail)}" aria-label="Ir a mi cuenta">Mi cuenta</a>` : '<a href="/auth/login">Ingresar</a>'}
       <a href="/carrito" class="cart-link"><span aria-hidden="true">▢</span> Carrito</a>
     </nav>
   </header>
