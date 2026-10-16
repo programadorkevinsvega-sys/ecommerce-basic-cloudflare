@@ -6,8 +6,21 @@ import { Env } from '../src/platform/Env.js';
 import { SettingsController } from '../src/bff/controllers/settings/SettingsController.js';
 import { SettingsGateway } from '../src/bff/gateways/settings/SettingsGateway.js';
 import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js';
+import { SecurityHeadersMiddleware } from '../src/bff/middleware/SecurityHeadersMiddleware.js';
 
 describe('CSRF and request rate middleware', () => {
+  it('allows the Cloudflare Turnstile widget while keeping a restrictive CSP', async () => {
+    const app = new Hono();
+    app.use('*', SecurityHeadersMiddleware);
+    app.get('/auth/register', (c) => c.text('register'));
+    const response = await app.request('/auth/register');
+    const policy = response.headers.get('Content-Security-Policy') || '';
+    expect(policy).toContain('script-src');
+    expect(policy).toContain('https://challenges.cloudflare.com');
+    expect(policy).toContain('frame-src https://challenges.cloudflare.com');
+    expect(policy).toContain("frame-ancestors 'none'");
+  });
+
   it('rejects cross-origin cookie writes and permits same-origin writes', async () => {
     const app = new Hono();
     app.use('*', CsrfProtectionMiddleware);
