@@ -13,13 +13,15 @@ Todos los recursos operan directamente en el entorno de producción configurado 
 | **Worker (BFF + módulos)** | `ecommerce-basic-cloudflare` | `src/index.ts` |
 | **D1 Única** | `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) | `env.DB` |
 | **R2 Bucket** | `ecommerce-vega-production` | `env.MEDIA_BUCKET` |
-| **KV Cache** | ID `a49472c551f04d438a1b7a082d7468d9` | `env.CACHE` |
+| **Workers KV** | ID `a49472c551f04d438a1b7a082d7468d9` | `env.CACHE`; cursor temporal de mantenimiento de medios |
 | **Queues Principal** | `ecommerce-vega-events-production` | `env.EVENTS_QUEUE` |
 | **Queues DLQ (Dead Letter Queue)** | `ecommerce-vega-events-dlq-production` | Manejo de mensajes fallidos |
 | **Analytics Engine** | `ecommerce_vega_analytics_production` | `env.ANALYTICS` |
 | **Images** | Cloudflare Images binding | `env.IMAGES` |
 
 Esta configuración referencia recursos de producción. No hay que leer estos nombres como prueba de que un release concreto esté desplegado o saludable; verificar deployments, `/health` y el ledger antes de una operación productiva.
+
+Workers Cache no es un binding ni un namespace KV: está habilitado para el Worker en Wrangler, cachea HTML SSR público con TTL de 30 segundos y purga la etiqueta `storefront-public-html` tras las mutaciones relevantes. La evidencia de producción está en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md).
 
 ---
 

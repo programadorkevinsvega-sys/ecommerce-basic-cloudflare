@@ -444,28 +444,28 @@ El Worker tiene habilitado **Workers Cache** en Wrangler para respuestas HTML SS
 
 La caché se omite para solicitudes con cookies o `Authorization`, búsquedas de texto, rutas no incluidas explícitamente, y páginas de cuenta, carrito, checkout, seguimiento, opiniones con elegibilidad, admin y APIs. `Vary: Cookie` separa la respuesta anónima de solicitudes con sesión. Solo se cachean respuestas 200 `text/html`; los demás casos llevan `private, no-store`. El HTML puede quedar hasta 30 segundos desactualizado; los precios, stock y permisos del checkout se vuelven a validar en sus flujos autoritativos.
 
-Después de mutaciones exitosas del catálogo, inventario, promociones, reseñas, contenido, configuración o pedidos, el BFF ejecuta `ctx.cache.purge()` para invalidar globalmente esa etiqueta antes de responder. La publicación programada del blog también la invalida. Si Cloudflare rechaza el purge, se registra un error estructurado y el TTL de 30 segundos limita el tiempo de datos desactualizados; el flujo de compra siempre vuelve a validar precio, stock y condiciones en sus fuentes autoritativas. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding. Ver [ADR-0030](./docs/adr/ADR-0030-invalidacion-workers-cache.md).
+Después de mutaciones exitosas del catálogo, inventario, promociones, reseñas, contenido, configuración o pedidos, el BFF ejecuta `ctx.cache.purge()` para invalidar globalmente esa etiqueta antes de responder. La publicación programada del blog también la invalida. Si Cloudflare rechaza el purge, se registra un error estructurado y el TTL de 30 segundos limita el tiempo de datos desactualizados; el flujo de compra siempre vuelve a validar precio, stock y condiciones en sus fuentes autoritativas. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. Las imágenes públicas servidas por `/media/:id` tienen `max-age=31536000, immutable`; al reemplazar una imagen, la entidad debe usar el nuevo ID de Media. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding. Ver [ADR-0030](./docs/adr/ADR-0030-invalidacion-workers-cache.md).
 
 ---
 
 ## 10. Eventos de integración (v1)
 
-Contrato común: `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producerModule`, `payload`, `traceId`.
+Contrato común: `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producerModule`, `payload`, `traceId`. La tabla identifica consumidores previstos o definidos por contrato; no afirma que cada consumer esté conectado en el runtime. La invalidación de Workers Cache se hace directamente en el BFF tras las mutaciones y no depende de un consumer de Queue.
 
 | Evento | Productor | Consumidores típicos |
 |---|---|---|
 | `identity.customer.registered.v1` | identity | notifications |
-| `catalog.product.published.v1` / `.updated.v1` / `.archived.v1` | catalog | seo (sitemap), caché, audit |
-| `storefront.content.changed.v1` | storefront | caché |
-| `cms.page.published.v1` | cms | seo, caché |
-| `promotions.promotion.changed.v1` | promotions | caché |
+| `catalog.product.published.v1` / `.updated.v1` / `.archived.v1` | catalog | seo (sitemap), audit |
+| `storefront.content.changed.v1` | storefront | — |
+| `cms.page.published.v1` | cms | seo |
+| `promotions.promotion.changed.v1` | promotions | — |
 | `inventory.stock.low.v1` | inventory | notifications |
 | `orders.order.placed.v1` | orders | inventory, notifications, audit |
 | `payments.payment.confirmed.v1` / `.failed.v1` | payments | orders, invoicing, realtime, notifications, audit |
 | `payments.cod.collected.v1` | payments | orders, invoicing, realtime, audit |
 | `invoicing.invoice.issued.v1` | invoicing | notifications (email), realtime, audit |
 | `invoicing.credit_note.issued.v1` | invoicing | notifications, realtime, audit |
-| `shipping.zone.changed.v1` | shipping | caché |
+| `shipping.zone.changed.v1` | shipping | — |
 
 Consumidores idempotentes, `message.ack()` solo tras persistir, `retry({ delaySeconds })` en fallos recuperables y DLQ configurada.
 
@@ -519,7 +519,7 @@ Las migraciones viven en cada módulo (`infrastructure/persistence/d1/migrations
 |---|---|---|
 | `DB` | D1 `ecommerce-vega-production` | Base de datos única con prefijos por módulo. |
 | `MEDIA_BUCKET` | R2 `ecommerce-vega-production` | Objetos de media y documentos. |
-| `CACHE` | KV (ID en Wrangler) | Cursor temporal de mantenimiento de medios; la caché de HTML usa Cache API y no incrementa métricas KV. |
+| `CACHE` | Workers KV (ID en Wrangler) | Cursor temporal de mantenimiento de medios; Workers Cache para HTML e imágenes no usa este namespace y no incrementa sus métricas. |
 | `EVENTS_QUEUE` | Queue `ecommerce-vega-events-production` | Consumidor configurado con DLQ `ecommerce-vega-events-dlq-production`; DLQ no es un binding independiente. |
 | `ANALYTICS` | Dataset `ecommerce_vega_analytics_production` | Binding configurado; ver instrumentación antes de asumir métricas específicas. |
 | `IMAGES` | Cloudflare Images | Binding para operaciones de medios. |
@@ -607,7 +607,7 @@ Además, para este proyecto:
 
 - Cada módulo con CRUD admin tiene permisos RBAC definidos, registro en `audit` y metadatos SEO cuando la entidad tenga URL pública.
 - Cumple el **checklist de PR de [`SECURITY_RULES.md`](./SECURITY_RULES.md)**, incluida al menos una prueba de acceso cruzado entre clientes.
-- Es **compatible con rollback** según [`ROLLBACK_RECOVERY.md`](./ROLLBACK_RECOVERY.md) (migraciones expand/contract, eventos versionados, caché con clave versionada).
+- Es **compatible con rollback** según [`ROLLBACK_RECOVERY.md`](./ROLLBACK_RECOVERY.md) (migraciones expand/contract, eventos versionados y caché particionada por versión del Worker).
 
 ---
 

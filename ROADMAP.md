@@ -131,14 +131,14 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 ## Fase 3 — Tienda pública base
 
 **Módulos:** `catalog` (lectura pública), `seo` (mínimo), BFF `store/*`
-**Contrato aplicable:** §7 (KV/Cache API), §9 (BFF), §10 (Gateways), §16 (resiliencia).
+**Contrato aplicable:** §7 (Workers Cache y KV), §9 (BFF), §10 (Gateways), §16 (resiliencia).
 **Seguridad y recuperación:** SEC-WEB-01..06, SEC-FE-01..04, SEC-VAL-05, SEC-CMS-03 · `ROLLBACK_RECOVERY.md`: rollback del Worker y purga de caché. El SSR actual no está desplegado como Pages.
 
 - [x] Proyecto `storefront` con SSR (renderizado en servidor 100% Cloudflare Worker y BFF integrado, mismo origen ADR-0007).
 - [x] Páginas: **Home** (`/`), **listado** (`/productos` con filtros y orden), **detalle de producto** (`/productos/:slug`), y **búsqueda** integrada (`/productos?q=`).
 - [x] Detalle de producto muestra las políticas comerciales completas: contra entrega disponible o no, cobertura de envío (nacional / local) y modalidad de venta.
 - [x] Layout público: header con navegación, footer informativo y barra de búsqueda interactiva.
-- [x] Cache API de Cloudflare para HTML SSR público anónimo, con TTL corto, claves versionadas y bypass de sesiones y rutas transaccionales.
+- [x] Workers Cache de Cloudflare para HTML SSR público anónimo, con TTL de 30 segundos, partición por versión y bypass de sesiones y rutas transaccionales.
 - [x] Etiqueta global y purge inmediato de Workers Cache después de mutaciones de catálogo, inventario, promociones, reseñas, contenido, configuración y pedidos; publicación programada incluida.
 - [x] SEO base por página: `title`, `description`, `canonical`, Open Graph (`og:title`, `og:description`), meta `robots` (index, follow).
 - [x] Autenticación de clientes en la tienda: formulario de login interactivo conectado a la API con cookie segura `__Host-session`.
@@ -151,7 +151,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 **Módulo:** `storefront`
 **Contrato aplicable:** §4, §5, §6.1, §7, §8.
-**Seguridad y recuperación:** SEC-CMS-01, 02 y 05, SEC-WEB-05, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: eventos de invalidación versionados y purga de caché.
+**Seguridad y recuperación:** SEC-CMS-01, 02 y 05, SEC-WEB-05, SEC-ADM-01 y 03 · `ROLLBACK_RECOVERY.md`: purga de la etiqueta `storefront-public-html` en Workers Cache.
 
 - [x] **Banners promocionales:** ubicaciones (`home`, `category`, `product`, `checkout`), vigencia programada (`startsAt`/`endsAt`), enlaces y alt text obligatorio.
 - [x] **Anuncios:** barra superior (`top_bar`), mensajes de alerta y avisos con vigencia temporal.
@@ -223,7 +223,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [x] `ShippingGateway`: ¿cobertura para dirección X?, tarifa, ¿zona admite contra entrega?
 - [x] CRUD completo en admin: zonas, cobertura y tarifas; selector de zonas en el formulario de producto (`local`).
 - [x] Validación en detalle de producto: "¿llega a mi ciudad?" por selector de municipio.
-- [x] Evento `shipping.zone.changed.v1` para invalidar caché.
+- [x] Evento `shipping.zone.changed.v1` persistido en el outbox para cambios de zona. La invalidación pública se ejecuta en el BFF tras escrituras exitosas; el evento no es un consumidor de caché.
 
 **Criterio de salida:** un producto `local` solo se acepta para direcciones de sus zonas, y uno `national` para cualquier dirección cubierta. (Completado y verificado en producción).
 

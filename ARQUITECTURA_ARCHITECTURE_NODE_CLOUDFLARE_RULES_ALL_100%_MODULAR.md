@@ -371,7 +371,7 @@ src/
 
 
         cache/
-          kv/                           # implementación de ICachePort con Workers KV / Cache API
+          kv/                           # implementación de ICachePort con Workers KV
 
 
         messaging/
@@ -539,7 +539,7 @@ Para garantizar consistencia entre la escritura en D1 y la publicación del even
 ---
 
 
-# 7. Cache y KV (Workers KV & Cache API)
+# 7. Cache, Workers Cache y KV
 
 
 - Acceso a KV siempre detrás de un puerto `ICachePort` en `application/ports/out/`.
@@ -547,7 +547,9 @@ Para garantizar consistencia entre la escritura en D1 y la publicación del even
   - Lecturas de configuración global y cache con tolerancia a consistencia eventual.
   - TTL explícito (`expirationTtl`).
   - Keys namespaced: `<module>:<entity>:<id>:<subresource>`.
-- Para cache de respuestas HTTP completas: usar la **Cloudflare Cache API** (`caches.default`).
+- Para cachear respuestas HTTP completas del Worker: usar **Workers Cache**, activado por configuración y controlado con cabeceras HTTP (`Cache-Control`). No confundirlo con Workers KV ni con la Cache API programática (`caches.default`), cuyos objetos se administran explícitamente y tienen otro alcance.
+- Las respuestas públicas mutables deben incluir etiquetas `Cache-Tag`; después de confirmar una escritura se purgan con `ctx.cache.purge()` o `cache.purge()` desde el mismo Worker y entrypoint. Una invalidación fallida se registra y debe existir un TTL finito como recuperación.
+- Nunca etiquetar ni cachear respuestas con datos personales, autenticados o transaccionales. Esas respuestas llevan `private, no-store`.
 - Prohibido usar Workers KV como fuente única de verdad para datos críticos de negocio.
 
 

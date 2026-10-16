@@ -22,3 +22,7 @@ La invalidación es global para el HTML público y puede expulsar páginas que n
 ## Recuperación
 
 Un rollback conserva la separación de caché por versión del Worker. Ante fallos repetidos del purge, revisar los logs JSON del evento indicado y mantener el TTL corto hasta corregir la causa.
+
+## Evidencia de despliegue
+
+El cambio se desplegó el 2026-10-15 en el Worker `658dcbcb-44b9-45c0-9e08-b1d74a519eed` (commit `48003b2`). Typecheck, lint de arquitectura, `git diff --check` y Wrangler dry-run pasaron. En producción, la ficha de producto devolvió primero `MISS` y luego `HIT`. No se realizó una mutación autenticada real para verificar el purge completo; el primer evento operativo debe confirmar su ejecución y ausencia de `cache.public_html_invalidation_failed`.

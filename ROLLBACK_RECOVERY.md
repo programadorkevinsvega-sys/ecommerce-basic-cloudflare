@@ -18,7 +18,7 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 | **Interfaz de tienda y admin** | Viaja actualmente dentro del Worker | La UI actual es renderizada por el Worker; `apps/admin` es placeholder. Si más adelante se despliega Pages, deberá documentarse su deployment independiente |
 | **D1 única** | No automático | Migraciones por módulo; restauración es una operación aparte |
 | **R2** (medios y documentos) | No | Nunca se borra para "revertir" |
-| **KV / Cache API** | Revisar/invalidate solo si el release las usa | El binding KV está configurado, pero no se encontró uso generalizado de caché en el código revisado |
+| **Workers Cache / KV** | Revisar purga de etiquetas al mutar y partición por versión; KV se conserva por separado | Workers Cache almacena HTML SSR público; el binding KV solo guarda el cursor temporal de mantenimiento de medios |
 | **Queues + DLQ** | No | Mensajes ya publicados siguen existiendo |
 | **Cron Triggers** | Con el Worker | Pausar si el cambio los afecta |
 | **Durable Objects** (si existen) | Limitado | Cambios de clase/migración de DO son delicados |
@@ -111,7 +111,7 @@ Ante un fallo de aplicación que no requiera revertir datos:
 
    No ejecutar el segundo comando a ciegas: confirmar el deployment objetivo y la sintaxis/interacción que presenta Wrangler antes de confirmar.
 
-6. **Purgar la caché** afectada (ver sección Caché).
+6. **Purgar la caché** afectada (ver sección Workers Cache y KV).
 7. Verificar salud, logs y flujos críticos; registrar resultado y decisión de recuperación.
 
 El rollback del Worker no deshace migraciones D1, no restaura R2 y no revierte mensajes ya publicados en una Queue.
@@ -228,7 +228,7 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 - Tras el rollback, revisar profundidad, antigüedad, errores y DLQ **antes** de volver a procesar o reproducir mensajes.
 - Los eventos de pagos (`payments.payment.confirmed.v1`) y de pedidos no se reproducen a ciegas: pasan por la reconciliación anterior.
 
-## Caché (KV y Cache API)
+## Workers Cache y KV
 
 - Workers Cache sirve HTML SSR público con TTL máximo de 30 segundos; Cloudflare separa las entradas por versión del Worker por defecto. Las respuestas usan la etiqueta `storefront-public-html`, purgada después de mutaciones relevantes exitosas del BFF y de publicaciones programadas del blog. Las solicitudes con cookies llevan `Vary: Cookie` y las rutas privadas/transaccionales son `private, no-store`.
 - Workers Cache usa niveles globales y agrupa solicitudes simultáneas con la misma clave. Aun así, no se toma como fuente de verdad; el checkout y las mutaciones consultan sus fuentes autoritativas.

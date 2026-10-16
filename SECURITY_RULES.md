@@ -114,7 +114,7 @@ La gestión administrativa usa `catalog:read`, `catalog:edit` y `catalog:delete`
 
 ## 9. Almacenamiento y medios en R2 (R2)
 
-- **SEC-R2-01** Bucket **privado**: sin dominio público ni `r2.dev` habilitado. Los medios de producto se sirven **a través del Worker** (ruta `/media/*`, cacheada), no por acceso directo a R2.
+- **SEC-R2-01** Bucket **privado**: sin dominio público ni `r2.dev` habilitado. Los medios de producto se sirven **a través del Worker** (ruta `/media/*`, `Cache-Control: public, max-age=31536000, immutable`), no por acceso directo a R2. Las claves usan IDs inmutables; reemplazar una imagen crea una referencia de Media nueva.
 - **SEC-R2-02** Permisos mínimos del binding limitados a este bucket; solo `infrastructure/storage/r2` del módulo `media` lo usa. Rotación de credenciales si se usan tokens S3.
 - **SEC-R2-03** Las claves las genera el servidor (`media/{uuid}`; `private/u/{customerId}/{uuid}` para documentos privados). El nombre original del archivo vive en D1, **nunca** en la clave.
 - **SEC-R2-04** Solo administradores con permiso suben medios. Validar por firma real del archivo, decodificar todos los píxeles y re-encodear a WebP, tipo permitido de entrada (JPEG, PNG, WebP, AVIF), tamaño máximo y dimensiones. El límite configurado es 10 MiB, 16.384 px por lado y 40 MP; el cuerpo multipart se limita a 11 MiB incluso en streaming. **SVG excluido**. El re-encode descarta EXIF/GPS.
