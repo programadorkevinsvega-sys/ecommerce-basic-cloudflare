@@ -31,7 +31,7 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | Fase | Nombre | Tamaño | Estado | Resultado |
 |---|---|:---:|:---:|---|
 | 0 | Fundaciones | M | ⚠️ Parcial | Monorepo, Worker base y CI; staging aislado y ensayo de recuperación pendientes |
-| 1 | Identidad y configuración | M | ✅ Completada | Login de admin y clientes, RBAC, ajustes de tienda |
+| 1 | Identidad y configuración | M | ✅ Completada | Registro/login con Turnstile, RBAC, ajustes de tienda y seguridad de cuenta |
 | 2 | Medios y catálogo | L | ✅ Completada | CRUD de productos con políticas de venta por producto |
 | 3 | Tienda pública base | L | ✅ Completada | Home, listado, detalle, SEO básico en SSR |
 | 4 | Contenido de la tienda | M | ✅ Completada | Carrusel, banners y anuncios con su gestión |
@@ -93,7 +93,8 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 
 - [x] Administradores: login con **MFA (TOTP)**, logout, sesiones opacas con hash (`__Host-admin-session`), bloqueo progresivo por intentos, cambio de contraseña, re-autenticación en acciones críticas.
 - [x] Clientes: registro, login, verificación de contraseña con PBKDF2 100k iteraciones, sesiones opacas (`__Host-session`).
-- [x] Cuenta del cliente: edición de nombre/teléfono con confirmación de contraseña, cambio de contraseña con rotación de sesión y cierre de las demás sesiones; listado/revocación de sesiones propias.
+- [x] Turnstile en registro y login de clientes y login de admin; el servidor verifica token y hostname permitido desde `TURNSTILE_HOSTNAMES` antes de crear cuenta o sesión.
+- [x] Cuenta del cliente: `/cuenta` muestra pedidos/facturas y permite logout con revocación del token en servidor y expiración de cookie; perfil, cambio de contraseña con reautenticación y gestión/revocación de sesiones propias.
 - [x] Rutas `/cuenta/perfil` y `/cuenta/seguridad`; el cambio de correo queda fuera hasta implementar verificación de la nueva dirección.
 - [x] Roles y permisos (RBAC, denegar por defecto, protección del último Superadmin); roles base sembrados (Superadmin, Editor, Ventas, Soporte).
 - [x] Middleware de autenticación/autorización en el BFF vía `IdentityGateway`.
@@ -105,6 +106,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] UI del panel servida por el Worker en `/admin` y `/admin/login`; dashboard con navegación por secciones y scripts para sus interacciones. `apps/admin` todavía no contiene el frontend desplegado.
 
 **Criterio de salida:** un admin inicia sesión, un cliente se registra y entra, y un permiso faltante devuelve `403`. (Completado y verificado en producción).
+- **Evidencia adicional (2026-10-16):** las páginas de registro y login muestran el widget configurado para `vega.jnmtortas.com`; los tres endpoints rechazan tokens Turnstile inválidos antes de procesar credenciales o registrar clientes. El logout desde `/cuenta` revoca la sesión y expira la cookie.
 
 ---
 
@@ -298,7 +300,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [x] Snapshot JSON inmutable en D1 y documento soporte formal en Cloudflare R2 (`private/invoices/{num}.html`) mediante `IInvoicePdfPort` (`HtmlInvoicePdfAdapter`).
 - [x] Notas crédito (`invoicing_credit_notes`) emitibles desde el admin vinculadas a facturas existentes.
 - [x] Admin `/admin` tab Facturación 🧾: listado de facturas, búsqueda, visualización/descarga de documento y emisión de notas crédito.
-- [x] Cliente `/cuenta`: portal con perfil, historial de pedidos y descarga segura de sus facturas.
+- [x] Cliente `/cuenta`: portal con perfil, historial de pedidos, descarga segura de facturas y cierre de sesión con revocación server-side.
 - [x] Puerto `IElectronicInvoicingPort` y adaptador base implementados para conectar DIAN en el futuro sin modificar el dominio.
 
 **Email y auditoría**

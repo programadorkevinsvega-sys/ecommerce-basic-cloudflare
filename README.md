@@ -54,7 +54,7 @@ El punto de entrada para agentes es [`AGENTS.md`](./AGENTS.md) (y `CLAUDE.md`, q
 
 ---
 
-## 1. Alcance funcional (estado del código, 2026-10-15)
+## 1. Alcance funcional (estado del código, 2026-10-16)
 
 Este cuadro describe capacidades presentes en el repositorio; no implica por sí solo que cada versión esté desplegada o que la integración externa haya pasado una prueba punta a punta. La evidencia por entorno se registra en [`AUDIT_PROGRESS.md`](./AUDIT_PROGRESS.md), [`ROADMAP.md`](./ROADMAP.md) y [`docs/migrations/manifest.md`](./docs/migrations/manifest.md).
 
@@ -86,7 +86,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | **Pago contra entrega** configurable por producto | `catalog` + `orders` + `payments` | ✅ | ✅ |
 | **Entrega local o envío nacional** | `orders` + `shipping` + `catalog` | ✅ Zonas locales y transportadora configuradas por separado | ✅ Local según zonas de Medellín/Valle de Aburrá; nacional cotizado por MiPaquete |
 | Productos con descuento | `promotions`, `catalog` | ✅ | ✅ |
-| Cuenta del cliente (perfil, pedidos, direcciones) | `identity`, `orders` | — | ✅ Perfil editable con reautenticación; pedidos y facturas propios |
+| Cuenta del cliente (perfil, pedidos, sesiones) | `identity`, `orders` | — | ✅ Perfil editable con reautenticación; pedidos/facturas propios; logout revoca la sesión |
 | Configuración de la tienda | `settings` | ✅ | — |
 | Auditoría de acciones | `audit` | ✅ lectura | — |
 | Emails transaccionales con Resend | `notifications` | ✅ Envío desde plantillas implementadas en código | — |
@@ -124,7 +124,7 @@ Las acciones administrativas dependen del contrato y del valor histórico de cad
 | Eventos | **Cloudflare Queues** y consumidor/DLQ configurados; outbox por módulo según cada implementación |
 | Tareas programadas | Cron Trigger cada 5 minutos para los handlers registrados en el Worker |
 | Consistencia fuerte | Actualización condicional en D1; Durable Objects no están configurados |
-| Rate limiting | Bindings de rate limit para autenticación, checkout y escrituras; no se encontró integración Turnstile |
+| Rate limiting y antiabuso | Bindings de rate limit para autenticación, checkout y escrituras; Turnstile se verifica en servidor para registro y logins de clientes/admin |
 | Observabilidad | Logs y binding Analytics Engine configurado; la instrumentación de cada métrica debe verificarse por handler |
 | Storefront | Rutas HTML SSR integradas al Worker Hono (ver controladores `storefront` y vistas) |
 | Panel admin | Dashboard servido por el Worker en `/admin`, con secciones en una página y scripts del cliente; `apps/admin` es un paquete placeholder, no el frontend desplegado |
@@ -381,7 +381,10 @@ El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado pa
 | `/carrito`, `/checkout` | Compra |
 | `/seguimiento-pedido` | Clientes con sesión consultan sus pedidos por propiedad; invitados usan número de pedido y clave enviada al correo; estados y datos logísticos administrables desde Envíos en el panel |
 | `/auth/login` | Inicio de sesión SSR; las operaciones de registro y autenticación se exponen por API |
+| `/auth/register` | Registro SSR de clientes protegido con Turnstile |
+| `/admin/login` | Inicio de sesión administrativo con MFA y Turnstile |
 | `/cuenta` | Vista de cuenta protegida, con resumen de pedidos y facturas del cliente |
+| `/cuenta/perfil`, `/cuenta/seguridad` | Edición del perfil, cambio de contraseña y gestión de sesiones propias; logout desde `/cuenta` |
 | `/sitemap.xml`, `/sitemap-blog.xml`, `/robots.txt` | Generados dinámicamente |
 | URL desconocida | Página 404 útil con navegación a la tienda; no es un catálogo de rutas CMS |
 
@@ -418,10 +421,10 @@ El detalle normativo (IDs `SEC-*`, modelo de amenaza, checklist de PR y matriz d
 
 - **Contraseñas:** PBKDF2 (Web Crypto) con sal por usuario y parámetros versionados; migrable a otro algoritmo sin romper sesiones.
 - **Sesiones:** token opaco aleatorio (32 bytes) cuyo **hash SHA-256** se guarda en `identity_sessions`; cookies `__Host-session` (clientes) y `__Host-admin-session` (admin), `HttpOnly; Secure; SameSite=Lax; Path=/`, sin `Domain`. Expiración absoluta e inactividad (más estrictas para admin), rotación al login/cambio de contraseña y revocación en el servidor. El cliente puede cerrar sesiones propias; no se devuelve IP ni token en el listado.
-- **Cuenta del cliente:** `/cuenta/perfil` permite actualizar nombre y teléfono tras confirmar la contraseña actual. `/cuenta/seguridad` permite cambiar contraseña y revisar/revocar sesiones. El correo permanece de solo lectura hasta contar con confirmación de la nueva dirección.
+- **Cuenta del cliente:** `/cuenta` muestra pedidos/facturas y ofrece cerrar sesión con revocación server-side y expiración de cookie. `/cuenta/perfil` permite actualizar nombre y teléfono tras confirmar la contraseña actual. `/cuenta/seguridad` permite cambiar contraseña y revisar/revocar sesiones. El correo permanece de solo lectura hasta contar con confirmación de la nueva dirección.
 - **Administradores:** MFA (TOTP) obligatoria antes del lanzamiento, re-autenticación en acciones críticas, auditoría de toda mutación.
 - **RBAC:** permisos por recurso y acción (`products:write`, `promotions:publish`…), verificados en el BFF vía `IdentityGateway`; la autorización de negocio vive en el módulo.
-- **Protección:** rate limiting configurado, validaciones en controladores, CSP/cabeceras y verificación de firma del webhook de Wompi. Turnstile no está configurado; ver controles normativos y pendientes en `SECURITY_RULES.md`.
+- **Protección:** rate limiting configurado; Turnstile en registro y logins de clientes/admin con verificación de token y hostname en servidor; CSP/cabeceras y firma del webhook Wompi. La certificación integral sigue pendiente según `SECURITY_RULES.md`.
 - **Datos:** secretos solo en Cloudflare Secrets, PII fuera de logs, subidas a R2 con validación de tipo/tamaño y URLs firmadas para operaciones privadas.
 - **Carga de imágenes:** 10 MiB máximo, 16.384 px por lado y 40 MP; formatos JPEG, PNG, WebP y AVIF. El Worker valida firmas, estructura disponible, dimensiones, CRC de chunks PNG y tamaño remoto con `R2.head()` antes de persistir D1. La decodificación completa de píxeles y la eliminación EXIF/GPS siguen pendientes.
 - **Admin:** opcionalmente detrás de **Cloudflare Access** como capa adicional.

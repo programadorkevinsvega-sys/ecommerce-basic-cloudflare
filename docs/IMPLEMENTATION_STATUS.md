@@ -1,6 +1,6 @@
 # Estado de implementación y sincronización documental
 
-**Corte documental:** 2026-10-15. **Rama revisada:** `main`.
+**Corte documental:** 2026-10-16. **Rama revisada:** `main`.
 
 Este archivo es un índice para distinguir estado del código, operación y evidencia. No reemplaza contratos normativos, ADRs ni registros de migración. Las funciones marcadas presentes describen el repositorio revisado; solo las notas con verificación explícita prueban un comportamiento de un entorno concreto.
 
@@ -15,6 +15,9 @@ Este archivo es un índice para distinguir estado del código, operación y evid
 | Reseñas | El producto y su página de opiniones muestran puntuaciones/conteos. Las reseñas verificadas dependen de una compra elegible consultada por Gateway. La fuente de la migración `reviews__0002_demo_reviews.sql` ya no inserta opiniones ficticias en una instalación nueva; las bases previas pueden conservar las filas históricas hasta que se reemplacen o limpien. |
 | Seguimiento | `/seguimiento-pedido`: el cliente autenticado accede a sus pedidos por sesión; un invitado requiere el número de pedido y la clave enviada al correo. La administración tiene gestión de seguimiento y una vista separada para imprimir guías listas. |
 | Perfil y seguridad de cuenta | `/cuenta/perfil` permite editar nombre/teléfono con contraseña actual; `/cuenta/seguridad` cambia contraseña, rota la sesión, cierra las sesiones anteriores y permite listar/revocar sesiones del propio cliente. El correo aún no se puede cambiar porque falta el flujo de verificación de la nueva dirección. |
+| Registro y autenticación | `/auth/register`, `/auth/login` y `/admin/login` incluyen Turnstile. Los tres endpoints verifican token y hostname en servidor con `TURNSTILE_HOSTNAMES` antes de registrar o autenticar; fallos de verificación no crean cuentas ni sesiones. |
+| Sesión del cliente | El login normal redirige a `/cuenta`; el encabezado ofrece «Mi cuenta». En `/cuenta` el botón de cierre revoca la sesión y expira la cookie antes de regresar al inicio. |
+| Tarjetas de catálogo | Las imágenes de tarjetas usan relación 4:3 en escritorio y una relación más panorámica en móvil; el precio queda junto a reseñas, sin empujarse al fondo de la tarjeta. |
 | Notificaciones | La ruta REST autenticada consulta D1 con cursor `since`; el panel de pagos hace polling. No existen Durable Objects/WebSockets en la configuración actual. ADR-0011 conserva la propuesta original como diseño futuro. |
 | Facturas | El adaptador actual almacena y sirve HTML/CSS de impresión desde R2. No genera un PDF binario en el Worker. |
 | Envíos | La zona local del comercio es Medellín y los diez municipios del Valle de Aburrá. Los destinos nacionales, cobertura y tarifas se consultan a MiPaquete. Configuración de transportadora, empaques, seguimiento e impresión son secciones administrativas distintas. |
@@ -43,6 +46,12 @@ La invalidación por etiqueta se desplegó el 2026-10-15 en Worker `658dcbcb-44b
 - Prueba controlada completa de MiPaquete con envío real, guía, impresión, tracking, correo al cliente, cobros y conciliación.
 - Resolver con el proveedor una respuesta ambigua de creación de envío cuando `getSendings` no encuentra coincidencia; mientras tanto no se reintenta el despacho automáticamente.
 - Ratificar el alcance legal/comercial de venta a crédito (ADR-0009).
+
+### Verificación de autenticación desplegada (2026-10-16)
+
+El titular configuró `TURNSTILE_SITE_KEY`, `TURNSTILE_HOSTNAMES` y el secreto `TURNSTILE_SECRET_KEY` en Cloudflare para `vega.jnmtortas.com`. El Worker presenta el widget y comprueba `siteverify`; acepta la URL configurada normalizándola a hostname y la compara con la respuesta firmada de Cloudflare. Pruebas automatizadas cubren token correcto, token rechazado y hostname; las tres rutas desplegadas fueron consultadas con token inválido y respondieron HTTP 400 antes de registrar o iniciar sesión. Esto no cierra la certificación de seguridad global.
+
+La cuenta de correo usada en el intento de alta ya existía en D1 de producción, por lo que el registro duplicado fue rechazado; se mejoró la respuesta para dirigir al cliente al login. No se creó otra cuenta ni se repitió el registro con una dirección nueva. El logout de cliente quedó desplegado con `ed0b898`: POST al endpoint de logout, revocación en servidor y expiración de cookie. No hubo cambios D1 ni migración.
 
 ## Documentos fuente
 

@@ -297,6 +297,10 @@ La sesión de login ya no se devuelve en JSON ni se inyecta en el HTML/localStor
 
 Se implementó CSRF por Origin/Sec-Fetch-Site en mutaciones con sesión y rate limits por IP para autenticación, inicio de pago/checkout y otras escrituras. El limiter es defensa contra abuso aproximada; faltan límites por actor/pedido, Turnstile donde aplique y prueba de carga/despliegue. Las pruebas verifican el webhook con firma estándar y API simulada dentro del Worker local, pero no reemplazan el evento real de sandbox de Wompi. MFA/reautenticación, auditoría completa de toda mutación y validación de bindings contra la cuenta de producción siguen pendientes de certificación.
 
+### Actualización de autenticación y Turnstile (2026-10-16)
+
+La nota anterior sobre Turnstile describe el estado previo y queda superada para autenticación: registro de clientes, login de clientes y login administrativo ahora muestran el widget y verifican el token en el servidor mediante `siteverify`. `TURNSTILE_HOSTNAMES` limita los hosts aceptados; ante secreto ausente, falla de proveedor o token inválido el flujo falla cerrado. La CSP permite el widget oficial y el beacon de Cloudflare Insights. Se probaron token válido/inválido, hostname y rechazo en los tres endpoints desplegados. La certificación integral, la prueba de carga, límites por actor/pedido y los demás controles pendientes de esta matriz siguen abiertos.
+
 
 ### Auditoría de checkout (2026-10-12)
 El endpoint de creación de pedidos calcula importes en servidor con catálogo publicado, promociones/cupones, zona de envío activa e impuesto configurado; no utiliza precios ni totales recibidos del navegador. Se rechazan cantidades fuera de rango, productos no publicados y stock insuficiente. La reserva fallida cancela el pedido. La cobertura automatizada de cálculo se ejecuta con `node_modules/.bin/vitest run` desde `apps/api`.

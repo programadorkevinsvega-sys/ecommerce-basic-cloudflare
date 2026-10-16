@@ -68,6 +68,8 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | `ADMIN_EMAIL` | String | `admin@tudominio.com` | Identificador de login para la única cuenta Superadmin activa. No se usa para enviar TOTP. |
 | `RESEND_FROM_EMAIL` | String | `Vega Store <onboarding@resend.dev>` | Dirección de correo del remitente configurada en Resend para todos los envíos transaccionales. |
 | `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` / `pub_test_...` | Llave pública de comercio para checkout cliente y validación de contexto. |
+| `TURNSTILE_SITE_KEY` | String | Clave pública de Cloudflare Turnstile | Site key mostrada por el widget de registro y logins. |
+| `TURNSTILE_HOSTNAMES` | String | `https://tienda.example.com` | Hosts de tienda permitidos, separados por coma; se normalizan y comparan contra el hostname devuelto por `siteverify`. |
 
 ---
 
@@ -81,6 +83,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | `WOMPI_INTEGRITY_SECRET` | Wompi Colombia | Secreto para calcular y verificar el hash SHA-256 de integridad de pagos. |
 | `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
 | `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; el host se configura como `MI_PAQUETE_API_URL`. |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile | Secreto enviado únicamente desde el Worker a `siteverify`; nunca se expone al navegador. |
 
 `RESEND_WEBHOOK_SECRET` está declarado opcionalmente en el tipo de entorno heredado, pero no hay ruta de webhook de Resend en el Worker actual; no configurarlo como si el webhook estuviera operativo.
 | `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; host HTTPS configurable mediante `MI_PAQUETE_API_URL` y no es un secreto. |
