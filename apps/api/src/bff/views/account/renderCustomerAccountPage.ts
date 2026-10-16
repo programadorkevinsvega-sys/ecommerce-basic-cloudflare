@@ -34,6 +34,8 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: .65rem .9rem; border-radius: 9px; text-decoration: none; font-size: .85rem; font-weight: 700; cursor: pointer; border: 1px solid var(--border); }
     .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
     .btn-outline { background: #fff; color: var(--text); }
+    .btn-logout { background: #fff; color: #9b2c2c; border-color: #ead6d3; }
+    .btn-logout:hover { background: #fff6f4; }
     .tag { display: inline-block; padding: .3rem .65rem; border-radius: 999px; background: #edf3ee; color: var(--primary); font-size: .75rem; font-weight: 700; }
     .account-actions { display:flex;gap:.65rem;flex-wrap:wrap;margin-top:1.25rem; }
     @media(max-width:640px){.nav{padding:1rem;flex-wrap:wrap}.container{margin-top:1.5rem}td,th{padding:.65rem .5rem;font-size:.8rem}}
@@ -44,7 +46,10 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
     <a href="/" class="brand">VEGA STORE</a>
     <div>
         <span style="margin-right: 1rem; color: var(--muted);">👤 ${escapeHtml(customer.email)}</span>
-      <a href="/" class="btn btn-outline">Volver a la Tienda</a>
+      <div style="display:flex;gap:.55rem;align-items:center;flex-wrap:wrap">
+        <a href="/" class="btn btn-outline">Volver a la Tienda</a>
+        <button id="customer-logout" class="btn btn-logout" type="button">Cerrar sesión</button>
+      </div>
     </div>
   </div>
 
@@ -112,6 +117,22 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
       `}
     </div>
   </div>
+  <script>
+    document.getElementById('customer-logout')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = 'Cerrando sesión…';
+      try {
+        const response = await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'same-origin' });
+        if (!response.ok) throw new Error('No fue posible cerrar la sesión.');
+        window.location.assign('/');
+      } catch {
+        button.disabled = false;
+        button.textContent = 'Cerrar sesión';
+        window.alert('No fue posible cerrar la sesión. Inténtalo de nuevo.');
+      }
+    });
+  </script>
 </body>
 </html>`;
 }
