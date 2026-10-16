@@ -37,11 +37,11 @@ export const storefrontProductStyles = String.raw`
     }
     .product-card-v2 .card-title a { color: #17241d; text-decoration: none; }
     .product-card-v2 .card-title a:hover { color: #285432; }
-    .product-card-rating { display: inline-flex; align-items: center; gap: .3rem; margin: -.35rem 0 .65rem; color: #48634e; font-size: .8rem; font-weight: 650; text-decoration: none; }
+    .product-card-rating { display: inline-flex; align-items: center; gap: .3rem; margin: -.35rem 0 .1rem; color: #48634e; font-size: .8rem; font-weight: 650; text-decoration: none; }
     .product-card-rating:hover { color: #1e513b; text-decoration: underline; }
     .product-card-rating span { color: #94c11f; font-size: 1rem; }
     .card-pricing-block {
-      display: flex; flex-direction: column; align-items: stretch; gap: .1rem; margin-top: auto; padding-top: .4rem;
+      display: flex; flex-direction: column; align-items: stretch; gap: .1rem; margin-top: 0; padding-top: .1rem;
     }
     .card-price-group { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .45rem; row-gap: .1rem; min-width: 0; }
     .card-price-sale { color: #dc2626; font-weight: 850; font-size: 1.22rem; }
@@ -161,6 +161,8 @@ export const storefrontProductStyles = String.raw`
     }
     @media (max-width: 520px) {
       .grid { grid-template-columns: 1fr; }
+      .product-card-v2 .product-media { aspect-ratio: 1.35 / 1; padding: .8rem; }
+      .product-card-v2 .card-body { gap: .4rem; }
       .purchase-actions-row { grid-template-columns: 1fr; }
       .detail-trust-cards { grid-template-columns: 1fr; }
     }

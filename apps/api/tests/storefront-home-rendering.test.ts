@@ -20,6 +20,13 @@ const product: CatalogProductDto = {
 };
 
 describe('storefront presentation', () => {
+  it('keeps mobile product cards compact and places price directly after reviews', () => {
+    const html = renderBaseLayout({ title: 'Catálogo', description: 'Productos', bodyHtml: renderProductList([product]) });
+    expect(html).toContain('.product-card-v2 .product-media { aspect-ratio: 1.35 / 1;');
+    expect(html).toContain('gap: .4rem;');
+    expect(html).toContain('margin-top: 0; padding-top: .1rem;');
+  });
+
   it('renders the existing catalog data in the redesigned home sections', () => {
     const html = renderProductList([product]);
     expect(html).toContain('Encuentra algo para tu día');
