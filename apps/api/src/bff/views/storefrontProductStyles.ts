@@ -11,7 +11,7 @@ export const storefrontProductStyles = String.raw`
       box-shadow: 0 16px 36px -12px rgba(23,36,29,.09), 0 4px 12px -2px rgba(23,36,29,.04);
     }
     .product-card-v2 .product-media {
-      position: relative; aspect-ratio: 1 / 1; padding: 1.25rem; background: #f8f9f6;
+      position: relative; aspect-ratio: 4 / 3; padding: .9rem; background: #f8f9f6;
       display: grid; place-items: center; border-bottom: 1px solid #edf1eb; text-decoration: none;
     }
     .product-card-v2 .product-media img {
@@ -70,7 +70,7 @@ export const storefrontProductStyles = String.raw`
     }
     .btn-action-view:hover { background: #edf2ea; }
     .product-card-v2 .card-body { padding: 1rem; }
-    .product-card-v2 .card-title { min-height: 2.7em; font-size: .98rem; }
+    .product-card-v2 .card-title { min-height: 0; font-size: .98rem; }
     .card-brand { color: #718078; font-size: .67rem; }
     .product-card-v2 .product-card-footer { border-top: 0; }
     .card-actions-group { grid-template-columns: 1fr; }
@@ -161,7 +161,7 @@ export const storefrontProductStyles = String.raw`
     }
     @media (max-width: 520px) {
       .grid { grid-template-columns: 1fr; }
-      .product-card-v2 .product-media { aspect-ratio: 1.35 / 1; padding: .8rem; }
+      .product-card-v2 .product-media { aspect-ratio: 1.4 / 1; padding: .8rem; }
       .product-card-v2 .card-body { gap: .4rem; }
       .purchase-actions-row { grid-template-columns: 1fr; }
       .detail-trust-cards { grid-template-columns: 1fr; }
