@@ -45,6 +45,15 @@ describe('customer registration', () => {
     expect(gateway.registerCustomer).not.toHaveBeenCalled();
   });
 
+  it('returns a clear conflict when the customer email is already registered', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ success: true, hostname: 'vega.jnmtortas.com' }))));
+    gateway.registerCustomer.mockRejectedValueOnce(new Error('El correo electrónico ya se encuentra registrado'));
+    const app = CustomerAuthController.createRoutes(gateway as never);
+    const response = await app.request('https://vega.jnmtortas.com/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'person@example.com', password: 'strong-password-123', fullName: 'Client Person', turnstileToken: 'valid-token' }) }, env);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'Ese correo ya tiene una cuenta. Inicia sesión para continuar.' });
+  });
+
   it('requires Turnstile before customer login', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ success: true, hostname: 'vega.jnmtortas.com' }))));
     const app = CustomerAuthController.createRoutes(gateway as never);

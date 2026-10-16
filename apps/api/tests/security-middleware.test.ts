@@ -17,6 +17,7 @@ describe('CSRF and request rate middleware', () => {
     const policy = response.headers.get('Content-Security-Policy') || '';
     expect(policy).toContain('script-src');
     expect(policy).toContain('https://challenges.cloudflare.com');
+    expect(policy).toContain('https://static.cloudflareinsights.com');
     expect(policy).toContain('frame-src https://challenges.cloudflare.com');
     expect(policy).toContain("frame-ancestors 'none'");
   });

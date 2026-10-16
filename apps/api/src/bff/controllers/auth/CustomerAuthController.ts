@@ -37,7 +37,10 @@ export class CustomerAuthController {
         const { turnstileToken: _turnstileToken, ...customerInput } = parsed.data;
         const customer = await gateway.registerCustomer(customerInput);
         return c.json({ data: customer }, 201);
-      } catch {
+      } catch (error) {
+        if (error instanceof Error && error.message === 'El correo electrónico ya se encuentra registrado') {
+          return c.json({ error: 'Ese correo ya tiene una cuenta. Inicia sesión para continuar.' }, 409);
+        }
         return c.json({ error: 'No fue posible completar el registro' }, 400);
       }
     });
