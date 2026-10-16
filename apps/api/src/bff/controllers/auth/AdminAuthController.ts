@@ -2,16 +2,19 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import QRCode from 'qrcode-svg';
+import { Env } from '../../../platform/Env.js';
+import { verifyTurnstileToken } from '../../security/verifyTurnstileToken.js';
 
 const adminLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1).max(128),
   totpCode: z.string().length(6).optional(),
+  turnstileToken: z.string().min(1).max(2048),
 }).strict();
 
 export class AdminAuthController {
-  public static createRoutes(gateway: IdentityGateway): Hono {
-    const router = new Hono();
+  public static createRoutes(gateway: IdentityGateway): Hono<{ Bindings: Env }> {
+    const router = new Hono<{ Bindings: Env }>();
 
     router.post('/login', async (c) => {
       try {
@@ -21,11 +24,17 @@ export class AdminAuthController {
           return c.json({ error: 'Validación fallida' }, 400);
         }
 
+        const verification = await verifyTurnstileToken(parsed.data.turnstileToken, c.env, c.req.url, c.req.header('cf-connecting-ip'));
+        if (verification === 'unavailable') return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
+        if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+
         const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for');
         const userAgent = c.req.header('user-agent');
 
         const session = await gateway.loginAdmin({
-          ...parsed.data,
+          email: parsed.data.email,
+          password: parsed.data.password,
+          totpCode: parsed.data.totpCode,
           ipAddress: ip,
           userAgent,
         });

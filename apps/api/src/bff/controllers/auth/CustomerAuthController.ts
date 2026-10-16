@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { Env } from '../../../platform/Env.js';
+import { verifyTurnstileToken } from '../../security/verifyTurnstileToken.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -14,6 +15,7 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1).max(128),
+  turnstileToken: z.string().min(1).max(2048),
 }).strict();
 
 export class CustomerAuthController {
@@ -28,17 +30,9 @@ export class CustomerAuthController {
           return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
         }
 
-        if (!c.env.TURNSTILE_SECRET_KEY) return c.json({ error: 'Registro temporalmente no disponible' }, 503);
-        const verification = new URLSearchParams({ secret: c.env.TURNSTILE_SECRET_KEY, response: parsed.data.turnstileToken });
-        const ip = c.req.header('cf-connecting-ip');
-        if (ip) verification.set('remoteip', ip);
-        const turnstileResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-          method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: verification,
-        });
-        if (!turnstileResponse.ok) return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
-        const result = await turnstileResponse.json() as { success?: boolean; hostname?: string };
-        const requestHost = new URL(c.req.url).hostname;
-        if (!result.success || result.hostname !== requestHost) return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+        const verification = await verifyTurnstileToken(parsed.data.turnstileToken, c.env, c.req.url, c.req.header('cf-connecting-ip'));
+        if (verification === 'unavailable') return c.json({ error: 'Registro temporalmente no disponible' }, 503);
+        if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
 
         const { turnstileToken: _turnstileToken, ...customerInput } = parsed.data;
         const customer = await gateway.registerCustomer(customerInput);
@@ -56,11 +50,16 @@ export class CustomerAuthController {
           return c.json({ error: 'Validación fallida' }, 400);
         }
 
+        const verification = await verifyTurnstileToken(parsed.data.turnstileToken, c.env, c.req.url, c.req.header('cf-connecting-ip'));
+        if (verification === 'unavailable') return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
+        if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+
         const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for');
         const userAgent = c.req.header('user-agent');
 
         const session = await gateway.loginCustomer({
-          ...parsed.data,
+          email: parsed.data.email,
+          password: parsed.data.password,
           ipAddress: ip,
           userAgent,
         });

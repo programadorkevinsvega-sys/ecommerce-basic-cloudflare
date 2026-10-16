@@ -1,4 +1,4 @@
-export function renderAuthPage(redirectTo = '/'): string {
+export function renderAuthPage(redirectTo = '/', siteKey?: string): string {
   return `
     <div style="max-width: 450px; margin: 2rem auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 2rem;">
       <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Iniciar Sesión</h1>
@@ -10,6 +10,7 @@ export function renderAuthPage(redirectTo = '/'): string {
           <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">Correo Electrónico</label>
           <input type="email" id="email" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;" />
         </div>
+        ${siteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(siteKey)}" data-theme="light"></div>` : '<div id="turnstileNotice" style="color:#a12727;text-align:center">La verificación de seguridad no está configurada.</div>'}
         <div>
           <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">Contraseña</label>
           <input type="password" id="password" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;" />
@@ -31,12 +32,14 @@ export function renderAuthPage(redirectTo = '/'): string {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const errDiv = document.getElementById('loginError');
+        const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+        if (!turnstileToken) { errDiv.textContent = 'Completa la verificación de seguridad.'; errDiv.style.display = 'block'; return; }
 
         try {
           const res = await fetch('/api/v1/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password, turnstileToken })
           });
           if (res.ok) {
             window.location.href = document.getElementById('redirectTo').value || '/';
@@ -44,6 +47,7 @@ export function renderAuthPage(redirectTo = '/'): string {
             const data = await res.json();
             errDiv.textContent = data.error || 'Credenciales inválidas';
             errDiv.style.display = 'block';
+            if (window.turnstile) window.turnstile.reset();
           }
         } catch {
           errDiv.textContent = 'Error de conexión';
@@ -51,6 +55,7 @@ export function renderAuthPage(redirectTo = '/'): string {
         }
       });
     </script>
+    ${siteKey ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}
   `;
 }
 

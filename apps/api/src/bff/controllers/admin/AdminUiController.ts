@@ -25,7 +25,9 @@ export class AdminUiController {
 
     // Pantalla de login de administración
     router.get('/login', (c) => {
-      return c.html(renderAdminLoginPage());
+      const siteKey = (c as typeof c & { env?: { TURNSTILE_SITE_KEY?: string } }).env?.TURNSTILE_SITE_KEY;
+      c.header('cache-control', 'private, no-store');
+      return c.html(renderAdminLoginPage(siteKey));
     });
 
     router.get('/mfa-setup', async (c) => {

@@ -145,12 +145,12 @@ export class StorefrontController {
       const html = renderBaseLayout({
         title: 'Iniciar Sesión',
         description: 'Accede a tu cuenta de cliente en Vega Store.',
-        bodyHtml: renderAuthPage(safeLocalRedirect(c.req.query('redirect'))),
+        bodyHtml: renderAuthPage(safeLocalRedirect(c.req.query('redirect')), (c as typeof c & { env?: { TURNSTILE_SITE_KEY?: string } }).env?.TURNSTILE_SITE_KEY),
         headerMenuItems: nav.headerMenuItems,
         footerMenuItems: nav.footerMenuItems,
         footerStoreProfile: nav.footerStoreProfile,
       });
-      return c.html(html);
+      return c.html(html, 200, { 'Cache-Control': 'private, no-store' });
     });
 
     router.get('/auth/register', async (c) => {

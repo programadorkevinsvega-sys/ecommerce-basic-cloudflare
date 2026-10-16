@@ -1,4 +1,4 @@
-export function renderAdminLoginPage(): string {
+export function renderAdminLoginPage(siteKey?: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -37,6 +37,7 @@ export function renderAdminLoginPage(): string {
         <label for="totpCode">Código de autenticación (si ya activaste MFA)</label>
         <input type="text" id="totpCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" />
       </div>
+      ${siteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(siteKey)}" data-theme="dark"></div>` : '<div class="error" style="display:block">La verificación de seguridad no está configurada.</div>'}
       <button type="submit">Iniciar Sesión</button>
       <div id="errorBox" class="error"></div>
     </form>
@@ -49,12 +50,14 @@ export function renderAdminLoginPage(): string {
       const totpCode = document.getElementById('totpCode').value;
       const errBox = document.getElementById('errorBox');
       errBox.style.display = 'none';
+      const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+      if (!turnstileToken) { errBox.textContent = 'Completa la verificación de seguridad.'; errBox.style.display = 'block'; return; }
 
       try {
         const res = await fetch('/api/v1/admin/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, ...(totpCode ? { totpCode } : {}) })
+          body: JSON.stringify({ email, password, turnstileToken, ...(totpCode ? { totpCode } : {}) })
         });
         const data = await res.json();
         if (res.ok) {
@@ -62,6 +65,7 @@ export function renderAdminLoginPage(): string {
         } else {
           errBox.textContent = data.error || 'Credenciales inválidas';
           errBox.style.display = 'block';
+          if (window.turnstile) window.turnstile.reset();
         }
       } catch {
         errBox.textContent = 'Error de conexión con el servidor';
@@ -69,6 +73,11 @@ export function renderAdminLoginPage(): string {
       }
     });
   </script>
+  ${siteKey ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}
 </body>
 </html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char] || char));
 }
