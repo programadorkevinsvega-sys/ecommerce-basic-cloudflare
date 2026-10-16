@@ -209,8 +209,9 @@ describe('storefront presentation', () => {
     expect(html).toContain('normalize(location.municipality) === normalize(restoredName)');
     expect(html).toContain('data-min-days="1"');
     expect(html).toContain('Lámpara de lectura');
-    expect(html).toContain('240.000');
-    expect(html).toContain('45.600');
+    // SSR uses the currently published catalog price, never the stale cart snapshot.
+    expect(html).toContain('31.980');
+    expect(html).toContain('6.076');
     expect(html).not.toContain('Gafas de Sol Polarizadas');
     expect(html).toContain("fetch('/api/v1/orders'");
     expect(html).toContain("fetch('/api/v1/payments/wompi/init'");

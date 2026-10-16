@@ -7,6 +7,10 @@ function gateways(overrides: Record<string, unknown> = {}) {
     catalog: { listProducts: async () => [product] },
     promotions: {
       evaluateProductDiscount: async () => ({ hasDiscount: false, finalPriceCents: 0 }),
+      evaluateCartDiscounts: async (items: Array<{ productId: string; unitPriceCents: number }>) => items.map((item) => ({
+        productId: item.productId, originalPriceCents: item.unitPriceCents,
+        finalPriceCents: item.unitPriceCents, discountAppliedCents: 0,
+      })),
       validateCoupon: async () => ({ valid: true, discountAppliedCents: 0 }),
     },
     settings: { getSettings: async () => ({ taxRatePercent: 19 }) },

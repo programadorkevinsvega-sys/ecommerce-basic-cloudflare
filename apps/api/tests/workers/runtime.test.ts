@@ -111,9 +111,20 @@ describe('Worker API security and runtime bindings', () => {
     const zone = { id: 'zone-1', isActive: true, priceInCents: 500, allowsCashOnDelivery: true };
     const product = { id: 'prod-1', name: 'Test product', sku: 'SKU1', status: 'published', priceInCents: 1000, stockQuantity: 2, salePolicy: { allowsCashOnDelivery: false, shippingScope: 'national', localCoverageZones: [] } };
     const orders = { createOrder: vi.fn().mockResolvedValue(order), updateOrderStatus, evaluateCheckoutPolicy: vi.fn().mockResolvedValue({ canProceed: true, allowsCashOnDelivery: false, allowedPaymentMethods: ['wompi'] }) };
-    const shipping = { getZone: vi.fn().mockResolvedValue(zone), checkCoverage: vi.fn().mockResolvedValue({ isCovered: true, zoneId: zone.id }) };
+    const shipping = {
+      getZone: vi.fn().mockResolvedValue(zone),
+      checkCoverage: vi.fn().mockResolvedValue({ isCovered: true, zoneId: zone.id }),
+      listActiveFreeShippingRules: vi.fn().mockResolvedValue([]),
+    };
     const catalog = { listProducts: vi.fn().mockResolvedValue([product]) };
-    const promotions = { evaluateProductDiscount: vi.fn().mockResolvedValue({ hasDiscount: false }), validateCoupon: vi.fn() };
+    const promotions = {
+      evaluateProductDiscount: vi.fn().mockResolvedValue({ hasDiscount: false }),
+      evaluateCartDiscounts: vi.fn(async (items: Array<{ productId: string; unitPriceCents: number }>) => items.map((item) => ({
+        productId: item.productId, originalPriceCents: item.unitPriceCents,
+        finalPriceCents: item.unitPriceCents, discountAppliedCents: 0,
+      }))),
+      validateCoupon: vi.fn(),
+    };
     const settings = { getSettings: vi.fn().mockResolvedValue({ taxRatePercent: 0 }) };
     const app = OrdersController.createRoutes(orders as any, {} as any, shipping as any, catalog as any, {} as any, { reserveStock } as any, {} as any, settings as any, promotions as any);
     const response = await app.fetch(new Request('https://shop.test/api/v1/orders', {

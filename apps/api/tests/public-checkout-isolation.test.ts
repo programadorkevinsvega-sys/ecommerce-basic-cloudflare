@@ -15,7 +15,7 @@ describe('public checkout isolation and inline data', () => {
       {} as never,
       {} as never,
       {} as never,
-      {} as never,
+      { evaluateCartDiscounts: vi.fn(async () => []) } as never,
     );
     const response = await app.request('/api/v1/orders/checkout/evaluate', {
       method: 'POST', headers: { 'content-type': 'application/json' },
