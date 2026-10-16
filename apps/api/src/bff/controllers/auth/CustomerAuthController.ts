@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { Env } from '../../../platform/Env.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(12).max(128),
   fullName: z.string().min(2).max(100),
   phone: z.string().max(20).optional(),
+  turnstileToken: z.string().min(1).max(2048),
 }).strict();
 
 const loginSchema = z.object({
@@ -15,8 +17,8 @@ const loginSchema = z.object({
 }).strict();
 
 export class CustomerAuthController {
-  public static createRoutes(gateway: IdentityGateway): Hono {
-    const router = new Hono();
+  public static createRoutes(gateway: IdentityGateway): Hono<{ Bindings: Env }> {
+    const router = new Hono<{ Bindings: Env }>();
 
     router.post('/register', async (c) => {
       try {
@@ -26,7 +28,20 @@ export class CustomerAuthController {
           return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
         }
 
-        const customer = await gateway.registerCustomer(parsed.data);
+        if (!c.env.TURNSTILE_SECRET_KEY) return c.json({ error: 'Registro temporalmente no disponible' }, 503);
+        const verification = new URLSearchParams({ secret: c.env.TURNSTILE_SECRET_KEY, response: parsed.data.turnstileToken });
+        const ip = c.req.header('cf-connecting-ip');
+        if (ip) verification.set('remoteip', ip);
+        const turnstileResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+          method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: verification,
+        });
+        if (!turnstileResponse.ok) return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+        const result = await turnstileResponse.json() as { success?: boolean; hostname?: string };
+        const requestHost = new URL(c.req.url).hostname;
+        if (!result.success || result.hostname !== requestHost) return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+
+        const { turnstileToken: _turnstileToken, ...customerInput } = parsed.data;
+        const customer = await gateway.registerCustomer(customerInput);
         return c.json({ data: customer }, 201);
       } catch {
         return c.json({ error: 'No fue posible completar el registro' }, 400);

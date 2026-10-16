@@ -11,6 +11,7 @@ import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
+import { renderCustomerRegisterPage } from '../../views/renderCustomerRegisterPage.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
@@ -150,6 +151,21 @@ export class StorefrontController {
         footerStoreProfile: nav.footerStoreProfile,
       });
       return c.html(html);
+    });
+
+    router.get('/auth/register', async (c) => {
+      const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
+      const siteKey = (c as typeof c & { env?: { TURNSTILE_SITE_KEY?: string } }).env?.TURNSTILE_SITE_KEY;
+      const html = renderBaseLayout({
+        title: 'Crear cuenta',
+        description: 'Crea tu cuenta de cliente en Vega Store.',
+        noindex: true,
+        bodyHtml: renderCustomerRegisterPage(siteKey),
+        headerMenuItems: nav.headerMenuItems,
+        footerMenuItems: nav.footerMenuItems,
+        footerStoreProfile: nav.footerStoreProfile,
+      });
+      return c.html(html, 200, { 'Cache-Control': 'private, no-store' });
     });
 
     return router;
