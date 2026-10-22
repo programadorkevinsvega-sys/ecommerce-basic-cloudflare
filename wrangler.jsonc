@@ -4,6 +4,12 @@
   "main": "apps/api/src/index.ts",
   "compatibility_date": "2024-11-01",
   "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
   "cache": { "enabled": true, "cross_version_cache": false },
   "keep_vars": true,
   "d1_databases": [
