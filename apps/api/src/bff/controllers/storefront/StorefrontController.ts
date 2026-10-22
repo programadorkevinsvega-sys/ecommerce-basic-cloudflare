@@ -139,6 +139,7 @@ export class StorefrontController {
         cashOnDeliveryOnly: filters.cashOnDeliveryOnly,
         sort: filters.sort,
         hasActiveFilters: filters.hasActiveFilters,
+        category: c.req.query('category'),
       });
 
       const storeUrl = 'https://vega.jnmtortas.com';
