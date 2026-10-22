@@ -56,7 +56,8 @@ export function renderCatalogPage(products: CatalogProductDto[], query?: string,
     if (next.cashOnDeliveryOnly) params.set('cod', '1');
     if (next.sort !== 'featured') params.set('sort', next.sort);
     if (next.page !== undefined && next.page > 1) params.set('page', String(next.page));
-    return '/productos' + (params.size ? `?${params.toString()}` : '');
+    const encoded = params.toString();
+    return '/productos' + (encoded ? `?${encoded}` : '');
   };
   const hiddenState = [
     query ? `<input type="hidden" name="q" value="${escape(query)}">` : '',
@@ -95,7 +96,7 @@ export function renderCatalogPage(products: CatalogProductDto[], query?: string,
   ];
   const sortForm = `<form class="catalog-sort-form" action="/productos" method="GET">${hiddenState}<label class="catalog-sort">Ordenar por<select id="catalog-sort" name="sort">${sortOptions.map((option) => `<option value="${option.value}"${sort === option.value ? ' selected' : ''}>${option.label}</option>`).join('')}</select></label><button type="submit">Ordenar</button></form>`;
   const content = `<div class="catalog-toolbar"><div><h1>${title}</h1><p>${products.length} ${products.length === 1 ? 'producto en esta página' : 'productos en esta página'} · Precios en COP</p></div>${sortForm}</div>
-    ${filterChips.length ? `<div class="catalog-active-filters"><strong>Filtros activos:</strong><div>${filterChips.join('')}</div></div>` : ''}<p class="catalog-results-count" role="status" aria-live="polite">${products.length ? `Mostrando ${products.length} productos en esta página.` : 'No hay productos para mostrar en esta página.'}</p><p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p>
+    ${filterChips.length ? `<div class="catalog-active-filters"><strong>Filtros activos:</strong><div>${filterChips.join('')}</div></div>` : ''}<p class="catalog-results-count" role="status" aria-live="polite">${products.length ? `Mostrando ${products.length} ${products.length === 1 ? 'producto' : 'productos'} en esta página.` : 'No hay productos para mostrar en esta página.'}</p><p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p>
     ${products.length ? `<div class="grid catalog-grid" id="catalog-product-grid">${products.map((product) => renderStorefrontProductCard(product, discounts?.get(product.id),reviews?.[product.id])).join('')}</div>` : empty}`;
   const currentPage = pagination?.page || 1;
   const firstItem = products.length ? (currentPage - 1) * 24 + 1 : 0;
