@@ -37,6 +37,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
     <section class="detail-purchase" aria-label="Añadir producto al carrito"><div class="detail-quantity"><span id="quantity-label">Cantidad</span><div><button type="button" data-quantity-change="-1" aria-label="Disminuir cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>−</button><input id="buy-qty" type="number" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" step="1" aria-labelledby="quantity-label" ${product.stockQuantity < 1 ? 'disabled' : ''} /><button type="button" data-quantity-change="1" aria-label="Aumentar cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>+</button></div></div>
       <button type="button" id="btn-add-cart" class="detail-add-button" ${product.stockQuantity < 1 ? 'disabled' : ''}><span aria-hidden="true">＋</span>Añadir al carrito · <span id="detail-total">${formatPrice(salePrice)}</span></button></section>
     <div id="cart-msg" class="detail-cart-message" role="status" aria-live="polite" hidden></div>
+    <section class="detail-wishlist" aria-label="Lista de deseos" style="margin-top:1rem"><button type="button" id="btn-wishlist-add" style="padding:.7rem 1rem;border:1px solid #20563c;border-radius:8px;background:#fff;color:#20563c;cursor:pointer">♡ Guardar en favoritos</button><p id="wishlist-msg" class="detail-cart-message" role="status" aria-live="polite" hidden></p></section>
     <ul class="detail-trust-list"><li><span aria-hidden="true">◉</span><div><strong>${codTitle}</strong><p>${codDescription}</p></div></li><li><span aria-hidden="true">↗</span><div><strong>${shippingTitle}</strong><p>${escapeHtml(shippingDescription)}</p></div></li></ul>
     ${renderProductShippingWidget(product)}
   </div></article>
@@ -74,6 +75,26 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
         if (response.ok) message.insertAdjacentHTML('beforeend', ' <a href="/carrito">Ver carrito</a>');
       } catch { message.hidden = false; message.textContent = 'Error de conexión al agregar el producto.'; }
       finally { addButton.disabled = ${product.stockQuantity < 1}; addButton.removeAttribute('aria-busy'); }
+    });
+    const wishlistButton = document.getElementById('btn-wishlist-add');
+    const wishlistMessage = document.getElementById('wishlist-msg');
+    wishlistButton?.addEventListener('click', async () => {
+      if (!wishlistMessage) return;
+      wishlistButton.disabled = true; wishlistButton.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch('/api/v1/customer/wishlist/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: detailProductId }) });
+        const result = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          const link = document.createElement('a'); link.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname); link.textContent = 'Inicia sesión para guardar favoritos';
+          wishlistMessage.replaceChildren(link); wishlistMessage.hidden = false; return;
+        }
+        if (!response.ok) { wishlistMessage.textContent = result.error || 'No se pudo guardar el favorito.'; wishlistMessage.hidden = false; return; }
+        wishlistButton.dataset.saved = 'true'; wishlistButton.textContent = '♥ Guardado en favoritos';
+        const link = document.createElement('a'); link.href = '/cuenta/favoritos'; link.textContent = ' Ver mis favoritos';
+        wishlistMessage.replaceChildren(document.createTextNode(result.alreadySaved ? 'Este producto ya está en tus favoritos.' : 'Producto guardado en tus favoritos.'), link);
+        wishlistMessage.hidden = false;
+      } catch { wishlistMessage.textContent = 'Error de conexión. Inténtalo de nuevo.'; wishlistMessage.hidden = false; }
+      finally { wishlistButton.removeAttribute('aria-busy'); wishlistButton.disabled = wishlistButton.dataset.saved === 'true'; }
     });
     refreshDetailQuantity();
   </script>`;
