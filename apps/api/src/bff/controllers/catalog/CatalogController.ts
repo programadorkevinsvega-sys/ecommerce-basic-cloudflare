@@ -5,6 +5,7 @@ import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { synchronizeCatalogProductStock } from './synchronizeCatalogProductStock.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import {
   createProductSchema,
@@ -174,21 +175,11 @@ export class CatalogController {
 
           const productId = c.req.param('id');
           const { stockQuantity, syncStockToInventory = false, ...productChanges } = parsed.data;
-          if (stockQuantity !== undefined) {
-            const currentProduct = await catalogGateway.getProductById(productId);
-            const stockChanged = stockQuantity !== currentProduct.stockQuantity;
-            if (stockChanged && !syncStockToInventory) {
-              return c.json({ error: 'El stock cambió en el formulario. Confirma “Aplicar cambio de stock al inventario operativo” para ajustar las existencias.' }, 409);
-            }
-            if (syncStockToInventory) {
-              try {
-                await inventoryGateway.adjustStock(productId, stockQuantity, 'catalog_product_stock_edit');
-                inventoryStockUpdated = true;
-              } catch (error) {
-                return c.json({ error: error instanceof Error ? error.message : 'No fue posible actualizar el inventario operativo.' }, 409);
-              }
-            }
-          }
+          const stockSync = await synchronizeCatalogProductStock({
+            productId, stockQuantity, syncStockToInventory, catalogGateway, inventoryGateway,
+          });
+          if (!stockSync.ok) return c.json({ error: stockSync.error }, stockSync.status);
+          inventoryStockUpdated = stockSync.inventoryUpdated;
 
           const taxRate = (await settingsGateway.getSettings()).taxRatePercent;
           const zones = await shippingGateway.listZones(true);
