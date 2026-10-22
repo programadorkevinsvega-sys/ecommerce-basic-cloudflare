@@ -31,4 +31,27 @@ describe('inventory admin read/write permissions', () => {
       actorId: 'admin-1', action: 'inventory.catalog_stock_initialized', entityId: 'p1', changes: { quantity: 8 },
     }));
   });
+
+  it('does not overwrite an existing inventory stock during catalog bootstrap sync', async () => {
+    const existing = { productId: 'p1', quantity: 0, reservedQuantity: 0, availableQuantity: 0 };
+    const listStocks = vi.fn().mockResolvedValue([existing]);
+    const adjust = vi.fn();
+    const catalog = { listProducts: vi.fn().mockResolvedValue([{ id: 'p1', stockQuantity: 20 }]) };
+    const identity = { validateSession: vi.fn(async () => ({
+      actorId: 'admin-1', actorType: 'admin', mfaEnabled: true, permissions: ['inventory:adjust'],
+    })) };
+    const app = InventoryController.createRoutes(
+      { listStocks, adjustStock: adjust } as any,
+      identity as any,
+      catalog as any,
+      { record: vi.fn() } as any,
+    );
+    const response = await app.request('/api/v1/admin/inventory/sync', {
+      method: 'POST', headers: { cookie: '__Host-admin-session=valid' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(adjust).not.toHaveBeenCalled();
+    expect(await response.json()).toMatchObject({ items: [existing], createdCount: 0 });
+  });
 });
