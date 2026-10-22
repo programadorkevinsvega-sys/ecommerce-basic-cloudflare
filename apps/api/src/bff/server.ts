@@ -31,6 +31,7 @@ import { FreeShippingRuleController } from './controllers/shipping/FreeShippingR
 import { MiPaqueteConfigController } from './controllers/shipping/MiPaqueteConfigController.js';
 import { MiPaqueteShipmentController } from './controllers/shipping/MiPaqueteShipmentController.js';
 import { CartController } from './controllers/cart/CartController.js';
+import { WishlistController } from './controllers/wishlist/WishlistController.js';
 import { InventoryController } from './controllers/inventory/InventoryController.js';
 import { OrdersController } from './controllers/orders/OrdersController.js';
 import { PaymentsController } from './controllers/payments/PaymentsController.js';
@@ -89,6 +90,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway, cRoot.catalogGateway));
+  app.route('/', WishlistController.createRoutes(cRoot.wishlistGateway, cRoot.identityGateway, cRoot.catalogGateway));
   app.route('/', OrderTrackingController.createRoutes(cRoot.ordersGateway, cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.notificationsGateway));
   app.route('/', InventoryController.createRoutes(cRoot.inventoryGateway, cRoot.identityGateway, cRoot.catalogGateway, cRoot.auditGateway));
   app.route('/', OrdersController.createRoutes(
