@@ -15,7 +15,7 @@ export const createProductSchema = z.object({
   packedWeightGrams: z.number().int().min(1).max(100000).nullable().optional(),
   allowedPaymentMethods: z.array(z.enum(['wompi', 'cash_on_delivery'])).min(1),
   sku: z.string().min(1).max(50),
-  stockQuantity: z.number().int().nonnegative().default(0),
+  stockQuantity: z.number().int().nonnegative().max(100000).default(0),
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
   condition: z.enum(['new', 'used', 'refurbished']).default('new'),
   specifications: z.record(z.unknown()).default({}),
