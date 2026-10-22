@@ -58,7 +58,11 @@ export class D1InventoryRepository implements IInventoryRepository {
     if ((result.meta?.changes ?? 0) !== 1) {
       const current = await this.getStock(productId);
       if (!current) throw new Error('No se encontró el registro de inventario después de inicializarlo');
-      throw new Error(`El stock solicitado (${quantity}) no puede ser menor que las unidades reservadas (${current.reservedQuantity})`);
+      if (current.reservedQuantity > quantity) {
+        throw new Error(`El stock solicitado (${quantity}) no puede ser menor que las unidades reservadas (${current.reservedQuantity})`);
+      }
+      if (current.quantity !== quantity) throw new Error('No fue posible aplicar el stock objetivo al inventario');
+      return current;
     }
     const updated = await this.getStock(productId);
     if (!updated) throw new Error('No fue posible volver a leer el inventario actualizado');
