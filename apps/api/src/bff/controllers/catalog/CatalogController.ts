@@ -166,6 +166,7 @@ export class CatalogController {
       '/admin/products/:id',
       createAuthMiddleware(identityGateway, 'admin', 'catalog:edit'),
       async (c) => {
+        let inventoryStockUpdated = false;
         try {
           const body = await c.req.json();
           const parsed = updateProductSchema.safeParse(body);
@@ -173,7 +174,6 @@ export class CatalogController {
 
           const productId = c.req.param('id');
           const { stockQuantity, syncStockToInventory = false, ...productChanges } = parsed.data;
-          let inventoryStockUpdated = false;
           if (stockQuantity !== undefined) {
             const currentProduct = await catalogGateway.getProductById(productId);
             const stockChanged = stockQuantity !== currentProduct.stockQuantity;
@@ -202,9 +202,11 @@ export class CatalogController {
           });
           return c.json({ data: product });
         } catch {
-          // Si Inventory ya aceptó un stock objetivo, no lo revertimos: puede haber reservas concurrentes.
-          // Inventory es la fuente de verdad operativa; la respuesta permite reintentar el espejo del catálogo.
-          return c.json({ error: 'No fue posible actualizar el producto. Si acababas de confirmar un cambio de stock, revisa Inventario antes de reintentar.' }, 400);
+          // Si Inventory ya aceptó el stock, no lo revertimos: pueden haber ocurrido reservas concurrentes.
+          if (inventoryStockUpdated) {
+            return c.json({ error: 'El inventario operativo se actualizó, pero no se pudo guardar el producto en el catálogo. Reintenta guardar el producto; verifica primero el stock en Inventario.' }, 503);
+          }
+          return c.json({ error: 'No fue posible actualizar el producto' }, 400);
         }
       }
     );
