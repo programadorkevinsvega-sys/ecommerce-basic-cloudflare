@@ -79,7 +79,8 @@ describe('catalog and inventory stock synchronization', () => {
     });
 
     expect(response.status).toBe(409);
-    expect((await response.json()).error).toContain('unidades reservadas');
+    const body = await response.json() as { error?: string };
+    expect(body.error).toContain('unidades reservadas');
     expect(catalog.updateProduct).not.toHaveBeenCalled();
   });
 
