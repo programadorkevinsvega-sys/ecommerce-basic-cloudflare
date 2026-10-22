@@ -12,6 +12,7 @@ import { renderStoreFooterDetails, renderStoreLegalIdentity, renderStoreSocialLi
 import { storefrontBlogStyles } from './storefrontBlogStyles.js';
 import { storefrontReviewStyles } from './storefrontReviewStyles.js';
 import { renderAnnouncementBar, type AnnouncementBarItem } from './renderAnnouncementBar.js';
+import { renderSearchSuggestionsScript } from './renderSearchSuggestionsScript.js';
 
 export interface LayoutMenuItem {
   title: string;
@@ -96,10 +97,11 @@ export function renderBaseLayout(props: LayoutProps): string {
   ${props.checkoutMode ? checkoutHeader : ''}
   <header class="site-header">
     <a href="/" class="brand-link" aria-label="Vega Store, ir al inicio"><span>VEGA <span>STORE</span></span></a>
-    <form class="header-search" action="/productos" method="GET" role="search" aria-label="Buscar productos">
+    <form class="header-search" action="/productos" method="GET" role="search" aria-label="Buscar productos" autocomplete="off">
       <label class="search-label" for="header-search">Buscar productos</label>
-      <input id="header-search" type="search" name="q" placeholder="¿Qué estás buscando?" />
+      <input id="header-search" type="search" name="q" placeholder="¿Qué estás buscando?" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="header-search-suggestions" aria-haspopup="listbox" spellcheck="false" />
       <button type="submit" aria-label="Buscar"><span aria-hidden="true">⌕</span></button>
+      <ul id="header-search-suggestions" class="header-search-suggestions" role="listbox" aria-label="Sugerencias de productos" hidden></ul>
     </form>
     <nav class="site-nav" aria-label="Navegación principal">
       ${headerLinksHtml}
@@ -119,6 +121,7 @@ export function renderBaseLayout(props: LayoutProps): string {
     </div>
     <p class="footer-copyright">&copy; ${new Date().getFullYear()} ${escapeHtml(props.footerStoreProfile?.storeName || 'Vega Store')}${props.footerStoreProfile?.footerCopyrightText ? `. ${escapeHtml(props.footerStoreProfile.footerCopyrightText)}` : ''}</p>
   </footer>
+  ${renderSearchSuggestionsScript()}
 </body>
 </html>`;
 }

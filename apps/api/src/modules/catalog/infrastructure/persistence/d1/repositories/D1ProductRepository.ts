@@ -1,6 +1,7 @@
 import { Product } from '../../../../domain/entities/Product.js';
 import { IProductRepository } from '../../../../domain/ports/IProductRepository.js';
 import { D1ProductMapper, ProductRow } from './D1ProductMapper.js';
+import { buildCatalogFtsPrefixQuery } from '../CatalogFtsPrefixQuery.js';
 
 export class D1ProductRepository implements IProductRepository {
   private readonly db: D1Database;
@@ -125,19 +126,26 @@ export class D1ProductRepository implements IProductRepository {
 
   public async search(query: string, limit: number, offset: number, status?: string): Promise<Product[]> {
     const fetchLimit = Math.min(limit + offset, 500);
-    const ftsResults = await this.db
-      .prepare(`SELECT catalog_products_fts.product_id FROM catalog_products_fts
-        JOIN catalog_products ON catalog_products.id = catalog_products_fts.product_id
-        WHERE catalog_products_fts MATCH ? ${status ? 'AND catalog_products.status = ?' : ''}
-        LIMIT ?`)
-      .bind(...(status ? [query, status, fetchLimit] : [query, fetchLimit]))
-      .all<{ product_id: string }>();
+    const normalizedText = query.normalize('NFC').replace(/[^\p{L}\p{N}\s_]/gu, ' ').trim().replace(/\s+/g, ' ').slice(0, 120).trim();
+    const ftsQuery = buildCatalogFtsPrefixQuery(normalizedText);
+    const ftsResults = ftsQuery
+      ? await this.db
+        .prepare(`SELECT catalog_products_fts.product_id FROM catalog_products_fts
+          JOIN catalog_products ON catalog_products.id = catalog_products_fts.product_id
+          WHERE catalog_products_fts MATCH ? ${status ? 'AND catalog_products.status = ?' : ''}
+          ORDER BY bm25(catalog_products_fts), catalog_products_fts.product_id
+          LIMIT ?`)
+        .bind(...(status ? [ftsQuery, status, fetchLimit] : [ftsQuery, fetchLimit]))
+        .all<{ product_id: string }>()
+      : { results: [] as Array<{ product_id: string }> };
 
+    if (!normalizedText) return [];
     const brandQuery = `SELECT id FROM catalog_products
       WHERE instr(lower(COALESCE(brand, '')), lower(?)) > 0 ${status ? 'AND status = ?' : ''}
-      ORDER BY created_at DESC LIMIT ?`;
+      ORDER BY CASE WHEN lower(COALESCE(brand, '')) = lower(?) THEN 0 ELSE 1 END, created_at DESC
+      LIMIT ?`;
     const brandResults = await this.db.prepare(brandQuery)
-      .bind(...(status ? [query, status, fetchLimit] : [query, fetchLimit]))
+      .bind(...(status ? [normalizedText, status, normalizedText, fetchLimit] : [normalizedText, normalizedText, fetchLimit]))
       .all<{ id: string }>();
     const productIds = [...new Set([
       ...(ftsResults.results || []).map((row) => row.product_id),

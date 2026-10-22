@@ -38,7 +38,16 @@ export const storefrontComponentStyles = String.raw`
     .site-header { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto; gap: 1.5rem; padding-block: .85rem; background: #f3f4ef !important; border-bottom: 0; }
     .brand-link { font-size: 1rem !important; letter-spacing: .08em; font-weight: 850 !important; }
     .brand-link > span > span, .footer-brand .brand-link > span { color: #718078; font-weight: 550; }
-    .header-search { display: flex; justify-self: center; width: min(100%, 410px); height: 44px; overflow: hidden; border: 1px solid #e1e5de; border-radius: 999px; background: #fff; }
+    .header-search { position: relative; display: flex; justify-self: center; width: min(100%, 410px); height: 44px; border: 1px solid #e1e5de; border-radius: 999px; background: #fff; }
+    .header-search-suggestions { position: absolute; top: calc(100% + .55rem); left: -1px; right: -1px; z-index: 100; max-height: min(65vh, 420px); overflow: auto; margin: 0; padding: .35rem; list-style: none; border: 1px solid var(--border); border-radius: 14px; background: #fff; box-shadow: 0 14px 36px rgba(22, 32, 27, .18); }
+    .header-search-suggestions[hidden] { display: none; }
+    .header-search-suggestion { display: flex; align-items: center; gap: .75rem; min-height: 60px; padding: .55rem .65rem; border-radius: 10px; color: var(--text); text-decoration: none; }
+    .header-search-suggestion:hover, .header-search-suggestion[aria-selected="true"] { background: #f3f4ef; text-decoration: none; }
+    .header-search-suggestion:focus-visible { outline: 3px solid #6b9d26; outline-offset: -2px; }
+    .header-search-suggestion-image { width: 48px; height: 48px; flex: 0 0 48px; object-fit: cover; border-radius: 8px; background: #f3f4ef; }
+    .header-search-suggestion-copy { display: grid; min-width: 0; flex: 1; gap: .12rem; }
+    .header-search-suggestion-title { overflow-wrap: anywhere; color: #16201b; font-size: .84rem; font-weight: 750; line-height: 1.3; }
+    .header-search-suggestion-meta { color: #65716a; font-size: .74rem; line-height: 1.35; }
     .header-search input { width: 100%; min-width: 0; padding: 0 1rem; border: 0; outline: 0; background: transparent; }
     .header-search button { width: 48px; flex: 0 0 48px; border: 0; background: transparent; color: #59655d; font-size: 1.5rem; cursor: pointer; }
     .site-nav { gap: .15rem; }
