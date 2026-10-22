@@ -47,6 +47,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 16. `notifications` -> `notifications_*`
 17. `audit` -> `audit_*`
 18. `reviews` -> `reviews_*`
+19. `wishlist` -> `wishlist_*`
 
 `credit` aparece en decisiones y el roadmap, pero todavía no existe como módulo ni posee tablas `credit_*`; su implementación requiere cerrar ADR-0009.
 
