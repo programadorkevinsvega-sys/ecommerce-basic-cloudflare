@@ -38,7 +38,7 @@ export const storefrontComponentStyles = String.raw`
     .site-header { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto; gap: 1.5rem; padding-block: .85rem; background: #f3f4ef !important; border-bottom: 0; }
     .brand-link { font-size: 1rem !important; letter-spacing: .08em; font-weight: 850 !important; }
     .brand-link > span > span, .footer-brand .brand-link > span { color: #718078; font-weight: 550; }
-    .header-search { position: relative; display: flex; justify-self: center; width: min(100%, 410px); height: 44px; overflow: visible; border: 1px solid #e1e5de; border-radius: 999px; background: #fff; }
+    .header-search { position: relative; display: flex; justify-self: center; width: min(100%, 410px); height: 44px; border: 1px solid #e1e5de; border-radius: 999px; background: #fff; }
     .header-search-suggestions { position: absolute; top: calc(100% + .55rem); left: -1px; right: -1px; z-index: 100; max-height: min(65vh, 420px); overflow: auto; margin: 0; padding: .35rem; list-style: none; border: 1px solid var(--border); border-radius: 14px; background: #fff; box-shadow: 0 14px 36px rgba(22, 32, 27, .18); }
     .header-search-suggestions[hidden] { display: none; }
     .header-search-suggestion { display: flex; align-items: center; gap: .75rem; min-height: 60px; padding: .55rem .65rem; border-radius: 10px; color: var(--text); text-decoration: none; }
