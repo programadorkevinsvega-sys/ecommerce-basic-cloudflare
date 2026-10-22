@@ -68,6 +68,15 @@ export default {
         }
       })()
     );
+
+    ctx.waitUntil((async () => {
+      try {
+        const published = await compositionRoot.outboxRelayService.relayPendingEvents('wishlist_outbox_events', 'wishlist');
+        if (published > 0) logger.info('Wishlist events relayed', { count: published });
+      } catch (error) {
+        logger.error('Error relaying wishlist outbox events', error);
+      }
+    })());
   },
 };
 
