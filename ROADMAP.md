@@ -388,7 +388,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
   - [x] Autocompletado del buscador global: sugiere productos publicados, admite navegación por teclado y usa consultas FTS5 con prefijos acotados; PR #4 integrado en `main` y flujo validado por el propietario en el frontend desplegado el 2026-10-22.
-  - [ ] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL; implementación en la rama `feat/phase-12-server-side-catalog-filters`, pendiente CI y aceptación funcional.
+  - [x] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL; PR #5 integrado en `main`, desplegado en Cloudflare y validado funcionalmente por el propietario el 2026-10-22. Validación local aprobada: typecheck, lint, 193 pruebas unitarias y 24 pruebas de Workers. GitHub Actions sigue reportando fallo en dos jobs sin pasos ni logs accesibles; CI remota no confirmada.
 - [ ] Carritos abandonados y campañas por email.
 - [ ] Fidelización y gift cards.
 - [ ] **Extracción de módulos** a Workers propios cuando exista necesidad real, siguiendo la sección 10.1 del contrato (D1 propia, `ServiceBinding<Modulo>Gateway`, un cambio de wiring en `composition-root.ts`).
