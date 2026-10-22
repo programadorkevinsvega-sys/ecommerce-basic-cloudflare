@@ -49,7 +49,7 @@ export function parseStorefrontCatalogFilters(input: StorefrontCatalogFilterInpu
 }
 
 function parsePriceCop(value?: string): number | undefined {
-  if (value === undefined || value.trim() === '' || !/^\\d{1,9}$/.test(value.trim())) return undefined;
+  if (value === undefined || value.trim() === '' || !/^\d{1,9}$/.test(value.trim())) return undefined;
   const amount = Number(value);
   return Number.isSafeInteger(amount) && amount >= 0 && amount <= 999_999_999 ? amount : undefined;
 }
