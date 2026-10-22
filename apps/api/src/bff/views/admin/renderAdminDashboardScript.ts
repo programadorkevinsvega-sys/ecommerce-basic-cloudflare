@@ -134,6 +134,8 @@ export function renderAdminDashboardScript(): string {
         window.updateProductPricingTargetFields?.();
         window.updateRecommendedProductPrice?.();
         document.getElementById('pStock').value = p.stockQuantity ?? 10;
+        document.getElementById('pStockSyncOption').style.display = 'block';
+        document.getElementById('pSyncStockToInventory').checked = false;
         document.getElementById('pCondition').value = p.condition || 'new';
         document.getElementById('pBrand').value = p.brand || '';
         document.getElementById('pType').value = p.productType || '';
@@ -184,6 +186,8 @@ export function renderAdminDashboardScript(): string {
     function resetProductForm() {
       document.getElementById('pEditId').value = '';
       document.getElementById('newProductForm').reset();
+      const stockSyncOption = document.getElementById('pStockSyncOption');
+      if (stockSyncOption) stockSyncOption.style.display = 'none';
       window.updateProductPricingTargetFields?.();
       window.updateRecommendedProductPrice?.();
       const wrap = document.getElementById('pLocalZonesWrapper');
