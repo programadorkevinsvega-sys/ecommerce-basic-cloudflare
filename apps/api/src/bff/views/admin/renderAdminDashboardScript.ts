@@ -133,9 +133,7 @@ export function renderAdminDashboardScript(): string {
         const paymentMethods = p.allowedPaymentMethods || ['wompi', 'cash_on_delivery']; document.getElementById('pPayWompi').checked = paymentMethods.includes('wompi');
         window.updateProductPricingTargetFields?.();
         window.updateRecommendedProductPrice?.();
-        document.getElementById('pStock').value = p.stockQuantity ?? 10;
-        document.getElementById('pStockSyncOption').style.display = 'block';
-        document.getElementById('pSyncStockToInventory').checked = false;
+        window.prepareProductStockSyncOption?.(true, p.stockQuantity ?? 10);
         document.getElementById('pCondition').value = p.condition || 'new';
         document.getElementById('pBrand').value = p.brand || '';
         document.getElementById('pType').value = p.productType || '';
@@ -186,12 +184,10 @@ export function renderAdminDashboardScript(): string {
     function resetProductForm() {
       document.getElementById('pEditId').value = '';
       document.getElementById('newProductForm').reset();
-      const stockSyncOption = document.getElementById('pStockSyncOption');
-      if (stockSyncOption) stockSyncOption.style.display = 'none';
+      window.prepareProductStockSyncOption?.(false);
       window.updateProductPricingTargetFields?.();
       window.updateRecommendedProductPrice?.();
-      const wrap = document.getElementById('pLocalZonesWrapper');
-      if (wrap) wrap.style.display = 'none';
+      document.getElementById('pLocalZonesWrapper')?.style.setProperty('display', 'none');
       window.currentProductMediaIds = [];
       if (typeof window.updateProductMediaGrid === 'function') {
         window.updateProductMediaGrid();
