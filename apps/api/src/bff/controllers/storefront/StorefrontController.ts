@@ -17,7 +17,7 @@ import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationH
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 import { getPageMarketingContent } from './StorefrontPageMarketing.js';
 import { ProductDetailController } from './ProductDetailController.js';
-import { parseStorefrontCatalogFilters } from './StorefrontCatalogQuery.js';
+import { buildStorefrontCatalogPageHref, parseStorefrontCatalogFilters } from './StorefrontCatalogQuery.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -109,19 +109,7 @@ export class StorefrontController {
 
       const products = productRecords.slice(0, 24);
       const [discountMap, reviewSummaries] = await Promise.all([resolveProductDiscounts(products, promotionsGateway), reviewsGateway.summaries(products.map((product) => product.id)).catch(() => ({}))]);
-      const pageHref = (targetPage: number) => {
-        const params = new URLSearchParams();
-        if (query) params.set('q', query);
-        const category = c.req.query('category');
-        if (category) params.set('category', category);
-        filters.brands.forEach((brand) => params.append('brand', brand));
-        if (filters.minPriceCop !== undefined) params.set('minPrice', String(filters.minPriceCop));
-        if (filters.maxPriceCop !== undefined) params.set('maxPrice', String(filters.maxPriceCop));
-        if (filters.cashOnDeliveryOnly) params.set('cod', '1');
-        if (filters.sort !== 'featured') params.set('sort', filters.sort);
-        params.set('page', String(targetPage));
-        return `/productos?${params.toString()}#catalog-product-grid`;
-      };
+      const pageHref = (targetPage: number) => buildStorefrontCatalogPageHref(targetPage, query, c.req.query('category'), filters);
       const availableBrands = [...new Set([
         ...brandRecords.filter((brand) => brand.status !== 'inactive').map((brand) => brand.name.trim()),
         ...products.map((product) => product.brand?.trim() || ''),
