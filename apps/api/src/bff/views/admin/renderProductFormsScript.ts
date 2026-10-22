@@ -42,6 +42,13 @@ export function renderProductFormsScript(): string {
       }
     }
 
+    document.getElementById('pStock')?.addEventListener('input', () => {
+      if (document.getElementById('pEditId')?.value) {
+        const confirmSync = document.getElementById('pSyncStockToInventory');
+        if (confirmSync) confirmSync.checked = true;
+      }
+    });
+
     document.getElementById('newProductForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('pMsg');
@@ -63,6 +70,7 @@ export function renderProductFormsScript(): string {
 
       const tags = Array.from(document.getElementById('pTags').selectedOptions).map(option => option.value);
       const relatedBlogPostIds = Array.from(document.getElementById('pRelatedBlogPosts').selectedOptions).map(option => option.value);
+      const editId = document.getElementById('pEditId')?.value;
       const payload = {
         name: document.getElementById('pName').value,
         slug: document.getElementById('pSlug').value,
@@ -81,6 +89,7 @@ export function renderProductFormsScript(): string {
           ...(document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : [])
         ],
         stockQuantity: Number(document.getElementById('pStock').value),
+        ...(editId ? { syncStockToInventory: document.getElementById('pSyncStockToInventory')?.checked === true } : {}),
         condition: document.getElementById('pCondition').value,
         brand: document.getElementById('pBrand').value || undefined,
         productType: document.getElementById('pType').value || undefined,
@@ -112,7 +121,6 @@ export function renderProductFormsScript(): string {
         return;
       }
 
-      const editId = document.getElementById('pEditId')?.value;
       const url = editId ? '/api/v1/admin/products/' + editId : '/api/v1/admin/products';
       const method = editId ? 'PUT' : 'POST';
 
