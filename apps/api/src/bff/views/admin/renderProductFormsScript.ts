@@ -2,9 +2,11 @@ export function renderProductFormsScript(): string {
   return `
     function readOptionalInteger(id) { const value = document.getElementById(id).value.trim(); return value ? Number(value) : null; }
     window.currentProductMediaIds = [];
+    window.originalCatalogStockQuantity = null;
     window.prepareProductStockSyncOption = (editing, stockQuantity) => {
       const input = document.getElementById('pStock');
       if (input && stockQuantity !== undefined) input.value = stockQuantity;
+      window.originalCatalogStockQuantity = editing && stockQuantity !== undefined ? Number(stockQuantity) : null;
       const option = document.getElementById('pStockSyncOption');
       if (option) option.style.display = editing ? 'block' : 'none';
       const confirmSync = document.getElementById('pSyncStockToInventory');
@@ -53,7 +55,7 @@ export function renderProductFormsScript(): string {
     document.getElementById('pStock')?.addEventListener('input', () => {
       if (document.getElementById('pEditId')?.value) {
         const confirmSync = document.getElementById('pSyncStockToInventory');
-        if (confirmSync) confirmSync.checked = true;
+        if (confirmSync) confirmSync.checked = Number(document.getElementById('pStock').value) !== window.originalCatalogStockQuantity;
       }
     });
 
