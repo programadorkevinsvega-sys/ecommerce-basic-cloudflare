@@ -1,3 +1,4 @@
+import { CatalogProductSort } from '../../modules/catalog/domain/ports/ProductListQuery.js';
 import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 import { BannerItem } from './renderProductList.js';
@@ -8,88 +9,100 @@ import { renderStorefrontPagination } from './renderStorefrontPagination.js';
 import { ProductReviewCardSummaryDto } from '../gateways/reviews/ReviewsGateway.js';
 
 export interface CatalogPagePagination { page: number; previousHref?: string; nextHref?: string; }
+export interface CatalogPageFilterState {
+  availableBrands?: string[];
+  selectedBrands?: string[];
+  minPriceCop?: number;
+  maxPriceCop?: number;
+  cashOnDeliveryOnly?: boolean;
+  sort?: CatalogProductSort;
+  hasActiveFilters?: boolean;
+  category?: string;
+}
 
-export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination, reviews?: Record<string,ProductReviewCardSummaryDto>): string {
+interface CatalogUrlState {
+  query?: string;
+  category?: string;
+  brands: string[];
+  minPriceCop?: number;
+  maxPriceCop?: number;
+  cashOnDeliveryOnly: boolean;
+  sort: CatalogProductSort;
+  page?: number;
+}
+
+export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination, reviews?: Record<string,ProductReviewCardSummaryDto>, filterState: CatalogPageFilterState = {}): string {
   const escape = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const effectivePrice = (product: CatalogProductDto): number => discounts?.get(product.id)?.hasDiscount ? discounts.get(product.id)!.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-  const brands = [...new Set(products.map((product) => product.brand?.trim()).filter((brand): brand is string => Boolean(brand)))].sort((a, b) => a.localeCompare(b, 'es'));
-  const priceValues = products.map(effectivePrice);
-  const minPrice = priceValues.length ? Math.min(...priceValues) : 0;
-  const maxPrice = priceValues.length ? Math.max(...priceValues) : 0;
-  const brandFilters = brands.map((brand) => {
-    const count = products.filter((product) => product.brand?.trim() === brand).length;
-    return `<label class="catalog-filter-option"><input type="checkbox" data-brand-filter value="${escape(brand)}"><span>${escape(brand)}</span><span>${count}</span></label>`;
-  }).join('');
-  const codCount = products.filter((product) => product.salePolicy.allowsCashOnDelivery).length;
+  const selectedBrands = [...new Set(filterState.selectedBrands ?? [])];
+  const sort = filterState.sort ?? 'featured';
+  const cashOnDeliveryOnly = filterState.cashOnDeliveryOnly ?? false;
+  const availableBrands = [...new Set([
+    ...(filterState.availableBrands ?? []),
+    ...products.map((product) => product.brand?.trim() ?? ''),
+    ...selectedBrands,
+  ].map((brand) => brand.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const state: CatalogUrlState = {
+    query, category: filterState.category, brands: selectedBrands,
+    minPriceCop: filterState.minPriceCop, maxPriceCop: filterState.maxPriceCop,
+    cashOnDeliveryOnly, sort,
+  };
+  const catalogUrl = (next: CatalogUrlState): string => {
+    const params = new URLSearchParams();
+    if (next.query) params.set('q', next.query);
+    if (next.category) params.set('category', next.category);
+    next.brands.forEach((brand) => params.append('brand', brand));
+    if (next.minPriceCop !== undefined) params.set('minPrice', String(next.minPriceCop));
+    if (next.maxPriceCop !== undefined) params.set('maxPrice', String(next.maxPriceCop));
+    if (next.cashOnDeliveryOnly) params.set('cod', '1');
+    if (next.sort !== 'featured') params.set('sort', next.sort);
+    if (next.page !== undefined && next.page > 1) params.set('page', String(next.page));
+    return '/productos' + (params.size ? `?${params.toString()}` : '');
+  };
+  const hiddenState = [
+    query ? `<input type="hidden" name="q" value="${escape(query)}">` : '',
+    filterState.category ? `<input type="hidden" name="category" value="${escape(filterState.category)}">` : '',
+    ...selectedBrands.map((brand) => `<input type="hidden" name="brand" value="${escape(brand)}">`),
+    filterState.minPriceCop !== undefined ? `<input type="hidden" name="minPrice" value="${filterState.minPriceCop}">` : '',
+    filterState.maxPriceCop !== undefined ? `<input type="hidden" name="maxPrice" value="${filterState.maxPriceCop}">` : '',
+    cashOnDeliveryOnly ? '<input type="hidden" name="cod" value="1">' : '',
+  ].join('');
+  const priceFilterActive = filterState.minPriceCop !== undefined || filterState.maxPriceCop !== undefined;
+  const filterChips: string[] = [];
+  if (query) filterChips.push(`<a class="catalog-filter-chip" href="${escape(catalogUrl({ ...state, query: undefined, page: undefined }))}" aria-label="Quitar búsqueda">${escape('Búsqueda: ' + query)} ×</a>`);
+  selectedBrands.forEach((brand) => filterChips.push(`<a class="catalog-filter-chip" href="${escape(catalogUrl({ ...state, brands: selectedBrands.filter((item) => item !== brand), page: undefined }))}" aria-label="Quitar filtro de marca ${escape(brand)}">${escape(brand)} ×</a>`));
+  if (priceFilterActive) filterChips.push(`<a class="catalog-filter-chip" href="${escape(catalogUrl({ ...state, minPriceCop: undefined, maxPriceCop: undefined, page: undefined }))}" aria-label="Quitar filtro de precio">${escape([filterState.minPriceCop === undefined ? '' : `Desde ${filterState.minPriceCop.toLocaleString('es-CO')}`, filterState.maxPriceCop === undefined ? '' : `Hasta ${filterState.maxPriceCop.toLocaleString('es-CO')}`].filter(Boolean).join(' · '))} ×</a>`);
+  if (cashOnDeliveryOnly) filterChips.push(`<a class="catalog-filter-chip" href="${escape(catalogUrl({ ...state, cashOnDeliveryOnly: false, page: undefined }))}">Pago contra entrega ×</a>`);
+  if (sort !== 'featured') filterChips.push(`<a class="catalog-filter-chip" href="${escape(catalogUrl({ ...state, sort: 'featured', page: undefined }))}">${sort === 'price_asc' ? 'Precio base: menor a mayor' : sort === 'price_desc' ? 'Precio base: mayor a menor' : 'Nombre: A–Z'} ×</a>`);
+
+  const brandFilters = availableBrands.map((brand) => `<label class="catalog-filter-option"><input type="checkbox" name="brand" value="${escape(brand)}"${selectedBrands.includes(brand) ? ' checked' : ''}><span>${escape(brand)}</span></label>`).join('');
+  const filterPanel = `<aside class="catalog-sidebar"><details class="catalog-filters" open><summary><span>Filtros</span><span class="catalog-chevron" aria-hidden="true">⌄</span></summary>
+    <form class="catalog-filter-form" action="/productos" method="GET">${query ? `<input type="hidden" name="q" value="${escape(query)}">` : ''}${filterState.category ? `<input type="hidden" name="category" value="${escape(filterState.category)}">` : ''}<input type="hidden" name="sort" value="${sort}">
+    ${brandFilters ? `<section class="catalog-filter-group"><h2>Marca</h2>${brandFilters}</section>` : ''}
+    <section class="catalog-filter-group"><h2>Rango de precio (COP)</h2><label class="catalog-price-input">Desde<input type="number" name="minPrice" min="0" max="999999999" step="1000" value="${filterState.minPriceCop ?? ''}" aria-label="Precio mínimo en pesos colombianos"></label><label class="catalog-price-input">Hasta<input type="number" name="maxPrice" min="0" max="999999999" step="1000" value="${filterState.maxPriceCop ?? ''}" aria-label="Precio máximo en pesos colombianos"></label><p>Se aplica al precio de catálogo antes de descuentos y promociones.</p></section>
+    <section class="catalog-filter-group"><h2>Pago</h2><label class="catalog-filter-option"><input type="checkbox" name="cod" value="1"${cashOnDeliveryOnly ? ' checked' : ''}><span>Pago contra entrega</span></label></section>
+    <div class="catalog-filter-actions"><button type="submit">Aplicar filtros</button><a href="${escape(catalogUrl({ ...state, brands: [], minPriceCop: undefined, maxPriceCop: undefined, cashOnDeliveryOnly: false, page: undefined }))}">Limpiar filtros</a></div></form></details></aside>`;
+
   const title = query ? `Resultados para “${escape(query)}”` : 'Catálogo';
-  const empty = products.length ? '' : `<section class="catalog-empty"><span aria-hidden="true">⌕</span><h2>${query ? 'No encontramos resultados' : 'Aún no hay productos disponibles'}</h2><p>${query ? `No hay productos que coincidan con “${escape(query)}”. Prueba otra búsqueda.` : 'Vuelve pronto para descubrir los productos disponibles.'}</p><a href="/productos">Ver todo el catálogo</a></section>`;
-  const filterPanel = products.length ? `<aside class="catalog-sidebar"><details class="catalog-filters" open><summary><span>Filtros</span><span class="catalog-chevron" aria-hidden="true">⌄</span></summary>
-    ${brands.length ? `<section class="catalog-filter-group"><h2>Línea</h2>${brandFilters}</section>` : ''}
-    <section class="catalog-filter-group"><h2>Precio</h2><label class="catalog-price-input">Desde<input type="number" data-min-price min="${minPrice}" max="${maxPrice}" step="1000" value="${minPrice}" aria-label="Precio mínimo"></label><label class="catalog-price-input">Hasta<input type="number" data-max-price min="${minPrice}" max="${maxPrice}" step="1000" value="${maxPrice}" aria-label="Precio máximo"></label><p>${formatPrice(minPrice)} – ${formatPrice(maxPrice)}</p></section>
-    ${codCount ? `<section class="catalog-filter-group"><h2>Pago</h2><label class="catalog-filter-option"><input type="checkbox" data-cod-filter><span>Pago contra entrega</span><span>${codCount}</span></label></section>` : ''}</details></aside>` : '';
-  const content = products.length ? `<div class="catalog-toolbar"><div><h1>${title}</h1><p>${products.length} ${products.length === 1 ? 'producto cargado' : 'productos cargados'} · Precios en COP</p></div><label class="catalog-sort">Ordenar por<select id="catalog-sort"><option value="featured">Destacados</option><option value="low">Menor precio</option><option value="high">Mayor precio</option><option value="name">Nombre (A–Z)</option></select></label></div>
-    <div class="catalog-active-filters" id="catalog-active-filters" hidden><strong>Filtros activos:</strong><div id="catalog-filter-chips"></div></div><p id="catalog-results-count" class="catalog-results-count" role="status" aria-live="polite"></p><p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p>
-    <div class="grid catalog-grid" id="catalog-product-grid">${products.map((product) => renderStorefrontProductCard(product, discounts?.get(product.id),reviews?.[product.id])).join('')}</div>
-    <section class="catalog-empty catalog-filter-empty" id="catalog-filter-empty" hidden><span aria-hidden="true">⌕</span><h2>Ningún producto coincide con tus filtros</h2><p>Prueba con otra línea o rango de precio.</p></section>` : '';
-  const queryValue = JSON.stringify(query || '').replace(/</g, '\\u003c');
-  const filtersScript = products.length ? `<script>
-    const catalogServerQuery = ${queryValue};
-    const catalogGrid = document.getElementById('catalog-product-grid');
-    const catalogCards = Array.from(catalogGrid.querySelectorAll('[data-catalog-product]'));
-    const catalogInitialOrder = new Map(catalogCards.map((card, index) => [card, index]));
-    const catalogMinInput = document.querySelector('[data-min-price]');
-    const catalogMaxInput = document.querySelector('[data-max-price]');
-    const catalogBrandInputs = Array.from(document.querySelectorAll('[data-brand-filter]'));
-    const catalogCodInput = document.querySelector('[data-cod-filter]');
-    const catalogSort = document.getElementById('catalog-sort');
-    const formatCatalogPrice = cents => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    function applyCatalogFilters() {
-      const selectedBrands = catalogBrandInputs.filter(input => input.checked).map(input => input.value);
-      const minimum = catalogMinInput.value === '' ? Number(catalogMinInput.min) : Number(catalogMinInput.value);
-      const maximum = catalogMaxInput.value === '' ? Number(catalogMaxInput.max) : Number(catalogMaxInput.value);
-      const visible = [];
-      catalogCards.forEach(card => {
-        const price = Number(card.dataset.price);
-        const matches = (!selectedBrands.length || selectedBrands.includes(card.dataset.brand)) && price >= minimum && price <= maximum && (!catalogCodInput?.checked || card.dataset.cod === 'true');
-        card.hidden = !matches;
-        if (matches) visible.push(card);
-      });
-      const ordered = [...catalogCards].sort((a, b) => {
-        if (catalogSort.value === 'low') return Number(a.dataset.price) - Number(b.dataset.price);
-        if (catalogSort.value === 'high') return Number(b.dataset.price) - Number(a.dataset.price);
-        if (catalogSort.value === 'name') return a.dataset.name.localeCompare(b.dataset.name, 'es');
-        return catalogInitialOrder.get(a) - catalogInitialOrder.get(b);
-      });
-      catalogGrid.append(...ordered);
-      document.getElementById('catalog-results-count').textContent = 'Mostrando ' + visible.length + ' de ' + catalogCards.length + ' productos cargados.';
-      document.getElementById('catalog-filter-empty').hidden = visible.length > 0;
-      catalogGrid.hidden = visible.length === 0;
-      renderCatalogFilterChips(selectedBrands, minimum, maximum);
-    }
-    function renderCatalogFilterChips(selectedBrands, minimum, maximum) {
-      const active = document.getElementById('catalog-active-filters');
-      const list = document.getElementById('catalog-filter-chips');
-      list.replaceChildren();
-      const addChip = (label, clear) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'catalog-filter-chip'; button.textContent = label + ' ×'; button.addEventListener('click', () => { clear(); applyCatalogFilters(); }); list.append(button); };
-      if (catalogServerQuery) addChip('Búsqueda: ' + catalogServerQuery, () => { window.location.href = '/productos'; });
-      selectedBrands.forEach(brand => addChip(brand, () => { const input = catalogBrandInputs.find(item => item.value === brand); if (input) input.checked = false; }));
-      if (minimum > Number(catalogMinInput.min) || maximum < Number(catalogMaxInput.max)) addChip(formatCatalogPrice(minimum) + ' – ' + formatCatalogPrice(maximum), () => { catalogMinInput.value = catalogMinInput.min; catalogMaxInput.value = catalogMaxInput.max; });
-      if (catalogCodInput?.checked) addChip('Pago contra entrega', () => { catalogCodInput.checked = false; });
-      active.hidden = list.childElementCount === 0;
-    }
-    catalogBrandInputs.forEach(input => input.addEventListener('change', applyCatalogFilters));
-    catalogCodInput?.addEventListener('change', applyCatalogFilters);
-    catalogMinInput.addEventListener('input', applyCatalogFilters);
-    catalogMaxInput.addEventListener('input', applyCatalogFilters);
-    catalogSort.addEventListener('change', applyCatalogFilters);
-    applyCatalogFilters();
-  </script>` : '';
-  const catalogBody = products.length ? `<div class="catalog-layout">${filterPanel}<section class="catalog-main">${content}${empty}</section></div>` : empty;
+  const noResultsTitle = filterState.hasActiveFilters ? 'No hay productos con estos filtros' : query ? 'No encontramos resultados' : 'Aún no hay productos disponibles';
+  const noResultsMessage = filterState.hasActiveFilters ? 'Prueba con otra marca o ajusta el rango de precio.' : query ? `No hay productos que coincidan con “${escape(query)}”. Prueba otra búsqueda.` : 'Vuelve pronto para descubrir los productos disponibles.';
+  const clearFiltersUrl = catalogUrl({ ...state, query: query && !filterState.hasActiveFilters ? undefined : query, brands: [], minPriceCop: undefined, maxPriceCop: undefined, cashOnDeliveryOnly: false, sort: 'featured', page: undefined });
+  const empty = `<section class="catalog-empty"><span aria-hidden="true">⌕</span><h2>${noResultsTitle}</h2><p>${noResultsMessage}</p><a href="${escape(clearFiltersUrl)}">${filterState.hasActiveFilters || sort !== 'featured' ? 'Limpiar filtros' : 'Ver todo el catálogo'}</a></section>`;
+  const sortOptions: Array<{ value: CatalogProductSort; label: string }> = [
+    { value: 'featured', label: 'Destacados' },
+    { value: 'price_asc', label: 'Precio base: menor a mayor' },
+    { value: 'price_desc', label: 'Precio base: mayor a menor' },
+    { value: 'name_asc', label: 'Nombre (A–Z)' },
+  ];
+  const sortForm = `<form class="catalog-sort-form" action="/productos" method="GET">${hiddenState}<label class="catalog-sort">Ordenar por<select id="catalog-sort" name="sort">${sortOptions.map((option) => `<option value="${option.value}"${sort === option.value ? ' selected' : ''}>${option.label}</option>`).join('')}</select></label><button type="submit">Ordenar</button></form>`;
+  const content = `<div class="catalog-toolbar"><div><h1>${title}</h1><p>${products.length} ${products.length === 1 ? 'producto en esta página' : 'productos en esta página'} · Precios en COP</p></div>${sortForm}</div>
+    ${filterChips.length ? `<div class="catalog-active-filters"><strong>Filtros activos:</strong><div>${filterChips.join('')}</div></div>` : ''}<p class="catalog-results-count" role="status" aria-live="polite">${products.length ? `Mostrando ${products.length} productos en esta página.` : 'No hay productos para mostrar en esta página.'}</p><p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p>
+    ${products.length ? `<div class="grid catalog-grid" id="catalog-product-grid">${products.map((product) => renderStorefrontProductCard(product, discounts?.get(product.id),reviews?.[product.id])).join('')}</div>` : empty}`;
   const currentPage = pagination?.page || 1;
   const firstItem = products.length ? (currentPage - 1) * 24 + 1 : 0;
   const lastItem = products.length ? firstItem + products.length - 1 : 0;
   const pageStatus = pagination ? `Mostrando ${firstItem}–${lastItem} productos · Página ${pagination.page}` : '';
   const pager = pagination ? renderStorefrontPagination('Paginación del catálogo', pageStatus, pagination.previousHref, pagination.nextHref) : '';
-  return `<nav class="catalog-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Catálogo</span></nav>${renderStorefrontBanners(banners, 'Contenido destacado')}${catalogBody}${pager}${filtersScript}${products.length ? renderProductCardActionsScript : ''}`;
+  return `<nav class="catalog-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span aria-hidden="true">/</span><span aria-current="page">Catálogo</span></nav>${renderStorefrontBanners(banners, 'Contenido destacado')}<div class="catalog-layout">${filterPanel}<section class="catalog-main">${content}</section></div>${pager}${products.length ? renderProductCardActionsScript : ''}`;
 }
