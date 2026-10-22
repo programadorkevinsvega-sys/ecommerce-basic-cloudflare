@@ -387,7 +387,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
-  - [x] Autocompletado del buscador global con sugerencias de productos publicados, navegación accesible por teclado y consultas FTS5 con prefijos acotados.
+  - [ ] Autocompletado del buscador global implementado en PR: sugiere productos publicados, admite navegación por teclado y usa consultas FTS5 con prefijos acotados; pendiente CI y aceptación en frontend.
   - [ ] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL.
 - [ ] Carritos abandonados y campañas por email.
 - [ ] Fidelización y gift cards.
