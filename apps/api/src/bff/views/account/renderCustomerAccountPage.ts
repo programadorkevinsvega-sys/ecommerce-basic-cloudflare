@@ -65,6 +65,7 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
       </div>
       <div class="account-actions">
         <a class="btn btn-outline" href="/cuenta/perfil">Editar perfil</a>
+        <a class="btn btn-outline" href="/cuenta/favoritos">Mis favoritos</a>
         <a class="btn btn-outline" href="/cuenta/seguridad">Seguridad y sesiones</a>
       </div>
     </div>

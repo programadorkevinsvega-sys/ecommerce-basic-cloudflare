@@ -5,7 +5,7 @@ const KNOWN_MODULES = [
   'identity', 'catalog', 'media', 'inventory', 'cart', 'orders',
   'payments', 'shipping', 'credit', 'invoicing', 'realtime',
   'promotions', 'storefront', 'cms', 'seo', 'settings',
-  'notifications', 'audit'
+  'notifications', 'audit', 'wishlist'
 ];
 
 function getAllFiles(dirPath, arrayOfFiles = []) {

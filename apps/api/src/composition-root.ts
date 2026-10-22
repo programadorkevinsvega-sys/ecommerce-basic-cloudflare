@@ -71,6 +71,10 @@ import { AuditGateway } from './bff/gateways/audit/AuditGateway.js';
 import { InProcessAuditGateway } from './bff/gateways/audit/InProcessAuditGateway.js';
 import { AuditModuleContainer } from './modules/audit/module.config.js';
 import { AuditPublicApi } from './modules/audit/module.public-api.js';
+import { WishlistGateway } from './bff/gateways/wishlist/WishlistGateway.js';
+import { InProcessWishlistGateway } from './bff/gateways/wishlist/InProcessWishlistGateway.js';
+import { createWishlistModule } from './modules/wishlist/module.config.js';
+import { WishlistPublicApi } from './modules/wishlist/module.public-api.js';
 import { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
@@ -87,6 +91,7 @@ export interface AppCompositionRoot {
   cartGateway: CartGateway;
   ordersGateway: OrdersGateway;
   reviewsGateway:ReviewsGateway;
+  wishlistGateway: WishlistGateway;
   paymentsGateway: PaymentsGateway;
   realtimeGateway: RealtimeGateway;
   invoicingGateway: InvoicingGateway;
@@ -159,6 +164,9 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const reviewsContainer=createReviewsModule(env,ordersGateway);
   const reviewsGateway=new InProcessReviewsGateway(new ReviewsPublicApi(reviewsContainer));
 
+  const wishlistContainer = createWishlistModule(env);
+  const wishlistGateway = new InProcessWishlistGateway(new WishlistPublicApi(wishlistContainer));
+
   const paymentsContainer = createPaymentsModule(env);
   const paymentsGateway = new InProcessPaymentsGateway(new PaymentsPublicApi(paymentsContainer));
 
@@ -191,6 +199,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     cartGateway,
     ordersGateway,
     reviewsGateway,
+    wishlistGateway,
     paymentsGateway,
     realtimeGateway,
     invoicingGateway,
