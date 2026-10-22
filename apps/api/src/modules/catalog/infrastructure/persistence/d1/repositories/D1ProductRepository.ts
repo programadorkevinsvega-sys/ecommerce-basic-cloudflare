@@ -126,7 +126,7 @@ export class D1ProductRepository implements IProductRepository {
 
   public async search(query: string, limit: number, offset: number, status?: string): Promise<Product[]> {
     const fetchLimit = Math.min(limit + offset, 500);
-    const normalizedText = query.normalize('NFC').replace(/[^\\p{L}\\p{N}\\s_]/gu, ' ').trim().replace(/\\s+/g, ' ');
+    const normalizedText = query.normalize('NFC').replace(/[^\p{L}\p{N}\s_]/gu, ' ').trim().replace(/\s+/g, ' ');
     const ftsQuery = buildCatalogFtsPrefixQuery(normalizedText);
     const ftsResults = ftsQuery
       ? await this.db
