@@ -58,3 +58,16 @@ function parseSort(value?: string): CatalogProductSort {
   if (value === 'price_asc' || value === 'price_desc' || value === 'name_asc') return value;
   return 'featured';
 }
+
+export function buildStorefrontCatalogPageHref(page: number, query: string | undefined, category: string | undefined, filters: StorefrontCatalogFilterState): string {
+  const params = new URLSearchParams();
+  if (query) params.set('q', query);
+  if (category) params.set('category', category);
+  filters.brands.forEach((brand) => params.append('brand', brand));
+  if (filters.minPriceCop !== undefined) params.set('minPrice', String(filters.minPriceCop));
+  if (filters.maxPriceCop !== undefined) params.set('maxPrice', String(filters.maxPriceCop));
+  if (filters.cashOnDeliveryOnly) params.set('cod', '1');
+  if (filters.sort !== 'featured') params.set('sort', filters.sort);
+  params.set('page', String(page));
+  return `/productos?${params.toString()}#catalog-product-grid`;
+}
