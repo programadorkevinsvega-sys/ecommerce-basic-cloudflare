@@ -10,9 +10,9 @@ export class CatalogSearchSuggestionsController {
       c.header('X-Content-Type-Options', 'nosniff');
 
       const query = (c.req.query('q') ?? '')
-        .replace(/[\\u0000-\\u001f\\u007f]/g, ' ')
+        .replace(/[\u0000-\u001f\u007f]/g, ' ')
         .trim()
-        .replace(/\\s+/g, ' ');
+        .replace(/\s+/g, ' ');
 
       if (query.length > 80) {
         return c.json({ error: 'La búsqueda no puede superar 80 caracteres' }, 400);
