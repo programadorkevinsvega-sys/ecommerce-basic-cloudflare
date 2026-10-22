@@ -49,7 +49,12 @@ export class InventoryStock {
   }
 
   public adjust(newQty: number): void {
-    if (newQty < 0) throw new Error('Stock no puede ser negativo');
+    if (!Number.isSafeInteger(newQty) || newQty < 0 || newQty > 100000) {
+      throw new Error('El stock debe ser un entero entre 0 y 100.000 unidades');
+    }
+    if (newQty < this.reservedQuantity) {
+      throw new Error(`El stock solicitado (${newQty}) no puede ser menor que las unidades reservadas (${this.reservedQuantity})`);
+    }
     this.quantity = newQty;
     this.updatedAt = new Date().toISOString();
   }

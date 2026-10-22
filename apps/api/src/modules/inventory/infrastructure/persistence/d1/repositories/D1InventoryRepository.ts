@@ -41,6 +41,34 @@ export class D1InventoryRepository implements IInventoryRepository {
     ).bind(stock.productId, stock.quantity, stock.reservedQuantity, stock.updatedAt).run();
   }
 
+  public async setStockQuantity(productId: string, quantity: number): Promise<InventoryStock> {
+    if (!productId.trim() || !Number.isSafeInteger(quantity) || quantity < 0 || quantity > 100000) {
+      throw new Error('Producto y stock objetivo válido son obligatorios');
+    }
+    const now = new Date().toISOString();
+    await this.db.prepare(
+      `INSERT OR IGNORE INTO inventory_stocks (product_id, quantity, reserved_quantity, updated_at)
+       VALUES (?, ?, 0, ?)`
+    ).bind(productId, quantity, now).run();
+
+    const result = await this.db.prepare(
+      `UPDATE inventory_stocks SET quantity = ?, updated_at = ?
+       WHERE product_id = ? AND reserved_quantity <= ?`
+    ).bind(quantity, now, productId, quantity).run();
+    if ((result.meta?.changes ?? 0) !== 1) {
+      const current = await this.getStock(productId);
+      if (!current) throw new Error('No se encontró el registro de inventario después de inicializarlo');
+      if (current.reservedQuantity > quantity) {
+        throw new Error(`El stock solicitado (${quantity}) no puede ser menor que las unidades reservadas (${current.reservedQuantity})`);
+      }
+      if (current.quantity !== quantity) throw new Error('No fue posible aplicar el stock objetivo al inventario');
+      return current;
+    }
+    const updated = await this.getStock(productId);
+    if (!updated) throw new Error('No fue posible volver a leer el inventario actualizado');
+    return updated;
+  }
+
   public async recordMovement(movement: InventoryMovementRecord): Promise<void> {
     await this.db.prepare(
       `INSERT INTO inventory_movements (id, product_id, type, quantity, reason, reference_id, created_at)

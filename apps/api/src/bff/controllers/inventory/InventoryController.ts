@@ -79,12 +79,13 @@ export class InventoryController {
     // POST /api/v1/admin/inventory/adjust (Admin: ajustar stock manualmente)
     app.post('/api/v1/admin/inventory/adjust', requireAdmin('inventory:adjust'), async (c) => {
       const body = await c.req.json();
-      if (typeof body.productId !== 'string' || !body.productId || !Number.isSafeInteger(body.deltaQuantity) || Math.abs(body.deltaQuantity) > 100000) {
-        return c.json({ error: 'productId y deltaQuantity son requeridos' }, 400);
+      const targetQuantity = body.targetQuantity ?? body.deltaQuantity;
+      if (typeof body.productId !== 'string' || !body.productId || !Number.isSafeInteger(targetQuantity) || targetQuantity < 0 || targetQuantity > 100000) {
+        return c.json({ error: 'productId y un targetQuantity entero entre 0 y 100.000 son requeridos' }, 400);
       }
       const updated = await inventoryGateway.adjustStock(
         body.productId,
-        body.deltaQuantity,
+        targetQuantity,
         typeof body.reason === 'string' ? body.reason.slice(0, 200) : 'manual_adjustment'
       );
       return c.json({ success: true, stock: updated });

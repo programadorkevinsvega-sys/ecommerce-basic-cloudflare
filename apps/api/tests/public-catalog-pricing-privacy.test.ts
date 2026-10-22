@@ -5,6 +5,7 @@ import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js
 import { SettingsGateway } from '../src/bff/gateways/settings/SettingsGateway.js';
 import { AuditGateway } from '../src/bff/gateways/audit/AuditGateway.js';
 import { ShippingGateway } from '../src/bff/gateways/shipping/ShippingGateway.js';
+import { InventoryGateway } from '../src/bff/gateways/inventory/InventoryGateway.js';
 
 describe('privacidad de objetivos de precio del catálogo público', () => {
   it('no expone el costo ni el objetivo de ganancia por búsqueda o slug', async () => {
@@ -17,7 +18,7 @@ describe('privacidad de objetivos de precio del catálogo público', () => {
       listProducts: vi.fn().mockResolvedValue([product]),
       getProductBySlug: vi.fn().mockResolvedValue(product),
     } as unknown as CatalogGateway;
-    const app = CatalogController.createRoutes(catalog, {} as IdentityGateway, {} as SettingsGateway, {} as AuditGateway, {} as ShippingGateway);
+    const app = CatalogController.createRoutes(catalog, {} as IdentityGateway, {} as SettingsGateway, {} as AuditGateway, {} as ShippingGateway, {} as InventoryGateway);
 
     for (const path of ['/products', '/products/producto']) {
       const response = await app.request(path);

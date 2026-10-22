@@ -4,6 +4,8 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
+import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { synchronizeCatalogProductStock } from './synchronizeCatalogProductStock.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import {
   createProductSchema,
@@ -13,7 +15,7 @@ import {
 } from './catalogSchemas.js';
 
 export class CatalogController {
-  public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, auditGateway: AuditGateway, shippingGateway: ShippingGateway): Hono {
+  public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, auditGateway: AuditGateway, shippingGateway: ShippingGateway, inventoryGateway: InventoryGateway): Hono {
     const router = new Hono();
 
     // 1. Productos (Público)
@@ -148,6 +150,12 @@ export class CatalogController {
           const zones = await shippingGateway.listZones(true);
           const transactionShippingCents = Math.max(0, ...zones.map((zone) => zone.priceInCents));
           const product = await catalogGateway.createProduct({ ...parsed.data, taxRateBasisPoints: Math.round(taxRate * 100), transactionShippingCents });
+          try {
+            // El stock operativo se inicializa en Inventory al crear el producto.
+            await inventoryGateway.adjustStock(product.id, product.stockQuantity, 'catalog_product_created');
+          } catch {
+            return c.json({ error: 'El producto se creó, pero no se pudo inicializar su inventario operativo. Abre Inventario y vuelve a sincronizar los productos.' }, 503);
+          }
           return c.json({ data: product }, 201);
         } catch {
           return c.json({ error: 'No fue posible crear el producto' }, 400);
@@ -159,17 +167,36 @@ export class CatalogController {
       '/admin/products/:id',
       createAuthMiddleware(identityGateway, 'admin', 'catalog:edit'),
       async (c) => {
+        let inventoryStockUpdated = false;
         try {
           const body = await c.req.json();
           const parsed = updateProductSchema.safeParse(body);
           if (!parsed.success) return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
 
+          const productId = c.req.param('id');
+          const { stockQuantity, syncStockToInventory = false, ...productChanges } = parsed.data;
+          const stockSync = await synchronizeCatalogProductStock({
+            productId, stockQuantity, syncStockToInventory, catalogGateway, inventoryGateway,
+          });
+          if (!stockSync.ok) return c.json({ error: stockSync.error }, stockSync.status);
+          inventoryStockUpdated = stockSync.inventoryUpdated;
+
           const taxRate = (await settingsGateway.getSettings()).taxRatePercent;
           const zones = await shippingGateway.listZones(true);
           const transactionShippingCents = Math.max(0, ...zones.map((zone) => zone.priceInCents));
-          const product = await catalogGateway.updateProduct({ id: c.req.param('id'), ...parsed.data, taxRateBasisPoints: Math.round(taxRate * 100), transactionShippingCents });
+          const product = await catalogGateway.updateProduct({
+            id: productId,
+            ...productChanges,
+            ...(stockQuantity !== undefined ? { stockQuantity } : {}),
+            taxRateBasisPoints: Math.round(taxRate * 100),
+            transactionShippingCents,
+          });
           return c.json({ data: product });
         } catch {
+          // Si Inventory ya aceptó el stock, no lo revertimos: pueden haber ocurrido reservas concurrentes.
+          if (inventoryStockUpdated) {
+            return c.json({ error: 'El inventario operativo se actualizó, pero no se pudo guardar el producto en el catálogo. Reintenta guardar el producto; verifica primero el stock en Inventario.' }, 503);
+          }
           return c.json({ error: 'No fue posible actualizar el producto' }, 400);
         }
       }
