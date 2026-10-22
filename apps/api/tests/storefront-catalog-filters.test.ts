@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseStorefrontCatalogFilters } from '../src/bff/controllers/storefront/StorefrontCatalogQuery.js';
+import { buildStorefrontCatalogPageHref, parseStorefrontCatalogFilters } from '../src/bff/controllers/storefront/StorefrontCatalogQuery.js';
 import { D1ProductRepository } from '../src/modules/catalog/infrastructure/persistence/d1/repositories/D1ProductRepository.js';
 
 function createRepositoryHarness() {
@@ -61,6 +61,28 @@ describe('storefront catalog filter query', () => {
     expect(parsed.brands).toHaveLength(10);
     expect(parsed.brands.every((brand) => brand.length === 80)).toBe(true);
   });
+  it('preserves the search, selected filters and ordering when generating pagination URLs', () => {
+    const filters = parseStorefrontCatalogFilters({
+      brands: ['Casa Verde', 'Marca Norte'],
+      minPrice: '10000',
+      maxPrice: '50000',
+      cod: '1',
+      sort: 'price_desc',
+    });
+    const href = buildStorefrontCatalogPageHref(3, 'lámpara', 'ofertas', filters);
+
+    expect(href).toContain('/productos?');
+    expect(href).toContain('q=l%C3%A1mpara');
+    expect(href).toContain('category=ofertas');
+    expect(href).toContain('brand=Casa+Verde');
+    expect(href).toContain('brand=Marca+Norte');
+    expect(href).toContain('minPrice=10000');
+    expect(href).toContain('maxPrice=50000');
+    expect(href).toContain('cod=1');
+    expect(href).toContain('sort=price_desc');
+    expect(href).toContain('page=3#catalog-product-grid');
+  });
+
 });
 
 describe('D1 product query filters', () => {
