@@ -65,6 +65,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | Home | `storefront` + `catalog` + `cms` | — | ✅ |
 | Listado de productos, filtros, búsqueda | `catalog` | ✅ CRUD | ✅ |
 | Detalle de producto | `catalog` + `seo` + `promotions` + `reviews` | ✅ CRUD | ✅ |
+| Lista de deseos | `wishlist` + `identity` + `catalog` | Guardar y quitar productos por cliente autenticado | Favoritos personales en `/cuenta/favoritos` |
 | Reseñas y valoraciones | `reviews` + `orders` | ✅ Listar, crear, editar, publicar/ocultar y eliminar; compra/pago se consulta por Gateway | ✅ Ficha y página de opiniones por producto; las opiniones sembradas se mantienen diferenciadas internamente de una compra verificada |
 | Carrusel y su gestión | `storefront` | ✅ CRUD | ✅ |
 | Gestión de banners | `storefront` | ✅ CRUD | ✅ |
@@ -194,6 +195,7 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 | `cart` | Carritos de invitado y de cliente | `cart_carts`, `cart_items`, `cart_outbox_events` |
 | `orders` | Pedidos, líneas, estados, historial, tracking de invitado y modalidad logística | `orders_orders`, `orders_lines`, `orders_history`, `orders_outbox_events` |
 | `reviews` | Opiniones de productos, puntuaciones y agregados | `reviews_product_reviews` |
+| `wishlist` | Lista de deseos privada por cliente autenticado; eventos de añadir/quitar versionados | `wishlist_items`, `wishlist_outbox_events` |
 | `payments` | Pagos con Wompi, webhooks, recaudos contra entrega y conciliación de liquidaciones | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_settlement_costs`, `payments_settlement_corrections`, `payments_outbox_events` |
 | `shipping` | Entrega local del comercio, catálogo DANE, paquetes, integración MiPaquete, guías y tracking | `shipping_zones`, `shipping_zone_locations`, `shipping_divipola` y tablas `shipping_*` de transportadora/paquetes |
 | `invoicing` | Facturas inmutables, secuencias, notas crédito y documento HTML de impresión | `invoicing_invoices`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |
@@ -385,6 +387,7 @@ El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado pa
 | `/admin/login` | Inicio de sesión administrativo con MFA y Turnstile |
 | `/cuenta` | Vista de cuenta protegida, con resumen de pedidos y facturas del cliente |
 | `/cuenta/perfil`, `/cuenta/seguridad` | Edición del perfil, cambio de contraseña y gestión de sesiones propias; logout desde `/cuenta` |
+| `/cuenta/favoritos` | Lista privada y paginada de productos guardados por el cliente autenticado |
 | `/sitemap.xml`, `/sitemap-blog.xml`, `/robots.txt` | Generados dinámicamente |
 | URL desconocida | Página 404 útil con navegación a la tienda; no es un catálogo de rutas CMS |
 
@@ -404,6 +407,7 @@ La tienda y API se publican en `https://vega.jnmtortas.com`, configurado como Cu
 | `/cuenta/perfil`, `/cuenta/seguridad` | Cliente autenticado | Editar nombre/teléfono, cambiar contraseña y listar/revocar sesiones propias. |
 | `PATCH /api/v1/customer/profile`, `POST /api/v1/customer/password`, `/api/v1/customer/sessions*` | Cliente autenticado + CSRF + límite de escritura | Reautenticación con contraseña actual; cambio de contraseña rota el token y cierra las otras sesiones. |
 | `/api/v1/customer/orders`, `/api/v1/customer/invoices` | Cliente autenticado | Consultar pedidos/facturas propios. |
+| `/api/v1/customer/wishlist*` | Cliente autenticado | Listar, guardar y quitar favoritos; la propiedad se deriva de la sesión. |
 | `/api/v1/cart/*`, `/api/v1/orders` | Invitado o cliente según operación | Carrito y creación de pedido. |
 | `/api/v1/admin/*` | Admin autenticado + permiso RBAC | Operaciones administrativas de módulos. |
 | `/api/v1/realtime/notifications*` | Sesión admin o cliente autenticada | Lectura incremental y marcado como leído. |
