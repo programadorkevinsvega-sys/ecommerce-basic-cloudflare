@@ -8,6 +8,7 @@ import { CustomerAuthController } from './controllers/auth/CustomerAuthControlle
 import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
+import { CatalogSearchSuggestionsController } from './controllers/catalog/CatalogSearchSuggestionsController.js';
 import { CatalogBrandAdminController } from './controllers/catalog/CatalogBrandAdminController.js';
 import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAuxiliaryAdminController.js';
 import { CatalogTaxonomyListController } from './controllers/catalog/CatalogTaxonomyListController.js';
@@ -159,6 +160,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway, cRoot.identityGateway));
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.auditGateway, cRoot.shippingGateway));
+  app.route('/api/v1', CatalogSearchSuggestionsController.createRoutes(cRoot.catalogGateway));
   app.route('/api/v1', CatalogBrandAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CatalogTaxonomyListController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogTaxonomyMutationController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
