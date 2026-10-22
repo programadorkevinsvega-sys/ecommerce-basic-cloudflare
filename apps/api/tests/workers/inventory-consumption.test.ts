@@ -48,4 +48,21 @@ describe('D1 stock consumption', () => {
     expect(stock).toMatchObject({ quantity: 3, reservedQuantity: 0 });
     expect(claim).toEqual({ quantity: 1, status: 'completed' });
   });
+
+  it('updates absolute stock atomically while preserving reservations and rejects stock below reserved units', async () => {
+    const productId = 'stock-reconciliation-product';
+    const now = new Date().toISOString();
+    await env.DB.prepare('INSERT INTO inventory_stocks (product_id, quantity, reserved_quantity, updated_at) VALUES (?, ?, ?, ?)')
+      .bind(productId, 0, 2, now).run();
+
+    const repository = new D1InventoryRepository(env.DB);
+    const updated = await repository.setStockQuantity(productId, 20);
+    expect(updated).toMatchObject({ quantity: 20, reservedQuantity: 2, availableQuantity: 18 });
+
+    await expect(repository.setStockQuantity(productId, 1))
+      .rejects.toThrow('no puede ser menor que las unidades reservadas');
+
+    const persisted = await repository.getStock(productId);
+    expect(persisted).toMatchObject({ quantity: 20, reservedQuantity: 2, availableQuantity: 18 });
+  });
 });
