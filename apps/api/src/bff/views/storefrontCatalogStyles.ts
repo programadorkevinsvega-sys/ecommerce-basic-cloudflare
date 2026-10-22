@@ -47,5 +47,5 @@ export const storefrontCatalogStyles = String.raw`
     .catalog-filter-empty button:hover, .catalog-empty a:hover { background: #2a372f; color: #fff; }
     @media (max-width: 1050px) { .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 760px) { .catalog-layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; } .catalog-sidebar { order: 0; } .catalog-filters { padding: .8rem 1rem; } .catalog-toolbar { align-items: flex-start; } .catalog-grid { gap: .75rem; } }
-    @media (max-width: 520px) { .catalog-toolbar { flex-direction: column; } .catalog-sort { width: 100%; } .catalog-sort select { width: 100%; } .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; } }
+    @media (max-width: 520px) { .catalog-toolbar { flex-direction: column; } .catalog-sort-form { width: 100%; } .catalog-sort { width: 100%; min-width: 0; flex: 1; } .catalog-sort select { width: 100%; min-width: 0; } .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; } }
 `;
