@@ -384,12 +384,12 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [x] Productos relacionados en la ficha, seleccionados por etiquetas, marca, tipo de producto y categorías compartidas; no aparecen recomendaciones sin relación.
 - [x] Guías textuales por producto y enlaces a artículos publicados del blog desde la ficha; sin archivos PDF ni referencias SQL entre módulos.
 - [x] Seguimiento seguro: clientes autenticados consultan pedidos de su cuenta; invitados usan una clave aleatoria enviada por correo. Admin puede gestionar estados, historial, datos de envío y guías desde sus secciones operativas.
-- [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
+- [ ] Validación end-to-end en producción de un pedido real con guía real: falta comprobar conjuntamente la compra/pago aplicable, creación e impresión de la guía, recepción del email, actualización del tracking de la transportadora y privacidad de acceso. Las pruebas de módulos no sustituyen esta validación operativa completa.
 - [ ] Multi-idioma con `hreflang`.
-- [ ] Búsqueda avanzada y sugerencias.
+- [x] Búsqueda avanzada y sugerencias de catálogo: alcance implementado mediante autocompletado accesible, filtros y ordenamiento en servidor; subfunciones desplegadas y validadas funcionalmente el 2026-10-22.
   - [x] Autocompletado del buscador global: sugiere productos publicados, admite navegación por teclado y usa consultas FTS5 con prefijos acotados; PR #4 integrado en `main` y flujo validado por el propietario en el frontend desplegado el 2026-10-22.
   - [x] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL; PR #5 integrado en `main`, desplegado en Cloudflare y validado funcionalmente por el propietario el 2026-10-22. Validación local aprobada: typecheck, lint, 193 pruebas unitarias y 24 pruebas de Workers. GitHub Actions sigue reportando fallo en dos jobs sin pasos ni logs accesibles; CI remota no confirmada.
-- [ ] Carritos abandonados y campañas por email.
+- [ ] Recuperación de carritos abandonados y campañas comerciales por email (pendiente; no confundir con los correos transaccionales ya existentes para pedidos y guías).
 - [ ] Fidelización y gift cards.
 - [ ] **Extracción de módulos** a Workers propios cuando exista necesidad real, siguiendo la sección 10.1 del contrato (D1 propia, `ServiceBinding<Modulo>Gateway`, un cambio de wiring en `composition-root.ts`).
 
