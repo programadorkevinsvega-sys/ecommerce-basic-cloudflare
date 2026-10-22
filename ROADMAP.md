@@ -387,8 +387,8 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
-  - [ ] Autocompletado del buscador global implementado en PR: sugiere productos publicados, admite navegación por teclado y usa consultas FTS5 con prefijos acotados; pendiente CI y aceptación en frontend.
-  - [ ] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL.
+  - [x] Autocompletado del buscador global: sugiere productos publicados, admite navegación por teclado y usa consultas FTS5 con prefijos acotados; PR #4 integrado en `main` y flujo validado por el propietario en el frontend desplegado el 2026-10-22.
+  - [ ] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL; implementación en la rama `feat/phase-12-server-side-catalog-filters`, pendiente CI y aceptación funcional.
 - [ ] Carritos abandonados y campañas por email.
 - [ ] Fidelización y gift cards.
 - [ ] **Extracción de módulos** a Workers propios cuando exista necesidad real, siguiendo la sección 10.1 del contrato (D1 propia, `ServiceBinding<Modulo>Gateway`, un cambio de wiring en `composition-root.ts`).

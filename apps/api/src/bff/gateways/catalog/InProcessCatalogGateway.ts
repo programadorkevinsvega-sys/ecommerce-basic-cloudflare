@@ -11,6 +11,7 @@ import {
   CatalogCollectionDto,
 } from './CatalogGateway.js';
 import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
+import { ProductListFilters } from '../../../modules/catalog/domain/ports/ProductListQuery.js';
 
 export class InProcessCatalogGateway implements CatalogGateway {
   private readonly publicApi: ICatalogPublicApi;
@@ -49,7 +50,7 @@ export class InProcessCatalogGateway implements CatalogGateway {
     status?: string;
     searchQuery?: string;
     relatedToId?: string;
-  }): Promise<CatalogProductDto[]> {
+  } & ProductListFilters): Promise<CatalogProductDto[]> {
     const products = await this.publicApi.listProducts(params);
     return products.map((p) => p.toPrimitives());
   }

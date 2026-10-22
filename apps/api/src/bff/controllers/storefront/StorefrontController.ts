@@ -17,6 +17,7 @@ import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationH
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 import { getPageMarketingContent } from './StorefrontPageMarketing.js';
 import { ProductDetailController } from './ProductDetailController.js';
+import { buildStorefrontCatalogPageHref, parseStorefrontCatalogFilters } from './StorefrontCatalogQuery.js';
 
 export class StorefrontController {
   public static createRoutes(
@@ -88,42 +89,57 @@ export class StorefrontController {
 
     router.get('/productos', async (c) => {
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const query = c.req.query('q');
+      const query = c.req.query('q')?.trim().slice(0, 120);
       const page = Number(c.req.query('page') || 1);
       if (!Number.isSafeInteger(page) || page < 1 || page > 1000) return c.redirect('/productos', 302);
+      const filters = parseStorefrontCatalogFilters({
+        brands: c.req.queries('brand') ?? [],
+        minPrice: c.req.query('minPrice'),
+        maxPrice: c.req.query('maxPrice'),
+        cod: c.req.query('cod'),
+        sort: c.req.query('sort'),
+      });
       const placement = c.req.query('category') ? 'category' : 'catalog';
-      const [productRecords, nav, banners] = await Promise.all([
-        catalogGateway.listProducts({ limit: 25, offset: (page - 1) * 24, status: 'published', searchQuery: query }),
+      const [productRecords, nav, banners, brandRecords] = await Promise.all([
+        catalogGateway.listProducts({ limit: 25, offset: (page - 1) * 24, status: 'published', searchQuery: query, ...filters.productFilters }),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
         getPageMarketingContent(storefrontGateway, placement, 'Contenido destacado', placement === 'catalog' ? ['products'] : []),
+        catalogGateway.listBrands({ limit: 100, offset: 0 }),
       ]);
 
       const products = productRecords.slice(0, 24);
       const [discountMap, reviewSummaries] = await Promise.all([resolveProductDiscounts(products, promotionsGateway), reviewsGateway.summaries(products.map((product) => product.id)).catch(() => ({}))]);
-      const pageHref = (targetPage: number) => {
-        const params = new URLSearchParams();
-        if (query) params.set('q', query);
-        const category = c.req.query('category');
-        if (category) params.set('category', category);
-        params.set('page', String(targetPage));
-        return `/productos?${params.toString()}#catalog-product-grid`;
-      };
+      const pageHref = (targetPage: number) => buildStorefrontCatalogPageHref(targetPage, query, c.req.query('category'), filters);
+      const availableBrands = [...new Set([
+        ...brandRecords.filter((brand) => brand.status !== 'inactive').map((brand) => brand.name.trim()),
+        ...products.map((product) => product.brand?.trim() || ''),
+        ...filters.brands,
+      ].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
       const bodyHtml = renderCatalogPage(products, query, banners.banners, discountMap, {
         page,
         previousHref: page > 1 ? pageHref(page - 1) : undefined,
         nextHref: productRecords.length > 24 ? pageHref(page + 1) : undefined,
-      }, reviewSummaries);
+      }, reviewSummaries, {
+        availableBrands,
+        selectedBrands: filters.brands,
+        minPriceCop: filters.minPriceCop,
+        maxPriceCop: filters.maxPriceCop,
+        cashOnDeliveryOnly: filters.cashOnDeliveryOnly,
+        sort: filters.sort,
+        hasActiveFilters: filters.hasActiveFilters,
+        category: c.req.query('category'),
+      });
 
       const storeUrl = 'https://vega.jnmtortas.com';
       const itemListJsonLd = StructuredDataHelper.generateItemListSchema(
         products.map((p, idx) => ({ name: p.name, url: `${storeUrl}/productos/${p.slug}`, position: idx + 1 }))
       );
-
+      const hasSearchOrFilter = Boolean(query) || filters.hasActiveFilters || filters.sort !== 'featured';
       const html = renderBaseLayout({
         title: query ? `Búsqueda: ${query}` : 'Catálogo de Productos',
         description: 'Explora nuestra variedad de productos con garantía de satisfacción.',
         canonicalUrl: `${storeUrl}/productos${page > 1 ? `?page=${page}` : ''}`,
-        noindex: Boolean(query && query.trim().length > 0),
+        noindex: hasSearchOrFilter,
         jsonLd: itemListJsonLd,
         bodyHtml,
         customerEmail,

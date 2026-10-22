@@ -123,19 +123,19 @@ describe('storefront presentation', () => {
     expect(html).not.toContain('UV400 polarizado');
   });
 
-  it('renders catalog filters only from loaded products and uses their real prices and purchase options', () => {
+  it('renders catalog filters as server-backed forms with catalog prices and purchase options', () => {
     const html = renderCatalogPage([product]);
     expect(html).toContain('<h1>Catálogo</h1>');
     expect(html).toContain('value="Casa Verde"');
-    expect(html).toContain('data-cod-filter');
+    expect(html).toContain('name="cod" value="1"');
     expect(html).toContain('data-price="1599000"');
-    expect(html).toContain('Menor precio');
+    expect(html).toContain('Precio base: menor a mayor');
     expect(html).toContain('Pago contra entrega');
     expect(html).toContain('Mostrando ');
     expect(html).toContain('role="status"');
-    expect(html).toContain('id="catalog-filter-empty" hidden');
+    expect(html).toContain('name="minPrice"');
     expect(html).not.toContain('Marca Ejemplo');
-    expect(html).not.toContain('Limpiar filtros');
+    expect(html).toContain('Limpiar filtros');
   });
 
   it('renders the discounted effective price and a useful empty state', () => {
@@ -177,13 +177,15 @@ describe('storefront presentation', () => {
     expect(blog.match(/aria-disabled="true"/g)).toHaveLength(2);
   });
 
-  it('keeps catalog search and filtering in presentation while sorting actual loaded cards', () => {
+  it('preserves catalog search and filter state in GET forms instead of filtering only loaded cards', () => {
     const html = renderCatalogPage([product], 'lámpara');
     expect(html).toContain('Resultados para “lámpara”');
-    expect(html).toContain('catalogServerQuery');
-    expect(html).toContain('applyCatalogFilters');
-    expect(html).toContain('catalogGrid.append(...ordered)');
-    expect(html).toContain('window.location.href = \'/productos\'');
+    expect(html).toContain('name="q" value="lámpara"');
+    expect(html).toContain('name="brand"');
+    expect(html).toContain('method="GET"');
+    expect(html).toContain('name="sort"');
+    expect(html).not.toContain('applyCatalogFilters');
+    expect(html).not.toContain('catalogGrid.append(...ordered)');
   });
 
   it('renders checkout information from the current cart and active shipping zones', () => {

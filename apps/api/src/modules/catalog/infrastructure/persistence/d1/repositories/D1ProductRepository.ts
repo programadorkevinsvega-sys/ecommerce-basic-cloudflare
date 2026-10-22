@@ -2,6 +2,7 @@ import { Product } from '../../../../domain/entities/Product.js';
 import { IProductRepository } from '../../../../domain/ports/IProductRepository.js';
 import { D1ProductMapper, ProductRow } from './D1ProductMapper.js';
 import { buildCatalogFtsPrefixQuery } from '../CatalogFtsPrefixQuery.js';
+import { ProductListFilters } from '../../../../domain/ports/ProductListQuery.js';
 
 export class D1ProductRepository implements IProductRepository {
   private readonly db: D1Database;
@@ -110,50 +111,90 @@ export class D1ProductRepository implements IProductRepository {
     ]);
   }
 
-  public async list(limit: number, offset: number, status?: string): Promise<Product[]> {
-    let query = 'SELECT * FROM catalog_products';
+  public async list(limit: number, offset: number, status?: string, filters: ProductListFilters = {}): Promise<Product[]> {
+    const where: string[] = [];
     const params: unknown[] = [];
     if (status) {
-      query += ' WHERE status = ?';
+      where.push('p.status = ?');
       params.push(status);
     }
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    appendProductListFilters(where, params, filters, 'p.');
+    const query = `SELECT p.* FROM catalog_products AS p${where.length ? ` WHERE ${where.join(' AND ')}` : ''}
+      ORDER BY ${productOrderBy(filters.sort, 'p.', false)} LIMIT ? OFFSET ?`;
     params.push(limit, offset);
-
     const { results } = await this.db.prepare(query).bind(...params).all<ProductRow>();
     return Promise.all((results || []).map((row) => D1ProductMapper.hydrate(row, this.db)));
   }
 
-  public async search(query: string, limit: number, offset: number, status?: string): Promise<Product[]> {
-    const fetchLimit = Math.min(limit + offset, 500);
+  public async search(query: string, limit: number, offset: number, status?: string, filters: ProductListFilters = {}): Promise<Product[]> {
     const normalizedText = query.normalize('NFC').replace(/[^\p{L}\p{N}\s_]/gu, ' ').trim().replace(/\s+/g, ' ').slice(0, 120).trim();
-    const ftsQuery = buildCatalogFtsPrefixQuery(normalizedText);
-    const ftsResults = ftsQuery
-      ? await this.db
-        .prepare(`SELECT catalog_products_fts.product_id FROM catalog_products_fts
-          JOIN catalog_products ON catalog_products.id = catalog_products_fts.product_id
-          WHERE catalog_products_fts MATCH ? ${status ? 'AND catalog_products.status = ?' : ''}
-          ORDER BY bm25(catalog_products_fts), catalog_products_fts.product_id
-          LIMIT ?`)
-        .bind(...(status ? [ftsQuery, status, fetchLimit] : [ftsQuery, fetchLimit]))
-        .all<{ product_id: string }>()
-      : { results: [] as Array<{ product_id: string }> };
-
     if (!normalizedText) return [];
-    const brandQuery = `SELECT id FROM catalog_products
-      WHERE instr(lower(COALESCE(brand, '')), lower(?)) > 0 ${status ? 'AND status = ?' : ''}
-      ORDER BY CASE WHEN lower(COALESCE(brand, '')) = lower(?) THEN 0 ELSE 1 END, created_at DESC
-      LIMIT ?`;
-    const brandResults = await this.db.prepare(brandQuery)
-      .bind(...(status ? [normalizedText, status, normalizedText, fetchLimit] : [normalizedText, normalizedText, fetchLimit]))
-      .all<{ id: string }>();
-    const productIds = [...new Set([
-      ...(ftsResults.results || []).map((row) => row.product_id),
-      ...(brandResults.results || []).map((row) => row.id),
-    ])];
-    const products = (await Promise.all(productIds.map((id) => this.findById(id))))
-      .filter((product): product is Product => Boolean(product));
-    return products.slice(offset, offset + limit);
-  }
+    const ftsQuery = buildCatalogFtsPrefixQuery(normalizedText);
+    const candidates: string[] = [];
+    const params: unknown[] = [];
 
+    if (ftsQuery) {
+      candidates.push(`SELECT catalog_products_fts.product_id AS product_id,
+          0 AS match_priority, bm25(catalog_products_fts) AS relevance
+        FROM catalog_products_fts
+        JOIN catalog_products AS source_product ON source_product.id = catalog_products_fts.product_id
+        WHERE catalog_products_fts MATCH ? ${status ? 'AND source_product.status = ?' : ''}`);
+      params.push(ftsQuery);
+      if (status) params.push(status);
+    }
+
+    candidates.push(`SELECT id AS product_id, 1 AS match_priority, 0.0 AS relevance
+      FROM catalog_products
+      WHERE instr(lower(COALESCE(brand, '')), lower(?)) > 0 ${status ? 'AND status = ?' : ''}`);
+    params.push(normalizedText);
+    if (status) params.push(status);
+
+    const where: string[] = [];
+    if (status) {
+      where.push('p.status = ?');
+      params.push(status);
+    }
+    appendProductListFilters(where, params, filters, 'p.');
+    const sql = `WITH candidate_matches AS (${candidates.join(' UNION ALL ')}),
+      ranked_matches AS (
+        SELECT product_id, MIN(match_priority) AS match_priority, MIN(relevance) AS relevance
+        FROM candidate_matches
+        GROUP BY product_id
+      )
+      SELECT p.* FROM ranked_matches AS m
+      JOIN catalog_products AS p ON p.id = m.product_id
+      ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+      ORDER BY ${productOrderBy(filters.sort, 'p.', true)} LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+    const { results } = await this.db.prepare(sql).bind(...params).all<ProductRow>();
+    return Promise.all((results || []).map((row) => D1ProductMapper.hydrate(row, this.db)));
+  }
+}
+
+function appendProductListFilters(where: string[], params: unknown[], filters: ProductListFilters, prefix: string): void {
+  const brands = [...new Set((filters.brand ?? []).map((brand) => brand.trim()).filter(Boolean))].slice(0, 10);
+  if (brands.length) {
+    where.push(`${prefix}brand IN (${brands.map(() => '?').join(', ')})`);
+    params.push(...brands);
+  }
+  if (filters.minPriceInCents !== undefined) {
+    where.push(`${prefix}price_in_cents >= ?`);
+    params.push(filters.minPriceInCents);
+  }
+  if (filters.maxPriceInCents !== undefined) {
+    where.push(`${prefix}price_in_cents <= ?`);
+    params.push(filters.maxPriceInCents);
+  }
+  if (filters.cashOnDeliveryOnly) {
+    where.push(`${prefix}allows_cash_on_delivery = 1`);
+  }
+}
+
+function productOrderBy(sort: ProductListFilters['sort'], prefix: string, search: boolean): string {
+  if (sort === 'price_asc') return `${prefix}price_in_cents ASC, ${prefix}id ASC`;
+  if (sort === 'price_desc') return `${prefix}price_in_cents DESC, ${prefix}id ASC`;
+  if (sort === 'name_asc') return `${prefix}name COLLATE NOCASE ASC, ${prefix}id ASC`;
+  return search
+    ? 'm.match_priority ASC, m.relevance ASC, p.created_at DESC, p.id ASC'
+    : `${prefix}created_at DESC, ${prefix}id ASC`;
 }
