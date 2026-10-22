@@ -380,13 +380,15 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 
 - [x] Reseñas públicas verificadas por compra entregada, página propia paginada y `AggregateRating` en JSON-LD; reseñas cargadas por migración permanecen internamente marcadas como no verificadas y no se atribuyen a compras.
 - [x] Gestión administrativa de reseñas: listar, buscar/paginar, crear, ver, editar, publicar/ocultar y eliminar; el método de pago solo procede de la verificación del pedido y no se inventa para una reseña editorial.
-- [ ] Lista de deseos (implementación en PR; pendiente CI y verificación de aceptación).
+- [x] Lista de deseos: guardado idempotente por cliente, página paginada, eliminación y aislamiento de sesión; migración D1 aplicada en producción y ciclo completo validado manualmente en el frontend el 2026-10-22.
 - [x] Productos relacionados en la ficha, seleccionados por etiquetas, marca, tipo de producto y categorías compartidas; no aparecen recomendaciones sin relación.
 - [x] Guías textuales por producto y enlaces a artículos publicados del blog desde la ficha; sin archivos PDF ni referencias SQL entre módulos.
 - [x] Seguimiento seguro: clientes autenticados consultan pedidos de su cuenta; invitados usan una clave aleatoria enviada por correo. Admin puede gestionar estados, historial, datos de envío y guías desde sus secciones operativas.
 - [ ] Validar el ciclo completo desplegado con un pedido real y una guía real, incluyendo recepción de email, tracking de la transportadora y privacidad de acceso.
 - [ ] Multi-idioma con `hreflang`.
 - [ ] Búsqueda avanzada y sugerencias.
+  - [x] Autocompletado del buscador global con sugerencias de productos publicados, navegación accesible por teclado y consultas FTS5 con prefijos acotados.
+  - [ ] Filtros y ordenamiento de catálogo en servidor, coherentes con la paginación y el estado de la URL.
 - [ ] Carritos abandonados y campañas por email.
 - [ ] Fidelización y gift cards.
 - [ ] **Extracción de módulos** a Workers propios cuando exista necesidad real, siguiendo la sección 10.1 del contrato (D1 propia, `ServiceBinding<Modulo>Gateway`, un cambio de wiring en `composition-root.ts`).
