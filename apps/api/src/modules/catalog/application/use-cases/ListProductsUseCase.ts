@@ -1,8 +1,9 @@
 import { Result } from '../../../../shared-kernel/Result.js';
 import { Product } from '../../domain/entities/Product.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
+import { ProductListFilters } from '../../domain/ports/ProductListQuery.js';
 
-export interface ListProductsInput {
+export interface ListProductsInput extends ProductListFilters {
   limit?: number;
   offset?: number;
   status?: string;
@@ -25,9 +26,9 @@ export class ListProductsUseCase {
 
     let products: Product[];
     if (input.searchQuery && input.searchQuery.trim().length > 0) {
-      products = await this.productRepo.search(input.searchQuery.trim(), limit, offset, input.status);
+      products = await this.productRepo.search(input.searchQuery.trim(), limit, offset, input.status, input);
     } else {
-      products = await this.productRepo.list(limit, offset, input.status);
+      products = await this.productRepo.list(limit, offset, input.status, input);
     }
 
     return Result.ok(products);
