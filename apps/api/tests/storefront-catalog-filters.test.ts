@@ -97,12 +97,14 @@ describe('D1 product query filters', () => {
     });
 
     expect(calls).toHaveLength(1);
-    expect(calls[0].sql).toContain('p.brand IN (?, ?)');
-    expect(calls[0].sql).toContain('p.price_in_cents >= ?');
-    expect(calls[0].sql).toContain('p.price_in_cents <= ?');
-    expect(calls[0].sql).toContain('p.allows_cash_on_delivery = 1');
-    expect(calls[0].sql).toContain('ORDER BY p.price_in_cents ASC, p.id ASC LIMIT ? OFFSET ?');
-    expect(calls[0].params).toEqual([
+    const call = calls[0];
+    if (!call) throw new Error('Se esperaba una consulta D1 para listar productos');
+    expect(call.sql).toContain('p.brand IN (?, ?)');
+    expect(call.sql).toContain('p.price_in_cents >= ?');
+    expect(call.sql).toContain('p.price_in_cents <= ?');
+    expect(call.sql).toContain('p.allows_cash_on_delivery = 1');
+    expect(call.sql).toContain('ORDER BY p.price_in_cents ASC, p.id ASC LIMIT ? OFFSET ?');
+    expect(call.params).toEqual([
       'published', 'Casa Verde', 'Marca Norte', 100000, 900000, 25, 24,
     ]);
   });
@@ -116,13 +118,15 @@ describe('D1 product query filters', () => {
     });
 
     expect(calls).toHaveLength(1);
-    expect(calls[0].sql).toContain('catalog_products_fts MATCH ?');
-    expect(calls[0].sql).toContain('ranked_matches AS');
-    expect(calls[0].sql).toContain('p.brand IN (?)');
-    expect(calls[0].sql).toContain('p.allows_cash_on_delivery = 1');
-    expect(calls[0].sql).toContain('ORDER BY p.name COLLATE NOCASE ASC, p.id ASC LIMIT ? OFFSET ?');
-    expect(calls[0].sql).not.toContain('Lámpara');
-    expect(calls[0].params).toEqual([
+    const call = calls[0];
+    if (!call) throw new Error('Se esperaba una consulta D1 para buscar productos');
+    expect(call.sql).toContain('catalog_products_fts MATCH ?');
+    expect(call.sql).toContain('ranked_matches AS');
+    expect(call.sql).toContain('p.brand IN (?)');
+    expect(call.sql).toContain('p.allows_cash_on_delivery = 1');
+    expect(call.sql).toContain('ORDER BY p.name COLLATE NOCASE ASC, p.id ASC LIMIT ? OFFSET ?');
+    expect(call.sql).not.toContain('Lámpara');
+    expect(call.params).toEqual([
       '"Lámpara"*', 'published', 'Lámpara', 'published',
       'published', 'Casa Verde', 25, 24,
     ]);
