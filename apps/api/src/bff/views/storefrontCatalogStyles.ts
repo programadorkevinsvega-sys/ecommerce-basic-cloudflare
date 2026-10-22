@@ -27,7 +27,13 @@ export const storefrontCatalogStyles = String.raw`
     .catalog-sort select { min-width: 175px; min-height: 44px !important; padding: 0 .7rem !important; border: 1px solid #c7ccbe !important; border-radius: 10px !important; background: #fff !important; color: #16201b !important; }
     .catalog-active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .75rem 0; color: #424e47; font-size: .8rem; }
     .catalog-active-filters > div { display: flex; flex-wrap: wrap; gap: .4rem; }
-    .catalog-filter-chip { min-height: 34px; padding: 0 .7rem; border: 1px solid #c7ccbe; border-radius: 999px; background: #fff; color: #16201b; font: inherit; font-size: .76rem; cursor: pointer; }
+    .catalog-filter-chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 .7rem; border: 1px solid #c7ccbe; border-radius: 999px; background: #fff; color: #16201b; font: inherit; font-size: .76rem; cursor: pointer; text-decoration: none; }
+    .catalog-filter-form { display: flex; flex-direction: column; gap: .75rem; }
+    .catalog-filter-actions { display: flex; flex-direction: column; gap: .55rem; margin-top: .35rem; }
+    .catalog-filter-actions button, .catalog-sort-form > button { min-height: 40px; padding: .55rem .8rem; border: 1px solid #1f4d3a; border-radius: 10px; background: #1f4d3a; color: #fff; font-size: .8rem; font-weight: 650; cursor: pointer; }
+    .catalog-filter-actions a { color: #424e47; font-size: .8rem; text-align: center; }
+    .catalog-sort-form { display: flex; align-items: flex-end; gap: .55rem; }
+    .catalog-sort-form > button { min-height: 44px; }
     .catalog-filter-chip:hover { border-color: #1f4d3a; background: #e8ebe2; }
     .catalog-results-count { margin: 0 0 .55rem; color: #65716a; font-size: .78rem; }
     .catalog-cart-feedback { margin: 0 0 .8rem; padding: .7rem .9rem; border: 1px solid #cfe0d5; border-radius: 10px; background: #e4eee8; color: #1f4d3a; font-size: .85rem; }
