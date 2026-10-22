@@ -1,5 +1,5 @@
 export function renderSearchSuggestionsScript(): string {
-  return String.raw\`<script>
+  return String.raw`<script>
     (() => {
       const form = document.querySelector('.header-search');
       const input = document.getElementById('header-search');
@@ -94,7 +94,7 @@ export function renderSearchSuggestionsScript(): string {
           });
           if (!response.ok) throw new Error('Search suggestions unavailable');
           const payload = await response.json();
-          if (sequence !== requestSequence || input.value.replace(/\\s+/g, ' ').trim() !== query) return;
+          if (sequence !== requestSequence || input.value.replace(/\s+/g, ' ').trim() !== query) return;
           render(Array.isArray(payload.suggestions) ? payload.suggestions : []);
         } catch (error) {
           if (error instanceof Error && error.name === 'AbortError') return;
@@ -107,7 +107,7 @@ export function renderSearchSuggestionsScript(): string {
       input.addEventListener('input', () => {
         window.clearTimeout(debounceTimer);
         activeRequest?.abort();
-        const query = input.value.replace(/\\s+/g, ' ').trim();
+        const query = input.value.replace(/\s+/g, ' ').trim();
         requestSequence += 1;
         const sequence = requestSequence;
         if (Array.from(query).length < 2) {
@@ -152,5 +152,5 @@ export function renderSearchSuggestionsScript(): string {
       });
       form.addEventListener('submit', hide);
     })();
-  </script>\`;
+  </script>`;
 }
