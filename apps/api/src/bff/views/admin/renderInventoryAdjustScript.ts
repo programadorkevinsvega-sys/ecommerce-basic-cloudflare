@@ -101,7 +101,7 @@ export function renderInventoryAdjustScript(): string {
         // La ruta existente recibe deltaQuantity, pero su controlador guarda ese valor como stock total.
         const response = await fetch('/api/v1/admin/inventory/adjust', {
           method: 'POST', headers: adminHeaders(true),
-          body: JSON.stringify({ productId: inventoryAdjustmentStock.productId, deltaQuantity: targetQuantity, reason }),
+          body: JSON.stringify({ productId: inventoryAdjustmentStock.productId, targetQuantity, reason }),
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || 'No se pudo ajustar el stock.');
