@@ -18,21 +18,13 @@ export class AdjustStockUseCase {
   }
 
   public async execute(cmd: AdjustStockCommand): Promise<InventoryStock> {
-    let stock = await this.repo.getStock(cmd.productId);
-    const now = new Date().toISOString();
-
-    if (!stock) {
-      stock = new InventoryStock({
-        productId: cmd.productId,
-        quantity: cmd.quantity,
-        reservedQuantity: 0,
-        updatedAt: now,
-      });
-    } else {
-      stock.adjust(cmd.quantity);
+    if (!cmd.productId.trim() || !Number.isSafeInteger(cmd.quantity) || cmd.quantity < 0 || cmd.quantity > 100000) {
+      throw new Error('Producto y stock objetivo válido son obligatorios');
     }
-
-    await this.repo.saveStock(stock);
+    const now = new Date().toISOString();
+    // La cantidad es un objetivo absoluto, no un delta. D1 valida el límite respecto a las reservas
+    // en la misma sentencia que actualiza quantity para no sobrescribir reserved_quantity concurrente.
+    const stock = await this.repo.setStockQuantity(cmd.productId, cmd.quantity);
     await this.repo.recordMovement({
       id: crypto.randomUUID(),
       productId: cmd.productId,
@@ -47,7 +39,6 @@ export class AdjustStockUseCase {
       quantity: cmd.quantity,
       reason: cmd.reason,
     });
-
     return stock;
   }
 }
