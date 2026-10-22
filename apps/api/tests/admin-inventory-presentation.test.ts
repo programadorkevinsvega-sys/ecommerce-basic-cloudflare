@@ -22,6 +22,7 @@ describe('admin inventory presentation', () => {
     const script = renderInventoryAdminScript() + renderInventoryListScript() + renderInventoryAdjustScript();
     expect(() => new Function(script)).not.toThrow();
     expect(script).toContain("/api/v1/admin/inventory/adjust");
+    expect(script).toContain('targetQuantity, reason');
     expect(script).toContain("/api/v1/admin/inventory/sync");
     expect(script).toContain("/api/v1/admin/audit");
     expect(script).toContain('stock.quantity + value');
