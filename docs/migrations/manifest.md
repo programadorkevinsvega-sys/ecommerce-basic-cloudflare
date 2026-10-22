@@ -366,3 +366,12 @@ Se añadieron y aplicaron cuatro migraciones compatibles hacia adelante:
 | `shipping__0012_free_shipping_starter_rules.sql` | `shipping_*` | 3 reglas de envío gratis. |
 
 Las cuatro migraciones se aplicaron a `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) con el runner remoto. Verificación del ledger: 73 migraciones. Consultas confirmaron tres registros en cada grupo solicitado y cero variantes sin producto. Los productos base están en borrador y sin stock; banners, anuncios, descuentos, cupones y reglas de envío gratis están inactivos, por lo que estos datos no publican contenido ni conceden descuentos/envíos al cliente. Las URLs de las seis imágenes de banner respondieron HTTP 200 al aplicar la migración. Los campos opcionales `image_media_id` y `og_image_id` quedaron nulos porque todavía no hay archivos de marca/colección/producto cargados como activos de Media/R2; no se asignaron identificadores ficticios.
+
+
+## Módulo: `wishlist` (introducido en `feat/phase-12-wishlist`)
+
+| Archivo | Versión | Entorno | Estado |
+|---|---|---|---|
+| `wishlist__0001_init.sql` | v1 | No aplicado | Pendiente de superar CI y de aplicar la migración en un entorno controlado. |
+
+La migración crea únicamente `wishlist_items` y `wishlist_outbox_events`. El repositorio guarda y elimina cada favorito junto con un evento versionado dentro de un `D1Database.batch`; la aplicación de esta migración en producción no forma parte de este cambio y no se afirma como realizada.
