@@ -1,5 +1,6 @@
 import { LegacyPriceMigrationPreview } from '../../../modules/catalog/application/use-cases/MigrateLegacyProductPricesUseCase.js';
 import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
+import { ProductListFilters } from '../../../modules/catalog/domain/ports/ProductListQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
 export interface CatalogProductTagDto { id:string; name:string; description:string; status:'active'|'inactive'; productCount:number; createdAt:string; updatedAt:string; }
 export interface SaveCatalogProductTagRequest { id?:string; name:string; description:string; status:'active'|'inactive'; }
@@ -171,7 +172,7 @@ export interface CatalogGateway {
   deleteProduct(id: string): Promise<void>;
   getProductBySlug(slug: string): Promise<CatalogProductDto>;
   getProductById(id: string): Promise<CatalogProductDto>;
-  listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string; relatedToId?: string }): Promise<CatalogProductDto[]>;
+  listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string; relatedToId?: string } & ProductListFilters): Promise<CatalogProductDto[]>;
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
   listCategories(query?: CatalogPageQuery): Promise<CategoryDto[]>;
   deleteCategory(id: string): Promise<void>;
