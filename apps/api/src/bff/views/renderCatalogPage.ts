@@ -33,8 +33,6 @@ interface CatalogUrlState {
 
 export function renderCatalogPage(products: CatalogProductDto[], query?: string, banners: BannerItem[] = [], discounts?: Map<string, ProductDiscountDto>, pagination?: CatalogPagePagination, reviews?: Record<string,ProductReviewCardSummaryDto>, filterState: CatalogPageFilterState = {}): string {
   const escape = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  const effectivePrice = (product: CatalogProductDto): number => discounts?.get(product.id)?.hasDiscount ? discounts.get(product.id)!.finalPriceCents : product.priceInCents;
-  const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const selectedBrands = [...new Set(filterState.selectedBrands ?? [])];
   const sort = filterState.sort ?? 'featured';
   const cashOnDeliveryOnly = filterState.cashOnDeliveryOnly ?? false;
