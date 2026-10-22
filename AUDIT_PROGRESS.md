@@ -532,3 +532,17 @@ Incluyen `README.md`, `SECURITY_RULES.md`, `ROLLBACK_RECOVERY.md`, `docs/adr/ADR
 - Se hizo visible una contradicción cronológica en las evidencias de `reviews__0001` y `reviews__0002`: debe verificarse contra el ledger remoto antes de afirmar el orden de aplicación. No se alteraron datos ni migraciones.
 - Trabajo únicamente documental; no se requiere migración D1. No se ejecutaron pruebas ni se certificó un despliegue.
 - En la revisión ampliada también corregí el ADR original de Cloudflare Pages y el de WebSockets/Durable Objects: son propuestas históricas que no corresponden a la implementación actual. La factura actual es HTML/CSS de impresión y las notificaciones usan polling HTTP, no PDF binario ni WebSockets.
+
+## Sincronización de estado de la Fase 12 (2026-10-22)
+
+Este registro complementa las anotaciones históricas fechadas: los estados antiguos describen lo que se conocía en su fecha y no deben leerse como el estado actual de `main`.
+
+- **Autocompletado del catálogo:** PR #4 integrada en `main`; el propietario confirmó la funcionalidad en el storefront desplegado.
+- **Filtros y ordenamiento del catálogo:** PR #5 integrada mediante squash en el commit `0ab619f40d39a24f6e6450635af82c4c03faac39`. Cloudflare completó el despliegue con Worker `c755e70b-5499-48a9-90f3-afe02a6909a8`; el propietario confirmó que los filtros funcionan en producción. Validación local reportada: typecheck, lint, 193 pruebas unitarias y 24 pruebas de Workers aprobadas.
+- **Lista de deseos:** el propietario confirmó el flujo de añadir/listar/quitar en el frontend de producción y que la migración D1 está aplicada. La descripción anterior en `docs/IMPLEMENTATION_STATUS.md` que afirmaba que la función seguía sin desplegarse fue corregida en la actualización documental del 2026-10-22.
+- **Búsqueda avanzada y sugerencias:** el elemento principal del `ROADMAP.md` queda marcado como completado porque sus subfunciones previstas en esta fase (autocompletado, filtros y ordenamiento) están integradas y validadas.
+- **Seguimiento de pedidos y guías:** la implementación y las pruebas de autorización/persistencia existen, pero esto no acredita por sí solo una compra real procesada de punta a punta. Sigue pendiente la aceptación E2E con pedido, guía, email recibido, tracking de transportadora y privacidad de acceso.
+- **Pendiente de Fase 12:** multidioma/`hreflang`, recuperación de carritos abandonados y campañas comerciales, fidelización/gift cards. La extracción de módulos a Workers se difiere hasta que exista una necesidad real.
+- **CI:** las ejecuciones de GitHub Actions asociadas a la PR #5 reportaron fallo en Gitleaks y lint/arquitectura, pero GitHub no expuso pasos ni logs útiles. No registrar CI como aprobada. Este bloqueo de observabilidad del pipeline no contradice el despliegue de Cloudflare ni la aceptación funcional de filtros que confirmó el propietario.
+
+El estado vigente y resumido se mantiene en `ROADMAP.md` y `docs/IMPLEMENTATION_STATUS.md`.
