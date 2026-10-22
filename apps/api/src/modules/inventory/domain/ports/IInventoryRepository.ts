@@ -13,6 +13,7 @@ export interface InventoryMovementRecord {
 export interface IInventoryRepository {
   getStock(productId: string): Promise<InventoryStock | null>;
   saveStock(stock: InventoryStock): Promise<void>;
+  setStockQuantity(productId: string, quantity: number): Promise<InventoryStock>;
   recordMovement(movement: InventoryMovementRecord): Promise<void>;
   createReservation(orderId: string, productId: string, quantity: number, expiresAt: string): Promise<void>;
   releaseReservation(orderId: string): Promise<void>;
