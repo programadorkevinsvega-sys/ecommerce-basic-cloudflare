@@ -2,6 +2,14 @@ export function renderProductFormsScript(): string {
   return `
     function readOptionalInteger(id) { const value = document.getElementById(id).value.trim(); return value ? Number(value) : null; }
     window.currentProductMediaIds = [];
+    window.prepareProductStockSyncOption = (editing, stockQuantity) => {
+      const input = document.getElementById('pStock');
+      if (input && stockQuantity !== undefined) input.value = stockQuantity;
+      const option = document.getElementById('pStockSyncOption');
+      if (option) option.style.display = editing ? 'block' : 'none';
+      const confirmSync = document.getElementById('pSyncStockToInventory');
+      if (confirmSync) confirmSync.checked = false;
+    };
     window.setProductAttributeValues = (specifications = {}) => {
       document.querySelectorAll('[data-product-attribute]').forEach((field) => {
         const value = specifications[field.dataset.productAttribute] ?? '';
