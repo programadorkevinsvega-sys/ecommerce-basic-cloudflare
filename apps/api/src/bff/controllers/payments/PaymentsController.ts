@@ -123,7 +123,14 @@ export class PaymentsController {
         const status = String(canonical.status).toUpperCase();
         if (status === 'APPROVED' && currentOrder?.status === 'confirmed' && currentOrder.paymentStatus === 'approved') {
           try {
-            if (await invoicingGateway.getInvoice({ orderId: res.orderId })) return c.json({ received: true, ignored: true });
+            if (await invoicingGateway.getInvoice({ orderId: res.orderId })) {
+              try {
+                if (!shippingGateway) throw new Error('Shipping gateway is unavailable');
+                await createShipmentForEligibleOrder(res.orderId, { orders: ordersGateway, settings: settingsGateway,
+                  shipping: shippingGateway, notifications: notificationsGateway });
+              } catch (error) { reportWebhookFailure('shipping_reconciliation', error); }
+              return c.json({ received: true, ignored: true });
+            }
           } catch (error) { reportWebhookFailure('lookup_invoice', error); throw error; }
         }
         if (['DECLINED', 'VOIDED', 'ERROR'].includes(status) && currentOrder?.status === 'cancelled' && currentOrder.paymentStatus === 'failed') return c.json({ received: true, ignored: true });

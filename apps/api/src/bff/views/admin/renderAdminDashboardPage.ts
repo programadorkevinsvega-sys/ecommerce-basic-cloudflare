@@ -62,7 +62,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <div class="admin-shell">
     ${renderAdminSidebar(props.adminEmail)}
     <main id="admin-main" class="admin-main" tabindex="-1">
-      <header class="admin-topbar"><div><p>VEGA STORE · ADMINISTRACIÓN</p><h1>Panel de administración</h1></div><div class="admin-topbar-actions"><button id="admin-refresh" type="button" onclick="window.location.reload()" aria-label="Actualizar esta página">↻ Actualizar</button><span>Sesión: ${escapeHtml(props.adminEmail)}</span></div></header>
+      <header class="admin-topbar"><div><p>VEGA STORE · ADMINISTRACIÓN</p><h1>Panel de administración</h1></div><div class="admin-topbar-actions"><button id="admin-refresh" type="button" onclick="window.location.reload()" aria-label="Actualizar esta página">↻ Actualizar</button></div></header>
       ${renderAdminSummarySection(props)}
       <div id="admin-legacy-tabs" class="admin-legacy-pane" hidden>
         ${renderAdminLegacyTabs(props)}
@@ -120,8 +120,4 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderPhase8AdminScript()}</script>
 </body>
 </html>`;
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
