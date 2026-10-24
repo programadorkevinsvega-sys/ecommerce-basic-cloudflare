@@ -72,7 +72,7 @@ export class StorefrontCheckoutController {
         footerStoreProfile: nav.footerStoreProfile,
       });
 
-      return c.html(html);
+      return c.html(html, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // GET /checkout
@@ -112,7 +112,7 @@ export class StorefrontCheckoutController {
         announcementItems: marketing.announcementItems,
       });
 
-      return c.html(html);
+      return c.html(html, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // GET /checkout/resultado

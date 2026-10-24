@@ -42,7 +42,7 @@ export class CartController {
       const cartId = getOrCreateCartId(c);
       const customerId = await getCustomerId(c);
       const cart = await cartGateway.getCart(cartId, customerId);
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // POST /api/v1/cart/items
@@ -64,7 +64,7 @@ export class CartController {
         product.priceInCents,
         customerId
       );
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // PATCH /api/v1/cart/items/:productId
@@ -80,7 +80,7 @@ export class CartController {
         productId,
         body.quantity
       );
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // DELETE /api/v1/cart/items/:productId
@@ -88,14 +88,14 @@ export class CartController {
       const cartId = getOrCreateCartId(c);
       const productId = c.req.param('productId');
       const cart = await cartGateway.removeItem(cartId, productId);
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // POST /api/v1/cart/clear
     app.post('/api/v1/cart/clear', async (c) => {
       const cartId = getOrCreateCartId(c);
       const cart = await cartGateway.clearCart(cartId);
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     // POST /api/v1/cart/merge
@@ -106,7 +106,7 @@ export class CartController {
         return c.json({ error: 'No autorizado' }, 401);
       }
       const cart = await cartGateway.mergeCart(guestCartId, customerId);
-      return c.json({ success: true, cart });
+      return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });
 
     return app;
