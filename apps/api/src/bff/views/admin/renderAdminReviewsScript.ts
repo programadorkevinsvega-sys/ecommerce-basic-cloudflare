@@ -1,6 +1,6 @@
 export function renderAdminReviewsScript():string{return `
 (() => {
-  let page=1,pageSize=10,total=0,searchTimer;
+  let page=1,pageSize=25,total=0,searchTimer;
   const esc=(value)=>window.escapeHtml(String(value??''));
   const date=(value)=>{const parsed=new Date(value);return Number.isNaN(parsed.valueOf())?'—':new Intl.DateTimeFormat('es-CO',{dateStyle:'medium',timeStyle:'short'}).format(parsed)};
   async function loadAdminReviews(nextPage=page){

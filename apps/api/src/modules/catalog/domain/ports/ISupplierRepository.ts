@@ -6,4 +6,5 @@ export interface ISupplierRepository {
   save(supplier: Supplier): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<Supplier[]>;
+  count(includeInactive?: boolean): Promise<number>;
 }

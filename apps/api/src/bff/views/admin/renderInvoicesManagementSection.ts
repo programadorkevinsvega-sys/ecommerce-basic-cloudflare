@@ -6,6 +6,7 @@ export function renderInvoicesManagementSection(): string {
       <label class="invoice-search-label" for="invoices-search">Buscar por factura, pedido, cliente o total</label><input id="invoices-search" class="invoice-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" oninput="filterAdminInvoices()" />
       <div class="invoices-table-scroll"><table class="invoices-table"><thead><tr><th>Factura</th><th>Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
         <tbody id="invoices-table-body"><tr><td colspan="7" class="invoices-empty">Cargando facturas…</td></tr></tbody></table></div>
+      <nav id="invoices-pagination" class="admin-pagination" aria-label="Paginación de facturas"></nav>
     </section>
     <div id="credit-note-modal" class="invoice-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="credit-note-title">
       <button class="invoice-modal-backdrop" type="button" aria-label="Cerrar nota crédito" onclick="closeCreditNoteModal()"></button>

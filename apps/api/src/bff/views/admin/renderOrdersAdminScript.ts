@@ -1,21 +1,46 @@
 export function renderOrdersAdminScript(): string {
   return `
     window._adminOrdersCache = {};
+    window._adminOrdersPage = 1;
+    window._adminOrdersMeta = { total: 0, hasMore: false, statusCounts: {} };
     let _activeModalOrderId = null;
 
-    async function loadAdminOrders() {
+    async function loadAdminOrders(page = window._adminOrdersPage || 1) {
       const tbody = document.getElementById('orders-table-body');
       if (!tbody) return;
+      const refreshButton = document.getElementById('orders-refresh');
+      if (refreshButton) {
+        refreshButton.disabled = true;
+        refreshButton.setAttribute('aria-busy', 'true');
+      }
       try {
-        const res = await fetch('/api/v1/admin/orders', { headers: adminHeaders() });
+        const params = new URLSearchParams({ page: String(page), pageSize: '25' });
+        const status = activeOrderStatus || 'all';
+        const method = document.getElementById('orders-method-filter')?.value || 'all';
+        const payment = document.getElementById('orders-payment-filter')?.value || 'all';
+        const query = (document.getElementById('orders-search')?.value || '').trim();
+        if (status !== 'all') params.set('status', status);
+        if (method === 'wompi') params.set('paymentMethod', 'wompi');
+        if (method === 'cod') params.set('paymentMethod', 'cash_on_delivery');
+        if (payment !== 'all') params.set('paymentStatus', payment);
+        if (query) params.set('q', query);
+        const res = await fetch('/api/v1/admin/orders?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const data = await res.json();
-        if (!res.ok || !data.success || !Array.isArray(data.orders)) throw new Error('No fue posible cargar los pedidos.');
+        if (!res.ok || !data.success || !Array.isArray(data.orders)) throw new Error(data.error || 'No fue posible cargar los pedidos.');
+        if (data.orders.length === 0 && page > 1 && page * data.pageSize > data.total) return loadAdminOrders(page - 1);
         window._adminOrdersCache = {};
         window._adminOrdersList = data.orders;
+        window._adminOrdersPage = data.page;
+        window._adminOrdersMeta = data;
         data.orders.forEach(o => { window._adminOrdersCache[o.id] = o; });
         window.renderAdminOrdersTable();
       } catch (error) {
         tbody.innerHTML = '<tr><td colspan="7" class="orders-loading">' + escapeHtml(error.message || 'Error al cargar pedidos') + '</td></tr>';
+      } finally {
+        if (refreshButton) {
+          refreshButton.disabled = false;
+          refreshButton.removeAttribute('aria-busy');
+        }
       }
     }
 

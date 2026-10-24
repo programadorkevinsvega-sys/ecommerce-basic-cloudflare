@@ -1,11 +1,16 @@
 export function renderCollectionFormScript(): string {
   return `
     const selectedCollectionProducts = new Map();
-    let collectionSearchTimer, collectionSearchAbort, collectionUploadAbort;
+    let collectionSearchTimer, collectionSearchAbort, collectionUploadAbort, collectionSearchPage = 1, collectionSearchHasMore = false;
     const collectionElement = (id) => document.getElementById(id);
     function renderCollectionProductResults(products) {
       const root = collectionElement('collectionProductResults');
       root.replaceChildren();
+      const pager = collectionElement('collectionProductPager');
+      pager.hidden = !collectionElement('collectionProductSearch').value.trim() || (!collectionSearchHasMore && collectionSearchPage <= 1);
+      pager.querySelector('span').textContent = 'Página ' + collectionSearchPage;
+      pager.querySelector('[data-product-page="previous"]').disabled = collectionSearchPage <= 1;
+      pager.querySelector('[data-product-page="next"]').disabled = !collectionSearchHasMore;
       if (!products.length) { root.textContent = 'No encontramos productos publicados.'; return; }
       products.forEach((product) => {
         const label = document.createElement('label'); label.className = 'collection-product-result';
@@ -32,22 +37,24 @@ export function renderCollectionFormScript(): string {
         chip.append(remove); root.append(chip);
       });
     }
-    async function fetchCollectionProducts(query, ids) {
+    async function fetchCollectionProducts(query, ids, page = 1) {
       if (collectionSearchAbort) collectionSearchAbort.abort();
       collectionSearchAbort = new AbortController();
-      const params = ids?.length ? 'ids=' + encodeURIComponent(ids.join(',')) : 'q=' + encodeURIComponent(query || '');
+      const params = ids?.length ? 'ids=' + encodeURIComponent(ids.join(',')) : 'q=' + encodeURIComponent(query || '') + '&page=' + page + '&pageSize=25';
       const response = await fetch('/api/v1/admin/collection-products?' + params, { headers: window.adminHeaders(false), signal: collectionSearchAbort.signal });
       const body = await response.json();
       if (!response.ok || !Array.isArray(body.data)) throw new Error(body.error || 'No se pudo buscar productos.');
-      return body.data;
+      return { items: body.data, page: body.page || 1, hasMore: Boolean(body.hasMore) };
     }
-    async function searchCollectionProducts(query) {
+    async function searchCollectionProducts(query, page = 1) {
+      collectionSearchPage = page;
       const status = collectionElement('collectionProductSearchStatus');
       status.textContent = query && query.length < 2 ? 'Escribe al menos 2 caracteres para buscar.' : 'Buscando productos…';
       if (query && query.length < 2) { if (collectionSearchAbort) collectionSearchAbort.abort(); window.lastCollectionProductResults = []; renderCollectionProductResults([]); return; }
       try {
-        const products = await fetchCollectionProducts(query);
-        window.lastCollectionProductResults = products; renderCollectionProductResults(products); renderSelectedCollectionProducts();
+        const result = await fetchCollectionProducts(query, null, page);
+        collectionSearchHasMore = result.hasMore;
+        window.lastCollectionProductResults = result.items; renderCollectionProductResults(result.items); renderSelectedCollectionProducts();
       } catch (error) {
         if (error.name !== 'AbortError') status.textContent = error.message || 'No se pudo buscar productos.';
       }
@@ -70,7 +77,7 @@ export function renderCollectionFormScript(): string {
       ids.forEach((id) => selectedCollectionProducts.set(id, { id, name:'Producto no disponible', sku:id }));
       renderSelectedCollectionProducts();
       if (ids.length) {
-        try { (await fetchCollectionProducts('', ids)).forEach((product) => selectedCollectionProducts.set(product.id, product)); renderSelectedCollectionProducts(); }
+        try { (await fetchCollectionProducts('', ids)).items.forEach((product) => selectedCollectionProducts.set(product.id, product)); renderSelectedCollectionProducts(); }
         catch (error) { collectionElement('collectionProductSearchStatus').textContent = error.message || 'No se pudieron cargar los productos seleccionados.'; }
       }
       await searchCollectionProducts(collectionElement('collectionProductSearch').value);
@@ -90,6 +97,8 @@ export function renderCollectionFormScript(): string {
       if (query.length === 1) { if (collectionSearchAbort) collectionSearchAbort.abort(); window.lastCollectionProductResults = []; renderCollectionProductResults([]); collectionElement('collectionProductSearchStatus').textContent = 'Escribe al menos 2 caracteres para buscar.'; return; }
       collectionSearchTimer = setTimeout(() => searchCollectionProducts(query), 250);
     });
+    collectionElement('collectionProductPager').querySelector('[data-product-page="previous"]').addEventListener('click', () => searchCollectionProducts(collectionElement('collectionProductSearch').value.trim(), collectionSearchPage - 1));
+    collectionElement('collectionProductPager').querySelector('[data-product-page="next"]').addEventListener('click', () => searchCollectionProducts(collectionElement('collectionProductSearch').value.trim(), collectionSearchPage + 1));
     collectionElement('collectionImageFile').addEventListener('change', async (event) => {
       const input = event.currentTarget, file = input.files?.[0]; if (!file) return;
       const status = collectionElement('collectionImageStatus'); status.textContent = 'Subiendo imagen…';

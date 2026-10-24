@@ -31,10 +31,16 @@ export class D1ProductVariantRepository implements IProductVariantRepository {
   public async list(query?: CatalogPageQuery): Promise<ProductVariant[]> {
     const where = query?.includeInactive ? '' : " WHERE status = 'active'";
     const statement = query?.limit
-      ? this.db.prepare('SELECT * FROM catalog_product_variants' + where + ' ORDER BY name LIMIT ? OFFSET ?').bind(query.limit, query.offset ?? 0)
-      : this.db.prepare('SELECT * FROM catalog_product_variants' + where + ' ORDER BY name');
+      ? this.db.prepare('SELECT * FROM catalog_product_variants' + where + ' ORDER BY name,id LIMIT ? OFFSET ?').bind(query.limit, query.offset ?? 0)
+      : this.db.prepare('SELECT * FROM catalog_product_variants' + where + ' ORDER BY name,id');
     const { results = [] } = await statement.all<VariantRow>();
     return results.map((r) => this.toDomain(r));
+  }
+
+  public async count(includeInactive = false): Promise<number> {
+    const where = includeInactive ? '' : " WHERE status = 'active'";
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM catalog_product_variants${where}`).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   private toDomain(r: VariantRow): ProductVariant {

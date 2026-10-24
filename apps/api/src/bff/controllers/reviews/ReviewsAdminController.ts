@@ -15,7 +15,7 @@ export class ReviewsAdminController {
   public static createRoutes(reviews:ReviewsGateway,catalog:CatalogGateway,identity:IdentityGateway,orders:OrdersGateway):Hono {
     const router=new Hono();
     router.get('/admin/reviews',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
-      const page=Number(c.req.query('page')||1),pageSize=Number(c.req.query('pageSize')||10);
+      const page=Number(c.req.query('page')||1),pageSize=Number(c.req.query('pageSize')||25);
       const status=c.req.query('status')||undefined,query=(c.req.query('q')||'').trim();
       if(!Number.isSafeInteger(page)||page<1||page>1_000_000||!Number.isSafeInteger(pageSize)||pageSize<1||pageSize>50||status&&!statuses.has(status as ReviewStatus)||query.length>120)
         return c.json({error:'Filtros o paginación inválidos'},400);

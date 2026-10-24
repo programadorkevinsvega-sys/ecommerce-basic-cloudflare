@@ -42,10 +42,12 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     return rule.toPrimitives() as PromotionRuleDto;
   }
 
-  public async listPromotionRules(activeOnly = false): Promise<PromotionRuleDto[]> {
-    const rules = await this.publicApi.listPromotionRules(activeOnly);
+  public async listPromotionRules(activeOnly = false, limit?: number, offset = 0): Promise<PromotionRuleDto[]> {
+    const rules = await this.publicApi.listPromotionRules(activeOnly, limit, offset);
     return rules.map((r) => r.toPrimitives() as PromotionRuleDto);
   }
+  public countPromotionRules(activeOnly = false) { return this.publicApi.countPromotionRules(activeOnly); }
+  public async getPromotionRuleById(id: string): Promise<PromotionRuleDto | null> { return (await this.publicApi.getPromotionRuleById(id))?.toPrimitives() ?? null; }
 
   public async deletePromotionRule(id: string): Promise<void> {
     await this.publicApi.deletePromotionRule(id);
@@ -92,10 +94,12 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
     return coupon.toPrimitives() as CouponDto;
   }
 
-  public async listCoupons(activeOnly = false): Promise<CouponDto[]> {
-    const coupons = await this.publicApi.listCoupons(activeOnly);
+  public async listCoupons(activeOnly = false, limit?: number, offset = 0): Promise<CouponDto[]> {
+    const coupons = await this.publicApi.listCoupons(activeOnly, limit, offset);
     return coupons.map((c) => c.toPrimitives() as CouponDto);
   }
+  public countCoupons(activeOnly = false) { return this.publicApi.countCoupons(activeOnly); }
+  public async getCouponById(id: string): Promise<CouponDto | null> { return (await this.publicApi.getCouponById(id))?.toPrimitives() ?? null; }
 
   public async deleteCoupon(id: string): Promise<void> {
     await this.publicApi.deleteCoupon(id);

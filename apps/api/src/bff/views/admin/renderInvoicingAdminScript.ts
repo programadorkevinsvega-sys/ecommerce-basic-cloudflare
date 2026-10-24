@@ -2,38 +2,47 @@ export function renderInvoicingAdminScript(): string {
   return `
     let _activeCnInvoiceId = null;
     let _adminInvoices = [];
+    let _invoicePage = 1;
+    let _invoiceMeta = { total: 0, hasMore: false };
+    let _invoiceSearchTimer;
 
-    async function loadAdminInvoices() {
+    async function loadAdminInvoices(page = _invoicePage) {
       const tbody = document.getElementById('invoices-table-body');
       if (!tbody) return;
       try {
-        const response = await fetch('/api/v1/admin/invoices', { headers: adminHeaders() });
+        const params = new URLSearchParams({ page: String(page), pageSize: '25' });
+        const query = document.getElementById('invoices-search')?.value.trim() || '';
+        if (query) params.set('q', query);
+        const response = await fetch('/api/v1/admin/invoices?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const data = await response.json();
-        if (!data.success || !Array.isArray(data.invoices)) throw new Error('No se pudieron cargar las facturas');
+        if (!response.ok || !data.success || !Array.isArray(data.invoices)) throw new Error(data.error || 'No se pudieron cargar las facturas');
         _adminInvoices = data.invoices;
-        filterAdminInvoices();
-      } catch {
-        tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty error">Error al cargar facturas.</td></tr>';
+        _invoicePage = data.page;
+        _invoiceMeta = data;
+        tbody.innerHTML = _adminInvoices.map(renderInvoiceRow).join('') || '<tr><td colspan="7" class="invoices-empty">No hay facturas que coincidan con la búsqueda.</td></tr>';
+        renderInvoicesPagination();
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty error">' + escapeHtml(error.message || 'Error al cargar facturas.') + '</td></tr>';
       }
     }
 
     function filterAdminInvoices() {
-      window.resetAdminTablePage('invoices');
-      const tbody = document.getElementById('invoices-table-body');
-      if (!tbody) return;
-      const query = normalizeInvoiceSearch(document.getElementById('invoices-search')?.value || '');
-      const digits = query.replace(/\\D/g, '');
-      const invoices = _adminInvoices.filter(invoice => {
-        const total = Math.round(Number(invoice.totalCents || 0) / 100);
-        const exactTotal = (Number(invoice.totalCents || 0) / 100).toLocaleString('es-CO', { maximumFractionDigits: 2 });
-        const haystack = normalizeInvoiceSearch([invoice.invoiceNumber, invoice.orderId, invoice.customerName, invoice.customerEmail, total.toLocaleString('es-CO'), exactTotal].join(' '));
-        return !query || haystack.includes(query) || (digits.length > 0 && (String(total).includes(digits) || exactTotal.replace(/\\D/g, '').includes(digits)));
-      });
-      window.paginateAdminTable('invoices', tbody, invoices, renderInvoiceRow, 7, 'No hay facturas que coincidan con la búsqueda.');
+      clearTimeout(_invoiceSearchTimer);
+      _invoiceSearchTimer = setTimeout(() => loadAdminInvoices(1), 250);
     }
 
-    function normalizeInvoiceSearch(value) {
-      return String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
+    function renderInvoicesPagination() {
+      const nav = document.getElementById('invoices-pagination');
+      if (!nav) return;
+      const pageSize = Number(_invoiceMeta.pageSize || 25);
+      const total = Number(_invoiceMeta.total || 0);
+      const start = total ? (_invoicePage - 1) * pageSize + 1 : 0;
+      const end = Math.min(_invoicePage * pageSize, total);
+      nav.innerHTML = '<button type="button" data-invoice-page="previous">Anterior</button><span aria-live="polite">' + start + '–' + end + ' de ' + total + ' · Página ' + _invoicePage + '</span><button type="button" data-invoice-page="next">Siguiente</button>';
+      nav.querySelector('[data-invoice-page="previous"]').disabled = _invoicePage <= 1;
+      nav.querySelector('[data-invoice-page="next"]').disabled = !_invoiceMeta.hasMore;
+      nav.querySelector('[data-invoice-page="previous"]').onclick = () => loadAdminInvoices(_invoicePage - 1);
+      nav.querySelector('[data-invoice-page="next"]').onclick = () => loadAdminInvoices(_invoicePage + 1);
     }
 
     function renderInvoiceRow(invoice) {

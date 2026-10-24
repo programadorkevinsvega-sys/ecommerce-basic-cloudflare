@@ -9,8 +9,10 @@ import { CreateAnnouncementUseCase } from './application/use-cases/CreateAnnounc
 import { UpdateAnnouncementUseCase } from './application/use-cases/UpdateAnnouncementUseCase.js';
 import { ListAnnouncementsUseCase } from './application/use-cases/ListAnnouncementsUseCase.js';
 import { DeleteAnnouncementUseCase } from './application/use-cases/DeleteAnnouncementUseCase.js';
+import { IStorefrontContentRepository } from './domain/ports/IStorefrontContentRepository.js';
 
 export interface StorefrontModuleContainer {
+  contentRepository: IStorefrontContentRepository;
   getStorefrontHomeContentUseCase: GetStorefrontHomeContentUseCase;
   createBannerUseCase: CreateBannerUseCase;
   updateBannerUseCase: UpdateBannerUseCase;
@@ -26,6 +28,7 @@ export function createStorefrontModule(env: Env): StorefrontModuleContainer {
   const repo = new D1StorefrontContentRepository(env.DB);
 
   return {
+    contentRepository: repo,
     getStorefrontHomeContentUseCase: new GetStorefrontHomeContentUseCase(repo),
     createBannerUseCase: new CreateBannerUseCase(repo),
     updateBannerUseCase: new UpdateBannerUseCase(repo),

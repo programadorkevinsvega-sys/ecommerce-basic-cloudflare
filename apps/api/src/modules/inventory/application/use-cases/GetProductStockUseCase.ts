@@ -20,4 +20,6 @@ export class GetProductStockUseCase {
     }
     return stock;
   }
+
+  public exists(productId: string): Promise<boolean> { return this.repo.hasStock(productId); }
 }

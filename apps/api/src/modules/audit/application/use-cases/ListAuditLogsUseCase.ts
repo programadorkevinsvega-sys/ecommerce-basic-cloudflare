@@ -7,4 +7,6 @@ export class ListAuditLogsUseCase {
   public async execute(filters?: ListAuditLogsFilters): Promise<AuditLog[]> {
     return this.repo.list(filters);
   }
+
+  public count(): Promise<number> { return this.repo.count(); }
 }

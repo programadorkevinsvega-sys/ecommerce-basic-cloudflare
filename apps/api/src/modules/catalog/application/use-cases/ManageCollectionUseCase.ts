@@ -11,6 +11,7 @@ export class ManageCollectionUseCase {
   public constructor(private readonly collections: ICollectionRepository, private readonly products: IProductRepository) {}
 
   public list(query?: CatalogPageQuery): Promise<Collection[]> { return this.collections.list(query); }
+  public count(includeInactive = true, query?: string): Promise<number> { return this.collections.count(includeInactive, query); }
   public async getById(id: string): Promise<Collection> {
     const collection = await this.collections.findById(id);
     if (!collection) throw new CollectionNotFoundError();

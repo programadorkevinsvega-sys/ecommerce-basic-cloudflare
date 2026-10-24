@@ -33,6 +33,10 @@ export class InProcessOrdersGateway implements OrdersGateway {
     return this.publicApi.listOrders(filters);
   }
 
+  public listAdminOrders(query: Parameters<OrdersGateway['listAdminOrders']>[0]) {
+    return this.publicApi.listAdminOrders(query);
+  }
+
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
     return this.publicApi.updateOrderStatus(cmd);
   }
@@ -69,4 +73,5 @@ export class InProcessOrdersGateway implements OrdersGateway {
   public listLocalCodCollectionCandidates(limit: number, offset: number) {
     return this.publicApi.listLocalCodCollectionCandidates(limit, offset);
   }
+  public countLocalCodCollectionCandidates() { return this.publicApi.countLocalCodCollectionCandidates(); }
 }

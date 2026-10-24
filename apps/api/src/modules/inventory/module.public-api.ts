@@ -4,6 +4,7 @@ import { ReserveStockCommand } from './application/use-cases/ReserveStockUseCase
 import { ReleaseStockCommand } from './application/use-cases/ReleaseStockUseCase.js';
 import { AdjustStockCommand } from './application/use-cases/AdjustStockUseCase.js';
 import { ConsumeStockCommand } from './application/use-cases/ConsumeStockUseCase.js';
+import { AdminInventoryPage, AdminInventoryQuery } from './domain/ports/AdminInventoryPage.js';
 
 export class InventoryPublicApi {
   private readonly container: InventoryModuleContainer;
@@ -15,6 +16,8 @@ export class InventoryPublicApi {
   public async getStock(productId: string): Promise<InventoryStock> {
     return this.container.getProductStockUseCase.execute(productId);
   }
+
+  public hasStock(productId: string): Promise<boolean> { return this.container.getProductStockUseCase.exists(productId); }
 
   public async reserveStock(cmd: ReserveStockCommand): Promise<{ success: boolean; error?: string }> {
     return this.container.reserveStockUseCase.execute(cmd);
@@ -30,6 +33,10 @@ export class InventoryPublicApi {
 
   public async listStocks(): Promise<InventoryStock[]> {
     return this.container.listStockUseCase.execute();
+  }
+
+  public listAdminInventory(query: AdminInventoryQuery): Promise<AdminInventoryPage> {
+    return this.container.listAdminInventoryUseCase.execute(query);
   }
 
   public async consumeStock(cmd: ConsumeStockCommand): Promise<void> {

@@ -37,9 +37,11 @@ export class ShippingPublicApi {
     return this.container.toggleShippingZoneUseCase.execute(id);
   }
 
-  public async listZones(onlyActive = false): Promise<ShippingZone[]> {
-    return this.container.listShippingZonesUseCase.execute(onlyActive);
+  public async listZones(onlyActive = false, limit?: number, offset = 0, localOnly = false): Promise<ShippingZone[]> {
+    return this.container.listShippingZonesUseCase.execute(onlyActive, limit, offset, localOnly);
   }
+
+  public countZones(onlyActive = false, localOnly = false): Promise<number> { return this.container.listShippingZonesUseCase.count(onlyActive, localOnly); }
 
   public async getZone(id: string): Promise<ShippingZone | null> {
     return this.container.getShippingZoneUseCase.execute(id);

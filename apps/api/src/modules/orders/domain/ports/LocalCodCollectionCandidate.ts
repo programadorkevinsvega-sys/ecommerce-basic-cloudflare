@@ -9,4 +9,5 @@ export interface LocalCodCollectionCandidate {
 
 export interface ILocalCodCollectionCandidateRepository {
   list(limit: number, offset: number): Promise<LocalCodCollectionCandidate[]>;
+  count(): Promise<number>;
 }

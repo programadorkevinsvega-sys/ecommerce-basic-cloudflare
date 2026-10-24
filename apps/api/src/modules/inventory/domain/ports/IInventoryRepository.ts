@@ -12,6 +12,7 @@ export interface InventoryMovementRecord {
 
 export interface IInventoryRepository {
   getStock(productId: string): Promise<InventoryStock | null>;
+  hasStock(productId: string): Promise<boolean>;
   saveStock(stock: InventoryStock): Promise<void>;
   setStockQuantity(productId: string, quantity: number): Promise<InventoryStock>;
   recordMovement(movement: InventoryMovementRecord): Promise<void>;

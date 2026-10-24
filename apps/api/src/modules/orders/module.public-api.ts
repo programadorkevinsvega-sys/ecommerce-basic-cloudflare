@@ -7,6 +7,7 @@ import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails,
 import { FreeShippingItemCandidate, FreeShippingRuleCandidate } from './domain/services/OrdersCheckoutPolicy.js';
 import { LocalDeliveryLabelPage } from './domain/ports/LocalDeliveryLabel.js';
 import { LocalCodCollectionCandidate } from './domain/ports/LocalCodCollectionCandidate.js';
+import { AdminOrderListPage, AdminOrderListQuery } from './domain/ports/AdminOrderListPage.js';
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -33,6 +34,10 @@ export class OrdersPublicApi {
 
   public async listOrders(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]> {
     return this.container.listOrdersUseCase.execute(filters);
+  }
+
+  public listAdminOrders(query: AdminOrderListQuery): Promise<AdminOrderListPage> {
+    return this.container.listAdminOrdersUseCase.execute(query);
   }
 
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
@@ -71,4 +76,5 @@ export class OrdersPublicApi {
   public listLocalCodCollectionCandidates(limit: number, offset: number): Promise<LocalCodCollectionCandidate[]> {
     return this.container.listLocalCodCollectionCandidatesUseCase.execute(limit, offset);
   }
+  public countLocalCodCollectionCandidates(): Promise<number> { return this.container.listLocalCodCollectionCandidatesUseCase.count(); }
 }

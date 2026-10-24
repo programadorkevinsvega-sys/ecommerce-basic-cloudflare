@@ -2,22 +2,25 @@ export function renderInventoryAdminScript(): string {
   return `
     window._adminInventoryItems = [];
     window._adminInventoryProducts = {};
-    async function loadAdminInventory() {
+    window._adminInventoryPage = 1;
+    window._adminInventoryMeta = {};
+    async function loadAdminInventory(page = window._adminInventoryPage) {
       const body = document.getElementById('inventory-table-body');
       if (!body) return false;
       body.innerHTML = '<tr><td colspan="5" class="inventory-loading">Cargando inventario…</td></tr>';
       clearInventoryMessage();
       try {
-        await fetch('/api/v1/admin/inventory/sync', { method: 'POST', headers: adminHeaders(true), body: '{}' });
-        const [inventoryResponse, productsResponse] = await Promise.all([
-          fetch('/api/v1/admin/inventory', { headers: adminHeaders() }),
-          fetch('/api/v1/products?limit=200')
-        ]);
+        const params = new URLSearchParams({ page: String(page), pageSize: '25' });
+        const query = document.getElementById('inventory-search')?.value.trim() || '';
+        if (query) params.set('q', query);
+        if (activeInventoryLevel !== 'all') params.set('level', activeInventoryLevel);
+        const inventoryResponse = await fetch('/api/v1/admin/inventory?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const inventory = await inventoryResponse.json();
-        const products = productsResponse.ok ? await productsResponse.json() : { data: [] };
         if (!inventoryResponse.ok || !inventory.success || !Array.isArray(inventory.items)) throw new Error(inventory.error || 'No fue posible cargar el inventario.');
         window._adminInventoryItems = inventory.items;
-        window._adminInventoryProducts = Object.fromEntries((products.data || []).map(product => [product.id, product]));
+        window._adminInventoryProducts = inventory.products || {};
+        window._adminInventoryPage = inventory.page;
+        window._adminInventoryMeta = inventory;
         window.renderAdminInventoryView();
         loadRecentInventoryMovements();
         return true;
@@ -26,6 +29,24 @@ export function renderInventoryAdminScript(): string {
         showInventoryMessage(error.message || 'Error al cargar inventario', true);
         return false;
       }
+    }
+
+    async function syncAdminInventoryCatalog() {
+      const button = document.getElementById('inventory-sync');
+      if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); }
+      try {
+        let page = 1, hasMore = true, created = 0;
+        while (hasMore) {
+          const response = await fetch('/api/v1/admin/inventory/sync', { method: 'POST', headers: adminHeaders(true),
+            body: JSON.stringify({ page, pageSize: 25 }) });
+          const data = await response.json();
+          if (!response.ok || !data.success) throw new Error(data.error || 'No fue posible sincronizar el catálogo.');
+          created += Number(data.createdCount || 0); hasMore = Boolean(data.hasMore); page++;
+        }
+        showInventoryMessage(created + ' productos sincronizados con el inventario.', false);
+        await loadAdminInventory(1);
+      } catch (error) { showInventoryMessage(error.message || 'Error al sincronizar inventario.', true); }
+      finally { if (button) { button.disabled = false; button.removeAttribute('aria-busy'); } }
     }
 
     async function loadRecentInventoryMovements() {
@@ -74,6 +95,7 @@ export function renderInventoryAdminScript(): string {
     }
 
     document.getElementById('inventory-refresh')?.addEventListener('click', loadAdminInventory);
+    document.getElementById('inventory-sync')?.addEventListener('click', syncAdminInventoryCatalog);
     document.getElementById('inventory-export')?.addEventListener('click', exportAdminInventory);
     window.loadAdminInventory = loadAdminInventory;
   `;

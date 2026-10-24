@@ -4,39 +4,43 @@ export function renderInventoryListScript(): string {
     const INVENTORY_ALERT_LIMIT = 10;
     function availableStock(stock) { return Number(stock.availableQuantity ?? (stock.quantity - stock.reservedQuantity)); }
     function inventoryLevel(stock) { const available = availableStock(stock); return available <= 0 ? 'out' : available < INVENTORY_ALERT_LIMIT ? 'low' : 'ok'; }
-    function filteredInventory() {
-      const query = (document.getElementById('inventory-search')?.value || '').trim().toLowerCase();
-      return (window._adminInventoryItems || []).filter(stock => {
-        const product = window._adminInventoryProducts[stock.productId] || {};
-        const matchesText = !query || [product.name, product.sku, product.brand].join(' ').toLowerCase().includes(query);
-        const level = inventoryLevel(stock);
-        return matchesText && (activeInventoryLevel === 'all' || activeInventoryLevel === level);
-      });
-    }
+    function filteredInventory() { return window._adminInventoryItems || []; }
 
     function renderAdminInventoryView() {
-      const items = window._adminInventoryItems || [];
-      const availableTotal = items.reduce((sum, item) => sum + availableStock(item), 0);
-      const reservedTotal = items.reduce((sum, item) => sum + Number(item.reservedQuantity || 0), 0);
-      const lowCount = items.filter(item => availableStock(item) < INVENTORY_ALERT_LIMIT).length;
+      const items = filteredInventory();
+      const meta = window._adminInventoryMeta || {};
+      const summary = meta.summary || {};
+      const totalAlerts = Number(summary.lowStockCount || 0) + Number(summary.outOfStockCount || 0);
       const alertCount = document.getElementById('inventory-alert-count');
-      if (alertCount) alertCount.textContent = String(lowCount);
-      document.getElementById('inv-kpi-total').textContent = items.length.toLocaleString('es-CO');
-      document.getElementById('inv-kpi-available').textContent = availableTotal.toLocaleString('es-CO');
-      document.getElementById('inv-kpi-reserved').textContent = reservedTotal.toLocaleString('es-CO');
-      document.getElementById('inv-kpi-low').textContent = lowCount.toLocaleString('es-CO');
+      if (alertCount) alertCount.textContent = String(totalAlerts);
+      document.getElementById('inv-kpi-total').textContent = Number(summary.skuCount || 0).toLocaleString('es-CO');
+      document.getElementById('inv-kpi-available').textContent = Number(summary.availableUnits || 0).toLocaleString('es-CO');
+      document.getElementById('inv-kpi-reserved').textContent = Number(summary.reservedUnits || 0).toLocaleString('es-CO');
+      document.getElementById('inv-kpi-low').textContent = totalAlerts.toLocaleString('es-CO');
       document.querySelectorAll('[data-inventory-count]').forEach(node => {
         const level = node.dataset.inventoryCount;
-        node.textContent = String(level === 'all' ? items.length : items.filter(item => inventoryLevel(item) === level).length);
+        node.textContent = String(level === 'all' ? summary.skuCount || 0 : level === 'out' ? summary.outOfStockCount || 0 : summary.lowStockCount || 0);
       });
-      const visible = filteredInventory();
       const body = document.getElementById('inventory-table-body');
       const region = document.getElementById('inventory-table-region');
       const empty = document.getElementById('inventory-empty');
-      region.hidden = visible.length === 0;
-      empty.hidden = visible.length !== 0;
-      window.paginateAdminTable('inventory', body, visible, renderInventoryRow, 5, 'No hay productos de inventario que coincidan.');
-      document.getElementById('inventory-summary').textContent = 'Mostrando ' + visible.length + ' de ' + items.length + ' productos cargados.';
+      region.hidden = false;
+      empty.hidden = items.length !== 0 || Number(meta.total || 0) !== 0;
+      body.innerHTML = items.length ? items.map(renderInventoryRow).join('') : '<tr><td colspan="5" class="inventory-loading">No hay productos en esta página.</td></tr>';
+      const start = meta.total ? (meta.page - 1) * meta.pageSize + 1 : 0;
+      const end = Math.min(meta.page * meta.pageSize, meta.total);
+      document.getElementById('inventory-summary').textContent = 'Mostrando ' + start + '–' + end + ' de ' + Number(meta.total || 0) + ' productos.';
+      renderInventoryPagination(meta);
+    }
+
+    function renderInventoryPagination(meta) {
+      const nav = document.getElementById('inventory-pagination');
+      if (!nav) return;
+      nav.innerHTML = '<button type="button" data-inventory-page="previous">Anterior</button><span aria-live="polite">Página ' + Number(meta.page || 1) + ' · ' + Number(meta.total || 0) + ' productos</span><button type="button" data-inventory-page="next">Siguiente</button>';
+      nav.querySelector('[data-inventory-page="previous"]').disabled = Number(meta.page) <= 1;
+      nav.querySelector('[data-inventory-page="next"]').disabled = !meta.hasMore;
+      nav.querySelector('[data-inventory-page="previous"]').onclick = () => loadAdminInventory(meta.page - 1);
+      nav.querySelector('[data-inventory-page="next"]').onclick = () => loadAdminInventory(meta.page + 1);
     }
 
     function renderInventoryRow(stock) {
@@ -61,7 +65,7 @@ export function renderInventoryListScript(): string {
       });
       const blob = new Blob(['\ufeff' + rows.map(row => row.join(',')).join('\\r\\n')], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a'); link.href = url; link.download = 'inventario.csv'; link.click();
+      const link = document.createElement('a'); link.href = url; link.download = 'inventario-pagina-' + window._adminInventoryPage + '.csv'; link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
@@ -72,16 +76,18 @@ export function renderInventoryListScript(): string {
     }
 
     document.querySelectorAll('[data-inventory-level]').forEach(button => button.addEventListener('click', () => {
-      activeInventoryLevel = button.dataset.inventoryLevel;
-      window.resetAdminTablePage('inventory');
+      activeInventoryLevel = button.dataset.inventoryLevel || 'all';
       document.querySelectorAll('[data-inventory-level]').forEach(tab => {
         const selected = tab === button;
         tab.classList.toggle('selected', selected);
         tab.setAttribute('aria-pressed', String(selected));
       });
-      renderAdminInventoryView();
+      loadAdminInventory(1);
     }));
-    document.getElementById('inventory-search')?.addEventListener('input', () => { window.resetAdminTablePage('inventory'); renderAdminInventoryView(); });
+    let inventorySearchTimer;
+    document.getElementById('inventory-search')?.addEventListener('input', () => {
+      clearTimeout(inventorySearchTimer); inventorySearchTimer = setTimeout(() => loadAdminInventory(1), 250);
+    });
     document.getElementById('inventory-reset')?.addEventListener('click', () => {
       activeInventoryLevel = 'all';
       document.getElementById('inventory-search').value = '';

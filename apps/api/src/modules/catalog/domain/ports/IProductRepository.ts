@@ -8,4 +8,5 @@ export interface IProductRepository {
   delete(id: string): Promise<void>;
   list(limit: number, offset: number, status?: string, filters?: ProductListFilters): Promise<Product[]>;
   search(query: string, limit: number, offset: number, status?: string, filters?: ProductListFilters): Promise<Product[]>;
+  count?(status?: string, query?: string): Promise<number>;
 }

@@ -8,13 +8,20 @@ export class D1ProductTagRepository implements IProductTagRepository {
   private readonly db: D1Database;
   public constructor(db: D1Database) { this.db = db; }
 
-  public async list(includeInactive = true): Promise<ProductTag[]> {
+  public async list(includeInactive = true, page = 1, pageSize = 25): Promise<ProductTag[]> {
     const statusFilter = includeInactive ? '' : "WHERE t.status = 'active'";
     const result = await this.db.prepare(`SELECT t.id,t.name,t.description,t.status,t.created_at,t.updated_at,
       COUNT(DISTINCT p.id) AS product_count FROM catalog_tags t
       LEFT JOIN catalog_products p ON EXISTS (SELECT 1 FROM json_each(p.tags) j WHERE lower(j.value)=lower(t.name))
-      ${statusFilter} GROUP BY t.id ORDER BY t.name COLLATE NOCASE`).all<TagRow>();
+      ${statusFilter} GROUP BY t.id ORDER BY t.name COLLATE NOCASE,t.id LIMIT ? OFFSET ?`)
+      .bind(pageSize, (page - 1) * pageSize).all<TagRow>();
     return (result.results || []).map((row) => this.toTag(row));
+  }
+
+  public async count(includeInactive = true): Promise<number> {
+    const where = includeInactive ? '' : " WHERE status = 'active'";
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM catalog_tags${where}`).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   public async save(input: SaveProductTagInput): Promise<ProductTag> {

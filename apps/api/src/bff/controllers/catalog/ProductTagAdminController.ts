@@ -11,8 +11,8 @@ export class ProductTagAdminController {
   public static createRoutes(catalog:CatalogGateway,identity:IdentityGateway,audit:AuditGateway):Hono {
     const router=new Hono();
     router.get('/admin/product-tags',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
-      const page=Number(c.req.query('page')||1);if(!Number.isSafeInteger(page)||page<1||page>1000000)return c.json({error:'Página inválida'},400);
-      try {const all=await catalog.listProductTags(true);const start=(page-1)*10;return c.json({success:true,page,pageSize:10,hasMore:start+10<all.length,data:all.slice(start,start+10)});}
+      const page=Number(c.req.query('page')||1),pageSize=Number(c.req.query('pageSize')||25);if(!Number.isSafeInteger(page)||page<1||page>1000000||!Number.isSafeInteger(pageSize)||pageSize<1||pageSize>50)return c.json({error:'Paginación inválida'},400);
+      try {const [data,total]=await Promise.all([catalog.listProductTags(true,page,pageSize),catalog.countProductTags(true)]);return c.json({success:true,page,pageSize,total,hasMore:page*pageSize<total,data});}
       catch{return c.json({error:'No fue posible cargar las etiquetas'},500);}
     });
     router.post('/admin/product-tags',createAuthMiddleware(identity,'admin','catalog:create'),async(c)=>{

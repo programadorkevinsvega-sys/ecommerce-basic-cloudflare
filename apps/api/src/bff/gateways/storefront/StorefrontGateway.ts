@@ -87,11 +87,15 @@ export interface StorefrontGateway {
   createBanner(request: CreateBannerGatewayRequest): Promise<{ id: string; title: string }>;
   updateBanner(request: UpdateBannerGatewayRequest): Promise<BannerItemDto>;
   listBanners(): Promise<BannerItemDto[]>;
+  listAdminBanners(limit: number, offset: number, filters?: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean }): Promise<{ items: BannerItemDto[]; total: number }>;
+  getBannerById(id: string): Promise<BannerItemDto | null>;
   getPublicBanners(placement: string): Promise<BannerItemDto[]>;
   getPublicAnnouncements(placement: string): Promise<AnnouncementItemDto[]>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(request: { message: string; placement: string; linkUrl?: string }): Promise<{ id: string; message: string }>;
   updateAnnouncement(request: UpdateAnnouncementGatewayRequest): Promise<AnnouncementItemDto>;
   listAnnouncements(): Promise<AnnouncementItemDto[]>;
+  listAdminAnnouncements(limit: number, offset: number): Promise<{ items: AnnouncementItemDto[]; total: number }>;
+  getAnnouncementById(id: string): Promise<AnnouncementItemDto | null>;
   deleteAnnouncement(id: string): Promise<void>;
 }

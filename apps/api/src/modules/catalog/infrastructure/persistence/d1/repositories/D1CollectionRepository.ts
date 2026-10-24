@@ -16,12 +16,17 @@ export class D1CollectionRepository implements ICollectionRepository {
     return row ? this.hydrate(row) : null;
   }
   public async list(query?: CatalogPageQuery): Promise<Collection[]> {
-    const active = query?.includeInactive ? '' : " WHERE status = 'active'";
-    const sql = 'SELECT * FROM catalog_collections' + active + ' ORDER BY name LIMIT ? OFFSET ?';
-    const { results = [] } = await this.db.prepare(sql).bind(query?.limit ?? 100, query?.offset ?? 0).all<CollectionRow>();
+    const filters = collectionFilters(query);
+    const { results = [] } = await this.db.prepare(`SELECT * FROM catalog_collections${filters.where} ORDER BY name,id LIMIT ? OFFSET ?`).bind(...filters.values, query?.limit ?? 100, query?.offset ?? 0).all<CollectionRow>();
     const items: Collection[] = [];
     for (const row of results) items.push(await this.hydrate(row));
     return items;
+  }
+
+  public async count(includeInactive = true, query?: string): Promise<number> {
+    const filters = collectionFilters({ includeInactive, query });
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM catalog_collections${filters.where}`).bind(...filters.values).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
   public async save(collection: Collection): Promise<void> {
     const p = collection.toPrimitives();
@@ -40,4 +45,11 @@ export class D1CollectionRepository implements ICollectionRepository {
     const props: CollectionProps = { id:row.id,name:row.name,slug:row.slug,description:row.description,imageMediaId:row.image_media_id ?? undefined,productIds:results.map((item)=>item.product_id),status:row.status,seoTitle:row.seo_title ?? undefined,seoDescription:row.seo_description ?? undefined,createdAt:row.created_at,updatedAt:row.updated_at };
     return new Collection(props);
   }
+}
+
+function collectionFilters(query?: CatalogPageQuery): { where: string; values: string[] } {
+  const clauses = query?.includeInactive ? [] : ["status = 'active'"];
+  const term = query?.query?.trim().normalize('NFC').slice(0, 100);
+  if (term) clauses.push('instr(lower(name),lower(?))>0');
+  return { where: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '', values: term ? [term] : [] };
 }

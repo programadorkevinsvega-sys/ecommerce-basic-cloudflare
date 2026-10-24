@@ -3,6 +3,7 @@ import { IInvoiceRepository } from '../../domain/ports/IInvoiceRepository.js';
 
 export interface ListInvoicesQuery {
   customerId?: string;
+  query?: string;
   limit?: number;
   offset?: number;
 }
@@ -12,5 +13,9 @@ export class ListInvoicesUseCase {
 
   public async execute(query?: ListInvoicesQuery): Promise<Invoice[]> {
     return this.repo.list(query);
+  }
+
+  public count(query?: Pick<ListInvoicesQuery, 'customerId' | 'query'>): Promise<number> {
+    return this.repo.count(query);
   }
 }

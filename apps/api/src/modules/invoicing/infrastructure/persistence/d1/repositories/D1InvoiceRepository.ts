@@ -76,24 +76,20 @@ export class D1InvoiceRepository implements IInvoiceRepository {
     return row ? this.mapRowToInvoice(row) : null;
   }
 
-  public async list(filters?: { customerId?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
+  public async list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
     const limit = filters?.limit || 50;
     const offset = filters?.offset || 0;
-
-    let res;
-    if (filters?.customerId) {
-      res = await this.db
-        .prepare(`SELECT * FROM invoicing_invoices WHERE customer_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`)
-        .bind(filters.customerId, limit, offset)
-        .all<Record<string, unknown>>();
-    } else {
-      res = await this.db
-        .prepare(`SELECT * FROM invoicing_invoices ORDER BY created_at DESC LIMIT ? OFFSET ?`)
-        .bind(limit, offset)
-        .all<Record<string, unknown>>();
-    }
-
+    const where = invoiceFilters(filters);
+    const res = await this.db.prepare(`SELECT * FROM invoicing_invoices${where.sql} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`)
+      .bind(...where.values, limit, offset).all<Record<string, unknown>>();
     return (res.results || []).map((r) => this.mapRowToInvoice(r));
+  }
+
+  public async count(filters?: { customerId?: string; query?: string }): Promise<number> {
+    const where = invoiceFilters(filters);
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM invoicing_invoices${where.sql}`)
+      .bind(...where.values).first<{ total: number }>();
+    return row?.total || 0;
   }
 
   public async saveCreditNote(creditNote: CreditNote): Promise<void> {
@@ -157,4 +153,17 @@ export class D1InvoiceRepository implements IInvoiceRepository {
       updatedAt: r.updated_at as string,
     });
   }
+}
+
+function invoiceFilters(filters?: { customerId?: string; query?: string }): { sql: string; values: unknown[] } {
+  const clauses: string[] = [];
+  const values: unknown[] = [];
+  if (filters?.customerId) { clauses.push('customer_id = ?'); values.push(filters.customerId); }
+  if (filters?.query) {
+    const query = `%${filters.query.replace(/[\\%_]/g, '\\$&')}%`;
+    clauses.push("(invoice_number LIKE ? ESCAPE '\\' OR order_id LIKE ? ESCAPE '\\' OR customer_name LIKE ? ESCAPE '\\' OR customer_email LIKE ? ESCAPE '\\' OR CAST(ROUND(total_cents / 100.0) AS TEXT) LIKE ?)");
+    const digits = filters.query.replace(/\D/g, '');
+    values.push(query, query, query, query, digits ? `%${digits}%` : '');
+  }
+  return { sql: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '', values };
 }

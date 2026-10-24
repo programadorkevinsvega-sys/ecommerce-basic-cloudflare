@@ -5,5 +5,6 @@ export interface IPageRepository {
   findBySlug(slug: string): Promise<Page | null>;
   save(page: Page, adminId?: string): Promise<void>;
   list(limit: number, offset: number, status?: string): Promise<Page[]>;
+  count(status?: string): Promise<number>;
   delete(id: string): Promise<void>;
 }

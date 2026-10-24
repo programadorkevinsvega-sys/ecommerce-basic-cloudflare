@@ -14,7 +14,7 @@ export class CmsBlogAdminController {
   public static createRoutes(cms:CmsGateway,identity:IdentityGateway,seo:SeoGateway,media:MediaGateway):Hono{
     const router=new Hono();
     router.get('/api/v1/admin/cms/blog/posts',createAuthMiddleware(identity,'admin','cms:read'),async(c)=>{
-      const page=parseInt(c.req.query('page')||'1',10);const pageSize=parseInt(c.req.query('pageSize')||'10',10);const status=c.req.query('status') as 'draft'|'scheduled'|'published'|'archived'|undefined;
+      const page=parseInt(c.req.query('page')||'1',10);const pageSize=parseInt(c.req.query('pageSize')||'25',10);const status=c.req.query('status') as 'draft'|'scheduled'|'published'|'archived'|undefined;
       if(!Number.isInteger(page)||page<1||!Number.isInteger(pageSize)||pageSize<1||pageSize>50||status&&!['draft','scheduled','published','archived'].includes(status))return c.json({error:'Parámetros de página inválidos'},400);
       return c.json({data:await cms.listBlogPosts({page,pageSize,status})});
     });
@@ -42,7 +42,7 @@ export class CmsBlogAdminController {
   }
 }
 
-function queryPage(c:{req:{query:(key:string)=>string|undefined}}):{page:number;size:number}|null{const page=Number(c.req.query('page')||1);const size=Number(c.req.query('pageSize')||10);return Number.isInteger(page)&&page>0&&page<=10000&&Number.isInteger(size)&&size>0&&size<=50?{page,size}:null;}
+function queryPage(c:{req:{query:(key:string)=>string|undefined}}):{page:number;size:number}|null{const page=Number(c.req.query('page')||1);const size=Number(c.req.query('pageSize')||25);return Number.isInteger(page)&&page>0&&page<=10000&&Number.isInteger(size)&&size>0&&size<=50?{page,size}:null;}
 async function saveTaxonomy(cms:CmsGateway,kind:'author'|'category',input:unknown,media:MediaGateway){const body=taxonomySchema.safeParse(input);if(!body.success)return Response.json({error:'Datos inválidos'}, {status:400});try{if(kind==='author'&&body.data.imageMediaId)await validateImageId(body.data.imageMediaId,media);const data=kind==='author'?await cms.saveBlogAuthor(body.data):await cms.saveBlogCategory(body.data);return Response.json({data},{status:body.data.id?200:201});}catch{return Response.json({error:'No fue posible guardar el registro'}, {status:400});}}
 
 async function validateBlogImages(input:{featuredImageMediaId?:string;contentHtml:string},media:MediaGateway):Promise<void>{const ids=new Set([input.featuredImageMediaId,...[...input.contentHtml.matchAll(/src\s*=\s*["']?\/media\/([0-9a-f-]{36})/gi)].map((match)=>match[1])].filter((id):id is string=>Boolean(id)));if(ids.size>30)throw new Error('Demasiadas imágenes en el artículo.');await Promise.all([...ids].map((id)=>validateImageId(id,media)));}

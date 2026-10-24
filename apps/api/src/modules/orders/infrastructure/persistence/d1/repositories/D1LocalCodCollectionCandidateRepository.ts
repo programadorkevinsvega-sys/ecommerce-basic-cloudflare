@@ -23,4 +23,9 @@ export class D1LocalCodCollectionCandidateRepository implements ILocalCodCollect
         receiptReference: row.shipping_tracking_number || `LOCAL-${row.id.slice(-8).toUpperCase()}` };
     });
   }
+
+  public async count(): Promise<number> {
+    const row = await this.db.prepare("SELECT COUNT(*) AS total FROM orders_orders WHERE payment_method='cash_on_delivery' AND payment_status='pending' AND status='delivered' AND shipping_fulfillment_method='merchant_local'").first<{ total: number }>();
+    return Number(row?.total || 0);
+  }
 }

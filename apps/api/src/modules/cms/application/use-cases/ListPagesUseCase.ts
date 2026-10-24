@@ -25,4 +25,6 @@ export class ListPagesUseCase {
       return Result.fail(err instanceof Error ? err : new Error('Error al listar páginas'));
     }
   }
+
+  public count(status?: string): Promise<number> { return this.pageRepo.count(status); }
 }

@@ -34,13 +34,13 @@ export function renderTaxonomyFormsScript(): string {
         body.innerHTML = result.data.length ? result.data.map((item) => window.renderCatalogTaxonomyRow(key, item)).join('') : '<tr><td colspan="8" class="taxonomy-empty">No hay registros para mostrar.</td></tr>';
         const pager = document.getElementById('taxonomy-pagination-' + key);
         pager.hidden = false;
-        pager.querySelector('span').textContent = 'Página ' + result.page;
+        pager.querySelector('span').textContent = result.total + ' registros · Página ' + result.page;
         pager.querySelector('[data-page-direction="previous"]').disabled = result.page <= 1;
         pager.querySelector('[data-page-direction="next"]').disabled = !result.hasMore;
         pager.querySelector('[data-page-direction="previous"]').onclick = () => loadCatalogPage(key, result.page - 1);
         pager.querySelector('[data-page-direction="next"]').onclick = () => loadCatalogPage(key, result.page + 1);
         const count = document.getElementById('taxonomy-count-' + key);
-        if (count) count.textContent = result.data.length + ' registros por página · página ' + result.page;
+        if (count) count.textContent = result.total + ' registros · página ' + result.page + ' · ' + result.data.length + ' en esta página';
       } catch (error) {
         body.innerHTML = '<tr><td colspan="8" class="taxonomy-empty">' + escapeHtml(error.message || 'Error al cargar registros.') + '</td></tr>';
       }

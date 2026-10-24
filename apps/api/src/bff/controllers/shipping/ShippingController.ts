@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { renderShippingTableRows } from '../../views/admin/renderShippingTableRows.js';
 
 let lastLocationSyncAttempt = 0;
 
@@ -32,11 +33,11 @@ export class ShippingController {
         return c.json({ error: 'Parámetros de paginación o búsqueda inválidos' }, 400);
       }
       if (!search && page === 1) await syncCarrierLocationsIfNeeded(shippingGateway);
-      const pageSize = 10;
+      const pageSize = 25;
       const [data, total, zones] = await Promise.all([
         shippingGateway.listLocalCoverageLocations({ limit: pageSize, offset: (page - 1) * pageSize, search }),
         shippingGateway.countLocalCoverageLocations(search),
-        shippingGateway.listZones(),
+        shippingGateway.listZones(false, 200, 0, true),
       ]);
       return c.json({ success: true, page, pageSize, total, hasMore: page * pageSize < total, data, zones });
     });
@@ -62,8 +63,16 @@ export class ShippingController {
       '/api/v1/admin/shipping/zones',
       createAuthMiddleware(identityGateway, 'admin', 'shipping:read'),
       async (c) => {
-        const zones = (await shippingGateway.listZones()).filter((zone) => zone.type !== 'national');
-        return c.json({ data: zones });
+        const page = Number(c.req.query('page') || 1), pageSize = Number(c.req.query('pageSize') || 25);
+        if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
+        const [all, total, locations] = await Promise.all([
+          shippingGateway.listZones(false, pageSize + 1, (page - 1) * pageSize, true), shippingGateway.countZones(false, true),
+          shippingGateway.listLocations({ limit: 25, offset: 0 }),
+        ]);
+        const items = all.slice(0, pageSize);
+        const divipolaMap = new Map(locations.map((location) => [location.daneCode, location.fullName]));
+        return c.json({ success: true, items, rowsHtml: renderShippingTableRows(items, divipolaMap), page, pageSize, total,
+          hasMore: page * pageSize < total });
       }
     );
 

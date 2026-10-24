@@ -10,7 +10,7 @@ export function renderFreeShippingRulesScript(): string {
       if (!body) return;
       body.innerHTML = '<tr><td colspan="6">Cargando reglas…</td></tr>';
       try {
-        const response = await fetch('/api/v1/admin/shipping/free-shipping-rules?page=' + freeShippingPage);
+        const response = await fetch('/api/v1/admin/shipping/free-shipping-rules?page=' + freeShippingPage + '&pageSize=25', { cache: 'no-store' });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'No se pudieron cargar las reglas.');
         freeShippingRules.clear();
@@ -29,7 +29,7 @@ export function renderFreeShippingRulesScript(): string {
             if (action === 'delete') deleteFreeShippingRule(id);
           });
         });
-        document.getElementById('free-shipping-page-label').textContent = (result.total ? (freeShippingPage - 1) * 10 + 1 + '–' + Math.min(freeShippingPage * 10, result.total) + ' de ' + result.total : '0 registros') + ' · Página ' + freeShippingPage;
+        document.getElementById('free-shipping-page-label').textContent = (result.total ? (freeShippingPage - 1) * result.pageSize + 1 + '–' + Math.min(freeShippingPage * result.pageSize, result.total) + ' de ' + result.total : '0 registros') + ' · Página ' + freeShippingPage;
         document.getElementById('free-shipping-prev').disabled = freeShippingPage <= 1;
         document.getElementById('free-shipping-next').disabled = !result.hasMore;
       } catch (error) { body.innerHTML = '<tr><td colspan="6">' + escapeHtml(error.message) + '</td></tr>'; }
@@ -55,7 +55,7 @@ export function renderFreeShippingRulesScript(): string {
       const response = await fetch('/api/v1/admin/shipping/free-shipping-targets?type=' + type + '&page=' + page + '&q=' + encodeURIComponent(query) + (selectedId ? '&id=' + encodeURIComponent(selectedId) : ''));
       const result = await response.json();
       document.getElementById('fs-rule-target').innerHTML = '<option value="">Selecciona un destino</option>' + result.items.map(item => '<option value="' + escapeHtml(item.id) + '">' + escapeHtml(item.name + (item.detail ? ' · ' + item.detail : '')) + '</option>').join('');
-      document.getElementById('fs-target-page').textContent = 'Página ' + page;
+      document.getElementById('fs-target-page').textContent = result.total + ' destinos · Página ' + page;
       document.getElementById('fs-target-prev').disabled = page <= 1;
       document.getElementById('fs-target-next').disabled = !result.hasMore;
     }

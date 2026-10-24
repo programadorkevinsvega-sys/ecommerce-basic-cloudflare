@@ -14,6 +14,23 @@ export function renderShippingFormsScript(): string {
 
     let shippingDirectoryPage = 1;
     let shippingDirectoryTimer;
+    let shippingZonesPage = 1;
+    async function loadShippingZones(page = 1) {
+      const body = document.getElementById('shippingZonesTableBody'); if (!body) return;
+      shippingZonesPage = page;
+      try {
+        const response = await fetch('/api/v1/admin/shipping/zones?page=' + page + '&pageSize=25', { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cargar zonas.');
+        body.innerHTML = result.rowsHtml || '<tr><td colspan="6" class="shipping-empty">No hay zonas locales.</td></tr>';
+        const pager = document.getElementById('shipping-zones-pagination');
+        pager.querySelector('span').textContent = result.total + ' zonas locales · Página ' + result.page;
+        pager.querySelector('[data-zone-page="previous"]').disabled = result.page <= 1;
+        pager.querySelector('[data-zone-page="next"]').disabled = !result.hasMore;
+        pager.querySelector('[data-zone-page="previous"]').onclick = () => loadShippingZones(result.page - 1);
+        pager.querySelector('[data-zone-page="next"]').onclick = () => loadShippingZones(result.page + 1);
+      } catch (error) { body.innerHTML = '<tr><td colspan="6" class="shipping-empty">' + escapeHtml(error.message || 'Error cargando zonas.') + '</td></tr>'; }
+    }
     async function loadShippingDirectory(page = 1) {
       const body = document.getElementById('shippingLocationsTableBody');
       if (!body) return;
@@ -46,6 +63,7 @@ export function renderShippingFormsScript(): string {
       return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td><div class="shipping-row-actions">' + view + action + '</div></td></tr>';
     }
     ${renderShippingLocationDetailsScript()}
+    loadShippingZones();
     function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
     function filterShippingLocations() {
       const select = document.getElementById('shLocationsSelect');

@@ -13,4 +13,6 @@ export class AuditPublicApi {
   public async list(filters?: ListAuditLogsFilters): Promise<AuditLog[]> {
     return this.container.listAuditLogsUseCase.execute(filters);
   }
+
+  public count(): Promise<number> { return this.container.listAuditLogsUseCase.count(); }
 }

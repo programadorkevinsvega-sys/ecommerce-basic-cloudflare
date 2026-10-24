@@ -1,6 +1,7 @@
 import { Banner } from '../../../../domain/entities/Banner.js';
 import { Announcement } from '../../../../domain/entities/Announcement.js';
 import { IStorefrontContentRepository } from '../../../../domain/ports/IStorefrontContentRepository.js';
+import { buildAdminBannerFilter } from './buildAdminBannerFilter.js';
 
 interface BannerRow {
   id: string;
@@ -53,6 +54,15 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
       .prepare('SELECT * FROM storefront_banners ORDER BY sort_order ASC, created_at DESC')
       .all<BannerRow>();
     return (results || []).map((r) => this.hydrateBanner(r));
+  }
+
+  public async listAdminBanners(limit: number, offset: number, filters: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean } = {}): Promise<{ items: Banner[]; total: number }> {
+    const { where, values } = buildAdminBannerFilter(filters);
+    const [rows, count] = await Promise.all([
+      this.db.prepare(`SELECT * FROM storefront_banners${where} ORDER BY sort_order ASC, created_at DESC, id DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all<BannerRow>(),
+      this.db.prepare(`SELECT COUNT(*) AS total FROM storefront_banners${where}`).bind(...values).first<{ total: number }>(),
+    ]);
+    return { items: (rows.results || []).map((row) => this.hydrateBanner(row)), total: Number(count?.total || 0) };
   }
 
   public async findBannerById(id: string): Promise<Banner | null> {
@@ -114,6 +124,8 @@ export class D1StorefrontContentRepository implements IStorefrontContentReposito
       .all<AnnouncementRow>();
     return (results || []).map((r) => this.hydrateAnnouncement(r));
   }
+
+  public async listAdminAnnouncements(limit: number, offset: number): Promise<{ items: Announcement[]; total: number }> { const [rows, count] = await Promise.all([this.db.prepare('SELECT * FROM storefront_announcements ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?').bind(limit, offset).all<AnnouncementRow>(), this.db.prepare('SELECT COUNT(*) AS total FROM storefront_announcements').first<{ total: number }>()]); return { items: (rows.results || []).map((row) => this.hydrateAnnouncement(row)), total: Number(count?.total || 0) }; }
 
   public async findAnnouncementById(id: string): Promise<Announcement | null> {
     const row = await this.db

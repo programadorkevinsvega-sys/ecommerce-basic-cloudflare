@@ -55,6 +55,8 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return products.map((p) => p.toPrimitives());
   }
 
+  public countProducts(status?: string, query?: string): Promise<number> { return this.publicApi.countProducts(status, query); }
+
   public async createCategory(request: {
     name: string;
     slug: string;
@@ -68,6 +70,21 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public async listCategories(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<CategoryDto[]> {
     const categories = await this.publicApi.listCategories(query);
     return categories.map((c) => c.toPrimitives());
+  }
+
+  public async getCategoryById(id: string): Promise<CategoryDto | null> {
+    const category = await this.publicApi.getCategoryById(id);
+    return category?.toPrimitives() ?? null;
+  }
+
+  public async getBrandById(id: string): Promise<BrandDto | null> {
+    const brand = await this.publicApi.getBrandById(id);
+    return brand?.toPrimitives() ?? null;
+  }
+
+  public async getAttributeById(id: string): Promise<AttributeDto | null> {
+    const attribute = await this.publicApi.getAttributeById(id);
+    return attribute?.toPrimitives() ?? null;
   }
 
   public async deleteCategory(id: string): Promise<void> {
@@ -128,6 +145,7 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public updateTaxonomy(input: Parameters<CatalogGateway['updateTaxonomy']>[0]): Promise<void> {
     return this.publicApi.updateTaxonomy(input);
   }
+  public countTaxonomy(kind: Parameters<CatalogGateway['countTaxonomy']>[0], query?: string): Promise<number> { return this.publicApi.countTaxonomy(kind, query); }
 
   public deleteTaxonomy(kind: Parameters<CatalogGateway['deleteTaxonomy']>[0], id: string): Promise<void> {
     return this.publicApi.deleteTaxonomy(kind, id);
@@ -136,6 +154,7 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public async listCollections(query?: { limit?: number; offset?: number; includeInactive?: boolean }): Promise<CatalogCollectionDto[]> {
     return (await this.publicApi.listCollections(query)).map((collection) => collection.toPrimitives());
   }
+  public countCollections(includeInactive = true, query?: string): Promise<number> { return this.publicApi.countCollections(includeInactive, query); }
   public async getCollectionBySlug(slug: string): Promise<CatalogCollectionDto> {
     return (await this.publicApi.getCollectionBySlug(slug)).toPrimitives();
   }
@@ -151,7 +170,8 @@ export class InProcessCatalogGateway implements CatalogGateway {
   }
   public deleteCollection(id: string): Promise<void> { return this.publicApi.deleteCollection(id); }
 
-  public listProductTags(includeInactive = true) { return this.publicApi.listProductTags(includeInactive); }
+  public listProductTags(includeInactive = true, page = 1, pageSize = 25) { return this.publicApi.listProductTags(includeInactive, page, pageSize); }
+  public countProductTags(includeInactive = true) { return this.publicApi.countProductTags(includeInactive); }
   public saveProductTag(input: Parameters<CatalogGateway['saveProductTag']>[0]) { return this.publicApi.saveProductTag(input); }
   public deleteProductTag(id: string): Promise<void> { return this.publicApi.deleteProductTag(id); }
 

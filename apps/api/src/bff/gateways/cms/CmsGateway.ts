@@ -72,9 +72,11 @@ export interface CmsGateway {
     adminId?: string;
   }): Promise<CmsPageDto>;
   getPageBySlug(slug: string): Promise<CmsPageDto>;
+  getPageById(id: string): Promise<CmsPageDto | null>;
   getMenuByCode(code: string): Promise<CmsMenuDto>;
   saveMenu(input: { code: 'header' | 'footer'; title: string; items: CmsMenuItemInputDto[] }): Promise<CmsMenuDto>;
   listPages(limit?: number, offset?: number, status?: string): Promise<CmsPageDto[]>;
+  countPages(status?: string): Promise<number>;
   deletePage(id: string): Promise<void>;
   saveBlogPost(input: Partial<BlogPostDto> & Pick<BlogPostDto,'title'|'slug'|'excerpt'|'contentHtml'|'authorId'|'status'|'categoryIds'>): Promise<BlogPostDto>;
   listBlogPosts(input:{page:number;pageSize:number;status?:BlogPostDto['status'];categorySlug?:string;publishedOnly?:boolean}):Promise<BlogPageDto<BlogPostDto>>;

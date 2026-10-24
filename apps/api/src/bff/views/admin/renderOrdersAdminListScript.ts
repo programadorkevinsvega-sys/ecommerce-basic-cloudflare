@@ -12,37 +12,46 @@ export function renderOrdersAdminListScript(): string {
     };
 
     function filteredAdminOrders() {
-      const query = (document.getElementById('orders-search')?.value || '').trim().toLowerCase();
-      const method = document.getElementById('orders-method-filter')?.value || 'all';
-      const payment = document.getElementById('orders-payment-filter')?.value || 'all';
-      return (window._adminOrdersList || []).filter(order => {
-        const id = String(order.id || '');
-        const matchesQuery = !query || [id, order.customerName, order.customerPhone].join(' ').toLowerCase().includes(query);
-        const orderMethod = order.paymentMethod === 'wompi' ? 'wompi' : 'cod';
-        return matchesQuery && (activeOrderStatus === 'all' || order.status === activeOrderStatus) &&
-          (method === 'all' || method === orderMethod) && (payment === 'all' || payment === order.paymentStatus);
-      });
+      return window._adminOrdersList || [];
     }
 
     function renderAdminOrdersTable() {
       const orders = window._adminOrdersList || [];
+      const meta = window._adminOrdersMeta || {};
+      const counts = meta.statusCounts || {};
       document.querySelectorAll('[data-orders-count]').forEach(node => {
         const status = node.dataset.ordersCount;
-        node.textContent = String(status === 'all' ? orders.length : orders.filter(order => order.status === status).length);
+        node.textContent = String(status === 'all' ? Object.values(counts).reduce((sum, value) => sum + Number(value || 0), 0) : Number(counts[status] || 0));
       });
       const pendingCount = document.getElementById('orders-pending-count');
-      if (pendingCount) pendingCount.textContent = String(orders.filter(order => order.status === 'placed').length);
+      if (pendingCount) pendingCount.textContent = String(Number(counts.placed || 0));
       const visible = filteredAdminOrders();
       const body = document.getElementById('orders-table-body');
       const region = document.getElementById('orders-table-region');
       const empty = document.getElementById('orders-empty');
       if (!body || !region || !empty) return;
-      region.hidden = visible.length === 0;
-      empty.hidden = visible.length !== 0;
-      window.paginateAdminTable('orders', body, visible, renderAdminOrderRow, 7, 'No hay pedidos que coincidan con los filtros.');
+      region.hidden = false;
+      empty.hidden = visible.length !== 0 && Number(meta.total || 0) === 0;
+      body.innerHTML = visible.length ? visible.map(renderAdminOrderRow).join('') : '<tr><td colspan="7" class="orders-loading">No hay pedidos en esta página.</td></tr>';
       const sum = visible.reduce((total, order) => total + Number(order.totalCents || 0), 0);
-      document.getElementById('orders-summary').innerHTML = '<span>' + visible.length + ' pedidos coinciden · ' + orders.length + ' cargados</span>' +
+      const first = Number(meta.total || 0) ? (Number(meta.page) - 1) * Number(meta.pageSize) + 1 : 0;
+      const last = Math.min(Number(meta.page || 1) * Number(meta.pageSize || 25), Number(meta.total || 0));
+      document.getElementById('orders-summary').innerHTML = '<span>' + first + '–' + last + ' de ' + Number(meta.total || 0) + ' pedidos</span>' +
         '<span>Total mostrado <strong>' + orderMoney(sum) + '</strong></span>';
+      renderOrdersPagination(meta);
+    }
+
+    function renderOrdersPagination(meta) {
+      const nav = document.getElementById('orders-pagination');
+      if (!nav) return;
+      const page = Number(meta.page || 1);
+      nav.innerHTML = '<button type="button" class="orders-secondary-button" data-orders-page="previous">Anterior</button>' +
+        '<span aria-live="polite">Página ' + page + (meta.hasMore ? '+' : '') + '</span>' +
+        '<button type="button" class="orders-secondary-button" data-orders-page="next">Siguiente</button>';
+      nav.querySelector('[data-orders-page="previous"]').disabled = page <= 1;
+      nav.querySelector('[data-orders-page="next"]').disabled = !meta.hasMore;
+      nav.querySelector('[data-orders-page="previous"]').onclick = () => loadAdminOrders(page - 1);
+      nav.querySelector('[data-orders-page="next"]').onclick = () => loadAdminOrders(page + 1);
     }
 
     function renderAdminOrderRow(order) {
@@ -93,19 +102,18 @@ export function renderOrdersAdminListScript(): string {
 
     document.querySelectorAll('[data-orders-status]').forEach(button => button.addEventListener('click', () => {
       activeOrderStatus = button.dataset.ordersStatus;
-      window.resetAdminTablePage('orders');
+      window._adminOrdersPage = 1;
       document.querySelectorAll('[data-orders-status]').forEach(tab => {
         const selected = tab === button;
         tab.classList.toggle('selected', selected);
         tab.setAttribute('aria-pressed', String(selected));
       });
-      renderAdminOrdersTable();
+      loadAdminOrders(1);
     }));
-    ['orders-search', 'orders-method-filter', 'orders-payment-filter'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input', () => { window.resetAdminTablePage('orders'); renderAdminOrdersTable(); });
-      document.getElementById(id)?.addEventListener('change', () => { window.resetAdminTablePage('orders'); renderAdminOrdersTable(); });
-    });
-    document.getElementById('orders-refresh')?.addEventListener('click', loadAdminOrders);
+    let orderSearchTimer;
+    document.getElementById('orders-search')?.addEventListener('input', () => { clearTimeout(orderSearchTimer); orderSearchTimer = setTimeout(() => loadAdminOrders(1), 250); });
+    ['orders-method-filter', 'orders-payment-filter'].forEach(id => document.getElementById(id)?.addEventListener('change', () => loadAdminOrders(1)));
+    document.getElementById('orders-refresh')?.addEventListener('click', () => loadAdminOrders(window._adminOrdersPage));
     document.getElementById('orders-export')?.addEventListener('click', exportFilteredAdminOrders);
     document.getElementById('orders-reset-filters')?.addEventListener('click', () => {
       activeOrderStatus = 'all';

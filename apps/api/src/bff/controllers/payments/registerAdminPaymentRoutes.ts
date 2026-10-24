@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { Env } from '../../../platform/Env.js';
 import { PaymentsGateway } from '../../gateways/payments/PaymentsGateway.js';
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
@@ -20,10 +21,10 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
     if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:collect')) return c.json({ error: 'Permiso insuficiente' }, 403);
-    const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 20);
+    const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 25);
     if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
-    const items = await d.ordersGateway.listLocalCodCollectionCandidates(pageSize, (page - 1) * pageSize);
-    return c.json({ success: true, items, page, pageSize });
+    const [items, total] = await Promise.all([d.ordersGateway.listLocalCodCollectionCandidates(pageSize, (page - 1) * pageSize), d.ordersGateway.countLocalCodCollectionCandidates()]);
+    return c.json({ success: true, items, page, pageSize, total, hasMore: page * pageSize < total });
   });
 
   app.post('/api/v1/admin/payments/cod/collect', async (c) => {
@@ -51,8 +52,36 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
     if (!admin.permissions.some((p) => p === '*' || p === 'payments:*' || p === 'payments:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-    const [transactions, collections, settlementCosts] = await Promise.all([d.paymentsGateway.listTransactions(50), d.paymentsGateway.listCodCollections(50), d.paymentsGateway.listSettlementCosts(100)]);
-    return c.json({ success: true, transactions: transactions.map((tx) => tx.toJSON()), collections: collections.map((row) => row.toJSON()), settlementCosts });
+    const params = paymentPages.safeParse({
+      pageSize: c.req.query('pageSize') || '25',
+      transactionsPage: c.req.query('transactionsPage') || '1',
+      collectionsPage: c.req.query('collectionsPage') || '1',
+      settlementsPage: c.req.query('settlementsPage') || '1',
+      q: c.req.query('q') || undefined,
+    });
+    if (!params.success) return c.json({ error: 'Filtros o paginación inválidos' }, 400);
+    const { pageSize, q } = params.data;
+    const txOffset = (params.data.transactionsPage - 1) * pageSize;
+    const collectionOffset = (params.data.collectionsPage - 1) * pageSize;
+    const settlementOffset = (params.data.settlementsPage - 1) * pageSize;
+    const [transactions, transactionTotal, collections, collectionTotal, settlementCosts, settlementTotal] = await Promise.all([
+      d.paymentsGateway.listTransactions(pageSize, txOffset, q), d.paymentsGateway.countTransactions(q),
+      d.paymentsGateway.listCodCollections(pageSize, collectionOffset), d.paymentsGateway.countCodCollections(),
+      d.paymentsGateway.listSettlementCosts(pageSize, settlementOffset), d.paymentsGateway.countSettlementCosts(),
+    ]);
+    const details = await Promise.all(transactions.map(async (transaction) => {
+      const [order, invoice] = await Promise.all([
+        d.ordersGateway.getOrder(transaction.orderId), d.invoicingGateway.getInvoice({ orderId: transaction.orderId }),
+      ]);
+      return { orderId: transaction.orderId, order: order ? { customerName: order.customerName, customerEmail: order.customerEmail } : null,
+        invoice: invoice ? { invoiceNumber: invoice.invoiceNumber, customerName: invoice.customerName, customerEmail: invoice.customerEmail } : null };
+    }));
+    return c.json({ success: true,
+      transactions: { items: transactions.map((tx) => tx.toJSON()), page: params.data.transactionsPage, pageSize, total: transactionTotal, hasMore: txOffset + transactions.length < transactionTotal },
+      collections: { items: collections.map((row) => row.toJSON()), page: params.data.collectionsPage, pageSize, total: collectionTotal, hasMore: collectionOffset + collections.length < collectionTotal },
+      settlementCosts: { items: settlementCosts, page: params.data.settlementsPage, pageSize, total: settlementTotal, hasMore: settlementOffset + settlementCosts.length < settlementTotal },
+      details,
+    });
   });
 
   app.post('/api/v1/admin/payments/:orderId/settlement', async (c) => {
@@ -64,7 +93,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     const orderId = c.req.param('orderId');
     const order = await d.ordersGateway.getOrder(orderId);
     if (!order || order.paymentMethod !== 'wompi' || order.paymentStatus !== 'approved') return c.json({ error: 'Pedido Wompi aprobado no encontrado' }, 404);
-    const existing = (await d.paymentsGateway.listSettlementCosts(500)).find((row) => row.orderId === orderId);
+    const existing = (await d.paymentsGateway.listSettlementCosts(1, 0, orderId)).find((row) => row.orderId === orderId);
     if (existing) return c.json({ error: 'La conciliación ya existe; registra una corrección para conservar el historial' }, 409);
     let body: Record<string, unknown>;
     try { body = await c.req.json(); } catch { return c.json({ error: 'Datos de liquidación inválidos' }, 400); }
@@ -89,7 +118,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     let body: Record<string, unknown>;
     try { body = await c.req.json(); } catch { return c.json({ error: 'Datos de corrección inválidos' }, 400); }
     if (!Number.isSafeInteger(body.actualFeeCents) || typeof body.reportReference !== 'string' || typeof body.reason !== 'string') return c.json({ error: 'Comisión, referencia y motivo son requeridos' }, 400);
-    const previous = (await d.paymentsGateway.listSettlementCosts(500)).find((row) => row.orderId === orderId);
+    const previous = (await d.paymentsGateway.listSettlementCosts(1, 0, orderId)).find((row) => row.orderId === orderId);
     if (!previous) return c.json({ error: 'No existe una conciliación para corregir' }, 404);
     try {
       await d.paymentsGateway.recordSettlementCorrection({ orderId, actualFeeCents: body.actualFeeCents as number, reportReference: body.reportReference, reason: body.reason, recordedBy: admin.actorId });
@@ -99,6 +128,14 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
     } catch { return c.json({ error: 'No fue posible guardar la corrección' }, 400); }
   });
 }
+
+const paymentPages = z.object({
+  pageSize: z.coerce.number().int().min(1).max(50),
+  transactionsPage: z.coerce.number().int().min(1).max(1_000_000),
+  collectionsPage: z.coerce.number().int().min(1).max(1_000_000),
+  settlementsPage: z.coerce.number().int().min(1).max(1_000_000),
+  q: z.string().trim().max(120).optional(),
+}).strict();
 
 function getAdminToken(authorization?: string, cookies?: string): string | null {
   if (authorization?.startsWith('Bearer ')) return authorization.slice(7).trim();

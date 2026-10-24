@@ -107,7 +107,8 @@ export interface UpdateShippingZoneGatewayRequest {
 }
 
 export interface ShippingGateway {
-  listZones(onlyActive?: boolean): Promise<ShippingZoneDto[]>;
+  listZones(onlyActive?: boolean, limit?: number, offset?: number, localOnly?: boolean): Promise<ShippingZoneDto[]>;
+  countZones(onlyActive?: boolean, localOnly?: boolean): Promise<number>;
   getZone(id: string): Promise<ShippingZoneDto | null>;
   createZone(cmd: CreateShippingZoneGatewayRequest): Promise<ShippingZoneDto>;
   updateZone(cmd: UpdateShippingZoneGatewayRequest): Promise<ShippingZoneDto>;

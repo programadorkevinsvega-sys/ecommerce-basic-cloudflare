@@ -53,6 +53,13 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
     return banners.map((b) => b.toPrimitives());
   }
 
+  public async listAdminBanners(limit: number, offset: number, filters?: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean }) {
+    const result = await this.publicApi.listAdminBanners(limit, offset, filters);
+    return { items: result.items.map((banner) => banner.toPrimitives()), total: result.total };
+  }
+
+  public async getBannerById(id: string) { return (await this.publicApi.getBannerById(id))?.toPrimitives() ?? null; }
+
   public async getPublicBanners(placement: string): Promise<BannerItemDto[]> {
     const banners = await this.publicApi.listBanners(placement);
     return banners.map((banner) => banner.toPrimitives());
@@ -80,6 +87,13 @@ export class InProcessStorefrontGateway implements StorefrontGateway {
     const announcements = await this.publicApi.listAnnouncements();
     return announcements.map((a) => a.toPrimitives());
   }
+
+  public async listAdminAnnouncements(limit: number, offset: number) {
+    const result = await this.publicApi.listAdminAnnouncements(limit, offset);
+    return { items: result.items.map((announcement) => announcement.toPrimitives()), total: result.total };
+  }
+
+  public async getAnnouncementById(id: string) { return (await this.publicApi.getAnnouncementById(id))?.toPrimitives() ?? null; }
 
   public async getPublicAnnouncements(placement: string): Promise<AnnouncementItemDto[]> {
     const announcements = await this.publicApi.listAnnouncements();

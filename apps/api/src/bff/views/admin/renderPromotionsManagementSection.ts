@@ -69,10 +69,11 @@ export function renderPromotionsManagementSection(
         </div>
         <div id="prMsg" class="msg"></div>
       </form>
-      <table>
+      <table data-server-pagination="true">
         <thead><tr><th>Nombre y Alcance</th><th>Descuento</th><th>Vigencia</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${renderPromotionRulesTableRows(rules, productMap, categoryMap)}</tbody>
+        <tbody id="promotion-rules-body">${renderPromotionRulesTableRows(rules, productMap, categoryMap)}</tbody>
       </table>
+      <nav class="admin-pagination" id="promotion-rules-pagination" aria-label="Paginación de reglas"><button type="button" data-promo-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-promo-page="next" disabled>Siguiente</button></nav>
     </div>
 
     <div class="card" data-marketing-page="discount-coupon">
@@ -122,10 +123,11 @@ export function renderPromotionsManagementSection(
         </div>
         <div id="cpMsg" class="msg"></div>
       </form>
-      <table>
+      <table data-server-pagination="true">
         <thead><tr><th>Código y Alcance</th><th>Descuento</th><th>Usos</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${renderCouponsTableRows(coupons, productMap, categoryMap)}</tbody>
+        <tbody id="promotion-coupons-body">${renderCouponsTableRows(coupons, productMap, categoryMap)}</tbody>
       </table>
+      <nav class="admin-pagination" id="promotion-coupons-pagination" aria-label="Paginación de cupones"><button type="button" data-promo-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-promo-page="next" disabled>Siguiente</button></nav>
     </div>
 
     <section class="card" data-marketing-page="free-shipping" hidden>

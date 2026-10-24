@@ -6,4 +6,5 @@ export interface IProductVariantRepository {
   save(variant: ProductVariant): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<ProductVariant[]>;
+  count(includeInactive?: boolean): Promise<number>;
 }

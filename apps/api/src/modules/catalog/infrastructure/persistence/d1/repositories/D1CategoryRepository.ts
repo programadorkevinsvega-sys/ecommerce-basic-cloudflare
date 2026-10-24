@@ -63,13 +63,18 @@ export class D1CategoryRepository implements ICategoryRepository {
   }
 
   public async list(query?: CatalogPageQuery): Promise<Category[]> {
-    const where = query?.includeInactive ? '' : " WHERE status = 'active'";
-    const statement = query?.limit
-      ? this.db.prepare('SELECT * FROM catalog_categories' + where + ' ORDER BY name ASC LIMIT ? OFFSET ?').bind(query.limit, query.offset ?? 0)
-      : this.db.prepare('SELECT * FROM catalog_categories' + where + ' ORDER BY name ASC');
+    const filters = categoryFilters(query);
+    const statement = query?.limit ? this.db.prepare(`SELECT * FROM catalog_categories${filters.where} ORDER BY name ASC,id LIMIT ? OFFSET ?`).bind(...filters.values, query.limit, query.offset ?? 0)
+      : this.db.prepare(`SELECT * FROM catalog_categories${filters.where} ORDER BY name ASC,id`).bind(...filters.values);
     const { results } = await statement.all<CategoryRow>();
 
     return (results || []).map((r) => this.toDomain(r));
+  }
+
+  public async count(includeInactive = false, query?: string): Promise<number> {
+    const filters = categoryFilters({ includeInactive, query });
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM catalog_categories${filters.where}`).bind(...filters.values).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   private toDomain(row: CategoryRow): Category {
@@ -84,4 +89,11 @@ export class D1CategoryRepository implements ICategoryRepository {
       updatedAt: row.updated_at,
     });
   }
+}
+
+function categoryFilters(query?: CatalogPageQuery): { where: string; values: string[] } {
+  const clauses = query?.includeInactive ? [] : ["status = 'active'"];
+  const term = query?.query?.trim().normalize('NFC').slice(0, 100);
+  if (term) clauses.push('instr(lower(name),lower(?))>0');
+  return { where: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '', values: term ? [term] : [] };
 }

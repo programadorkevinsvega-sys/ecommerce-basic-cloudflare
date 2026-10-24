@@ -5,4 +5,5 @@ import { AuditLog } from '../../../modules/audit/domain/entities/AuditLog.js';
 export interface AuditGateway {
   record(cmd: RecordAuditCommand): Promise<AuditLog>;
   list(filters?: ListAuditLogsFilters): Promise<AuditLog[]>;
+  count(): Promise<number>;
 }

@@ -33,7 +33,7 @@ export class D1BlogPostRepository implements IBlogRepository {
     const { where, params } = this.filters(input);
     const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM cms_blog_posts p ${where}`).bind(...params).first<{total:number}>();
     const offset = (input.page - 1) * input.pageSize;
-    const rows = await this.db.prepare(`SELECT DISTINCT p.* FROM cms_blog_posts p ${where} ORDER BY COALESCE(p.published_at,p.created_at) DESC LIMIT ? OFFSET ?`).bind(...params,input.pageSize,offset).all<PostRow>();
+    const rows = await this.db.prepare(`SELECT DISTINCT p.* FROM cms_blog_posts p ${where} ORDER BY COALESCE(p.published_at,p.created_at) DESC,p.id DESC LIMIT ? OFFSET ?`).bind(...params,input.pageSize,offset).all<PostRow>();
     return { items: await Promise.all((rows.results || []).map((row) => this.hydrate(row))), total: count?.total ?? 0 };
   }
 

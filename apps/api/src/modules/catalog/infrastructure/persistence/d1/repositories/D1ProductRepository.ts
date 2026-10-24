@@ -3,6 +3,8 @@ import { IProductRepository } from '../../../../domain/ports/IProductRepository.
 import { D1ProductMapper, ProductRow } from './D1ProductMapper.js';
 import { buildCatalogFtsPrefixQuery } from '../CatalogFtsPrefixQuery.js';
 import { ProductListFilters } from '../../../../domain/ports/ProductListQuery.js';
+import { countAdminProducts } from './D1ProductAdminCount.js';
+import { appendProductListFilters, productOrderBy } from './productListSql.js';
 
 export class D1ProductRepository implements IProductRepository {
   private readonly db: D1Database;
@@ -169,32 +171,6 @@ export class D1ProductRepository implements IProductRepository {
     const { results } = await this.db.prepare(sql).bind(...params).all<ProductRow>();
     return Promise.all((results || []).map((row) => D1ProductMapper.hydrate(row, this.db)));
   }
-}
 
-function appendProductListFilters(where: string[], params: unknown[], filters: ProductListFilters, prefix: string): void {
-  const brands = [...new Set((filters.brand ?? []).map((brand) => brand.trim()).filter(Boolean))].slice(0, 10);
-  if (brands.length) {
-    where.push(`${prefix}brand IN (${brands.map(() => '?').join(', ')})`);
-    params.push(...brands);
-  }
-  if (filters.minPriceInCents !== undefined) {
-    where.push(`${prefix}price_in_cents >= ?`);
-    params.push(filters.minPriceInCents);
-  }
-  if (filters.maxPriceInCents !== undefined) {
-    where.push(`${prefix}price_in_cents <= ?`);
-    params.push(filters.maxPriceInCents);
-  }
-  if (filters.cashOnDeliveryOnly) {
-    where.push(`${prefix}allows_cash_on_delivery = 1`);
-  }
-}
-
-function productOrderBy(sort: ProductListFilters['sort'], prefix: string, search: boolean): string {
-  if (sort === 'price_asc') return `${prefix}price_in_cents ASC, ${prefix}id ASC`;
-  if (sort === 'price_desc') return `${prefix}price_in_cents DESC, ${prefix}id ASC`;
-  if (sort === 'name_asc') return `${prefix}name COLLATE NOCASE ASC, ${prefix}id ASC`;
-  return search
-    ? 'm.match_priority ASC, m.relevance ASC, p.created_at DESC, p.id ASC'
-    : `${prefix}created_at DESC, ${prefix}id ASC`;
+  public count(status?: string, query?: string): Promise<number> { return countAdminProducts(this.db, status, query); }
 }

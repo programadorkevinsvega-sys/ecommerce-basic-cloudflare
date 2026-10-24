@@ -15,12 +15,15 @@ import { D1LocalDeliveryLabelRepository } from './infrastructure/persistence/d1/
 import { ManageLocalDeliveryLabelsUseCase } from './application/use-cases/ManageLocalDeliveryLabelsUseCase.js';
 import { D1LocalCodCollectionCandidateRepository } from './infrastructure/persistence/d1/repositories/D1LocalCodCollectionCandidateRepository.js';
 import { ListLocalCodCollectionCandidatesUseCase } from './application/use-cases/ListLocalCodCollectionCandidatesUseCase.js';
+import { ListAdminOrdersUseCase } from './application/use-cases/ListAdminOrdersUseCase.js';
+import { D1AdminOrderListRepository } from './infrastructure/persistence/d1/repositories/D1AdminOrderListRepository.js';
 
 export interface OrdersModuleContainer {
   evaluateCheckoutPolicyUseCase: EvaluateCheckoutPolicyUseCase;
   createOrderUseCase: CreateOrderUseCase;
   getOrderUseCase: GetOrderUseCase;
   listOrdersUseCase: ListOrdersUseCase;
+  listAdminOrdersUseCase: ListAdminOrdersUseCase;
   updateOrderStatusUseCase: UpdateOrderStatusUseCase;
   hasDeliveredProductPurchaseUseCase:HasDeliveredProductPurchaseUseCase;
   getDeliveredProductPaymentMethodUseCase: GetDeliveredProductPaymentMethodUseCase;
@@ -32,6 +35,7 @@ export interface OrdersModuleContainer {
 
 export function createOrdersModule(env: Env): OrdersModuleContainer {
   const repo = new D1OrderRepository(env.DB);
+  const adminOrderList = new D1AdminOrderListRepository(env.DB, repo);
   const outbox = new D1OrderOutboxRepository(env.DB);
   const tracking = new D1OrderTrackingRepository(env.DB);
   const localLabels = new D1LocalDeliveryLabelRepository(env.DB);
@@ -42,6 +46,7 @@ export function createOrdersModule(env: Env): OrdersModuleContainer {
     createOrderUseCase: new CreateOrderUseCase(repo, outbox),
     getOrderUseCase: new GetOrderUseCase(repo),
     listOrdersUseCase: new ListOrdersUseCase(repo),
+    listAdminOrdersUseCase: new ListAdminOrdersUseCase(adminOrderList),
     updateOrderStatusUseCase: new UpdateOrderStatusUseCase(repo, outbox),
     hasDeliveredProductPurchaseUseCase:new HasDeliveredProductPurchaseUseCase(repo),
     getDeliveredProductPaymentMethodUseCase: new GetDeliveredProductPaymentMethodUseCase(repo),

@@ -27,13 +27,17 @@ export class InProcessPaymentsGateway implements PaymentsGateway {
     return this.publicApi.recordCodCollection(cmd);
   }
 
-  public async listTransactions(limit?: number): Promise<PaymentTransaction[]> {
-    return this.publicApi.listTransactions(limit);
+  public async listTransactions(limit?: number, offset?: number, query?: string): Promise<PaymentTransaction[]> {
+    return this.publicApi.listTransactions(limit, offset, query);
   }
 
-  public async listCodCollections(limit?: number): Promise<CodCollection[]> {
-    return this.publicApi.listCodCollections(limit);
+  public countTransactions(query?: string) { return this.publicApi.countTransactions(query); }
+
+  public async listCodCollections(limit?: number, offset?: number, query?: string): Promise<CodCollection[]> {
+    return this.publicApi.listCodCollections(limit, offset, query);
   }
+
+  public countCodCollections(query?: string) { return this.publicApi.countCodCollections(query); }
 
   public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
     return this.publicApi.recordSettlementCost(command);
@@ -43,7 +47,9 @@ export class InProcessPaymentsGateway implements PaymentsGateway {
     return this.publicApi.recordSettlementCorrection(command);
   }
 
-  public async listSettlementCosts(limit?: number) {
-    return this.publicApi.listSettlementCosts(limit);
+  public async listSettlementCosts(limit?: number, offset?: number, query?: string) {
+    return this.publicApi.listSettlementCosts(limit, offset, query);
   }
+
+  public countSettlementCosts(query?: string) { return this.publicApi.countSettlementCosts(query); }
 }

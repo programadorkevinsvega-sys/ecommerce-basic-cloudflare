@@ -71,6 +71,13 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   </div>
   <script>
     // Las operaciones same-origin envían automáticamente la cookie HttpOnly.
+    const nativeAdminFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      const requestUrl = input instanceof Request ? input.url : String(input);
+      const method = String(init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      if (method === 'GET' && new URL(requestUrl, location.href).pathname.startsWith('/api/v1/admin/')) init = { ...init, cache: 'no-store' };
+      return nativeAdminFetch(input, init);
+    };
     window.adminHeaders = function(isJson) {
       const h = {};
       if (isJson) h['Content-Type'] = 'application/json';

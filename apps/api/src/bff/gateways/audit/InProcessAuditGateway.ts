@@ -14,4 +14,6 @@ export class InProcessAuditGateway implements AuditGateway {
   public async list(filters?: ListAuditLogsFilters): Promise<AuditLog[]> {
     return this.publicApi.list(filters);
   }
+
+  public count(): Promise<number> { return this.publicApi.count(); }
 }

@@ -6,7 +6,12 @@ export class ManageProductTagsUseCase {
 
   public constructor(repository: IProductTagRepository) { this.repository = repository; }
 
-  public list(includeInactive = true): Promise<ProductTag[]> { return this.repository.list(includeInactive); }
+  public list(includeInactive = true, page = 1, pageSize = 25): Promise<ProductTag[]> {
+    const safePage = Math.min(1_000_000, Math.max(1, Math.floor(page) || 1));
+    const safeSize = Math.min(50, Math.max(1, Math.floor(pageSize) || 25));
+    return this.repository.list(includeInactive, safePage, safeSize);
+  }
+  public count(includeInactive = true): Promise<number> { return this.repository.count(includeInactive); }
 
   public save(input: SaveProductTagInput): Promise<ProductTag> {
     const name = input.name.trim().normalize('NFC');

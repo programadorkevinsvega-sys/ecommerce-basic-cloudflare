@@ -18,6 +18,7 @@ export function renderShippingManagementSection(zones: ShippingZoneDto[], divipo
     <section class="shipping-page-panel" data-shipping-panel="zones" aria-labelledby="shipping-zones-title">
       <div class="card shipping-zones-card"><div class="shipping-section-heading"><div><h2 id="shipping-zones-title">Entrega local del comercio</h2><p>${localZones.filter((zone) => zone.isActive).length} zonas locales activas · Medellín y Valle de Aburrá</p></div></div>
         <div class="shipping-table-scroll"><table class="shipping-table"><thead><tr><th>Zona local / municipios</th><th>Tipo</th><th>Tarifa</th><th>Plazo</th><th>Condiciones</th><th>Acciones</th></tr></thead><tbody id="shippingZonesTableBody">${renderShippingTableRows(localZones, divipolaMap)}</tbody></table></div>
+        <nav class="admin-pagination" id="shipping-zones-pagination" aria-label="Paginación de zonas locales"><button class="admin-page-button" type="button" data-zone-page="previous" disabled>Anterior</button><span aria-live="polite">Página 1</span><button class="admin-page-button" type="button" data-zone-page="next" disabled>Siguiente</button></nav>
       </div>
     </section>
     <section class="shipping-page-panel" data-shipping-panel="carriers" aria-labelledby="shipping-carriers-title" hidden>

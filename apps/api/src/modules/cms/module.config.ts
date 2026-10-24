@@ -4,6 +4,7 @@ import { D1MenuRepository } from './infrastructure/persistence/d1/repositories/D
 import { CreatePageUseCase } from './application/use-cases/CreatePageUseCase.js';
 import { UpdatePageContentUseCase } from './application/use-cases/UpdatePageContentUseCase.js';
 import { GetPageBySlugUseCase } from './application/use-cases/GetPageBySlugUseCase.js';
+import { GetPageByIdUseCase } from './application/use-cases/GetPageByIdUseCase.js';
 import { GetMenuByCodeUseCase } from './application/use-cases/GetMenuByCodeUseCase.js';
 import { ListPagesUseCase } from './application/use-cases/ListPagesUseCase.js';
 import { DeletePageUseCase } from './application/use-cases/DeletePageUseCase.js';
@@ -18,6 +19,7 @@ export interface CmsModuleContainer {
   createPageUseCase: CreatePageUseCase;
   updatePageContentUseCase: UpdatePageContentUseCase;
   getPageBySlugUseCase: GetPageBySlugUseCase;
+  getPageByIdUseCase: GetPageByIdUseCase;
   getMenuByCodeUseCase: GetMenuByCodeUseCase;
   saveMenuUseCase: SaveMenuUseCase;
   listPagesUseCase: ListPagesUseCase;
@@ -38,6 +40,7 @@ export function createCmsModule(env: Env): CmsModuleContainer {
     createPageUseCase: new CreatePageUseCase(pageRepo),
     updatePageContentUseCase: new UpdatePageContentUseCase(pageRepo),
     getPageBySlugUseCase: new GetPageBySlugUseCase(pageRepo),
+    getPageByIdUseCase: new GetPageByIdUseCase(pageRepo),
     getMenuByCodeUseCase: new GetMenuByCodeUseCase(menuRepo),
     saveMenuUseCase: new SaveMenuUseCase(menuRepo),
     listPagesUseCase: new ListPagesUseCase(pageRepo),

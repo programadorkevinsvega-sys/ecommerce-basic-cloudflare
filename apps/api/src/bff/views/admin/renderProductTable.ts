@@ -4,7 +4,30 @@ export function renderProductTable(products: CatalogProductDto[]): string {
   const published = products.filter((p) => p.status === 'published').length;
   const drafts = products.filter((p) => p.status === 'draft').length;
   const lowStock = products.filter((p) => p.stockQuantity < 10).length;
-  const rows = products.map((p) => {
+  const rows = renderProductRows(products);
+
+  const jsonScript = `<script>
+    window.__catalogProducts = ${JSON.stringify(products.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}))};
+  </script>`;
+
+  return `
+    <section class="products-screen" aria-labelledby="products-title">
+      <header class="products-heading"><div><span class="products-eyebrow">CATÁLOGO</span><h1 id="products-title">Productos</h1><p>Administra el catálogo, precios, existencias y publicación.</p></div><button class="products-primary-button" type="button" onclick="startCreateProduct()"><span aria-hidden="true">＋</span>Crear producto</button></header>
+      <section class="products-kpis" aria-label="Resumen de productos"><article><span>Productos</span><strong id="products-total">${products.length}</strong></article><article><span>Publicados</span><strong id="products-published">${published}</strong></article><article><span>Borradores</span><strong id="products-drafts">${drafts}</strong></article><article><span>Stock bajo</span><strong id="products-low-stock">${lowStock}</strong></article></section>
+      <details class="products-maintenance"><summary>Herramientas de mantenimiento de precios históricos</summary><p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p><button type="button" class="products-secondary-button" onclick="previewLegacyPriceMigration()">Previsualizar conversión</button><div id="legacy-price-preview" aria-live="polite"></div></details>
+      <section class="products-list-card" aria-label="Lista de productos">
+        <div class="products-list-toolbar"><div><h2>Todos los productos</h2><p id="products-results-count">${products.length} productos</p></div><label class="products-search"><span class="sr-only">Buscar productos</span><input id="products-search" type="search" placeholder="Buscar por nombre, SKU o marca" autocomplete="off"></label></div>
+        <div class="products-filter-tabs" role="group" aria-label="Filtrar productos por estado">${filterButton('all', 'Todos', products.length, true)}${filterButton('published', 'Publicados', published)}${filterButton('draft', 'Borradores', drafts)}${filterButton('archived', 'Archivados', products.filter((p) => p.status === 'archived').length)}</div>
+        <div class="products-table-scroll"><table class="products-table"><thead><tr><th>Producto</th><th>SKU</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Contra entrega</th><th>Acciones</th></tr></thead><tbody id="products-table-body">${rows || '<tr><td colspan="7" class="products-empty">Aún no tienes productos. Usa “Crear producto” para agregar el primero.</td></tr>'}</tbody></table></div>
+        <footer class="products-list-footer"><span id="products-visible-count">Mostrando ${products.length} productos</span><nav id="products-pagination" aria-label="Paginación de productos"></nav><span>Precios en COP</span></footer>
+      </section>
+    </section>
+    ${jsonScript}
+  `;
+}
+
+export function renderProductRows(products: CatalogProductDto[]): string {
+  return products.map((p) => {
     const price = (p.priceInCents / 100).toLocaleString('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -39,25 +62,6 @@ export function renderProductTable(products: CatalogProductDto[]): string {
       </tr>
     `;
   }).join('');
-
-  const jsonScript = `<script>
-    window.__catalogProducts = ${JSON.stringify(products.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}))};
-  </script>`;
-
-  return `
-    <section class="products-screen" aria-labelledby="products-title">
-      <header class="products-heading"><div><span class="products-eyebrow">CATÁLOGO</span><h1 id="products-title">Productos</h1><p>Administra el catálogo, precios, existencias y publicación.</p></div><button class="products-primary-button" type="button" onclick="startCreateProduct()"><span aria-hidden="true">＋</span>Crear producto</button></header>
-      <section class="products-kpis" aria-label="Resumen de productos"><article><span>Productos</span><strong>${products.length}</strong></article><article><span>Publicados</span><strong>${published}</strong></article><article><span>Borradores</span><strong>${drafts}</strong></article><article><span>Stock bajo</span><strong>${lowStock}</strong></article></section>
-      <details class="products-maintenance"><summary>Herramientas de mantenimiento de precios históricos</summary><p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p><button type="button" class="products-secondary-button" onclick="previewLegacyPriceMigration()">Previsualizar conversión</button><div id="legacy-price-preview" aria-live="polite"></div></details>
-      <section class="products-list-card" aria-label="Lista de productos">
-        <div class="products-list-toolbar"><div><h2>Todos los productos</h2><p id="products-results-count">${products.length} productos</p></div><label class="products-search"><span class="sr-only">Buscar productos</span><input id="products-search" type="search" placeholder="Buscar por nombre, SKU o marca" autocomplete="off"></label></div>
-        <div class="products-filter-tabs" role="group" aria-label="Filtrar productos por estado">${filterButton('all', 'Todos', products.length, true)}${filterButton('published', 'Publicados', published)}${filterButton('draft', 'Borradores', drafts)}${filterButton('archived', 'Archivados', products.filter((p) => p.status === 'archived').length)}</div>
-        <div class="products-table-scroll"><table class="products-table"><thead><tr><th>Producto</th><th>SKU</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Contra entrega</th><th>Acciones</th></tr></thead><tbody id="products-table-body">${rows || '<tr><td colspan="7" class="products-empty">Aún no tienes productos. Usa “Crear producto” para agregar el primero.</td></tr>'}<tr id="products-no-results" hidden><td colspan="7" class="products-empty">No hay productos que coincidan con la búsqueda.</td></tr></tbody></table></div>
-        <footer class="products-list-footer"><span id="products-visible-count">Mostrando ${products.length} productos</span><span>Precios en COP</span></footer>
-      </section>
-    </section>
-    ${jsonScript}
-  `;
 }
 
 function filterButton(value: string, label: string, count: number, selected = false): string {

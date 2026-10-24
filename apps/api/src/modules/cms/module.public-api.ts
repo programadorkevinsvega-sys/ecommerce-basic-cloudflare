@@ -12,9 +12,11 @@ export interface ICmsPublicApi {
   createPage(input: CreatePageInput): Promise<Page>;
   updatePageContent(input: UpdatePageContentInput): Promise<Page>;
   getPageBySlug(slug: string): Promise<Page>;
+  getPageById(id: string): Promise<Page | null>;
   getMenuByCode(code: string): Promise<Menu>;
   saveMenu(input: SaveMenuInput): Promise<Menu>;
   listPages(limit?: number, offset?: number, status?: string): Promise<Page[]>;
+  countPages(status?: string): Promise<number>;
   deletePage(id: string): Promise<void>;
   saveBlogPost(input: SaveBlogPostInput): Promise<BlogPost>;
   listBlogPosts(input: { page:number; pageSize:number; status?:BlogPostStatus; categorySlug?:string; publishedOnly?:boolean }): Promise<{items:BlogPost[];total:number}>;
@@ -58,6 +60,8 @@ export class CmsPublicApi implements ICmsPublicApi {
     return res.value;
   }
 
+  public getPageById(id: string): Promise<Page | null> { return this.container.getPageByIdUseCase.execute(id); }
+
   public async getMenuByCode(code: string): Promise<Menu> {
     const res = await this.container.getMenuByCodeUseCase.execute(code);
     if (res.isFail()) throw res.error;
@@ -73,6 +77,7 @@ export class CmsPublicApi implements ICmsPublicApi {
     if (res.isFail()) throw res.error;
     return res.value;
   }
+  public countPages(status?: string): Promise<number> { return this.container.listPagesUseCase.count(status); }
 
   public async deletePage(id: string): Promise<void> {
     const res = await this.container.deletePageUseCase.execute(id);

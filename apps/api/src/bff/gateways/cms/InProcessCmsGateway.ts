@@ -46,6 +46,11 @@ export class InProcessCmsGateway implements CmsGateway {
     return page.toPrimitives() as CmsPageDto;
   }
 
+  public async getPageById(id: string): Promise<CmsPageDto | null> {
+    const page = await this.publicApi.getPageById(id);
+    return page?.toPrimitives() ?? null;
+  }
+
   public async getMenuByCode(code: string): Promise<CmsMenuDto> {
     const menu = await this.publicApi.getMenuByCode(code);
     return menu.toPrimitives() as CmsMenuDto;
@@ -60,6 +65,7 @@ export class InProcessCmsGateway implements CmsGateway {
     const pages = await this.publicApi.listPages(limit, offset, status);
     return pages.map((p) => p.toPrimitives() as CmsPageDto);
   }
+  public countPages(status?: string): Promise<number> { return this.publicApi.countPages(status); }
 
   public async deletePage(id: string): Promise<void> {
     await this.publicApi.deletePage(id);

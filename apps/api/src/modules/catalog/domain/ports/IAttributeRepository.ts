@@ -7,4 +7,5 @@ export interface IAttributeRepository {
   save(attribute: Attribute): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<Attribute[]>;
+  count(includeInactive?: boolean): Promise<number>;
 }

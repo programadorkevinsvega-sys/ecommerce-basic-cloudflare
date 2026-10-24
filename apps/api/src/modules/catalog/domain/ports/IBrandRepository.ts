@@ -7,4 +7,5 @@ export interface IBrandRepository {
   save(brand: Brand): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<Brand[]>;
+  count(includeInactive?: boolean): Promise<number>;
 }

@@ -8,8 +8,6 @@ import { createSupplierSchema, createVariantSchema } from './catalogAuxiliarySch
 export class CatalogAuxiliaryAdminController {
   public static createRoutes(catalog: CatalogGateway, identity: IdentityGateway, audit: AuditGateway): Hono {
     const router = new Hono();
-    router.get('/admin/suppliers', createAuthMiddleware(identity, 'admin', 'catalog:read'), async (c) =>
-      c.json({ data: await catalog.listSuppliers() }));
     router.post('/admin/suppliers', createAuthMiddleware(identity, 'admin', 'catalog:create'), async (c) => {
       let body: unknown;
       try { body = await c.req.json(); } catch { return c.json({ error: 'Datos inválidos' }, 400); }
@@ -21,8 +19,6 @@ export class CatalogAuxiliaryAdminController {
         return c.json({ data: supplier }, 201);
       } catch { return c.json({ error: 'No fue posible crear el proveedor' }, 400); }
     });
-    router.get('/admin/product-variants', createAuthMiddleware(identity, 'admin', 'catalog:read'), async (c) =>
-      c.json({ data: await catalog.listProductVariants() }));
     router.post('/admin/product-variants', createAuthMiddleware(identity, 'admin', 'catalog:create'), async (c) => {
       let body: unknown;
       try { body = await c.req.json(); } catch { return c.json({ error: 'Datos inválidos' }, 400); }

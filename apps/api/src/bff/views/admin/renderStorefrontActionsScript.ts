@@ -1,5 +1,23 @@
 export function renderStorefrontActionsScript(): string {
   return `
+    async function loadStorefrontPage(kind, page = 1) {
+      const banners = kind === 'promo' || kind === 'info';
+      const type = kind === 'info' ? 'informative' : 'promotional';
+      const card = document.querySelector('[data-marketing-page="' + (kind === 'promo' ? 'promo-banners' : kind === 'info' ? 'info-banners' : 'announcements') + '"]');
+      const path = banners ? '/api/v1/admin/storefront/banners?page=' + page + '&pageSize=25&type=' + type + '&q=' + encodeURIComponent(card?.querySelector('input[type="search"]')?.value.trim() || '') + '&placement=' + encodeURIComponent(card?.querySelector('[aria-label="Filtrar ubicación"]')?.value || '') + '&active=' + encodeURIComponent(({active:'true',inactive:'false'})[card?.querySelector('[aria-label="Filtrar estado"]')?.value] || '') : '/api/v1/admin/storefront/announcements?page=' + page + '&pageSize=25';
+      const response = await fetch(path, { cache: 'no-store' }), result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cargar esta página.');
+      const bodyId = kind === 'promo' ? 'promo-banners-body' : kind === 'info' ? 'info-banners-body' : 'announcements-body';
+      const navId = kind === 'promo' ? 'promo-banners-pagination' : kind === 'info' ? 'info-banners-pagination' : 'announcements-pagination';
+      document.getElementById(bodyId).innerHTML = result.rowsHtml;
+      const nav = document.getElementById(navId);
+      nav.querySelector('span').textContent = result.total + ' registros · Página ' + result.page + ' de ' + Math.max(1, Math.ceil(result.total / result.pageSize));
+      nav.querySelector('[data-storefront-page="previous"]').disabled = result.page <= 1;
+      nav.querySelector('[data-storefront-page="next"]').disabled = !result.hasMore;
+      nav.querySelector('[data-storefront-page="previous"]').onclick = () => loadStorefrontPage(kind, result.page - 1);
+      nav.querySelector('[data-storefront-page="next"]').onclick = () => loadStorefrontPage(kind, result.page + 1);
+    }
+    loadStorefrontPage('promo').catch(() => {}); loadStorefrontPage('info').catch(() => {}); loadStorefrontPage('announcements').catch(() => {});
     async function setBannerStatus(id, isActive) {
       const action = isActive ? 'publicar' : 'ocultar';
       if (!confirm('¿Deseas ' + action + ' este banner?')) return;
@@ -25,22 +43,10 @@ export function renderStorefrontActionsScript(): string {
       else alert('No se pudo duplicar el banner');
     }
 
+    let bannerFilterTimer;
     function filterBanners(card) {
-      const [search, placement, state, type] = card.querySelector('.banner-filters').querySelectorAll('input, select');
-      const body = card.querySelector('tbody');
-      const matchesFilter = (row) => {
-        const matches = row.dataset.title.includes(search.value.toLowerCase()) &&
-          (!placement.value || row.dataset.placement === placement.value) && (!state.value || row.dataset.active === state.value) && (!type.value || row.dataset.type === type.value);
-        return matches;
-      };
-      const template = document.createElement('template');
-      const rows = window.getStaticAdminTableRows(body).filter((markup) => {
-        template.innerHTML = markup;
-        return template.content.firstElementChild?.matches('[data-banner-row="1"]') && matchesFilter(template.content.firstElementChild);
-      });
-      const key = body?.dataset.paginationKey;
-      window.resetAdminTablePage(key);
-      window.paginateAdminTable(key, body, rows, (markup) => markup, 4, 'No hay banners que coincidan con los filtros.');
+      clearTimeout(bannerFilterTimer);
+      bannerFilterTimer = setTimeout(() => loadStorefrontPage(card.dataset.marketingPage === 'info-banners' ? 'info' : 'promo', 1).catch(() => {}), 250);
     }
 
     function previewBanner(prefix, bannerType) {

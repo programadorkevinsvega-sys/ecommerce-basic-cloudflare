@@ -68,11 +68,18 @@ export class D1PageRepository implements IPageRepository {
       query += ' WHERE status = ?';
       params.push(status);
     }
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
     const { results } = await this.db.prepare(query).bind(...params).all<PageRow>();
     return Promise.all((results || []).map((r) => this.hydrate(r)));
+  }
+
+  public async count(status?: string): Promise<number> {
+    const row = status
+      ? await this.db.prepare('SELECT COUNT(*) AS total FROM cms_pages WHERE status = ?').bind(status).first<{ total: number }>()
+      : await this.db.prepare('SELECT COUNT(*) AS total FROM cms_pages').first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   public async delete(id: string): Promise<void> {

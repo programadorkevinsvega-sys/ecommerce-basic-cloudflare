@@ -9,15 +9,15 @@ export function renderOrderTrackingAdminScript(): string {
     let localLabelPage = 1; let localLabelItems = []; let localLabelTotal = 0;
     async function loadLocalDeliveryLabels(page = localLabelPage) {
       localLabelPage = page; const body = document.getElementById('local-label-body'); if (!body) return;
-      try { const params = new URLSearchParams({ page: String(page), pageSize: '10', unprinted: 'true' });
+      try { const params = new URLSearchParams({ page: String(page), pageSize: '25', unprinted: 'true' });
         const response = await fetch('/api/v1/admin/shipping/local/labels?' + params); const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'No se pudieron cargar las etiquetas locales');
         localLabelItems = data.items || []; localLabelTotal = data.total || 0;
         body.innerHTML = localLabelItems.length ? localLabelItems.map((item) => '<tr><td>#' + escapeHtml(item.orderId) + '</td><td>' + escapeHtml(item.customerName) + '<small>' + escapeHtml(item.customerPhone) + '</small></td><td>' + escapeHtml(item.municipality) + '<small>' + escapeHtml(item.addressLine) + '</small></td><td><div class="shipping-row-actions"><button class="shipping-action" type="button" data-local-print="' + escapeHtml(item.orderId) + '">Imprimir etiqueta</button><button class="shipping-action" type="button" data-local-mark="' + escapeHtml(item.orderId) + '">Marcar impresa</button></div></td></tr>').join('') : '<tr><td colspan="4" class="shipping-empty">No hay etiquetas locales pendientes de impresión.</td></tr>';
         body.querySelectorAll('[data-local-print]').forEach((button) => button.addEventListener('click', () => { window.open('/api/v1/admin/shipping/local/labels/' + encodeURIComponent(button.dataset.localPrint) + '/print', '_blank', 'noopener'); }));
         body.querySelectorAll('[data-local-mark]').forEach((button) => button.addEventListener('click', () => markLocalLabelPrinted(button.dataset.localMark)));
-        const pager = document.getElementById('local-label-pagination'); const pages = Math.max(1, Math.ceil(localLabelTotal / 10));
-        pager.querySelector('span').textContent = (localLabelTotal ? (page - 1) * 10 + 1 : 0) + '–' + Math.min(page * 10, localLabelTotal) + ' de ' + localLabelTotal + ' · Página ' + page + ' de ' + pages;
+        const pager = document.getElementById('local-label-pagination'); const pages = Math.max(1, Math.ceil(localLabelTotal / 25));
+        pager.querySelector('span').textContent = (localLabelTotal ? (page - 1) * 25 + 1 : 0) + '–' + Math.min(page * 25, localLabelTotal) + ' de ' + localLabelTotal + ' · Página ' + page + ' de ' + pages;
         pager.querySelector('[data-page-direction="previous"]').disabled = page <= 1; pager.querySelector('[data-page-direction="next"]').disabled = page >= pages;
       } catch (error) { body.innerHTML = '<tr><td colspan="4" class="shipping-empty">' + escapeHtml(error.message || 'Error al cargar etiquetas') + '</td></tr>'; }
     }
@@ -25,15 +25,15 @@ export function renderOrderTrackingAdminScript(): string {
     async function printLocalLabelBatch() { const pending = localLabelItems; if (!pending.length) { alert('No hay etiquetas locales pendientes en esta página.'); return; } pending.forEach((item) => window.open('/api/v1/admin/shipping/local/labels/' + encodeURIComponent(item.orderId) + '/print', '_blank', 'noopener')); if (confirm('¿Confirmas que imprimiste las ' + pending.length + ' etiquetas abiertas?')) for (const item of pending) await markLocalLabelPrinted(item.orderId); }
     async function loadShipmentLabels(page = labelPage) {
       labelPage = page; const body = document.getElementById('shipment-label-body'); if (!body) return;
-      const params = new URLSearchParams({ page: String(page), pageSize: '10', unprinted: 'true' });
+      const params = new URLSearchParams({ page: String(page), pageSize: '25', unprinted: 'true' });
       try { const response = await fetch('/api/v1/admin/shipping/mipaquete/labels?' + params);
         const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudieron cargar las guías');
         labelItems = data.items || []; labelTotal = data.total || 0;
         body.innerHTML = labelItems.length ? labelItems.map((item) => '<tr><td>#' + escapeHtml(item.orderId) + '</td><td>' + escapeHtml(item.carrierName || 'MiPaquete') + '</td><td>' + escapeHtml(item.guideNumber || item.mipaqueteCode || '—') + '</td><td><div class="shipping-row-actions"><button class="shipping-action" type="button" data-print-id="' + escapeHtml(item.id) + '">Abrir guía</button><button class="shipping-action" type="button" data-mark-id="' + escapeHtml(item.id) + '">Marcar impresa</button></div></td></tr>').join('') : '<tr><td colspan="4" class="shipping-empty">No hay guías pendientes de impresión.</td></tr>';
         body.querySelectorAll('[data-print-id]').forEach((button) => button.addEventListener('click', () => { const item = labelItems.find((entry) => entry.id === button.dataset.printId); if (item) window.open(item.guideUrl, '_blank', 'noopener'); }));
         body.querySelectorAll('[data-mark-id]').forEach((button) => button.addEventListener('click', () => markShipmentPrinted(button.dataset.markId)));
-        const pager = document.getElementById('shipment-label-pagination'); const pages = Math.max(1, Math.ceil(labelTotal / 10));
-        pager.querySelector('span').textContent = (labelTotal ? (page - 1) * 10 + 1 : 0) + '–' + Math.min(page * 10, labelTotal) + ' de ' + labelTotal + ' · Página ' + page + ' de ' + pages;
+        const pager = document.getElementById('shipment-label-pagination'); const pages = Math.max(1, Math.ceil(labelTotal / 25));
+        pager.querySelector('span').textContent = (labelTotal ? (page - 1) * 25 + 1 : 0) + '–' + Math.min(page * 25, labelTotal) + ' de ' + labelTotal + ' · Página ' + page + ' de ' + pages;
         pager.querySelector('[data-page-direction="previous"]').disabled = page <= 1; pager.querySelector('[data-page-direction="next"]').disabled = page >= pages;
       } catch (error) { body.innerHTML = '<tr><td colspan="5" class="shipping-empty">' + escapeHtml(error.message || 'Error al cargar guías') + '</td></tr>'; }
     }
@@ -45,7 +45,7 @@ export function renderOrderTrackingAdminScript(): string {
       const body = document.getElementById('order-tracking-admin-body');
       if (!body) return;
       body.innerHTML = '<tr><td colspan="5" class="shipping-empty">Cargando pedidos…</td></tr>';
-      const params = new URLSearchParams({ page: String(page), pageSize: '10', q: document.getElementById('tracking-admin-query').value.trim(), status: document.getElementById('tracking-admin-status').value });
+      const params = new URLSearchParams({ page: String(page), pageSize: '25', q: document.getElementById('tracking-admin-query').value.trim(), status: document.getElementById('tracking-admin-status').value });
       try {
         const response = await fetch('/api/v1/admin/orders/tracking?' + params);
         const data = await response.json();
@@ -59,9 +59,9 @@ export function renderOrderTrackingAdminScript(): string {
       body.innerHTML = trackingAdminItems.length ? trackingAdminItems.map((item) => '<tr><td><strong>#' + escapeHtml(item.orderId) + '</strong><small>' + escapeHtml(item.customerName) + '</small><small>' + escapeHtml(item.customerEmail) + '</small></td><td><span class="shipping-badge neutral">' + escapeHtml(trackingStatusLabels[item.status] || item.status) + '</span></td><td>' + escapeHtml(item.shippingCarrier || '—') + '<small>' + escapeHtml(item.shippingTrackingNumber || 'Sin guía') + '</small></td><td>' + escapeHtml(item.estimatedDeliveryDate || (item.minEstimatedDays != null ? item.minEstimatedDays + '–' + item.maxEstimatedDays + ' días hábiles' : 'No definida')) + '</td><td><div class="shipping-row-actions"><button class="shipping-action primary" type="button" data-order-id="' + encodeURIComponent(item.orderId) + '">Gestionar</button></div></td></tr>').join('') : '<tr><td colspan="5" class="shipping-empty">No hay pedidos que coincidan con la búsqueda.</td></tr>';
       body.querySelectorAll('[data-order-id]').forEach((button) => button.addEventListener('click', () => openOrderTrackingEditor(button.dataset.orderId)));
       const pager = document.getElementById('order-tracking-admin-pagination');
-      const totalPages = Math.max(1, Math.ceil(trackingAdminTotal / 10));
-      const from = trackingAdminTotal ? (trackingAdminPage - 1) * 10 + 1 : 0;
-      pager.querySelector('span').textContent = from + '–' + Math.min(trackingAdminPage * 10, trackingAdminTotal) + ' de ' + trackingAdminTotal + ' · Página ' + trackingAdminPage + ' de ' + totalPages;
+      const totalPages = Math.max(1, Math.ceil(trackingAdminTotal / 25));
+      const from = trackingAdminTotal ? (trackingAdminPage - 1) * 25 + 1 : 0;
+      pager.querySelector('span').textContent = from + '–' + Math.min(trackingAdminPage * 25, trackingAdminTotal) + ' de ' + trackingAdminTotal + ' · Página ' + trackingAdminPage + ' de ' + totalPages;
       pager.querySelector('[data-page-direction="previous"]').disabled = trackingAdminPage <= 1;
       pager.querySelector('[data-page-direction="next"]').disabled = trackingAdminPage >= totalPages;
     }

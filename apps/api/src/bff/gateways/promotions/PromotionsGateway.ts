@@ -85,7 +85,9 @@ export interface PromotionsGateway {
     endsAt?: string;
     priority?: number;
   }): Promise<PromotionRuleDto>;
-  listPromotionRules(activeOnly?: boolean): Promise<PromotionRuleDto[]>;
+  listPromotionRules(activeOnly?: boolean, limit?: number, offset?: number): Promise<PromotionRuleDto[]>;
+  countPromotionRules(activeOnly?: boolean): Promise<number>;
+  getPromotionRuleById(id: string): Promise<PromotionRuleDto | null>;
   deletePromotionRule(id: string): Promise<void>;
   togglePromotionRule(id: string, active: boolean): Promise<PromotionRuleDto>;
 
@@ -117,7 +119,9 @@ export interface PromotionsGateway {
     startsAt?: string;
     endsAt?: string;
   }): Promise<CouponDto>;
-  listCoupons(activeOnly?: boolean): Promise<CouponDto[]>;
+  listCoupons(activeOnly?: boolean, limit?: number, offset?: number): Promise<CouponDto[]>;
+  countCoupons(activeOnly?: boolean): Promise<number>;
+  getCouponById(id: string): Promise<CouponDto | null>;
   deleteCoupon(id: string): Promise<void>;
   toggleCoupon(id: string, active: boolean): Promise<CouponDto>;
 

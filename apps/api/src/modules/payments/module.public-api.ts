@@ -26,13 +26,17 @@ export class PaymentsPublicApi {
     return this.container.recordCodCollectionUseCase.execute(cmd);
   }
 
-  public async listTransactions(limit?: number): Promise<PaymentTransaction[]> {
-    return this.container.listPaymentsUseCase.listTransactions(limit);
+  public async listTransactions(limit?: number, offset?: number, query?: string): Promise<PaymentTransaction[]> {
+    return this.container.listPaymentsUseCase.listTransactions(limit, offset, query);
   }
 
-  public async listCodCollections(limit?: number): Promise<CodCollection[]> {
-    return this.container.listPaymentsUseCase.listCodCollections(limit);
+  public countTransactions(query?: string): Promise<number> { return this.container.listPaymentsUseCase.countTransactions(query); }
+
+  public async listCodCollections(limit?: number, offset?: number, query?: string): Promise<CodCollection[]> {
+    return this.container.listPaymentsUseCase.listCodCollections(limit, offset, query);
   }
+
+  public countCodCollections(query?: string): Promise<number> { return this.container.listPaymentsUseCase.countCodCollections(query); }
 
   public async recordSettlementCost(command: RecordSettlementCostCommand): Promise<void> {
     await this.container.recordSettlementCostUseCase.execute(command);
@@ -42,7 +46,9 @@ export class PaymentsPublicApi {
     await this.container.recordSettlementCorrectionUseCase.execute(command);
   }
 
-  public async listSettlementCosts(limit?: number) {
-    return this.container.listPaymentsUseCase.listSettlementCosts(limit);
+  public async listSettlementCosts(limit?: number, offset?: number, query?: string) {
+    return this.container.listPaymentsUseCase.listSettlementCosts(limit, offset, query);
   }
+
+  public countSettlementCosts(query?: string): Promise<number> { return this.container.listPaymentsUseCase.countSettlementCosts(query); }
 }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { renderPromotionRulesTableRows, renderCouponsTableRows } from '../../views/admin/renderPromotionsTableRows.js';
 
 const CouponPreviewInput = z.object({
   code: z.string().trim().min(1).max(80),
@@ -52,8 +53,12 @@ export class PromotionsController {
       '/api/v1/admin/promotions/rules',
       createAuthMiddleware(identityGateway, 'admin', 'promotions:read'),
       async (c) => {
-        const rules = await promotionsGateway.listPromotionRules();
-        return c.json({ data: rules });
+        const page = parsePage(c.req.query('page')), pageSize = parseSize(c.req.query('pageSize'));
+        if (!page || !pageSize) return c.json({ error: 'Paginación inválida' }, 400);
+        const [data, total] = await Promise.all([promotionsGateway.listPromotionRules(false, pageSize, (page - 1) * pageSize), promotionsGateway.countPromotionRules()]);
+        const items = data;
+        return c.json({ success: true, page, pageSize, total, hasMore: page * pageSize < total, data: items,
+          rowsHtml: renderPromotionRulesTableRows(items, new Map(), new Map()) });
       }
     );
 
@@ -112,8 +117,12 @@ export class PromotionsController {
       '/api/v1/admin/promotions/coupons',
       createAuthMiddleware(identityGateway, 'admin', 'promotions:read'),
       async (c) => {
-        const coupons = await promotionsGateway.listCoupons();
-        return c.json({ data: coupons });
+        const page = parsePage(c.req.query('page')), pageSize = parseSize(c.req.query('pageSize'));
+        if (!page || !pageSize) return c.json({ error: 'Paginación inválida' }, 400);
+        const [data, total] = await Promise.all([promotionsGateway.listCoupons(false, pageSize, (page - 1) * pageSize), promotionsGateway.countCoupons()]);
+        const items = data;
+        return c.json({ success: true, page, pageSize, total, hasMore: page * pageSize < total, data: items,
+          rowsHtml: renderCouponsTableRows(items, new Map(), new Map()) });
       }
     );
 
@@ -169,4 +178,14 @@ export class PromotionsController {
 
     return router;
   }
+}
+
+function parsePage(value?: string): number | null {
+  const page = Number(value || 1);
+  return Number.isSafeInteger(page) && page > 0 && page <= 1_000_000 ? page : null;
+}
+
+function parseSize(value?: string): number | null {
+  const size = Number(value || 25);
+  return Number.isSafeInteger(size) && size > 0 && size <= 50 ? size : null;
 }

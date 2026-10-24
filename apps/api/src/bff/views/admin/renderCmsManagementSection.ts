@@ -133,8 +133,8 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
       </form>
       <table class="cms-table">
         <thead><tr><th>Título y URL</th><th>Estado</th><th>Última Actualización</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${pageRows || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay páginas CMS creadas</td></tr>'}</tbody>
-      </table></div></section>
+        <tbody id="cms-pages-body">${pageRows || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay páginas CMS creadas</td></tr>'}</tbody>
+      </table></div><nav class="admin-pagination" id="cms-pages-pagination" aria-label="Paginación de páginas CMS"><button type="button" data-cms-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-cms-page="next" disabled>Siguiente</button></nav></section>
 
       <!-- Modal de Confirmación para Eliminar Página -->
       <div id="cmsDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">

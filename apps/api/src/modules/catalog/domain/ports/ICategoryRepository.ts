@@ -7,4 +7,5 @@ export interface ICategoryRepository {
   save(category: Category): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<Category[]>;
+  count(includeInactive?: boolean, query?: string): Promise<number>;
 }

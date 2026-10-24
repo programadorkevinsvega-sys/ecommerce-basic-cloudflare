@@ -19,8 +19,12 @@ export class InvoicingPublicApi {
     return this.container.getInvoiceDocumentUseCase.execute(invoiceId);
   }
 
-  public async listInvoices(filters?: { customerId?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
+  public async listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
     return this.container.listInvoicesUseCase.execute(filters);
+  }
+
+  public countInvoices(filters?: { customerId?: string; query?: string }): Promise<number> {
+    return this.container.listInvoicesUseCase.count(filters);
   }
 
   public async createCreditNote(cmd: CreateCreditNoteCommand): Promise<CreditNote> {

@@ -9,12 +9,15 @@ export class ListPromotionRulesUseCase {
     this.ruleRepo = ruleRepo;
   }
 
-  public async execute(activeOnly = false): Promise<Result<PromotionRule[], Error>> {
+  public async execute(activeOnly = false, limit?: number, offset = 0): Promise<Result<PromotionRule[], Error>> {
     try {
-      const rules = await this.ruleRepo.list(activeOnly);
+      const rules = await this.ruleRepo.list(activeOnly, limit, offset);
       return Result.ok(rules);
     } catch (err) {
       return Result.fail(err instanceof Error ? err : new Error('Error al listar promociones'));
     }
   }
+
+  public getById(id: string): Promise<PromotionRule | null> { return this.ruleRepo.findById(id); }
+  public count(activeOnly = false): Promise<number> { return this.ruleRepo.count(activeOnly); }
 }

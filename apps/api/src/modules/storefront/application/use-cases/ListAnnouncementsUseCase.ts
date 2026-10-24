@@ -13,4 +13,6 @@ export class ListAnnouncementsUseCase {
     const announcements = await this.repo.findAllAnnouncements();
     return Result.ok(announcements);
   }
+
+  public listAdmin(limit: number, offset: number) { return this.repo.listAdminAnnouncements(limit, offset); }
 }

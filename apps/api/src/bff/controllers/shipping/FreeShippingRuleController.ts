@@ -19,39 +19,45 @@ export class FreeShippingRuleController {
     router.get('/api/v1/admin/shipping/free-shipping-rules', createAuthMiddleware(identity, 'admin', 'shipping:read'), async (c) => {
       const page = Number(c.req.query('page') || 1);
       if (!Number.isSafeInteger(page) || page < 1 || page > 100000) return c.json({ error: 'Página inválida' }, 400);
-      const result = await shipping.listFreeShippingRules(page, 10);
+      const pageSize = 25;
+      const result = await shipping.listFreeShippingRules(page, pageSize);
       const items = await Promise.all(result.items.map(async (rule) => ({ ...rule,
         targetName: rule.targetType === 'all' ? 'Todo el catálogo' : await targetName(catalog, rule.targetType, rule.targetId) })));
-      return c.json({ success: true, page, pageSize: 10, items, total: result.total, hasMore: page * 10 < result.total });
+      return c.json({ success: true, page, pageSize, items, total: result.total, hasMore: page * pageSize < result.total });
     });
 
     router.get('/api/v1/admin/shipping/free-shipping-targets', createAuthMiddleware(identity, 'admin', 'shipping:read'), async (c) => {
-      const type = c.req.query('type'); const query = (c.req.query('q') || '').trim().slice(0, 100);
+      const type = c.req.query('type'); const query = (c.req.query('q') || '').trim();
+      if (query.length > 100) return c.json({ error: 'Búsqueda demasiado larga' }, 400);
       const targetId = c.req.query('id');
       if (targetId && type === 'product') {
-        try { const item = await catalog.getProductById(targetId); return c.json({ items: [{ id: item.id, name: item.name, detail: item.sku }], hasMore: false }); }
-        catch { return c.json({ items: [], hasMore: false }); }
+        try { const item = await catalog.getProductById(targetId); return c.json({ items: [{ id: item.id, name: item.name, detail: item.sku }], page: 1, pageSize: 25, total: 1, hasMore: false }); }
+        catch { return c.json({ items: [], page: 1, pageSize: 25, total: 0, hasMore: false }); }
       }
       if (targetId && type === 'category') {
-        const item = (await catalog.listCategories({ limit: 1000, offset: 0 })).find((entry) => entry.id === targetId);
-        return c.json({ items: item ? [{ id: item.id, name: item.name, detail: '' }] : [], hasMore: false });
+        const item = await catalog.getCategoryById(targetId);
+        return c.json({ items: item ? [{ id: item.id, name: item.name, detail: '' }] : [], page: 1, pageSize: 25, total: item ? 1 : 0, hasMore: false });
       }
       if (targetId && type === 'collection') {
-        try { const item = await catalog.getCollectionById(targetId); return c.json({ items: [{ id: item.id, name: item.name, detail: item.slug }], hasMore: false }); }
-        catch { return c.json({ items: [], hasMore: false }); }
+        try { const item = await catalog.getCollectionById(targetId); return c.json({ items: [{ id: item.id, name: item.name, detail: item.slug }], page: 1, pageSize: 25, total: 1, hasMore: false }); }
+        catch { return c.json({ items: [], page: 1, pageSize: 25, total: 0, hasMore: false }); }
       }
       if (type === 'product') {
         const page = Number(c.req.query('page') || 1);
         if (!Number.isSafeInteger(page) || page < 1 || page > 100000) return c.json({ error: 'Página inválida' }, 400);
-        const items = await catalog.listProducts({ limit: 20, offset: (page - 1) * 20, status: 'published', searchQuery: query });
-        return c.json({ items: items.map((item) => ({ id: item.id, name: item.name, detail: item.sku })), hasMore: items.length === 20 });
+        const pageSize = 25;
+        const [items, total] = await Promise.all([catalog.listProducts({ limit: pageSize, offset: (page - 1) * pageSize, status: 'published', searchQuery: query }), catalog.countProducts('published', query)]);
+        return c.json({ items: items.map((item) => ({ id: item.id, name: item.name, detail: item.sku })), page, pageSize, total, hasMore: page * pageSize < total });
       }
-      const source = type === 'category' ? await catalog.listCategories({ limit: 1000, offset: 0 })
-        : type === 'collection' ? (await catalog.listCollections({ limit: 1000, offset: 0 })).filter((item) => item.status === 'active') : null;
-      if (!source) return c.json({ error: 'Tipo de destino inválido' }, 400);
-      const items = source.filter((item) => item.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
-        .slice(0, 100).map((item) => ({ id: item.id, name: item.name, detail: 'slug' in item ? item.slug : '' }));
-      return c.json({ items, hasMore: false });
+      if (type !== 'category' && type !== 'collection') return c.json({ error: 'Tipo de destino inválido' }, 400);
+      const page = Number(c.req.query('page') || 1), pageSize = 25;
+      if (!Number.isSafeInteger(page) || page < 1 || page > 100000) return c.json({ error: 'Página inválida' }, 400);
+      const isCategory = type === 'category';
+      const [items, total] = await Promise.all([isCategory
+        ? catalog.listCategories({ limit: pageSize, offset: (page - 1) * pageSize, includeInactive: true, query })
+        : catalog.listCollections({ limit: pageSize, offset: (page - 1) * pageSize, includeInactive: false, query }),
+      isCategory ? catalog.countTaxonomy('categories', query) : catalog.countCollections(false, query)]);
+      return c.json({ items: items.map((item) => ({ id: item.id, name: item.name, detail: 'slug' in item ? item.slug : '' })), page, pageSize, total, hasMore: page * pageSize < total });
     });
 
     router.post('/api/v1/admin/shipping/free-shipping-rules', createAuthMiddleware(identity, 'admin', 'shipping:create'), async (c) => {
@@ -99,7 +105,7 @@ async function isValidTarget(catalog: CatalogGateway, type: 'all' | 'product' | 
   if (!id) return false;
   try {
     if (type === 'product') return (await catalog.getProductById(id)).status === 'published';
-    if (type === 'category') return (await catalog.listCategories({ limit: 1000, offset: 0 })).some((item) => item.id === id);
+    if (type === 'category') return Boolean(await catalog.getCategoryById(id));
     return (await catalog.getCollectionById(id)).status === 'active';
   } catch { return false; }
 }
@@ -108,7 +114,7 @@ async function targetName(catalog: CatalogGateway, type: 'product' | 'category' 
   if (!id) return 'Destino no disponible';
   try {
     if (type === 'product') { const product = await catalog.getProductById(id); return `${product.name} · ${product.sku}`; }
-    if (type === 'category') return (await catalog.listCategories({ limit: 1000, offset: 0 })).find((item) => item.id === id)?.name || 'Categoría no disponible';
+    if (type === 'category') return (await catalog.getCategoryById(id))?.name || 'Categoría no disponible';
     return (await catalog.getCollectionById(id)).name;
   } catch { return 'Destino no disponible'; }
 }

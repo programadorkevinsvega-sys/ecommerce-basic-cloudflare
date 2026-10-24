@@ -1,6 +1,7 @@
 import { IPaymentRepository, WebhookEventRecord } from '../../../../domain/ports/IPaymentRepository.js';
 import { PaymentTransaction } from '../../../../domain/entities/PaymentTransaction.js';
 import { CodCollection } from '../../../../domain/entities/CodCollection.js';
+import { paymentSearch } from './paymentSearch.js';
 
 export class D1PaymentRepository implements IPaymentRepository {
   private readonly db: D1Database;
@@ -76,13 +77,16 @@ export class D1PaymentRepository implements IPaymentRepository {
     return this.mapToTransaction(row);
   }
 
-  public async listTransactions(limit = 100): Promise<PaymentTransaction[]> {
+  public async listTransactions(limit = 100, offset = 0, query?: string): Promise<PaymentTransaction[]> {
+    const where = paymentSearch('reference LIKE ? OR order_id LIKE ? OR status LIKE ?', query);
     const res = await this.db.prepare(
-      `SELECT * FROM payments_transactions ORDER BY created_at DESC LIMIT ?`
-    ).bind(limit).all<Record<string, unknown>>();
+      `SELECT * FROM payments_transactions${where.sql} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`
+    ).bind(...where.values, limit, offset).all<Record<string, unknown>>();
 
     return (res.results || []).map((r) => this.mapToTransaction(r));
   }
+
+  public async countTransactions(query?: string): Promise<number> { const where = paymentSearch('reference LIKE ? OR order_id LIKE ? OR status LIKE ?', query); return (await this.db.prepare(`SELECT COUNT(*) AS total FROM payments_transactions${where.sql}`).bind(...where.values).first<{ total: number }>())?.total || 0; }
 
   public async saveWebhookEvent(record: WebhookEventRecord): Promise<boolean> {
     const result = await this.db.prepare(
@@ -112,10 +116,11 @@ export class D1PaymentRepository implements IPaymentRepository {
     ).run();
   }
 
-  public async listCodCollections(limit = 100): Promise<CodCollection[]> {
+  public async listCodCollections(limit = 100, offset = 0, query?: string): Promise<CodCollection[]> {
+    const where = paymentSearch('order_id LIKE ? OR receipt_number LIKE ? OR collected_by LIKE ?', query);
     const res = await this.db.prepare(
-      `SELECT * FROM payments_cod_collections ORDER BY created_at DESC LIMIT ?`
-    ).bind(limit).all<Record<string, unknown>>();
+      `SELECT * FROM payments_cod_collections${where.sql} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`
+    ).bind(...where.values, limit, offset).all<Record<string, unknown>>();
 
     return (res.results || []).map((r) => new CodCollection({
       id: r.id as string,
@@ -128,6 +133,8 @@ export class D1PaymentRepository implements IPaymentRepository {
       createdAt: r.created_at as string,
     }));
   }
+
+  public async countCodCollections(query?: string): Promise<number> { const where = paymentSearch('order_id LIKE ? OR receipt_number LIKE ? OR collected_by LIKE ?', query); return (await this.db.prepare(`SELECT COUNT(*) AS total FROM payments_cod_collections${where.sql}`).bind(...where.values).first<{ total: number }>())?.total || 0; }
 
   public async recordSettlementCost(input: { orderId: string; actualFeeCents: number; estimatedFeeCents: number; reportReference: string; recordedBy: string; recordedAt: string }): Promise<void> {
     await this.db.prepare(`INSERT INTO payments_settlement_costs (order_id,actual_fee_cents,estimated_fee_cents,report_reference,recorded_by,recorded_at)
@@ -143,7 +150,8 @@ export class D1PaymentRepository implements IPaymentRepository {
     if ((result.meta?.changes ?? 0) !== 1) throw new Error('No existe una conciliación que corregir');
   }
 
-  public async listSettlementCosts(limit = 100): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string; corrected: boolean; correctionReason?: string; correctionCount: number }>> {
+  public async listSettlementCosts(limit = 100, offset = 0, query?: string): Promise<Array<{ orderId: string; actualFeeCents: number; estimatedFeeCents: number; varianceCents: number; reportReference: string; recordedBy: string; recordedAt: string; corrected: boolean; correctionReason?: string; correctionCount: number }>> {
+    const where = paymentSearch('base.order_id LIKE ? OR base.report_reference LIKE ?', query);
     const result = await this.db.prepare(`SELECT base.order_id, base.estimated_fee_cents,
       COALESCE(correction.actual_fee_cents, base.actual_fee_cents) AS actual_fee_cents,
       COALESCE(correction.report_reference, base.report_reference) AS report_reference,
@@ -154,8 +162,8 @@ export class D1PaymentRepository implements IPaymentRepository {
       FROM payments_settlement_costs base
       LEFT JOIN payments_settlement_corrections correction ON correction.id = (
         SELECT id FROM payments_settlement_corrections WHERE order_id = base.order_id ORDER BY recorded_at DESC, id DESC LIMIT 1
-      ) ORDER BY COALESCE(correction.recorded_at, base.recorded_at) DESC LIMIT ?`)
-      .bind(limit).all<Record<string, unknown>>();
+      )${where.sql} ORDER BY COALESCE(correction.recorded_at, base.recorded_at) DESC, base.order_id DESC LIMIT ? OFFSET ?`)
+      .bind(...where.values, limit, offset).all<Record<string, unknown>>();
     return (result.results || []).map((row) => ({
       orderId: row.order_id as string,
       actualFeeCents: row.actual_fee_cents as number,
@@ -169,6 +177,8 @@ export class D1PaymentRepository implements IPaymentRepository {
       correctionCount: Number(row.correction_count),
     }));
   }
+
+  public async countSettlementCosts(query?: string): Promise<number> { const where = paymentSearch('base.order_id LIKE ? OR base.report_reference LIKE ?', query); return (await this.db.prepare(`SELECT COUNT(*) AS total FROM payments_settlement_costs base${where.sql}`).bind(...where.values).first<{ total: number }>())?.total || 0; }
 
   private mapToTransaction(r: Record<string, unknown>): PaymentTransaction {
     return new PaymentTransaction({

@@ -15,7 +15,7 @@ export class MiPaqueteShipmentController {
   public static createRoutes(deps: { identity: IdentityGateway; orders: OrdersGateway; settings: SettingsGateway; shipping: ShippingGateway; audit: AuditGateway; notifications: NotificationsGateway }): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     app.get('/api/v1/admin/shipping/local/labels', createAuthMiddleware(deps.identity, 'admin', 'shipping:read'), async (c) => {
-      const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 10);
+      const page = Number(c.req.query('page') || 1); const pageSize = Number(c.req.query('pageSize') || 25);
       if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) return c.json({ error: 'Paginación inválida' }, 400);
       return c.json({ success: true, ...await deps.orders.listLocalDeliveryLabels(page, pageSize, c.req.query('unprinted') !== 'false'), page, pageSize });
     });

@@ -30,14 +30,16 @@ export class AuditController {
       if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000) {
         return c.json({ error: 'Página inválida' }, 400);
       }
-      const pageSize = 10;
-      const logs = await auditGateway.list({ limit: pageSize + 1, offset: (page - 1) * pageSize });
+      const pageSize = 25;
+      const [logs, total] = await Promise.all([
+        auditGateway.list({ limit: pageSize, offset: (page - 1) * pageSize }), auditGateway.count(),
+      ]);
       return c.json({
         success: true,
         page,
         pageSize,
-        hasMore: logs.length > pageSize,
-        logs: logs.slice(0, pageSize).map((log) => log.toJSON()),
+        total, hasMore: page * pageSize < total,
+        logs: logs.map((log) => log.toJSON()),
       });
     });
 

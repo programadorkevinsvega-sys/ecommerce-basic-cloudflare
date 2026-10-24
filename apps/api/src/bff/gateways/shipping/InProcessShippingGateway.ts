@@ -25,10 +25,12 @@ export class InProcessShippingGateway implements ShippingGateway {
     this.publicApi = publicApi;
   }
 
-  public async listZones(onlyActive = false): Promise<ShippingZoneDto[]> {
-    const zones = await this.publicApi.listZones(onlyActive);
+  public async listZones(onlyActive = false, limit?: number, offset = 0, localOnly = false): Promise<ShippingZoneDto[]> {
+    const zones = await this.publicApi.listZones(onlyActive, limit, offset, localOnly);
     return zones.map((z) => this.mapZone(z));
   }
+
+  public countZones(onlyActive = false, localOnly = false): Promise<number> { return this.publicApi.countZones(onlyActive, localOnly); }
 
   public async getZone(id: string): Promise<ShippingZoneDto | null> {
     const zone = await this.publicApi.getZone(id);

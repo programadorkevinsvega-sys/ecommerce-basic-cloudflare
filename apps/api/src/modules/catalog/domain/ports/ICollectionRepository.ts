@@ -7,4 +7,5 @@ export interface ICollectionRepository {
   save(collection: Collection): Promise<void>;
   delete(id: string): Promise<void>;
   list(query?: CatalogPageQuery): Promise<Collection[]>;
+  count(includeInactive?: boolean, query?: string): Promise<number>;
 }

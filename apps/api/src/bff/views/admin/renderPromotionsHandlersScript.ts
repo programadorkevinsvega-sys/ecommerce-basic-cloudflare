@@ -1,5 +1,20 @@
 export function renderPromotionsHandlersScript(): string {
   return `
+    const promotionPages = { rules: 1, coupons: 1 };
+    async function loadPromotionPage(kind, page = 1) {
+      const endpoint = kind === 'rules' ? 'rules' : 'coupons';
+      const result = await fetch('/api/v1/admin/promotions/' + endpoint + '?page=' + page + '&pageSize=25', { cache: 'no-store' }).then(response => response.json());
+      if (!result.success) throw new Error(result.error || 'No se pudo cargar la página.');
+      promotionPages[kind] = result.page;
+      document.getElementById(kind === 'rules' ? 'promotion-rules-body' : 'promotion-coupons-body').innerHTML = result.rowsHtml;
+      const nav = document.getElementById(kind === 'rules' ? 'promotion-rules-pagination' : 'promotion-coupons-pagination');
+      nav.querySelector('span').textContent = result.total + ' registros · Página ' + result.page;
+      nav.querySelector('[data-promo-page="previous"]').disabled = result.page <= 1;
+      nav.querySelector('[data-promo-page="next"]').disabled = !result.hasMore;
+      nav.querySelector('[data-promo-page="previous"]').onclick = () => loadPromotionPage(kind, result.page - 1);
+      nav.querySelector('[data-promo-page="next"]').onclick = () => loadPromotionPage(kind, result.page + 1);
+    }
+    loadPromotionPage('rules').catch(() => {}); loadPromotionPage('coupons').catch(() => {});
     function parseItemData(btn) {
       try {
         const enc = btn.getAttribute('data-item');

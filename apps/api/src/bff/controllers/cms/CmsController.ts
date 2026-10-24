@@ -9,6 +9,7 @@ import { getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
+import { renderCmsPageRows } from '../../views/admin/renderCmsPageRows.js';
 
 export class CmsController {
   public static createRoutes(cmsGateway: CmsGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, storefront: StorefrontGateway): Hono {
@@ -109,8 +110,12 @@ export class CmsController {
       createAuthMiddleware(identityGateway, 'admin', 'cms:read'),
       async (c) => {
         try {
-          const pages = await cmsGateway.listPages(50, 0);
-          return c.json({ data: pages });
+          const page = Number(c.req.query('page') || 1), pageSize = Number(c.req.query('pageSize') || 25);
+          const status = c.req.query('status') || undefined;
+          if (!Number.isSafeInteger(page) || page < 1 || page > 1_000_000 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 50 ||
+              status && !['draft', 'published'].includes(status)) return c.json({ error: 'Filtros o paginación inválidos' }, 400);
+          const [items, total] = await Promise.all([cmsGateway.listPages(pageSize, (page - 1) * pageSize, status), cmsGateway.countPages(status)]);
+          return c.json({ success: true, data: items, rowsHtml: renderCmsPageRows(items), page, pageSize, total, hasMore: page * pageSize < total });
         } catch {
           return c.json({ error: 'No fue posible consultar las páginas' }, 500);
         }

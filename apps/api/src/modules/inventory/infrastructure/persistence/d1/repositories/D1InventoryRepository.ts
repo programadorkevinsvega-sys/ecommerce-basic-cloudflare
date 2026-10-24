@@ -30,6 +30,11 @@ export class D1InventoryRepository implements IInventoryRepository {
     });
   }
 
+  public async hasStock(productId: string): Promise<boolean> {
+    const row = await this.db.prepare('SELECT 1 AS found FROM inventory_stocks WHERE product_id = ?').bind(productId).first<{ found: number }>();
+    return Boolean(row);
+  }
+
   public async saveStock(stock: InventoryStock): Promise<void> {
     await this.db.prepare(
       `INSERT INTO inventory_stocks (product_id, quantity, reserved_quantity, updated_at)

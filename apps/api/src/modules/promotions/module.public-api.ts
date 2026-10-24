@@ -12,12 +12,16 @@ import { Coupon } from './domain/entities/Coupon.js';
 export interface IPromotionsPublicApi {
   createPromotionRule(input: CreatePromotionRuleInput): Promise<PromotionRule>;
   updatePromotionRule(input: UpdatePromotionRuleInput): Promise<PromotionRule>;
-  listPromotionRules(activeOnly?: boolean): Promise<PromotionRule[]>;
+  listPromotionRules(activeOnly?: boolean, limit?: number, offset?: number): Promise<PromotionRule[]>;
+  countPromotionRules(activeOnly?: boolean): Promise<number>;
+  getPromotionRuleById(id: string): Promise<PromotionRule | null>;
   deletePromotionRule(id: string): Promise<void>;
   togglePromotionRule(id: string, active: boolean): Promise<PromotionRule>;
   createCoupon(input: CreateCouponInput): Promise<Coupon>;
   updateCoupon(input: UpdateCouponInput): Promise<Coupon>;
-  listCoupons(activeOnly?: boolean): Promise<Coupon[]>;
+  listCoupons(activeOnly?: boolean, limit?: number, offset?: number): Promise<Coupon[]>;
+  countCoupons(activeOnly?: boolean): Promise<number>;
+  getCouponById(id: string): Promise<Coupon | null>;
   deleteCoupon(id: string): Promise<void>;
   toggleCoupon(id: string, active: boolean): Promise<Coupon>;
   evaluateProductDiscount(input: EvaluateProductDiscountInput): Promise<ProductDiscountResult>;
@@ -44,11 +48,13 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
     return res.value;
   }
 
-  public async listPromotionRules(activeOnly = false): Promise<PromotionRule[]> {
-    const res = await this.container.listPromotionRulesUseCase.execute(activeOnly);
+  public async listPromotionRules(activeOnly = false, limit?: number, offset = 0): Promise<PromotionRule[]> {
+    const res = await this.container.listPromotionRulesUseCase.execute(activeOnly, limit, offset);
     if (res.isFail()) throw res.error;
     return res.value;
   }
+  public getPromotionRuleById(id: string) { return this.container.listPromotionRulesUseCase.getById(id); }
+  public countPromotionRules(activeOnly = false) { return this.container.listPromotionRulesUseCase.count(activeOnly); }
 
   public async deletePromotionRule(id: string): Promise<void> {
     const res = await this.container.deletePromotionRuleUseCase.execute(id);
@@ -73,11 +79,13 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
     return res.value;
   }
 
-  public async listCoupons(activeOnly = false): Promise<Coupon[]> {
-    const res = await this.container.listCouponsUseCase.execute(activeOnly);
+  public async listCoupons(activeOnly = false, limit?: number, offset = 0): Promise<Coupon[]> {
+    const res = await this.container.listCouponsUseCase.execute(activeOnly, limit, offset);
     if (res.isFail()) throw res.error;
     return res.value;
   }
+  public getCouponById(id: string) { return this.container.listCouponsUseCase.getById(id); }
+  public countCoupons(activeOnly = false) { return this.container.listCouponsUseCase.count(activeOnly); }
 
   public async deleteCoupon(id: string): Promise<void> {
     const res = await this.container.deleteCouponUseCase.execute(id);

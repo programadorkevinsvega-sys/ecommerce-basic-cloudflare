@@ -63,6 +63,11 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.use('*', TraceIdMiddleware);
   app.use('*', SecurityHeadersMiddleware);
   app.use('*', PublicHtmlCacheMiddleware);
+  app.use('/api/v1/admin/*', async (c, next) => {
+    await next();
+    c.header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    c.header('Vary', 'Cookie, Authorization');
+  });
   app.use('/api/*', RateLimitMiddleware);
   app.use('/media/upload', RateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);

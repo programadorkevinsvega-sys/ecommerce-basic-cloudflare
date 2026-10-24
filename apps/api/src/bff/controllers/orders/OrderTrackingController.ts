@@ -62,7 +62,7 @@ export class OrderTrackingController {
       if (!admin) return c.json({ error: 'No autorizado' }, 401);
       if (!hasPermission(admin.permissions, 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
       const page = Number(c.req.query('page') || 1);
-      const pageSize = Number(c.req.query('pageSize') || 10);
+      const pageSize = Number(c.req.query('pageSize') || 25);
       if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) {
         return c.json({ error: 'Paginación inválida' }, 400);
       }

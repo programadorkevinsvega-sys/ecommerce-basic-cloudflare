@@ -11,4 +11,5 @@ export interface ListAuditLogsFilters {
 export interface IAuditRepository {
   save(log: AuditLog): Promise<void>;
   list(filters?: ListAuditLogsFilters): Promise<AuditLog[]>;
+  count(): Promise<number>;
 }

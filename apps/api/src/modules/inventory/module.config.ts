@@ -8,6 +8,8 @@ import { AdjustStockUseCase } from './application/use-cases/AdjustStockUseCase.j
 import { ListStockUseCase } from './application/use-cases/ListStockUseCase.js';
 import { ConsumeStockUseCase } from './application/use-cases/ConsumeStockUseCase.js';
 import { CheckActiveReservationUseCase } from './application/use-cases/CheckActiveReservationUseCase.js';
+import { ListAdminInventoryUseCase } from './application/use-cases/ListAdminInventoryUseCase.js';
+import { D1AdminInventoryRepository } from './infrastructure/persistence/d1/repositories/D1AdminInventoryRepository.js';
 
 export interface InventoryModuleContainer {
   getProductStockUseCase: GetProductStockUseCase;
@@ -15,12 +17,14 @@ export interface InventoryModuleContainer {
   releaseStockUseCase: ReleaseStockUseCase;
   adjustStockUseCase: AdjustStockUseCase;
   listStockUseCase: ListStockUseCase;
+  listAdminInventoryUseCase: ListAdminInventoryUseCase;
   consumeStockUseCase: ConsumeStockUseCase;
   checkActiveReservationUseCase: CheckActiveReservationUseCase;
 }
 
 export function createInventoryModule(env: Env): InventoryModuleContainer {
   const repo = new D1InventoryRepository(env.DB);
+  const adminInventory = new D1AdminInventoryRepository(env.DB);
   const outbox = new D1InventoryOutboxRepository(env.DB);
 
   return {
@@ -29,6 +33,7 @@ export function createInventoryModule(env: Env): InventoryModuleContainer {
     releaseStockUseCase: new ReleaseStockUseCase(repo, outbox),
     adjustStockUseCase: new AdjustStockUseCase(repo, outbox),
     listStockUseCase: new ListStockUseCase(repo),
+    listAdminInventoryUseCase: new ListAdminInventoryUseCase(adminInventory),
     consumeStockUseCase: new ConsumeStockUseCase(repo),
     checkActiveReservationUseCase: new CheckActiveReservationUseCase(repo),
   };

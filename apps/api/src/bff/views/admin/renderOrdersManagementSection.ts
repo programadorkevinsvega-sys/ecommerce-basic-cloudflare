@@ -19,6 +19,7 @@ export function renderOrdersManagementSection(): string {
         <table class="orders-table"><thead><tr><th>Pedido</th><th>Cliente</th><th class="orders-align-right">Total</th><th>Método</th><th>Estado</th><th>Pago</th><th>Acciones</th></tr></thead>
         <tbody id="orders-table-body"><tr><td colspan="7" class="orders-loading">Cargando pedidos…</td></tr></tbody></table>
       </div>
+      <nav id="orders-pagination" class="admin-pagination" aria-label="Paginación de pedidos"></nav>
       <div id="orders-summary" class="orders-summary" aria-live="polite"><span>Esperando pedidos…</span><span>Total mostrado <strong>—</strong></span></div>
     </section>
     ${renderAdminOrderDetailModal()}

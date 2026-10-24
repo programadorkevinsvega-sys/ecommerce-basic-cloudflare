@@ -64,19 +64,22 @@ export class D1ShippingZoneRepository implements IShippingZoneRepository {
     }
   }
 
-  public async listAll(onlyActive = false): Promise<ShippingZone[]> {
+  public async listAll(onlyActive = false, limit?: number, offset = 0, localOnly = false): Promise<ShippingZone[]> {
     let query = 'SELECT * FROM shipping_zones';
     if (onlyActive) {
       query += ' WHERE is_active = 1';
     }
-    query += ' ORDER BY type ASC, price_in_cents ASC';
+    if (localOnly) query += onlyActive ? " AND type <> 'national'" : " WHERE type <> 'national'";
+    query += ' ORDER BY type ASC, price_in_cents ASC, id ASC';
+    const values: unknown[] = [];
+    if (limit !== undefined) { query += ' LIMIT ? OFFSET ?'; values.push(limit, offset); }
 
-    const { results } = await this.db.prepare(query).all<ShippingZoneRow>();
+    const { results } = await this.db.prepare(query).bind(...values).all<ShippingZoneRow>();
     if (!results || results.length === 0) return [];
 
-    const allLocs = await this.db
-      .prepare('SELECT zone_id, dane_code FROM shipping_zone_locations')
-      .all<{ zone_id: string; dane_code: string }>();
+    const zoneIds = results.map((row) => row.id);
+    const allLocs = await this.db.prepare(`SELECT zone_id, dane_code FROM shipping_zone_locations WHERE zone_id IN (${zoneIds.map(() => '?').join(',')})`)
+      .bind(...zoneIds).all<{ zone_id: string; dane_code: string }>();
 
     const locMap = new Map<string, string[]>();
     for (const loc of allLocs.results || []) {
@@ -86,6 +89,13 @@ export class D1ShippingZoneRepository implements IShippingZoneRepository {
     }
 
     return results.map((r) => this.hydrate(r, locMap.get(r.id) || []));
+  }
+
+  public async count(onlyActive = false, localOnly = false): Promise<number> {
+    const clauses = [onlyActive ? 'is_active = 1' : '', localOnly ? "type <> 'national'" : ''].filter(Boolean);
+    const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM shipping_zones${where}`).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   public async findByDaneCode(daneCode: string): Promise<ShippingZone[]> {

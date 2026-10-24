@@ -59,10 +59,16 @@ export class D1BrandRepository implements IBrandRepository {
   public async list(query?: CatalogPageQuery): Promise<Brand[]> {
     const where = query?.includeInactive ? '' : " WHERE status = 'active'";
     const statement = query?.limit
-      ? this.db.prepare('SELECT * FROM catalog_brands' + where + ' ORDER BY name ASC LIMIT ? OFFSET ?').bind(query.limit, query.offset ?? 0)
-      : this.db.prepare('SELECT * FROM catalog_brands' + where + ' ORDER BY name ASC');
+      ? this.db.prepare('SELECT * FROM catalog_brands' + where + ' ORDER BY name ASC,id LIMIT ? OFFSET ?').bind(query.limit, query.offset ?? 0)
+      : this.db.prepare('SELECT * FROM catalog_brands' + where + ' ORDER BY name ASC,id');
     const { results } = await statement.all<BrandRow>();
     return (results || []).map((r) => this.toDomain(r));
+  }
+
+  public async count(includeInactive = false): Promise<number> {
+    const where = includeInactive ? '' : " WHERE status = 'active'";
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM catalog_brands${where}`).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   private toDomain(row: BrandRow): Brand {

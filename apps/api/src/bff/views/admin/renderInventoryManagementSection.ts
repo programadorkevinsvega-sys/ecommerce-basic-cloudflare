@@ -3,7 +3,7 @@ import { renderInventoryAdjustModal } from './renderInventoryAdjustModal.js';
 export function renderInventoryManagementSection(): string {
   return `<section class="inventory-screen" aria-labelledby="inventory-title">
     <header class="inventory-heading"><div><h1 id="inventory-title">Inventario</h1><p>Stock en tiempo real por producto. Ajusta entradas, salidas y correcciones.</p></div>
-      <div class="inventory-heading-actions"><button class="inventory-secondary-button" id="inventory-refresh" type="button">${refreshIcon()}Actualizar</button><button class="inventory-primary-button" id="inventory-export" type="button">Exportar inventario</button></div>
+      <div class="inventory-heading-actions"><button class="inventory-secondary-button" id="inventory-refresh" type="button">${refreshIcon()}Actualizar</button><button class="inventory-secondary-button" id="inventory-sync" type="button">Sincronizar catálogo</button><button class="inventory-primary-button" id="inventory-export" type="button">Exportar página</button></div>
     </header>
     <div id="inventory-message" class="inventory-message" role="status" hidden></div>
     <section class="inventory-kpis" aria-label="Resumen del inventario">
@@ -24,6 +24,7 @@ export function renderInventoryManagementSection(): string {
           <tbody id="inventory-table-body"><tr><td colspan="5" class="inventory-loading">Carga el inventario para consultar existencias…</td></tr></tbody></table>
         </div>
         <div id="inventory-summary" class="inventory-summary" aria-live="polite">—</div>
+        <nav id="inventory-pagination" class="taxonomy-pagination" aria-label="Paginación del inventario"></nav>
       </section>
       <aside class="inventory-card inventory-movement-card" aria-labelledby="inventory-movements-title"><h2 id="inventory-movements-title">Movimientos recientes</h2><p class="inventory-movement-caption">Ajustes registrados en la bitácora administrativa.</p><ul id="inventory-movements" class="inventory-movements" aria-live="polite"><li class="inventory-movement-empty">Cargando movimientos…</li></ul></aside>
     </div>

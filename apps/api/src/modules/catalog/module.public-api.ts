@@ -27,8 +27,12 @@ export interface ICatalogPublicApi {
   getProductBySlug(slug: string): Promise<Product>;
   getProductById(id: string): Promise<Product>;
   listProducts(input: ListProductsInput): Promise<Product[]>;
+  countProducts(status?: string, query?: string): Promise<number>;
   createCategory(input: CreateCategoryInput): Promise<Category>;
   listCategories(query?: CatalogPageQuery): Promise<Category[]>;
+  getCategoryById(id: string): Promise<Category | null>;
+  getBrandById(id: string): Promise<Brand | null>;
+  getAttributeById(id: string): Promise<Attribute | null>;
   deleteCategory(id: string): Promise<void>;
   createBrand(input: CreateBrandInput): Promise<Brand>;
   listBrands(query?: CatalogPageQuery): Promise<Brand[]>;
@@ -40,14 +44,17 @@ export interface ICatalogPublicApi {
   createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant>;
   listProductVariants(query?: CatalogPageQuery): Promise<ProductVariant[]>;
   updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
+  countTaxonomy(kind: CatalogTaxonomyKind, query?: string): Promise<number>;
   deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
   listCollections(query?: CatalogPageQuery): Promise<Collection[]>;
+  countCollections(includeInactive?: boolean, query?: string): Promise<number>;
   getCollectionBySlug(slug: string): Promise<Collection>;
   findCollectionBySlug(slug: string): Promise<Collection | null>;
   getCollectionById(id: string): Promise<Collection>;
   saveCollection(input: CollectionInput, id?: string): Promise<Collection>;
   deleteCollection(id: string): Promise<void>;
-  listProductTags(includeInactive?: boolean): Promise<ProductTag[]>;
+  listProductTags(includeInactive?: boolean, page?: number, pageSize?: number): Promise<ProductTag[]>;
+  countProductTags(includeInactive?: boolean): Promise<number>;
   saveProductTag(input: SaveProductTagInput): Promise<ProductTag>;
   deleteProductTag(id: string): Promise<void>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
@@ -96,6 +103,8 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return res.value;
   }
 
+  public countProducts(status?: string, query?: string): Promise<number> { return this.container.listProductsUseCase.count(status, query); }
+
   public async createCategory(input: CreateCategoryInput): Promise<Category> {
     const res = await this.container.createCategoryUseCase.execute(input);
     if (res.isFail()) throw res.error;
@@ -107,6 +116,10 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     if (res.isFail()) throw res.error;
     return res.value;
   }
+
+  public getCategoryById(id: string): Promise<Category | null> { return this.container.manageCatalogTaxonomyUseCase.getCategoryById(id); }
+  public getBrandById(id: string): Promise<Brand | null> { return this.container.manageCatalogTaxonomyUseCase.getBrandById(id); }
+  public getAttributeById(id: string): Promise<Attribute | null> { return this.container.manageCatalogTaxonomyUseCase.getAttributeById(id); }
 
   public async deleteCategory(id: string): Promise<void> {
     const res = await this.container.deleteCategoryUseCase.execute(id);
@@ -162,19 +175,22 @@ export class CatalogPublicApi implements ICatalogPublicApi {
   public updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void> {
     return this.container.manageCatalogTaxonomyUseCase.update(input);
   }
+  public countTaxonomy(kind: CatalogTaxonomyKind, query?: string): Promise<number> { return this.container.manageCatalogTaxonomyUseCase.count(kind, query); }
 
   public deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void> {
     return this.container.manageCatalogTaxonomyUseCase.delete(kind, id);
   }
 
   public listCollections(query?: CatalogPageQuery): Promise<Collection[]> { return this.container.manageCollectionUseCase.list(query); }
+  public countCollections(includeInactive = true, query?: string): Promise<number> { return this.container.manageCollectionUseCase.count(includeInactive, query); }
   public getCollectionBySlug(slug: string): Promise<Collection> { return this.container.manageCollectionUseCase.getBySlug(slug); }
   public findCollectionBySlug(slug: string): Promise<Collection | null> { return this.container.manageCollectionUseCase.findBySlug(slug); }
   public getCollectionById(id: string): Promise<Collection> { return this.container.manageCollectionUseCase.getById(id); }
   public saveCollection(input: CollectionInput, id?: string): Promise<Collection> { return this.container.manageCollectionUseCase.save(input, id); }
   public deleteCollection(id: string): Promise<void> { return this.container.manageCollectionUseCase.delete(id); }
 
-  public listProductTags(includeInactive = true): Promise<ProductTag[]> { return this.container.manageProductTagsUseCase.list(includeInactive); }
+  public listProductTags(includeInactive = true, page = 1, pageSize = 25): Promise<ProductTag[]> { return this.container.manageProductTagsUseCase.list(includeInactive, page, pageSize); }
+  public countProductTags(includeInactive = true): Promise<number> { return this.container.manageProductTagsUseCase.count(includeInactive); }
   public saveProductTag(input: SaveProductTagInput): Promise<ProductTag> { return this.container.manageProductTagsUseCase.save(input); }
   public deleteProductTag(id: string): Promise<void> { return this.container.manageProductTagsUseCase.delete(id); }
 

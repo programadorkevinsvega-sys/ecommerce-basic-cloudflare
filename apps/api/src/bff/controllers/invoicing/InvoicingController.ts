@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
@@ -48,9 +49,15 @@ export class InvoicingController {
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
       if (!hasPermission(adminRes.permissions, 'invoices:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-
-      const invoices = await invoicingGateway.listInvoices({ limit: 100 });
-      return c.json({ success: true, invoices: invoices.map((inv) => inv.toJSON()) });
+      const parsed = invoicePageQuery.safeParse({ page: c.req.query('page') || '1', pageSize: c.req.query('pageSize') || '25', query: c.req.query('q') || undefined });
+      if (!parsed.success) return c.json({ error: 'Búsqueda o paginación inválida' }, 400);
+      const filters = { query: parsed.data.query?.trim() || undefined };
+      const [invoices, total] = await Promise.all([
+        invoicingGateway.listInvoices({ ...filters, limit: parsed.data.pageSize, offset: (parsed.data.page - 1) * parsed.data.pageSize }),
+        invoicingGateway.countInvoices(filters),
+      ]);
+      return c.json({ success: true, invoices: invoices.map((inv) => inv.toJSON()), total, page: parsed.data.page,
+        pageSize: parsed.data.pageSize, hasMore: parsed.data.page * parsed.data.pageSize < total });
     });
 
     // POST /api/v1/admin/invoices/:id/credit-notes — Emitir nota crédito
@@ -93,6 +100,12 @@ export class InvoicingController {
     return app;
   }
 }
+
+const invoicePageQuery = z.object({
+  page: z.coerce.number().int().min(1).max(1_000_000),
+  pageSize: z.coerce.number().int().min(1).max(50),
+  query: z.string().max(120).optional(),
+}).strict();
 
 function getSessionToken(authorization?: string, cookieHeader?: string, adminOnly = false): string | null {
   if (authorization?.startsWith('Bearer ')) return authorization.slice(7).trim();

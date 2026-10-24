@@ -4,7 +4,7 @@ export function renderAdminPaginationScript(): string {
     const adminStaticRows = new WeakMap();
     window.paginateAdminTable = function(key, tbody, rows, renderRow, colspan, emptyMessage) {
       if (!tbody) return;
-      const pageSize = 10;
+      const pageSize = 25;
       const total = rows.length;
       const pageCount = Math.max(1, Math.ceil(total / pageSize));
       const state = adminTablePages[key] || (adminTablePages[key] = { page: 1 });

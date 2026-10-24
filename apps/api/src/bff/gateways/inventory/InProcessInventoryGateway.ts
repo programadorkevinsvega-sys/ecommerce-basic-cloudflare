@@ -13,6 +13,8 @@ export class InProcessInventoryGateway implements InventoryGateway {
     return stock.toJSON();
   }
 
+  public hasStock(productId: string): Promise<boolean> { return this.publicApi.hasStock(productId); }
+
   public async reserveStock(orderId: string, items: Array<{ productId: string; quantity: number }>, ttlMinutes?: number): Promise<{ success: boolean; error?: string }> {
     return this.publicApi.reserveStock({ orderId, items, ttlMinutes });
   }
@@ -37,5 +39,9 @@ export class InProcessInventoryGateway implements InventoryGateway {
   public async listStocks(): Promise<InventoryStockDto[]> {
     const list = await this.publicApi.listStocks();
     return list.map((s) => s.toJSON());
+  }
+
+  public listAdminInventory(query: Parameters<InventoryGateway['listAdminInventory']>[0]) {
+    return this.publicApi.listAdminInventory(query);
   }
 }

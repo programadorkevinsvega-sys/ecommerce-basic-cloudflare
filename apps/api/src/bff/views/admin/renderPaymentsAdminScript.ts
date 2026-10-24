@@ -8,62 +8,66 @@ export function renderPaymentsAdminScript(): string {
     let _adminPaymentSettlements = [];
     let _adminPaymentOrders = new Map();
     let _adminPaymentInvoices = new Map();
+    const _paymentPages = { transactions: 1, collections: 1, settlements: 1 };
+    let _paymentMeta = {};
 
-    async function loadAdminPayments() {
+    async function loadAdminPayments(pageChanges = {}) {
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
+      Object.assign(_paymentPages, pageChanges);
       try {
-        const res = await fetch('/api/v1/admin/payments', { headers: adminHeaders() });
+        const params = new URLSearchParams({ pageSize: '25', transactionsPage: String(_paymentPages.transactions),
+          collectionsPage: String(_paymentPages.collections), settlementsPage: String(_paymentPages.settlements) });
+        const query = document.getElementById('payments-search')?.value.trim() || '';
+        if (query) params.set('q', query);
+        const res = await fetch('/api/v1/admin/payments?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const data = await res.json();
-        if (!data.success) throw new Error('No se pudieron cargar pagos');
-        _adminPaymentTransactions = data.transactions || [];
-        _adminPaymentCollections = data.collections || [];
-        _adminPaymentSettlements = data.settlementCosts || [];
-        const [orders, invoices] = await Promise.all([
-          loadAdminPaymentLookup('/api/v1/admin/orders', 'orders'),
-          loadAdminPaymentLookup('/api/v1/admin/invoices', 'invoices'),
-        ]);
-        _adminPaymentOrders = new Map(orders.map(order => [order.id, order]));
+        if (!res.ok || !data.success) throw new Error(data.error || 'No se pudieron cargar pagos');
+        _paymentMeta = data;
+        _paymentPages.transactions = data.transactions.page;
+        _paymentPages.collections = data.collections.page;
+        _paymentPages.settlements = data.settlementCosts.page;
+        _adminPaymentTransactions = data.transactions.items;
+        _adminPaymentCollections = data.collections.items;
+        _adminPaymentSettlements = data.settlementCosts.items;
+        _adminPaymentOrders = new Map(data.details.map(item => [item.orderId, item.order || {}]));
         _adminPaymentInvoices = new Map();
-        invoices.forEach(invoice => { if (!_adminPaymentInvoices.has(invoice.orderId)) _adminPaymentInvoices.set(invoice.orderId, invoice); });
+        data.details.forEach(item => { if (item.invoice) _adminPaymentInvoices.set(item.orderId, item.invoice); });
         renderAdminPaymentTransactions();
         const collectionsBody = document.getElementById('cod-collections-table-body');
-        if (collectionsBody) window.paginateAdminTable('cod-collections', collectionsBody, _adminPaymentCollections, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-collection-id="\${escapeHtml(row.id)}" onclick="viewCodCollection(this)">Ver</button></td></tr>\`, 6, 'Aún no hay recaudos registrados.');
+        if (collectionsBody) collectionsBody.innerHTML = _adminPaymentCollections.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-collection-id="\${escapeHtml(row.id)}" onclick="viewCodCollection(this)">Ver</button></td></tr>\`).join('') || '<tr><td colspan="6">No hay recaudos registrados.</td></tr>';
+        renderPaymentPagination('collections', data.collections);
         const settlementBody = document.getElementById('settlement-table-body');
-        if (settlementBody) window.paginateAdminTable('payment-settlements', settlementBody, _adminPaymentSettlements, row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code>\${row.corrected ? '<small class="payments-corrected-label">Corregida</small>' : ''}</td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><div class="payments-row-actions"><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="openSettlementCorrection(this)">Corregir</button></div></td></tr>\`, 6, 'Aún no hay conciliaciones registradas.');
+        if (settlementBody) settlementBody.innerHTML = _adminPaymentSettlements.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code>\${row.corrected ? '<small class="payments-corrected-label">Corregida</small>' : ''}</td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><div class="payments-row-actions"><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="openSettlementCorrection(this)">Corregir</button></div></td></tr>\`).join('') || '<tr><td colspan="6">Aún no hay conciliaciones registradas.</td></tr>';
+        renderPaymentPagination('settlements', data.settlementCosts);
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
     }
 
-    async function loadAdminPaymentLookup(url, key) {
-      try {
-        const response = await fetch(url, { headers: adminHeaders() });
-        if (!response.ok) return [];
-        const data = await response.json();
-        return Array.isArray(data[key]) ? data[key] : [];
-      } catch { return []; }
+    function renderPaymentPagination(key, meta) {
+      const nav = document.getElementById('payments-pagination-' + key);
+      if (!nav) return;
+      const from = meta.total ? (meta.page - 1) * meta.pageSize + 1 : 0;
+      const to = Math.min(meta.page * meta.pageSize, meta.total);
+      nav.innerHTML = '<button type="button" data-page="previous">Anterior</button><span aria-live="polite">' + from + '–' + to + ' de ' + meta.total + ' · Página ' + meta.page + '</span><button type="button" data-page="next">Siguiente</button>';
+      nav.querySelector('[data-page="previous"]').disabled = meta.page <= 1;
+      nav.querySelector('[data-page="next"]').disabled = !meta.hasMore;
+      nav.querySelector('[data-page="previous"]').onclick = () => loadAdminPayments({ [key]: meta.page - 1 });
+      nav.querySelector('[data-page="next"]').onclick = () => loadAdminPayments({ [key]: meta.page + 1 });
     }
 
     function renderAdminPaymentTransactions() {
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
-      const query = normalizePaymentSearch(document.getElementById('payments-search')?.value || '');
-      const digits = query.replace(/\\D/g, '');
-      const rows = _adminPaymentTransactions.filter(transaction => {
-        const order = _adminPaymentOrders.get(transaction.orderId) || {};
-        const invoice = _adminPaymentInvoices.get(transaction.orderId) || {};
-        const amount = Math.round(Number(transaction.amountInCents || 0) / 100);
-        const exactAmount = (Number(transaction.amountInCents || 0) / 100).toLocaleString('es-CO', { maximumFractionDigits: 2 });
-        const haystack = normalizePaymentSearch([transaction.reference, transaction.orderId, invoice.invoiceNumber, order.customerName, order.customerEmail, amount.toLocaleString('es-CO'), exactAmount].join(' '));
-        return !query || haystack.includes(query) || (digits.length > 0 && (String(amount).includes(digits) || exactAmount.replace(/\\D/g, '').includes(digits)));
-      });
-      window.paginateAdminTable('payment-transactions', tbody, rows, transaction => {
+      const rows = _adminPaymentTransactions;
+      tbody.innerHTML = rows.map(transaction => {
         const order = _adminPaymentOrders.get(transaction.orderId) || {};
         const invoice = _adminPaymentInvoices.get(transaction.orderId) || {};
         const amount = Math.round(Number(transaction.amountInCents || 0) / 100);
         return \`<tr><td><code>\${escapeHtml(transaction.reference || '—')}</code></td><td><strong class="invoice-number">\${escapeHtml(invoice.invoiceNumber || '—')}</strong></td><td><code>\${escapeHtml(transaction.orderId || '—')}</code></td><td><div class="invoice-client"><strong>\${escapeHtml(order.customerName || invoice.customerName || '—')}</strong><small>\${escapeHtml(order.customerEmail || invoice.customerEmail || '')}</small></div></td><td>\${escapeHtml(transaction.paymentMethod || '—')}</td><td class="payments-amount">$\${amount.toLocaleString('es-CO')}</td><td><span class="payments-status-badge \${paymentStatusClass(transaction.status)}">\${escapeHtml(paymentStatusLabel(transaction.status))}</span></td><td>\${escapeHtml(new Date(transaction.createdAt).toLocaleString('es-CO'))}</td></tr>\`;
-      }, 8, 'No hay transacciones que coincidan con la búsqueda.');
+      }).join('') || '<tr><td colspan="8">No hay transacciones que coincidan con la búsqueda.</td></tr>';
+      renderPaymentPagination('transactions', _paymentMeta.transactions);
     }
 
     function normalizePaymentSearch(value) {
@@ -86,7 +90,8 @@ export function renderPaymentsAdminScript(): string {
       return labels[normalized] || status || '—';
     }
 
-    function filterPaymentTransactions() { window.resetAdminTablePage('payment-transactions'); renderAdminPaymentTransactions(); }
+    let paymentSearchTimer;
+    function filterPaymentTransactions() { clearTimeout(paymentSearchTimer); paymentSearchTimer = setTimeout(() => loadAdminPayments({ transactions: 1 }), 250); }
 
     ${renderCodCollectionAdminScript()}
 

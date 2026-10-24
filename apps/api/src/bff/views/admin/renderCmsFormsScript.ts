@@ -6,6 +6,19 @@ export function renderCmsFormsScript(): string {
   return `
     window.__CMS_TEMPLATES = ${templatesJson};
     let _cmsPendingDeleteId = null;
+    async function loadCmsPageList(page = 1) {
+      const response = await fetch('/api/v1/admin/cms/pages?page=' + page + '&pageSize=25', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cargar las páginas.');
+      document.getElementById('cms-pages-body').innerHTML = result.rowsHtml;
+      const pager = document.getElementById('cms-pages-pagination');
+      pager.querySelector('span').textContent = result.total + ' registros · Página ' + result.page + (result.hasMore ? ' · hay más páginas' : ' · última página');
+      pager.querySelector('[data-cms-page="previous"]').disabled = result.page <= 1;
+      pager.querySelector('[data-cms-page="next"]').disabled = !result.hasMore;
+      pager.querySelector('[data-cms-page="previous"]').onclick = () => loadCmsPageList(result.page - 1);
+      pager.querySelector('[data-cms-page="next"]').onclick = () => loadCmsPageList(result.page + 1);
+    }
+    loadCmsPageList().catch(error => { document.getElementById('cms-pages-body').innerHTML = '<tr><td colspan="4">' + escapeHtml(error.message) + '</td></tr>'; });
 
     function updateCmsSeoCounters() {
       const tInput = document.getElementById('cmsSeoTitle');

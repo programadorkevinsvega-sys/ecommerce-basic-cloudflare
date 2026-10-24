@@ -14,21 +14,25 @@ export class CollectionAdminController {
     router.get('/admin/collection-products',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
       const ids=(c.req.query('ids')||'').split(',').filter(Boolean);
       const query=c.req.query('q')?.trim()||'';
+      const page=Number(c.req.query('page')||1),pageSize=25;
       if(ids.length>100||ids.some((id)=>!z.string().uuid().safeParse(id).success)||query.length>120)return c.json({error:'Búsqueda inválida'},400);
+      if(!Number.isSafeInteger(page)||page<1||page>1_000_000)return c.json({error:'Página inválida'},400);
       try {
         const searchQuery=query.split(/[^\p{L}\p{N}]+/u).filter(Boolean).join(' ');
         const rows=ids.length
           ? await Promise.all(ids.map((id)=>catalog.getProductById(id).catch(()=>null)))
-          : await catalog.listProducts({limit:30,offset:0,status:'published',searchQuery:searchQuery||undefined});
-        const data=rows.filter((row):row is CatalogProductDto=>row !== null && row.status==='published').map(({id,name,sku})=>({id,name,sku}));
-        return c.json({data});
+          : await catalog.listProducts({limit:pageSize+1,offset:(page-1)*pageSize,status:'published',searchQuery:searchQuery||undefined});
+        const hasMore=!ids.length&&rows.length>pageSize;
+        const data=(ids.length?rows:rows.slice(0,pageSize)).filter((row):row is CatalogProductDto=>row !== null && row.status==='published').map(({id,name,sku})=>({id,name,sku}));
+        return c.json({data,page,pageSize,hasMore});
       } catch { return c.json({error:'No fue posible buscar productos'},400); }
     });
     router.get('/admin/collections',createAuthMiddleware(identity,'admin','catalog:read'),async(c)=>{
       const page=Number(c.req.query('page')||1);
       if(!Number.isSafeInteger(page)||page<1||page>1000000)return c.json({error:'Página inválida'},400);
-      const rows=await catalog.listCollections({limit:11,offset:(page-1)*10,includeInactive:true});
-      return c.json({success:true,page,pageSize:10,hasMore:rows.length>10,data:rows.slice(0,10)});
+      const pageSize=25;
+      const [data,total]=await Promise.all([catalog.listCollections({limit:pageSize,offset:(page-1)*pageSize,includeInactive:true}),catalog.countCollections(true)]);
+      return c.json({success:true,page,pageSize,total,hasMore:page*pageSize<total,data});
     });
     router.post('/admin/collections',createAuthMiddleware(identity,'admin','catalog:create'),async(c)=>{
       const parsed=inputSchema.safeParse(await c.req.json().catch(()=>null));

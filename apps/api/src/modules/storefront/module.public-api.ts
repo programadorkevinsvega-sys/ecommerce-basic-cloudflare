@@ -12,10 +12,14 @@ export interface IStorefrontPublicApi {
   createBanner(input: CreateBannerInput): Promise<Banner>;
   updateBanner(input: UpdateBannerInput): Promise<Banner>;
   listBanners(placement?: string): Promise<Banner[]>;
+  listAdminBanners(limit: number, offset: number, filters?: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean }): Promise<{ items: Banner[]; total: number }>;
+  getBannerById(id: string): Promise<Banner | null>;
   deleteBanner(id: string): Promise<void>;
   createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement>;
   updateAnnouncement(input: UpdateAnnouncementInput): Promise<Announcement>;
   listAnnouncements(): Promise<Announcement[]>;
+  listAdminAnnouncements(limit: number, offset: number): Promise<{ items: Announcement[]; total: number }>;
+  getAnnouncementById(id: string): Promise<Announcement | null>;
   deleteAnnouncement(id: string): Promise<void>;
 }
 
@@ -50,6 +54,9 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
     return res.value;
   }
 
+  public listAdminBanners(limit: number, offset: number, filters?: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean }) { return this.container.listBannersUseCase.listAdmin(limit, offset, filters); }
+  public getBannerById(id: string) { return this.container.contentRepository.findBannerById(id); }
+
   public async deleteBanner(id: string): Promise<void> {
     const res = await this.container.deleteBannerUseCase.execute(id);
     if (res.isFail()) throw res.error;
@@ -72,6 +79,9 @@ export class StorefrontPublicApi implements IStorefrontPublicApi {
     if (res.isFail()) throw res.error;
     return res.value;
   }
+
+  public listAdminAnnouncements(limit: number, offset: number) { return this.container.listAnnouncementsUseCase.listAdmin(limit, offset); }
+  public getAnnouncementById(id: string) { return this.container.contentRepository.findAnnouncementById(id); }
 
   public async deleteAnnouncement(id: string): Promise<void> {
     const res = await this.container.deleteAnnouncementUseCase.execute(id);

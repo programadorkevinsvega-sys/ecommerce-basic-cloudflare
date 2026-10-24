@@ -14,4 +14,6 @@ export class ListBannersUseCase {
     const visible = placement ? banners.filter((banner) => banner.isCurrentlyVisible()) : banners;
     return Result.ok(visible);
   }
+
+  public listAdmin(limit: number, offset: number, filters?: { type?: 'promotional' | 'informative'; query?: string; placement?: string; isActive?: boolean }) { return this.repo.listAdminBanners(limit, offset, filters); }
 }

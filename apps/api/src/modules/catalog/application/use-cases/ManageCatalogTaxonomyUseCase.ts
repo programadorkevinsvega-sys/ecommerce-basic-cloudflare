@@ -17,6 +17,17 @@ export class ManageCatalogTaxonomyUseCase {
     private readonly attributes: IAttributeRepository, private readonly suppliers: ISupplierRepository,
     private readonly variants: IProductVariantRepository) {}
 
+  public getCategoryById(id: string): Promise<Category | null> { return this.categories.findById(id); }
+  public getBrandById(id: string): Promise<Brand | null> { return this.brands.findById(id); }
+  public getAttributeById(id: string): Promise<Attribute | null> { return this.attributes.findById(id); }
+  public count(kind: CatalogTaxonomyKind, query?: string): Promise<number> {
+    if (kind === 'categories') return this.categories.count(true, query);
+    if (kind === 'brands') return this.brands.count(true);
+    if (kind === 'attributes') return this.attributes.count(true);
+    if (kind === 'providers') return this.suppliers.count(true);
+    return this.variants.count(true);
+  }
+
   public async update(input: CatalogTaxonomyUpdate): Promise<void> {
     const updatedAt = new Date().toISOString();
     const fields = input.fields;

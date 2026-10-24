@@ -18,6 +18,11 @@ export class ListProductsUseCase {
     this.productRepo = productRepo;
   }
 
+  public count(status?: string, query?: string): Promise<number> {
+    if (this.productRepo.count) return this.productRepo.count(status, query);
+    return this.productRepo.list(100, 0, status).then((products) => products.length);
+  }
+
   public async execute(input: ListProductsInput): Promise<Result<Product[], Error>> {
     const limit = Math.min(input.limit || 20, 100);
     const offset = input.offset || 0;

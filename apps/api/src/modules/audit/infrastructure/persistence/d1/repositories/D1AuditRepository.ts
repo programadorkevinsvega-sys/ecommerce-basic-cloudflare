@@ -30,7 +30,7 @@ export class D1AuditRepository implements IAuditRepository {
     const offset = filters?.offset || 0;
 
     const res = await this.db
-      .prepare(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+      .prepare(`SELECT * FROM audit_logs ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`)
       .bind(limit, offset)
       .all<Record<string, unknown>>();
 
@@ -49,5 +49,10 @@ export class D1AuditRepository implements IAuditRepository {
           createdAt: r.created_at as string,
         })
     );
+  }
+
+  public async count(): Promise<number> {
+    const row = await this.db.prepare('SELECT COUNT(*) AS total FROM audit_logs').first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 }

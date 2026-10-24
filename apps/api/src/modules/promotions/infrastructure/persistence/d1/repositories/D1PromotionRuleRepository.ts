@@ -57,14 +57,21 @@ export class D1PromotionRuleRepository implements IPromotionRuleRepository {
     ).run();
   }
 
-  public async list(activeOnly = false): Promise<PromotionRule[]> {
+  public async list(activeOnly = false, limit?: number, offset = 0): Promise<PromotionRule[]> {
     let query = 'SELECT * FROM promotions_rules';
     if (activeOnly) {
       query += " WHERE is_active = 1 AND datetime('now') BETWEEN starts_at AND ends_at";
     }
-    query += ' ORDER BY priority DESC, created_at DESC';
-    const { results } = await this.db.prepare(query).all<RuleRow>();
+    query += ' ORDER BY priority DESC, created_at DESC, id DESC';
+    const statement = limit === undefined ? this.db.prepare(query) : this.db.prepare(query + ' LIMIT ? OFFSET ?').bind(limit, offset);
+    const { results } = await statement.all<RuleRow>();
     return (results || []).map((r) => this.hydrate(r));
+  }
+
+  public async count(activeOnly = false): Promise<number> {
+    const where = activeOnly ? " WHERE is_active = 1 AND datetime('now') BETWEEN starts_at AND ends_at" : '';
+    const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM promotions_rules${where}`).first<{ total: number }>();
+    return Number(row?.total || 0);
   }
 
   public async delete(id: string): Promise<void> {

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { Env } from '../../../platform/Env.js';
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
@@ -23,8 +24,14 @@ export function registerAdminOrderRoutes(
     const session = await identity.validateSession(token);
     if (session?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
     if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-    const result = await orders.listOrders({ limit: 100 });
-    return c.json({ success: true, orders: result.map((order) => order.toJSON()) });
+    const params = adminOrderListQuery.safeParse({
+      page: c.req.query('page') || '1', pageSize: c.req.query('pageSize') || '25',
+      status: c.req.query('status') || undefined, paymentStatus: c.req.query('paymentStatus') || undefined,
+      paymentMethod: c.req.query('paymentMethod') || undefined, query: c.req.query('q') || undefined,
+    });
+    if (!params.success) return c.json({ error: 'Filtros o paginación inválidos' }, 400);
+    const result = await orders.listAdminOrders({ ...params.data, query: params.data.query?.trim() || undefined });
+    return c.json({ success: true, ...result, orders: result.items.map((order) => order.toJSON()) });
   });
 
   app.patch('/api/v1/admin/orders/:orderId/status', async (c) => {
@@ -49,3 +56,12 @@ export function registerAdminOrderRoutes(
     return c.json({ success: true, order: updated.toJSON() });
   });
 }
+
+const adminOrderListQuery = z.object({
+  page: z.coerce.number().int().min(1).max(1_000_000),
+  pageSize: z.coerce.number().int().min(1).max(50),
+  status: z.enum(['placed', 'confirmed', 'prepared', 'shipped', 'delivered', 'cancelled']).optional(),
+  paymentStatus: z.enum(['pending', 'approved', 'failed', 'collected']).optional(),
+  paymentMethod: z.enum(['wompi', 'cash_on_delivery']).optional(),
+  query: z.string().max(120).optional(),
+}).strict();

@@ -30,12 +30,12 @@ export class AdminMutationSnapshotProvider {
         return review ? { id: review.id, productId: review.productId, rating: review.rating, status: review.status } : null;
       }
       if (kind === 'products') return this.gateways.catalogGateway.getProductById(id);
-      if (kind === 'categories') return (await this.gateways.catalogGateway.listCategories()).find((item) => item.id === id) ?? null;
-      if (kind === 'brands') return (await this.gateways.catalogGateway.listBrands()).find((item) => item.id === id) ?? null;
-      if (kind === 'attributes') return (await this.gateways.catalogGateway.listAttributes()).find((item) => item.id === id) ?? null;
-      if (kind === 'banners') return (await this.gateways.storefrontGateway.listBanners()).find((item) => item.id === id) ?? null;
-      if (kind === 'announcements') return (await this.gateways.storefrontGateway.listAnnouncements()).find((item) => item.id === id) ?? null;
-      if (kind === 'cms/pages') return (await this.gateways.cmsGateway.listPages(500)).find((item) => item.id === id) ?? null;
+      if (kind === 'categories') return this.gateways.catalogGateway.getCategoryById(id);
+      if (kind === 'brands') return this.gateways.catalogGateway.getBrandById(id);
+      if (kind === 'attributes') return this.gateways.catalogGateway.getAttributeById(id);
+      if (kind === 'banners') return this.gateways.storefrontGateway.getBannerById(id);
+      if (kind === 'announcements') return this.gateways.storefrontGateway.getAnnouncementById(id);
+      if (kind === 'cms/pages') return this.gateways.cmsGateway.getPageById(id);
       if (kind === 'cms/menus') {
         const menu = await this.gateways.cmsGateway.getMenuByCode(id);
         return { code: menu.code, title: menu.title, items: menu.items.map(menuItemSnapshot) };
@@ -44,17 +44,19 @@ export class AdminMutationSnapshotProvider {
       if (kind === 'cms/blog/authors') return this.gateways.cmsGateway.getBlogAuthor(id);
       if (kind === 'cms/blog/categories') return this.gateways.cmsGateway.getBlogCategory(id);
       if (kind === 'shipping/zones') return this.gateways.shippingGateway.getZone(id);
-      if (kind === 'promotions/rules') return (await this.gateways.promotionsGateway.listPromotionRules()).find((item) => item.id === id) ?? null;
-      if (kind === 'promotions/coupons') return (await this.gateways.promotionsGateway.listCoupons()).find((item) => item.id === id) ?? null;
+      if (kind === 'promotions/rules') return this.gateways.promotionsGateway.getPromotionRuleById(id);
+      if (kind === 'promotions/coupons') return this.gateways.promotionsGateway.getCouponById(id);
       if (kind === 'orders') return this.gateways.ordersGateway.getOrder(id);
       if (kind === 'invoices') return this.gateways.invoicingGateway.getInvoice({ id });
     }
     if (path === '/api/v1/admin/inventory/adjust' && typeof body?.productId === 'string') {
       return this.gateways.inventoryGateway.getStock(body.productId);
     }
-    if (path === '/api/v1/admin/inventory/sync') return this.gateways.inventoryGateway.listStocks();
+    if (path === '/api/v1/admin/inventory/sync' && Number.isSafeInteger(body?.page) && Number.isSafeInteger(body?.pageSize)) {
+      return this.gateways.inventoryGateway.listAdminInventory({ page: Number(body?.page), pageSize: Number(body?.pageSize) });
+    }
     if (path === '/api/v1/admin/payments/cod/collect' && typeof body?.orderId === 'string') {
-      const collections = await this.gateways.paymentsGateway.listCodCollections(500);
+      const collections = await this.gateways.paymentsGateway.listCodCollections(1, 0, body.orderId);
       return collections.filter((item) => item.orderId === body.orderId);
     }
     if (path === '/api/v1/realtime/notifications/read' && Array.isArray(body?.ids)) {

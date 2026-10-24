@@ -7,6 +7,7 @@ export interface InvoicingGateway {
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   getInvoice(query: { id?: string; orderId?: string; invoiceNumber?: string }): Promise<Invoice | null>;
   getInvoiceDocument(invoiceId: string): Promise<{ stream: ReadableStream; sizeBytes: number; etag: string } | null>;
-  listInvoices(filters?: { customerId?: string; limit?: number; offset?: number }): Promise<Invoice[]>;
+  listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]>;
+  countInvoices(filters?: { customerId?: string; query?: string }): Promise<number>;
   createCreditNote(cmd: CreateCreditNoteCommand): Promise<CreditNote>;
 }

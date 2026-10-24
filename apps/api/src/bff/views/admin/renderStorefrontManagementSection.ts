@@ -105,11 +105,12 @@ export function renderStorefrontManagementSection(
         <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
         <div id="pbMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
-      <table>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
+      <table data-server-pagination="true">
         <thead><tr><th>Título y Botón CTA</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${renderRows(promoBanners, true)}</tbody>
+        <tbody id="promo-banners-body">${renderRows(promoBanners, true)}</tbody>
       </table>
+      <nav class="admin-pagination" id="promo-banners-pagination" aria-label="Paginación de banners promocionales"><button type="button" data-storefront-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-storefront-page="next" disabled>Siguiente</button></nav>
     </div>
 
     <!-- SECCIÓN 2: BANNERS HERO INFORMATIVOS SIN BOTÓN -->
@@ -153,11 +154,12 @@ export function renderStorefrontManagementSection(
         <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
         <div id="ibMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select><select aria-label="Filtrar tipo" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los tipos</option><option value="promotional">Promocional</option><option value="informative">Informativo</option></select></div>
-      <table>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
+      <table data-server-pagination="true">
         <thead><tr><th>Título y Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${renderRows(infoBanners, false)}</tbody>
+        <tbody id="info-banners-body">${renderRows(infoBanners, false)}</tbody>
       </table>
+      <nav class="admin-pagination" id="info-banners-pagination" aria-label="Paginación de banners informativos"><button type="button" data-storefront-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-storefront-page="next" disabled>Siguiente</button></nav>
     </div>
 
     <!-- SECCIÓN 3: ANUNCIOS Y BARRA SUPERIOR -->
@@ -177,9 +179,9 @@ export function renderStorefrontManagementSection(
         <button type="button" class="btn-action" id="aCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetAnnouncementForm()">Cancelar</button>
         <div id="aMsg" class="msg"></div>
       </form>
-      <table>
+      <table data-server-pagination="true">
         <thead><tr><th>Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
-        <tbody>${announcements.map((a) => `
+        <tbody id="announcements-body">${announcements.map((a) => `
           <tr>
             <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
               ${escapeHtml(a.message)}
@@ -198,6 +200,7 @@ export function renderStorefrontManagementSection(
           </tr>
         `).join('') || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay anuncios registrados</td></tr>'}</tbody>
       </table>
+      <nav class="admin-pagination" id="announcements-pagination" aria-label="Paginación de anuncios"><button type="button" data-storefront-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-storefront-page="next" disabled>Siguiente</button></nav>
     </div>
   `;
 }

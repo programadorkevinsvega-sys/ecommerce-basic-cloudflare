@@ -7,6 +7,7 @@ import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
 import { synchronizeCatalogProductStock } from './synchronizeCatalogProductStock.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { registerAdminProductListRoute } from './registerAdminProductListRoute.js';
 import {
   createProductSchema,
   updateProductSchema,
@@ -17,6 +18,8 @@ import {
 export class CatalogController {
   public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, auditGateway: AuditGateway, shippingGateway: ShippingGateway, inventoryGateway: InventoryGateway): Hono {
     const router = new Hono();
+
+    registerAdminProductListRoute(router, catalogGateway, identityGateway);
 
     // 1. Productos (Público)
     router.get('/products', async (c) => {
