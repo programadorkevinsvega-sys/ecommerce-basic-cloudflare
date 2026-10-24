@@ -3,7 +3,7 @@ import { renderInventoryAdjustModal } from './renderInventoryAdjustModal.js';
 export function renderInventoryManagementSection(): string {
   return `<section class="inventory-screen" aria-labelledby="inventory-title">
     <header class="inventory-heading"><div><h1 id="inventory-title">Inventario</h1><p>Stock en tiempo real por producto. Ajusta entradas, salidas y correcciones.</p></div>
-      <div class="inventory-heading-actions"><button class="inventory-secondary-button" id="inventory-refresh" type="button">${refreshIcon()}Actualizar</button><button class="inventory-secondary-button" id="inventory-sync" type="button">Sincronizar catálogo</button><button class="inventory-primary-button" id="inventory-export" type="button">Exportar página</button></div>
+      <div class="inventory-heading-actions"><button class="inventory-primary-button" id="inventory-export" type="button">Exportar página</button></div>
     </header>
     <div id="inventory-message" class="inventory-message" role="status" hidden></div>
     <section class="inventory-kpis" aria-label="Resumen del inventario">
@@ -38,10 +38,6 @@ function metric(id: string, label: string, note: string): string {
 
 function filterTab(level: string, label: string): string {
   return `<button class="inventory-filter-tab${level === 'all' ? ' selected' : ''}" type="button" data-inventory-level="${level}" aria-pressed="${level === 'all'}">${label}<span data-inventory-count="${level}">0</span></button>`;
-}
-
-function refreshIcon(): string {
-  return '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3L20 9 M20 4v5h-5 M20 12a8 8 0 0 1-14 5.3L4 15 M4 20v-5h5"/></svg>';
 }
 
 function searchIcon(): string {

@@ -4,7 +4,6 @@ export function renderAuditManagementSection(): string {
       <header class="audit-heading">
         <div><span class="audit-eyebrow">SISTEMA</span><h1>Auditoría</h1>
           <p>Consulta el registro de acciones administrativas y eventos críticos.</p></div>
-        <button class="btn-primary" onclick="loadAdminAudit()">Actualizar</button>
       </header>
       <div class="audit-card">
         <div class="audit-table-scroll"><table class="audit-table">

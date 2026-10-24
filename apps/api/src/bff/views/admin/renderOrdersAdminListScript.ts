@@ -113,7 +113,6 @@ export function renderOrdersAdminListScript(): string {
     let orderSearchTimer;
     document.getElementById('orders-search')?.addEventListener('input', () => { clearTimeout(orderSearchTimer); orderSearchTimer = setTimeout(() => loadAdminOrders(1), 250); });
     ['orders-method-filter', 'orders-payment-filter'].forEach(id => document.getElementById(id)?.addEventListener('change', () => loadAdminOrders(1)));
-    document.getElementById('orders-refresh')?.addEventListener('click', () => loadAdminOrders(window._adminOrdersPage));
     document.getElementById('orders-export')?.addEventListener('click', exportFilteredAdminOrders);
     document.getElementById('orders-reset-filters')?.addEventListener('click', () => {
       activeOrderStatus = 'all';

@@ -3,7 +3,7 @@ import { renderAdminOrderDetailModal } from './renderAdminOrderDetailModal.js';
 export function renderOrdersManagementSection(): string {
   return `<section class="orders-screen" aria-labelledby="orders-title">
     <header class="orders-heading"><div><h1 id="orders-title">Pedidos</h1><p>Consulta los artículos comprados y la dirección de entrega, y gestiona el estado de envío y de pago.</p></div>
-      <div class="orders-heading-actions"><button class="orders-secondary-button" id="orders-refresh" type="button">${icon('refresh')}Actualizar</button><button class="orders-primary-button" id="orders-export" type="button">Exportar pedidos</button></div>
+      <div class="orders-heading-actions"><button class="orders-primary-button" id="orders-export" type="button">Exportar pedidos</button></div>
     </header>
     <section class="orders-card" aria-label="Lista de pedidos">
       <div class="orders-status-tabs" role="group" aria-label="Filtrar por estado del pedido">

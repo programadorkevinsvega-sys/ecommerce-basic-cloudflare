@@ -3,7 +3,6 @@ export function renderPaymentsManagementSection(): string {
     <section class="payments-screen" aria-labelledby="payments-title">
       <header class="payments-heading">
         <div><h1 id="payments-title">Pagos</h1><p>Consulta transacciones, registra recaudos y concilia las liquidaciones.</p></div>
-        <button class="btn-primary" type="button" onclick="loadAdminPayments()">Actualizar</button>
       </header>
       <section class="payments-page-panel" data-payment-panel="collections" aria-labelledby="payments-page-collections">
         <div id="cod-collection-section" class="card payments-page-card">

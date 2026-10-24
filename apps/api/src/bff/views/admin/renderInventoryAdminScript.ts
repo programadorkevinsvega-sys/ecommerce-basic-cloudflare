@@ -31,24 +31,6 @@ export function renderInventoryAdminScript(): string {
       }
     }
 
-    async function syncAdminInventoryCatalog() {
-      const button = document.getElementById('inventory-sync');
-      if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); }
-      try {
-        let page = 1, hasMore = true, created = 0;
-        while (hasMore) {
-          const response = await fetch('/api/v1/admin/inventory/sync', { method: 'POST', headers: adminHeaders(true),
-            body: JSON.stringify({ page, pageSize: 25 }) });
-          const data = await response.json();
-          if (!response.ok || !data.success) throw new Error(data.error || 'No fue posible sincronizar el catálogo.');
-          created += Number(data.createdCount || 0); hasMore = Boolean(data.hasMore); page++;
-        }
-        showInventoryMessage(created + ' productos sincronizados con el inventario.', false);
-        await loadAdminInventory(1);
-      } catch (error) { showInventoryMessage(error.message || 'Error al sincronizar inventario.', true); }
-      finally { if (button) { button.disabled = false; button.removeAttribute('aria-busy'); } }
-    }
-
     async function loadRecentInventoryMovements() {
       const list = document.getElementById('inventory-movements');
       if (!list) return;
@@ -94,8 +76,6 @@ export function renderInventoryAdminScript(): string {
       if (element) { element.hidden = true; element.textContent = ''; }
     }
 
-    document.getElementById('inventory-refresh')?.addEventListener('click', loadAdminInventory);
-    document.getElementById('inventory-sync')?.addEventListener('click', syncAdminInventoryCatalog);
     document.getElementById('inventory-export')?.addEventListener('click', exportAdminInventory);
     window.loadAdminInventory = loadAdminInventory;
   `;
