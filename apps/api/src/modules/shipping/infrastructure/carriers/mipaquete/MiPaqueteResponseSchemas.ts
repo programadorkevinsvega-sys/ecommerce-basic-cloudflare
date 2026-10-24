@@ -37,6 +37,7 @@ export const MiPaqueteSendingsSchema = z.object({
     'Número de Guía': z.union([z.string(), z.number()]).optional(),
     'Transportadora': z.string().optional(),
     'Estado actual del envío': z.string().optional(),
+    'Observaciones del envío': z.string().optional(),
     'Número de Recolección': z.union([z.string(), z.number()]).optional(),
     tracking: z.array(z.object({ updateState: z.string(), date: z.string().optional() }).passthrough()).optional(),
     pdfGuide: z.array(HttpsUrl).optional(),

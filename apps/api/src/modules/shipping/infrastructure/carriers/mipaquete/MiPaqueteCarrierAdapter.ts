@@ -38,7 +38,7 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
         quantity: input.package.quantity, width: input.package.widthCm, large: input.package.lengthCm,
         height: input.package.heightCm, weight: input.package.weightKg,
         declaredValue: input.package.declaredValueCop, forbiddenProduct: true,
-        productReference: input.orderId,
+        productReference: input.description.slice(0, 200),
       },
       locate: { originDaneCode: input.originDaneCode, destinyDaneCode: input.destinationDaneCode,
         originCountryCode: '170', destinyCountryCode: '170' },
@@ -77,31 +77,45 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
     };
   }
 
-  public async findByOrderReference(orderId: string, createdAt: string): Promise<CarrierShipmentLookup> {
-    const { init, end } = dateWindow(createdAt);
+  public async findByOrderReference(orderId: string): Promise<CarrierShipmentLookup> {
     const pageSize = 25;
     const maxPages = 8;
-    const first = await this.sendingsPage(1, pageSize, init, end);
+    const first = await this.sendingsPage(1, pageSize);
     const total = first.totalItems;
     if (total !== undefined && total > pageSize * maxPages) return { kind: 'inconclusive' };
     const pages = total === undefined ? maxPages : Math.max(1, Math.ceil(total / pageSize));
-    const matches = [];
+    const matches = new Map<string, (typeof first.sendings)[number]>();
     for (let page = 1; page <= pages; page++) {
-      const result = page === 1 ? first : await this.sendingsPage(page, pageSize, init, end);
-      matches.push(...result.sendings.filter((item) => String(item['Producto o Referencia'] ?? '') === orderId));
-      if (matches.length > 1) return { kind: 'multiple' };
-      if (total === undefined && result.sendings.length < pageSize) return lookupResult(matches[0]);
+      const result = page === 1 ? first : await this.sendingsPage(page, pageSize);
+      for (const item of result.sendings) {
+        if (isCancelled(item) || !matchesOrder(item, orderId)) continue;
+        const identity = item._id || String(item['Código mipaquete']);
+        matches.set(identity, item);
+      }
+      if (matches.size > 1) return { kind: 'multiple' };
+      if (total === undefined && result.sendings.length < pageSize) return lookupResult(matches.values().next().value);
     }
     if (total === undefined && pages === maxPages && first.sendings.length === pageSize) return { kind: 'inconclusive' };
-    return lookupResult(matches[0]);
+    return lookupResult(matches.values().next().value);
   }
 
-  private async sendingsPage(page: number, pageSize: number, init: string, end: string) {
-    const response = await this.client.listSendings(page, { pageSize, confirmationDate: { init, end } });
+  private async sendingsPage(page: number, pageSize: number) {
+    const response = await this.client.listSendings(page, { pageSize });
     const parsed = MiPaqueteSendingsSchema.safeParse(response);
     if (!parsed.success) throw new Error('Invalid MiPaquete reconciliation response');
     return parsed.data;
   }
+}
+
+function matchesOrder(item: { 'Producto o Referencia'?: string | number; 'Observaciones del envío'?: string }, orderId: string): boolean {
+  return String(item['Producto o Referencia'] ?? '').trim() === orderId ||
+    String(item['Observaciones del envío'] ?? '').includes(`Pedido ${orderId}`);
+}
+
+function isCancelled(item: { 'Estado actual del envío'?: string; tracking?: Array<{ updateState: string }> }): boolean {
+  const status = item['Estado actual del envío'] || item.tracking?.at(-1)?.updateState || '';
+  const normalized = status.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return normalized.includes('cancel') || normalized.includes('anulad');
 }
 
 function lookupResult(item: { _id?: string; 'Código mipaquete': string | number; 'Número de Guía'?: string | number;
@@ -112,14 +126,6 @@ function lookupResult(item: { _id?: string; 'Código mipaquete': string | number
     guideNumber: item['Número de Guía'] === undefined ? null : String(item['Número de Guía']),
     guideUrls: item.pdfGuide || [], pickupCode: item['Número de Recolección'] === undefined ? null : String(item['Número de Recolección']),
     carrierName: item['Transportadora'] || null, status: item['Estado actual del envío'] || 'Envío creado' };
-}
-
-function dateWindow(value: string): { init: string; end: string } {
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) throw new Error('Invalid shipment timestamp');
-  const init = new Date(date.getTime() - 86_400_000).toISOString().slice(0, 10);
-  const end = new Date(date.getTime() + 86_400_000).toISOString().slice(0, 10);
-  return { init, end };
 }
 
 function describeQuoteResponse(response: unknown, issues: Array<{ path: PropertyKey[]; message: string }>): string {

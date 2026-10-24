@@ -49,5 +49,5 @@ export interface IShippingCarrierPort {
   quote(request: CarrierQuoteRequest): Promise<CarrierQuote[]>;
   create(request: CreateCarrierShipmentRequest): Promise<CreatedCarrierShipment>;
   getStatus(mipaqueteCode: string): Promise<CarrierShipmentStatus | null>;
-  findByOrderReference(orderId: string, createdAt: string): Promise<CarrierShipmentLookup>;
+  findByOrderReference(orderId: string): Promise<CarrierShipmentLookup>;
 }

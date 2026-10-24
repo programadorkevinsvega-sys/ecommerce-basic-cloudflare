@@ -9,7 +9,7 @@ export class ReconcilePendingMiPaqueteShipmentUseCase {
     this.repository = repository; this.carrier = carrier;
   }
   public async execute(shipment: CarrierShipment): Promise<CarrierShipment> {
-    const result = await this.carrier.findByOrderReference(shipment.orderId, shipment.createdAt);
+    const result = await this.carrier.findByOrderReference(shipment.orderId);
     const now = new Date().toISOString();
     if (result.kind !== 'found') {
       const detail = result.kind === 'not_found' ? 'No aparece en la consulta exhaustiva; se conserva el bloqueo.'
