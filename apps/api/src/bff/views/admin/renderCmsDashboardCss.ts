@@ -2,7 +2,6 @@ export function renderCmsDashboardCss(): string {
   return `
     .admin-legacy-pane.cms-mode { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
     .admin-legacy-pane.blog-mode { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
-    .admin-main.blog-page-active>.admin-topbar { display:none; }
     .cms-screen { color:#151a23; }
     .cms-screen [hidden] { display:none!important; }
     .cms-heading,.cms-editor-heading,.cms-list-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }

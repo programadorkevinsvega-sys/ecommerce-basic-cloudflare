@@ -1,7 +1,6 @@
 export function renderShippingInvoicesDashboardCss(): string {
   return `
     .admin-legacy-pane.payments-mode,.admin-legacy-pane.shipping-mode,.admin-legacy-pane.invoices-mode { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; --input-bg:#fff; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
-    .admin-main.payments-page-active>.admin-topbar,.admin-main.shipping-page-active>.admin-topbar,.admin-main.invoices-page-active>.admin-topbar { display:none; }
     .admin-legacy-pane.payments-mode .card,.admin-legacy-pane.shipping-mode .card,.admin-legacy-pane.invoices-mode .card { border-color:#e3e6ec; background:#fff; color:#151a23; box-shadow:none; }
     .admin-legacy-pane.payments-mode input.payments-search-input,.admin-legacy-pane.invoices-mode input.invoice-search-input { width:min(100%,480px); min-height:44px; border:1px solid #cbd1db; border-radius:8px; padding:8px 11px; background:#fff; color:#151a23; font:inherit; box-shadow:none; }
     .admin-legacy-pane.payments-mode input.payments-search-input:focus,.admin-legacy-pane.invoices-mode input.invoice-search-input:focus { border-color:#7296f4; outline:0; box-shadow:0 0 0 3px #dce6fb; }

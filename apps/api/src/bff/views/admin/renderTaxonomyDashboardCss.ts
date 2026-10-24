@@ -1,7 +1,6 @@
 export function renderTaxonomyDashboardCss(): string {
   return `
     .admin-legacy-pane.taxonomies-mode { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; --input-bg:#fff; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
-    .admin-main.taxonomies-page-active>.admin-topbar { display:none; }
     .admin-legacy-pane.taxonomies-mode .card { border-color:#e3e6ec; background:#fff; color:#151a23; box-shadow:none; }
     .taxonomy-screen { color:#151a23; }
     .admin-nav-link[data-tab="taxonomies"].active { background:#edf3ef; color:#24583e; }

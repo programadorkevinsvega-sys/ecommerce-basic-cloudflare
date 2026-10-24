@@ -2,7 +2,6 @@ export function renderMenuAdminCss(): string {
   return `
     .admin-legacy-pane.menus-mode { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
     .menu-admin-screen { color:#151a23; }
-    .admin-main:has(.menus-mode.active)>.admin-topbar { display:none; }
     .menu-admin-heading,.menu-card-heading,.menu-footer-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .menu-admin-heading { margin:0 0 18px; }
     .menu-admin-heading span { color:#687283; font-size:10px; font-weight:750; letter-spacing:.1em; }

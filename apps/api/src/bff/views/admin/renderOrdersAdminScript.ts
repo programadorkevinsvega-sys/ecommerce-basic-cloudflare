@@ -8,11 +8,6 @@ export function renderOrdersAdminScript(): string {
     async function loadAdminOrders(page = window._adminOrdersPage || 1) {
       const tbody = document.getElementById('orders-table-body');
       if (!tbody) return;
-      const refreshButton = document.getElementById('orders-refresh');
-      if (refreshButton) {
-        refreshButton.disabled = true;
-        refreshButton.setAttribute('aria-busy', 'true');
-      }
       try {
         const params = new URLSearchParams({ page: String(page), pageSize: '25' });
         const status = activeOrderStatus || 'all';
@@ -36,11 +31,6 @@ export function renderOrdersAdminScript(): string {
         window.renderAdminOrdersTable();
       } catch (error) {
         tbody.innerHTML = '<tr><td colspan="7" class="orders-loading">' + escapeHtml(error.message || 'Error al cargar pedidos') + '</td></tr>';
-      } finally {
-        if (refreshButton) {
-          refreshButton.disabled = false;
-          refreshButton.removeAttribute('aria-busy');
-        }
       }
     }
 

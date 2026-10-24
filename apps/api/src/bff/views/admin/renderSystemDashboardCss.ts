@@ -1,7 +1,6 @@
 export function renderSystemDashboardCss(): string {
   return `
     .admin-legacy-pane:has(#tab-audit.active),.admin-legacy-pane:has(#tab-settings.active) { --border:#e3e6ec; --muted:#636b7b; --card-bg:#fff; --text:#151a23; --input-bg:#fff; min-height:0; border-radius:0; padding:0; background:#f5f6f8; color:#151a23; }
-    .admin-main:has(#tab-audit.active)>.admin-topbar,.admin-main:has(#tab-settings.active)>.admin-topbar { display:none; }
     .audit-screen,.settings-screen { display:grid; gap:18px; }
     .audit-heading,.settings-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; }
     .audit-eyebrow,.settings-eyebrow { color:#788190; font-size:10px; font-weight:750; letter-spacing:.12em; }
