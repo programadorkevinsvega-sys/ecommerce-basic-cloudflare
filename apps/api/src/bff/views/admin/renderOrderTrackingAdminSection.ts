@@ -11,10 +11,11 @@ export function renderOrderTrackingAdminSection(): string {
     <dialog id="order-tracking-edit-dialog" class="shipping-detail-dialog tracking-admin-dialog" aria-labelledby="tracking-edit-title">
       <form id="order-tracking-edit-form"><header><div><h2 id="tracking-edit-title">Actualizar seguimiento</h2><p id="tracking-edit-customer"></p></div><button class="shipping-modal-close" type="button" onclick="closeOrderTrackingEditor()" aria-label="Cerrar">×</button></header>
         <input id="tracking-edit-order-id" type="hidden" />
-        <label>Transportadora<input id="tracking-edit-carrier" maxlength="100" placeholder="Ej. Coordinadora" /></label>
-        <label>Número de guía<input id="tracking-edit-number" maxlength="120" placeholder="Número de guía" /></label>
-        <label>Enlace de seguimiento<input id="tracking-edit-url" type="url" placeholder="https://…" /></label>
-        <label>Fecha estimada de entrega<input id="tracking-edit-date" type="date" /></label>
+        <p class="tracking-provider-hint">Al generar o consultar la guía, MiPaquete devuelve la transportadora, el número y el PDF. Aquí se cargan automáticamente; puedes corregirlos si el proveedor informa un dato distinto.</p>
+        <label>Transportadora<input id="tracking-edit-carrier" maxlength="100" placeholder="MiPaquete la informa al generar la guía" /></label>
+        <label>Número de guía<input id="tracking-edit-number" maxlength="120" placeholder="MiPaquete lo informa al generar la guía" /></label>
+        <label>PDF de la guía<input id="tracking-edit-url" type="url" placeholder="Enlace devuelto por MiPaquete" /></label>
+        <label>Fecha estimada de entrega (opcional)<input id="tracking-edit-date" type="date" /><small>MiPaquete entrega un plazo estimado en la cotización; esta fecha exacta solo se completa si el proveedor la informa.</small></label>
         <section class="tracking-admin-timeline"><h3>Historial del pedido</h3><ol id="tracking-edit-timeline"></ol></section>
         <label>Estado actual<select id="tracking-edit-status" onchange="updateOrderTrackingStatusActionState()"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
         <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>

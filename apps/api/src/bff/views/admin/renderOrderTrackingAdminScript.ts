@@ -122,6 +122,9 @@ export function renderOrderTrackingAdminScript(): string {
           const synced = await response.json(); if (response.ok && synced.shipment) data.shipment = synced.shipment;
         }
         const shipment = data.shipment;
+        document.getElementById('tracking-edit-carrier').value = shipment.carrierName || 'MiPaquete';
+        document.getElementById('tracking-edit-number').value = shipment.guideNumber || '';
+        document.getElementById('tracking-edit-url').value = shipment.guideUrl || '';
         message.innerHTML = 'Guía ' + escapeHtml(shipment.guideNumber || shipment.mipaqueteCode || 'creada') +
           (shipment.guideUrl ? ' · <a href="' + escapeHtml(shipment.guideUrl) + '" target="_blank" rel="noopener">Abrir PDF</a>' : '') +
           (shipment.pickupCode ? ' · Recolección: ' + escapeHtml(shipment.pickupCode) : '');
