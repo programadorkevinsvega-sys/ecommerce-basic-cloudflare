@@ -46,7 +46,7 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
       ...(input.carrierId ? { deliveryCompany: input.carrierId } : { criteria: input.criterion }),
       description: input.description.slice(0, 200), comments: `Pedido ${input.orderId}`.slice(0, 200),
       paymentType: input.paymentType, valueCollection: input.collectionValueCop,
-      requestPickup: String(input.requestPickup), adminTransactionData: { saleValue: input.saleValueCop },
+      requestPickup: input.requestPickup, adminTransactionData: { saleValue: input.saleValueCop },
     });
     const parsed = MiPaqueteCreateSchema.safeParse(response);
     if (!parsed.success) throw new Error('Invalid MiPaquete shipment response');
