@@ -7,7 +7,7 @@ import { resolveFactusApiUrl } from './resolveFactusApiUrl.js';
 
 export interface FactusCredentials { clientId?: string; clientSecret?: string; username?: string; password?: string; }
 export interface FactusConfig {
-  mode?: string; apiUrl?: string; sandbox?: FactusCredentials; production?: FactusCredentials;
+  mode?: string; apiUrl?: string; credentials?: FactusCredentials;
   numberingRangeId?: string; creditNoteNumberingRangeId?: string;
   getOperationalConfig?: () => Promise<{ mode: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
 }
@@ -24,7 +24,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   public async submitToTaxAuthority(invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {
     await this.loadOperationalConfig();
     const mode = this.mode();
-    if (!mode || !this.hasCredentials(mode)) return { dianValidationStatus: 'not_configured', emailSent: false };
+    if (!mode || !this.hasCredentials()) return { dianValidationStatus: 'not_configured', emailSent: false };
     const existing = await this.findByReference(invoice.id);
     if (existing) return existing;
     const body = mapInvoiceToFactus(invoice, mode === 'production');
@@ -41,7 +41,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   public async findByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null> {
     await this.loadOperationalConfig();
     const mode = this.mode();
-    if (!mode || !this.hasCredentials(mode)) return null;
+    if (!mode || !this.hasCredentials()) return null;
     const query = new URLSearchParams({ 'filter[reference_code]': referenceCode, 'filter[per_page]': '2' });
     const result = await this.request(`/v2/bills?${query}`, { method: 'GET' });
     const entries = Array.isArray(result?.data) ? result.data : [];
@@ -52,7 +52,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   public async submitCreditNote(note: CreditNote, invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {
     await this.loadOperationalConfig();
     const mode = this.mode();
-    if (!mode || !this.hasCredentials(mode)) return { dianValidationStatus: 'not_configured', emailSent: false };
+    if (!mode || !this.hasCredentials()) return { dianValidationStatus: 'not_configured', emailSent: false };
     const existing = await this.findCreditNoteByReference(note.id);
     if (existing) return existing;
     const amount = (note.amountInCents / 100).toFixed(2);
@@ -78,7 +78,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   public async findCreditNoteByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null> {
     await this.loadOperationalConfig();
     const mode = this.mode();
-    if (!mode || !this.hasCredentials(mode)) return null;
+    if (!mode || !this.hasCredentials()) return null;
     const query = new URLSearchParams({ 'filter[reference_code]': referenceCode, 'filter[per_page]': '2' });
     const result = await this.request(`/v2/credit-notes?${query}`, { method: 'GET' });
     const entries = Array.isArray(result?.data) ? result.data : [];
@@ -96,12 +96,12 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     this.activeConfig = { ...this.config, ...operational };
   }
 
-  private credentials(mode: 'sandbox' | 'production'): FactusCredentials {
-    return this.activeConfig[mode] || {};
+  private credentials(): FactusCredentials {
+    return this.activeConfig.credentials || {};
   }
 
-  private hasCredentials(mode: 'sandbox' | 'production'): boolean {
-    const c = this.credentials(mode);
+  private hasCredentials(): boolean {
+    const c = this.credentials();
     return Boolean(c.clientId && c.clientSecret && c.username && c.password);
   }
 
@@ -138,7 +138,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
 
   private async authenticate(): Promise<string | null> {
     const mode = this.mode();
-    const credentials = mode ? this.credentials(mode) : {};
+    const credentials = mode ? this.credentials() : {};
     if (!mode || !credentials.clientId || !credentials.clientSecret || !credentials.username || !credentials.password) return null;
     const form = new URLSearchParams({ grant_type: this.refreshToken ? 'refresh_token' : 'password',
       client_id: credentials.clientId, client_secret: credentials.clientSecret,

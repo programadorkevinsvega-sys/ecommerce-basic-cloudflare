@@ -15,8 +15,7 @@ export interface InvoicingModuleDependencies {
   factus: {
     mode?: string; apiUrl?: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string;
     getOperationalConfig?: () => Promise<{ mode: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
-    sandbox?: { clientId?: string; clientSecret?: string; username?: string; password?: string };
-    production?: { clientId?: string; clientSecret?: string; username?: string; password?: string };
+    credentials?: { clientId?: string; clientSecret?: string; username?: string; password?: string };
   };
 }
 

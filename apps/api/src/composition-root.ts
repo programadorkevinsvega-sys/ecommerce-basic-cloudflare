@@ -180,9 +180,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
         return { mode: settings.factusMode || 'disabled', numberingRangeId: settings.factusNumberingRangeId,
           creditNoteNumberingRangeId: settings.factusCreditNoteNumberingRangeId };
       },
-      sandbox: { clientId: env.FACTUS_SANDBOX_CLIENT_ID, clientSecret: env.FACTUS_SANDBOX_CLIENT_SECRET,
-        username: env.FACTUS_SANDBOX_USERNAME, password: env.FACTUS_SANDBOX_PASSWORD },
-      production: { clientId: env.FACTUS_PRODUCTION_CLIENT_ID, clientSecret: env.FACTUS_PRODUCTION_CLIENT_SECRET,
+      credentials: { clientId: env.FACTUS_PRODUCTION_CLIENT_ID, clientSecret: env.FACTUS_PRODUCTION_CLIENT_SECRET,
         username: env.FACTUS_PRODUCTION_USERNAME, password: env.FACTUS_PRODUCTION_PASSWORD } } });
   const invoicingGateway = new InProcessInvoicingGateway(new InvoicingPublicApi(invoicingContainer));
 
