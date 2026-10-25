@@ -6,6 +6,8 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 
 > **Reinicio de prelanzamiento (2026-10-15):** la D1 anterior (`9b69f19a-cad8-4e53-b0d1-0bd2adb11945`) fue eliminada por el propietario. El binding apunta ahora a la D1 nueva `ecommerce-vega-production` (`372088f2-d700-4155-9057-6595815a005e`); las 69 migraciones y el estado inicial se verificaron según el registro final de esta nota.
 
+> **Binding corregido (2026-10-24):** el UUID anterior dejó de existir en la cuenta activa. El binding actual es `ecommerce-vega-production` (`bfb3ba3f-5e2a-4c33-9b93-0a5d7c04b6ef`). Ledger remoto verificado con 77 migraciones previas; se aplicaron solo las tres migraciones Factus/identidad fiscal hasta llegar a 80. Time Travel antes `00000041-00000002-0000510f-73c358f83a0fbce0614d1a72d45257ca`; después `00000041-0000001a-0000510f-2b98934b998cf0284950d666d6a98c6e`. Columnas y ledger verificados tras la aplicación.
+
 ---
 
 ## Módulo: `settings`
@@ -19,6 +21,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `settings__0003_storefront_contact_social.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con runner Wrangler; expansión aditiva, país Colombia solo en valores vacíos |
 | `settings__0003_storefront_contact_social.sql` | v3 | Local | 2026-10-14 | trabajo actual | ✅ Fuentes y copias generadas; consistencia verificada |
 | `settings__0004_footer_copyright.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada con runner Wrangler; columna aditiva y texto inicial |
+| `settings__0005_factus_configuration.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y tres columnas Factus confirmadas en D1. |
 
 ---
 
@@ -209,6 +212,7 @@ El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7
 | `orders__0005_secure_order_tracking.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada por runner tras verificar 49 migraciones previas; ledger, tres columnas e índice confirmados. Pedidos existentes: 13 antes y después, sin cambios de filas. Worker desplegado y al 100% (`7ac9c89a-eb45-433c-93b8-3f9c4aea54ca`); `/seguimiento-pedido` HTTP 200 y `/health` saludable. Bookmark previo `00000319-0000019e-00005105-9644332b47d51b300b3ec6018eb1b9b7`; posterior `00000319-000001aa-00005105-06eac73c65e096dc87017c45983141dd`. |
 | `orders__0008_shipping_fulfillment_method.sql` | v8 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada; entrada del ledger, columna/default verificados y 13 pedidos conservados. Bookmark previo `0000031e-000004ba-00005105-af412588b177ffea97d2b0bbf9c07c9d`; posterior `0000031e-000004c4-00005105-6741b923aa72b727756c4d275c673b0f`. |
 | `orders__0009_shipping_discount.sql` | v9 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Expand-only: agrega `shipping_discount_cents NOT NULL DEFAULT 0`; pedidos anteriores conservan su valor y total. Ledger y columna verificados en producción. |
+| `orders__0011_customer_fiscal_identity.sql` | v11 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y columnas fiscales confirmadas en D1. |
 
 ---
 
@@ -248,6 +252,7 @@ El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7
 | `invoicing__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (secuencias, facturas, notas crédito, outbox) |
 | `invoicing__0002_tax_included.sql` | v2 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aditiva; conserva documentos previos y marca IVA incluido |
 | `invoicing__0002_tax_included.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; facturas previas conservan `tax_included=0` |
+| `invoicing__0003_factus_electronic_invoices.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y campos de estado Factus confirmados en D1. |
 
 ---
 

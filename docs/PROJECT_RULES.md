@@ -104,6 +104,8 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 
 ## 7. Configuración Fiscal de la Tienda y Facturación Dinámica
 
+La integración Factus recibe `FACTUS_API_URL` como variable Cloudflare (HTTPS; host oficial correspondiente al entorno). Las credenciales OAuth `FACTUS_{SANDBOX,PRODUCTION}_{CLIENT_ID,CLIENT_SECRET,USERNAME,PASSWORD}` son secretos Cloudflare. El modo y los IDs de rangos de factura/nota crédito se administran en Configuración del panel. No copiar credenciales reales al `.env` compartido, al repositorio ni a logs. Revisa ADR-0032 antes de habilitar producción.
+
 - **Datos de la Empresa en `settings_store`:**
   - `store_name`: Nombre comercial de la tienda (ej. *Vega Store*).
   - `company_legal_name`: Razón social legal del comercio (ej. *Vega Store S.A.S.*).

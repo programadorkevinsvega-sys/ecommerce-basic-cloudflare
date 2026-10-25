@@ -18,6 +18,8 @@ export interface CreateOrderCommand {
   customerName: string;
   customerPhone: string;
   customerTaxId?: string | null;
+  customerTaxIdType?: 'CC' | 'NIT';
+  customerLegalOrganizationCode?: '1' | '2';
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
@@ -73,6 +75,8 @@ export class CreateOrderUseCase {
       customerEmail: cmd.customerEmail,
       customerName: cmd.customerName,
       customerPhone: cmd.customerPhone,
+      customerTaxIdType: cmd.customerTaxIdType,
+      customerLegalOrganizationCode: cmd.customerLegalOrganizationCode,
       customerTaxId: cmd.customerTaxId,
       shippingAddress: cmd.shippingAddress,
       shippingZoneId: cmd.shippingZoneId,

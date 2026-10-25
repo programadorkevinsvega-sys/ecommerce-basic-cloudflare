@@ -4,6 +4,13 @@ import { CreditNote } from '../entities/CreditNote.js';
 export interface IInvoiceRepository {
   getNextInvoiceNumber(prefix?: string): Promise<string>;
   save(invoice: Invoice): Promise<void>;
+  createForElectronicIssue(invoice: Invoice, traceId: string): Promise<void>;
+  updateElectronicResult(invoice: Invoice): Promise<void>;
+  listPendingElectronic(limit: number): Promise<Invoice[]>;
+  createCreditNoteForElectronicIssue(note: CreditNote, traceId: string): Promise<void>;
+  updateElectronicCreditNote(note: CreditNote): Promise<void>;
+  listPendingElectronicCreditNotes(limit: number): Promise<CreditNote[]>;
+  findCreditNoteById(id: string): Promise<CreditNote | null>;
   findById(id: string): Promise<Invoice | null>;
   findByOrderId(orderId: string): Promise<Invoice | null>;
   findByNumber(invoiceNumber: string): Promise<Invoice | null>;

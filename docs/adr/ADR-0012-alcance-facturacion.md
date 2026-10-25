@@ -1,6 +1,6 @@
 # ADR-0012: Alcance del Módulo de Facturación
 
-- **Estado:** Aceptado e Implementado
+- **Estado:** Implementado; decisión DIAN reemplazada parcialmente por ADR-0032
 - **Fecha:** Fase 0 (Propuesta) · Fase 9 (Implementado y Certificado)
 
 ## Contexto
@@ -15,5 +15,4 @@ Cada pago completado (Wompi o contra entrega) debe generar una factura comercial
    - Soporte para notas crédito (`invoicing_credit_notes`).
 
 2. **Integración DIAN de Colombia:**
-   - **Por el momento no se activa transmisión legal obligatoria ante la DIAN**, conforme a los requerimientos actuales del negocio.
-   - **Preparación arquitectónica:** Se implementa el puerto `IElectronicInvoicingPort` con un adaptador desacoplado (`MockElectronicInvoicingAdapter`), dejando la infraestructura 100% lista para conectar un proveedor tecnológico fiscal (Factus, Siigo, Alegra o DIAN directa) en cualquier momento sin alterar el dominio.
+   - La decisión original de no transmitir a DIAN fue reemplazada parcialmente por ADR-0032, que acepta Factus como proveedor.

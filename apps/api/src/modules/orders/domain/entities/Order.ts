@@ -20,6 +20,8 @@ export interface OrderProps {
   customerName: string;
   customerPhone: string;
   customerTaxId?: string | null;
+  customerTaxIdType?: 'CC' | 'NIT';
+  customerLegalOrganizationCode?: '1' | '2';
   shippingAddress: ShippingAddressSnapshot;
   shippingZoneId: string;
   shippingCostCents: number;
@@ -54,6 +56,8 @@ export class Order {
   public readonly customerName: string;
   public readonly customerPhone: string;
   public readonly customerTaxId: string | null;
+  public readonly customerTaxIdType: 'CC' | 'NIT';
+  public readonly customerLegalOrganizationCode: '1' | '2';
   public readonly shippingAddress: ShippingAddressSnapshot;
   public readonly shippingZoneId: string;
   public readonly shippingCostCents: number;
@@ -90,6 +94,8 @@ export class Order {
     this.customerName = props.customerName.trim();
     this.customerPhone = props.customerPhone.trim();
     this.customerTaxId = props.customerTaxId ? props.customerTaxId.trim() : null;
+    this.customerTaxIdType = props.customerTaxIdType ?? 'CC';
+    this.customerLegalOrganizationCode = props.customerLegalOrganizationCode ?? '2';
     this.shippingAddress = props.shippingAddress;
     this.shippingZoneId = props.shippingZoneId;
     this.shippingCostCents = props.shippingCostCents;
@@ -156,6 +162,8 @@ export class Order {
       customerName: this.customerName,
       customerPhone: this.customerPhone,
       customerTaxId: this.customerTaxId,
+      customerTaxIdType: this.customerTaxIdType,
+      customerLegalOrganizationCode: this.customerLegalOrganizationCode,
       shippingAddress: this.shippingAddress,
       shippingZoneId: this.shippingZoneId,
       shippingCostCents: this.shippingCostCents,

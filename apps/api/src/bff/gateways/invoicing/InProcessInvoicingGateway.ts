@@ -12,6 +12,22 @@ export class InProcessInvoicingGateway implements InvoicingGateway {
     return this.publicApi.issueInvoice(cmd);
   }
 
+  public processElectronicInvoice(invoiceId: string): Promise<void> {
+    return this.publicApi.processElectronicInvoice(invoiceId);
+  }
+
+  public reconcileElectronicInvoices(limit?: number): Promise<number> {
+    return this.publicApi.reconcileElectronicInvoices(limit);
+  }
+
+  public processElectronicCreditNote(creditNoteId: string): Promise<void> {
+    return this.publicApi.processElectronicCreditNote(creditNoteId);
+  }
+
+  public reconcileElectronicCreditNotes(limit?: number): Promise<number> {
+    return this.publicApi.reconcileElectronicCreditNotes(limit);
+  }
+
   public async getInvoice(query: { id?: string; orderId?: string; invoiceNumber?: string }): Promise<Invoice | null> {
     return this.publicApi.getInvoice(query);
   }

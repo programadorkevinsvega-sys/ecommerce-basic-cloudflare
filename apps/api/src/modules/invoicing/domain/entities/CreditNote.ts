@@ -6,6 +6,12 @@ export interface CreditNoteProps {
   amountInCents: number;
   issuedBy: string;
   createdAt: string;
+  correctionConceptCode?: '1' | '2' | '3' | '4' | '5' | '6';
+  electronicStatus?: 'not_configured' | 'pending' | 'accepted' | 'rejected';
+  providerNumber?: string | null;
+  cude?: string | null;
+  electronicErrors?: Record<string, string> | null;
+  electronicEmailSent?: boolean;
 }
 
 export class CreditNote {
@@ -16,6 +22,12 @@ export class CreditNote {
   public readonly amountInCents: number;
   public readonly issuedBy: string;
   public readonly createdAt: string;
+  public readonly correctionConceptCode: '1' | '2' | '3' | '4' | '5' | '6';
+  public electronicStatus: 'not_configured' | 'pending' | 'accepted' | 'rejected';
+  public providerNumber: string | null;
+  public cude: string | null;
+  public electronicErrors: Record<string, string> | null;
+  public electronicEmailSent: boolean;
 
   constructor(props: CreditNoteProps) {
     if (!props.id) throw new Error('CreditNote id is required');
@@ -30,6 +42,12 @@ export class CreditNote {
     this.amountInCents = props.amountInCents;
     this.issuedBy = props.issuedBy.trim();
     this.createdAt = props.createdAt;
+    this.correctionConceptCode = props.correctionConceptCode || '1';
+    this.electronicStatus = props.electronicStatus || 'not_configured';
+    this.providerNumber = props.providerNumber || null;
+    this.cude = props.cude || null;
+    this.electronicErrors = props.electronicErrors || null;
+    this.electronicEmailSent = props.electronicEmailSent ?? false;
   }
 
   public toJSON() {
@@ -41,6 +59,12 @@ export class CreditNote {
       amountInCents: this.amountInCents,
       issuedBy: this.issuedBy,
       createdAt: this.createdAt,
+      correctionConceptCode: this.correctionConceptCode,
+      electronicStatus: this.electronicStatus,
+      providerNumber: this.providerNumber,
+      cude: this.cude,
+      electronicErrors: this.electronicErrors,
+      electronicEmailSent: this.electronicEmailSent,
     };
   }
 }

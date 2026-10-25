@@ -1,7 +1,6 @@
 import { Invoice, InvoiceSnapshot } from '../../domain/entities/Invoice.js';
 import { IInvoiceRepository } from '../../domain/ports/IInvoiceRepository.js';
 import { IInvoicePdfPort } from '../../domain/ports/IInvoicePdfPort.js';
-import { IElectronicInvoicingPort } from '../../domain/ports/IElectronicInvoicingPort.js';
 
 export interface IssueInvoiceCommand {
   orderId: string;
@@ -19,14 +18,14 @@ export interface IssueInvoiceCommand {
   currency?: string;
   paymentMethod: string;
   paymentReference?: string | null;
+  traceId?: string;
   snapshot: InvoiceSnapshot;
 }
 
 export class IssueInvoiceUseCase {
   constructor(
     private readonly repo: IInvoiceRepository,
-    private readonly pdfPort: IInvoicePdfPort,
-    private readonly electronicPort: IElectronicInvoicingPort
+    private readonly pdfPort: IInvoicePdfPort
   ) {}
 
   public async execute(cmd: IssueInvoiceCommand): Promise<Invoice> {
@@ -75,11 +74,8 @@ export class IssueInvoiceUseCase {
     const docResult = await this.pdfPort.generateInvoiceDocument(invoice);
     invoice.pdfR2Key = docResult.r2Key;
 
-    // 5. Enviar a puerto tributario (Mock preparado para DIAN futura)
-    await this.electronicPort.submitToTaxAuthority(invoice);
-
-    // 6. Guardar en base de datos
-    await this.repo.save(invoice);
+    // Persistir factura y solicitud fiscal juntas; Factus se procesa después del pago.
+    await this.repo.createForElectronicIssue(invoice, cmd.traceId || 'unknown');
 
     return invoice;
   }

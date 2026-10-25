@@ -9,6 +9,8 @@ export function getCheckoutSubmitOrderScript(): string {
         const phone = document.getElementById('cust-phone').value.trim();
         const email = document.getElementById('cust-email').value.trim();
         const taxId = document.getElementById('cust-tax-id')?.value.trim() || '';
+        const taxIdType = document.getElementById('cust-tax-type')?.value || '';
+        const legalOrganizationCode = document.getElementById('cust-organization')?.value || '';
         const dept = document.getElementById('addr-dept').value.trim();
         const city = document.getElementById('addr-city').value.trim();
         const daneCode = document.getElementById('addr-dane-code').value;
@@ -29,6 +31,7 @@ export function getCheckoutSubmitOrderScript(): string {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               customerName: name, customerEmail: email, customerPhone: phone, customerTaxId: taxId,
+              customerTaxIdType: taxIdType, customerLegalOrganizationCode: legalOrganizationCode,
               shippingZoneId: zoneSel.value, shippingCostCents, subtotalCents, taxCents, discountCents: 0,
               ...(carrierDelivery ? { carrierQuoteId: selectedCarrierQuoteId, shippingChargeMode } : {}),
               couponCode: window.getCurrentCouponCode?.() || null,

@@ -11,6 +11,9 @@ export interface StoreSettingsProps {
   companyAddress?: string;
   companyCity?: string;
   companyCountry?: string;
+  factusMode: 'disabled' | 'sandbox' | 'production';
+  factusNumberingRangeId?: string;
+  factusCreditNoteNumberingRangeId?: string;
   socialInstagramUrl?: string;
   socialTiktokUrl?: string;
   socialFacebookUrl?: string;
@@ -47,6 +50,9 @@ export class StoreSettings {
   public get companyAddress(): string | undefined { return this.props.companyAddress; }
   public get companyCity(): string | undefined { return this.props.companyCity; }
   public get companyCountry(): string | undefined { return this.props.companyCountry; }
+  public get factusMode(): StoreSettingsProps['factusMode'] { return this.props.factusMode; }
+  public get factusNumberingRangeId(): string | undefined { return this.props.factusNumberingRangeId; }
+  public get factusCreditNoteNumberingRangeId(): string | undefined { return this.props.factusCreditNoteNumberingRangeId; }
   public get socialInstagramUrl(): string | undefined { return this.props.socialInstagramUrl; }
   public get socialTiktokUrl(): string | undefined { return this.props.socialTiktokUrl; }
   public get socialFacebookUrl(): string | undefined { return this.props.socialFacebookUrl; }
@@ -90,6 +96,9 @@ export class StoreSettings {
     }
     if (params.companyCity !== undefined) this.props.companyCity = params.companyCity.trim();
     if (params.companyCountry !== undefined) this.props.companyCountry = params.companyCountry.trim();
+    if (params.factusMode !== undefined) this.props.factusMode = params.factusMode;
+    if (params.factusNumberingRangeId !== undefined) this.props.factusNumberingRangeId = params.factusNumberingRangeId.trim();
+    if (params.factusCreditNoteNumberingRangeId !== undefined) this.props.factusCreditNoteNumberingRangeId = params.factusCreditNoteNumberingRangeId.trim();
     if (params.socialInstagramUrl !== undefined) this.props.socialInstagramUrl = validateSocialUrl(params.socialInstagramUrl, 'instagram.com');
     if (params.socialTiktokUrl !== undefined) this.props.socialTiktokUrl = validateSocialUrl(params.socialTiktokUrl, 'tiktok.com');
     if (params.socialFacebookUrl !== undefined) this.props.socialFacebookUrl = validateSocialUrl(params.socialFacebookUrl, 'facebook.com');

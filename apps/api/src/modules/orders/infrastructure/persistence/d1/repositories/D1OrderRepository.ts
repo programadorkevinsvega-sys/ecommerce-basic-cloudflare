@@ -1,48 +1,7 @@
-import { Order, OrderPaymentStatus, OrderStatus, ShippingAddressSnapshot } from '../../../../domain/entities/Order.js';
+import { Order } from '../../../../domain/entities/Order.js';
 import { OrderLine } from '../../../../domain/entities/OrderLine.js';
 import { IOrderRepository, OrderHistoryRecord } from '../../../../domain/ports/IOrderRepository.js';
-interface OrderRow {
-  id: string;
-  customer_id: string | null;
-  guest_cart_id_hash: string | null;
-  customer_email: string;
-  customer_name: string;
-  customer_phone: string;
-  shipping_address: string;
-  shipping_zone_id: string;
-  shipping_cost_cents: number;
-  shipping_discount_cents?: number;
-  shipping_collection_cents?: number;
-  shipping_charge_mode?: 'included' | 'collect_at_delivery';
-  shipping_fulfillment_method?: 'merchant_local' | 'carrier' | 'legacy';
-  subtotal_cents: number;
-  discount_cents: number;
-  coupon_code: string | null;
-  total_cents: number;
-  tax_cents: number;
-  pricing_version: number;
-  estimated_payment_fee_cents: number;
-  transaction_fee_cents: number;
-  guest_tracking_token_hash?: string | null;
-  min_estimated_days?: number | null;
-  max_estimated_days?: number | null;
-  payment_method: string;
-  status: string;
-  payment_status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface OrderLineRow {
-  id: string;
-  order_id: string;
-  product_id: string;
-  product_name: string;
-  product_sku: string;
-  quantity: number;
-  unit_price_cents: number;
-  total_cents: number;
-}
+import { hydrateD1Order, OrderLineRow, OrderRow } from './OrderPersistenceMapper.js';
 
 export class D1OrderRepository implements IOrderRepository {
   private readonly db: D1Database;
@@ -56,30 +15,27 @@ export class D1OrderRepository implements IOrderRepository {
     if (!row) return null;
 
     const lines = await this.loadLines(id);
-    return this.hydrate(row, lines);
+    return hydrateD1Order(row, lines);
   }
 
   public async save(order: Order): Promise<void> {
-    const addressWithTax = {
-      ...order.shippingAddress,
-      customerTaxId: order.customerTaxId || null,
-    };
-
     await this.db.prepare(
       `INSERT INTO orders_orders (
          id, customer_id, guest_cart_id_hash, customer_email, customer_name, customer_phone,
+         customer_tax_id, customer_tax_id_type, customer_legal_organization_code,
          shipping_address, shipping_zone_id, shipping_cost_cents,
          shipping_discount_cents,
          subtotal_cents, discount_cents, coupon_code, total_cents,
          payment_method, status, payment_status, created_at, updated_at, tax_cents, pricing_version, estimated_payment_fee_cents, transaction_fee_cents, guest_tracking_token_hash, min_estimated_days, max_estimated_days, shipping_collection_cents, shipping_charge_mode, shipping_fulfillment_method
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          payment_status = excluded.payment_status,
          updated_at = excluded.updated_at`
     ).bind(
       order.id, order.customerId, order.guestCartIdHash, order.customerEmail, order.customerName, order.customerPhone,
-      JSON.stringify(addressWithTax), order.shippingZoneId, order.shippingCostCents, order.shippingDiscountCents,
+      order.customerTaxId, order.customerTaxIdType, order.customerLegalOrganizationCode,
+      JSON.stringify(order.shippingAddress), order.shippingZoneId, order.shippingCostCents, order.shippingDiscountCents,
       order.subtotalCents, order.discountCents, order.couponCode, order.totalCents,
       order.paymentMethod, order.status, order.paymentStatus, order.createdAt, order.updatedAt,
       order.taxCents, order.pricingVersion, order.estimatedPaymentFeeCents, order.transactionFeeCents,
@@ -135,7 +91,7 @@ export class D1OrderRepository implements IOrderRepository {
     const orders: Order[] = [];
     for (const r of results) {
       const lines = await this.loadLines(r.id);
-      orders.push(this.hydrate(r, lines));
+      orders.push(hydrateD1Order(r, lines));
     }
     return orders;
   }
@@ -166,43 +122,4 @@ export class D1OrderRepository implements IOrderRepository {
     }));
   }
 
-  private hydrate(row: OrderRow, lines: OrderLine[]): Order {
-    let parsedAddress: any = {};
-    try { parsedAddress = JSON.parse(row.shipping_address); } catch {}
-    const customerTaxId = parsedAddress?.customerTaxId || null;
-
-    return new Order({
-      id: row.id,
-      customerId: row.customer_id,
-      guestCartIdHash: row.guest_cart_id_hash,
-      customerEmail: row.customer_email,
-      customerName: row.customer_name,
-      customerPhone: row.customer_phone,
-      customerTaxId,
-      shippingAddress: parsedAddress as ShippingAddressSnapshot,
-      shippingZoneId: row.shipping_zone_id,
-      shippingCostCents: row.shipping_cost_cents,
-      shippingDiscountCents: row.shipping_discount_cents ?? 0,
-      shippingCollectionCents: row.shipping_collection_cents ?? 0,
-      shippingChargeMode: row.shipping_charge_mode ?? 'included',
-      shippingFulfillmentMethod: row.shipping_fulfillment_method ?? 'legacy',
-      subtotalCents: row.subtotal_cents,
-      discountCents: row.discount_cents,
-      couponCode: row.coupon_code,
-      totalCents: row.total_cents,
-      taxCents: row.tax_cents ?? 0,
-      pricingVersion: row.pricing_version ?? 1,
-      estimatedPaymentFeeCents: row.estimated_payment_fee_cents ?? 0,
-      transactionFeeCents: row.transaction_fee_cents ?? 0,
-      guestTrackingTokenHash: row.guest_tracking_token_hash ?? null,
-      minEstimatedDays: row.min_estimated_days ?? null,
-      maxEstimatedDays: row.max_estimated_days ?? null,
-      paymentMethod: row.payment_method as 'wompi' | 'cash_on_delivery',
-      status: row.status as OrderStatus,
-      paymentStatus: row.payment_status as OrderPaymentStatus,
-      lines,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    });
-  }
 }

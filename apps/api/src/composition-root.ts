@@ -173,7 +173,17 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const realtimeContainer = createRealtimeModule(env);
   const realtimeGateway = new InProcessRealtimeGateway(new RealtimePublicApi(realtimeContainer));
 
-  const invoicingContainer = new InvoicingModuleContainer({ db: env.DB, bucket: env.MEDIA_BUCKET });
+  const invoicingContainer = new InvoicingModuleContainer({ db: env.DB, bucket: env.MEDIA_BUCKET,
+    factus: { apiUrl: env.FACTUS_API_URL,
+      getOperationalConfig: async () => {
+        const settings = await settingsGateway.getSettings();
+        return { mode: settings.factusMode || 'disabled', numberingRangeId: settings.factusNumberingRangeId,
+          creditNoteNumberingRangeId: settings.factusCreditNoteNumberingRangeId };
+      },
+      sandbox: { clientId: env.FACTUS_SANDBOX_CLIENT_ID, clientSecret: env.FACTUS_SANDBOX_CLIENT_SECRET,
+        username: env.FACTUS_SANDBOX_USERNAME, password: env.FACTUS_SANDBOX_PASSWORD },
+      production: { clientId: env.FACTUS_PRODUCTION_CLIENT_ID, clientSecret: env.FACTUS_PRODUCTION_CLIENT_SECRET,
+        username: env.FACTUS_PRODUCTION_USERNAME, password: env.FACTUS_PRODUCTION_PASSWORD } } });
   const invoicingGateway = new InProcessInvoicingGateway(new InvoicingPublicApi(invoicingContainer));
 
   const notificationsContainer = new NotificationsModuleContainer({

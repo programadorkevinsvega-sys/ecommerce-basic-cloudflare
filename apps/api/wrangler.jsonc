@@ -21,7 +21,7 @@
     {
       "binding": "DB",
       "database_name": "ecommerce-vega-production",
-      "database_id": "372088f2-d700-4155-9057-6595815a005e",
+      "database_id": "bfb3ba3f-5e2a-4c33-9b93-0a5d7c04b6ef",
       "migrations_dir": "migrations"
     }
   ],
@@ -71,6 +71,7 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
+    "FACTUS_API_URL": "https://api.factus.com.co",
     "MI_PAQUETE_API_URL": "https://api-v2.mpr.mipaquete.com",
     "RESEND_FROM_EMAIL": "Vega Store <no-reply@jnmtortas.com>"
   }

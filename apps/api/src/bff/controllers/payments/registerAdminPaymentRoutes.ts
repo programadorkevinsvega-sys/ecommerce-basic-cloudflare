@@ -11,6 +11,7 @@ import { NotificationsGateway } from '../../gateways/notifications/Notifications
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
+import { isFactusCustomerEmailEnabled } from './isFactusCustomerEmailEnabled.js';
 
 type PaymentRouteDependencies = { paymentsGateway: PaymentsGateway; ordersGateway: OrdersGateway; identityGateway: IdentityGateway; realtimeGateway: RealtimeGateway; inventoryGateway: InventoryGateway; invoicingGateway: InvoicingGateway; notificationsGateway: NotificationsGateway; auditGateway: AuditGateway; settingsGateway: SettingsGateway };
 
@@ -42,7 +43,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
       ? body.receiptNumber.trim().slice(0, 120) : `LOCAL-${order.id.slice(-8).toUpperCase()}`;
     const cod = await d.paymentsGateway.recordCodCollection({ orderId: order.id, amountInCents: body.amountInCents, collectedBy: admin.actorId, receiptNumber, notes: body.notes });
     await d.ordersGateway.updateOrderStatus({ orderId: order.id, status: 'delivered', paymentStatus: 'collected', note: `Recaudo contra entrega registrado por ${admin.actorId}`, actor: admin.actorId });
-    await processOrderPaymentSuccess({ orderId: order.id, traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown', paymentMethod: 'cash_on_delivery', paymentReference: receiptNumber, actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
+    await processOrderPaymentSuccess({ orderId: order.id, traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown', paymentMethod: 'cash_on_delivery', paymentReference: receiptNumber, factusCustomerEmailEnabled: isFactusCustomerEmailEnabled(c.env), actor: admin.actorId, ordersGateway: d.ordersGateway, inventoryGateway: d.inventoryGateway, invoicingGateway: d.invoicingGateway, notificationsGateway: d.notificationsGateway, auditGateway: d.auditGateway, realtimeGateway: d.realtimeGateway, settingsGateway: d.settingsGateway });
     return c.json({ success: true, collection: cod.toJSON() });
   });
 

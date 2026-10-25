@@ -2,7 +2,7 @@ import { Order } from '../../../modules/orders/domain/entities/Order.js';
 import { calculateOrderTaxCents } from './calculateOrderTaxCents.js';
 
 export class OrderEmailTemplates {
-  public static renderCustomerPaidEmail(order: Order, invoiceNumber: string, txId?: string): string {
+  public static renderCustomerPaidEmail(order: Order, invoiceNumber: string, txId?: string, factusEmailEnabled = false): string {
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
     const subtotalFormatted = (order.subtotalCents / 100).toLocaleString('es-CO');
     const taxFormatted = (calculateOrderTaxCents(order) / 100).toLocaleString('es-CO');
@@ -16,10 +16,10 @@ export class OrderEmailTemplates {
           <p style="color:#64748b;margin:0.25rem 0 0 0;font-size:0.9rem;">¡Pago Aprobado y Confirmado con Éxito!</p>
         </div>
         <p>Hola <strong>${order.customerName}</strong>, hemos recibido la confirmación de tu pago a través de <strong>Wompi</strong>.</p>
-        <p>Adjuntamos el PDF de tu factura para que puedas guardarlo.</p>
+        <p>${factusEmailEnabled ? 'Factus enviará la factura electrónica a este correo cuando DIAN la valide.' : 'La emisión electrónica de la factura está pendiente de configuración. Este mensaje confirma tu pago y pedido.'}</p>
         <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin:1.5rem 0;border:1px solid #e2e8f0;font-size:0.9rem;">
           <div><strong>Número de Pedido:</strong> #${order.id}</div>
-          <div><strong>Factura Comercial:</strong> <span style="color:#0284c7;font-weight:700;">#${invoiceNumber}</span></div>
+          <div><strong>Referencia interna:</strong> <span style="color:#0284c7;font-weight:700;">#${invoiceNumber}</span></div>
           <div><strong>Referencia / Tx Wompi:</strong> ${txId || 'Validado por pasarela'}</div>
           <div><strong>Método de Pago:</strong> Pago en línea (Wompi)</div>
         </div>

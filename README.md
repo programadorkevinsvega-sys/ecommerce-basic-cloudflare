@@ -83,7 +83,7 @@ Este cuadro describe capacidades presentes en el repositorio; no implica por sí
 | Carrito, checkout, pedidos | `cart`, `orders`, `inventory` | ✅ | ✅ |
 | Pagos en línea con **Wompi** | `payments` | ✅ | ✅ |
 | Notificaciones de pagos | `realtime` | ✅ Lectura incremental autenticada desde D1 | ✅ Solo las asociadas a su sesión/propiedad |
-| **Facturas** generadas y almacenadas con todos los detalles | `invoicing` | ✅ | ✅ (solo las suyas) |
+| **Facturas comerciales y transmisión electrónica Factus** | `invoicing` | ✅ Emisión interna; integración Factus configurable | ✅ (solo las suyas) |
 | **Pago contra entrega** configurable por producto | `catalog` + `orders` + `payments` | ✅ | ✅ |
 | **Entrega local o envío nacional** | `orders` + `shipping` + `catalog` | ✅ Zonas locales y transportadora configuradas por separado | ✅ Local según zonas de Medellín/Valle de Aburrá; nacional cotizado por MiPaquete |
 | Productos con descuento | `promotions`, `catalog` | ✅ | ✅ |

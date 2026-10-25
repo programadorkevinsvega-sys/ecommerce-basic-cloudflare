@@ -14,6 +14,8 @@ export interface ProcessPaymentSuccessParams {
   traceId: string;
   paymentMethod: string;
   paymentReference?: string;
+  paymentMethodCode?: string;
+  factusCustomerEmailEnabled?: boolean;
   actor: string;
   ordersGateway: OrdersGateway;
   inventoryGateway: InventoryGateway;
@@ -30,6 +32,8 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
     traceId,
     paymentMethod,
     paymentReference,
+    paymentMethodCode,
+    factusCustomerEmailEnabled,
     actor,
     ordersGateway,
     inventoryGateway,
@@ -71,6 +75,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       currency: 'COP',
       paymentMethod,
       paymentReference,
+      traceId,
       snapshot: {
         orderId: order.id,
         lines: order.lines.map((l) => ({
@@ -87,11 +92,15 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
           email: order.customerEmail,
           taxId: order.customerTaxId || null,
           phone: order.customerPhone,
+          documentType: order.customerTaxIdType,
+          legalOrganizationCode: order.customerLegalOrganizationCode,
+          municipalityCode: String(order.shippingAddress?.daneCode || '').replace(/\D/g, '').slice(0, 5),
         },
         shippingAddress: {
           addressLine: order.shippingAddress?.addressLine || '',
           municipality: order.shippingAddress?.municipality || '',
           department: order.shippingAddress?.department || '',
+          daneCode: order.shippingAddress?.daneCode,
         },
         company: storeSettings ? {
           storeName: storeSettings.storeName,
@@ -105,6 +114,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
         } : undefined,
         subtotalCents: order.subtotalCents,
         taxCents,
+        taxRatePercent: Number(storeSettings?.taxRatePercent || 0),
         shippingCostCents: Math.max(0, order.shippingCostCents - order.shippingDiscountCents),
         shippingCollectionCents: order.shippingCollectionCents,
         transactionFeeCents: order.transactionFeeCents,
@@ -112,6 +122,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
         totalCents: order.totalCents,
         currency: 'COP',
         paymentMethod,
+        paymentMethodCode: paymentMethodCode || (paymentMethod === 'cash_on_delivery' ? '10' : undefined),
         paymentReference,
       },
     });
@@ -125,16 +136,14 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
   // 3. Enviar emails transaccionales con Resend (Al Cliente Y a la Empresa)
   try {
     const invoiceAttachment = await createInvoiceAttachment(invoicingGateway, invoiceId, invoiceNumber);
-    if (!invoiceAttachment) throw new Error('No fue posible preparar el PDF de la factura');
     // 3.1 Al Cliente
-    const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference);
+    const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference, factusCustomerEmailEnabled);
     await notificationsGateway.sendEmail({
       recipientEmail: order.customerEmail,
       templateName: 'order_confirmed_customer',
-      subject: `¡Pago Confirmado! Pedido #${order.id} ${invoiceNumber ? '- Factura ' + invoiceNumber : ''}`,
+      subject: `¡Pago confirmado! Pedido #${order.id}`,
       idempotencyKey: `email_cust_${order.id}`,
       html: customerHtml,
-      attachments: [invoiceAttachment],
     });
 
     // 3.2 A la Empresa / Administrador
@@ -148,7 +157,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
       subject: `🚨 [NUEVA VENTA] Pedido #${order.id} — Factura #${invoiceNumber} ($${totalFormatted} COP)`,
       idempotencyKey: `email_admin_${order.id}`,
       html: adminHtml,
-      attachments: [invoiceAttachment],
+      ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     });
   } catch {
     console.error(JSON.stringify({ event: 'payments.confirmation_email_failed', order_id: order.id, trace_id: traceId }));

@@ -11,7 +11,8 @@ export function renderInvoicesManagementSection(): string {
     <div id="credit-note-modal" class="invoice-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="credit-note-title">
       <button class="invoice-modal-backdrop" type="button" aria-label="Cerrar nota crédito" onclick="closeCreditNoteModal()"></button>
       <section class="invoice-modal-dialog"><header><div><h2 id="credit-note-title">Emitir nota crédito</h2><p id="cn-modal-invoice-num">Factura: #---</p></div><button type="button" class="invoice-modal-close" aria-label="Cerrar" onclick="closeCreditNoteModal()">×</button></header>
-        <div class="invoice-modal-field"><label for="cn-reason">Motivo</label><input type="text" id="cn-reason" placeholder="Devolución de producto o corrección" /></div>
+        <div class="invoice-modal-field"><label for="cn-concept">Concepto DIAN</label><select id="cn-concept"><option value="1">Devolución parcial de bienes o no aceptación parcial del servicio</option><option value="2">Anulación de factura electrónica</option><option value="3">Rebaja o descuento parcial o total</option><option value="4">Ajuste de precio</option><option value="5">Descuento comercial por pronto pago</option><option value="6">Descuento comercial por volumen</option></select></div>
+        <div class="invoice-modal-field"><label for="cn-reason">Detalle del motivo</label><input type="text" id="cn-reason" maxlength="500" placeholder="Describe la causa de la nota crédito" /></div>
         <div class="invoice-modal-field"><label for="cn-amount">Monto de la nota (COP)</label><input type="text" id="cn-amount" data-cop-input inputmode="numeric" autocomplete="off" placeholder="1.728.550" /></div>
         <footer><button type="button" class="invoice-secondary-button" onclick="closeCreditNoteModal()">Cancelar</button><button type="button" class="btn-primary" onclick="submitCreditNote()">Emitir nota crédito</button></footer>
       </section>

@@ -70,8 +70,10 @@ export class InvoicingController {
 
       const invoiceId = c.req.param('id');
       const body = await c.req.json();
-      if (typeof body.reason !== 'string' || body.reason.trim().length === 0 || body.reason.length > 500 || !Number.isSafeInteger(body.amountInCents) || body.amountInCents <= 0) {
-        return c.json({ error: 'reason y amountInCents son requeridos' }, 400);
+      if (typeof body.reason !== 'string' || body.reason.trim().length === 0 || body.reason.length > 500 ||
+        !Number.isSafeInteger(body.amountInCents) || body.amountInCents <= 0 ||
+        !['1', '2', '3', '4', '5', '6'].includes(body.correctionConceptCode)) {
+        return c.json({ error: 'Motivo, concepto DIAN y monto válido son requeridos' }, 400);
       }
 
       try {
@@ -80,6 +82,8 @@ export class InvoicingController {
           reason: body.reason.trim(),
           amountInCents: body.amountInCents,
           issuedBy: adminRes.actorId,
+          correctionConceptCode: body.correctionConceptCode,
+          traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown',
         });
 
         await auditGateway.record({

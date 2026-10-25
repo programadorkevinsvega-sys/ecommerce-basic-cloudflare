@@ -1,4 +1,5 @@
 export type InvoiceStatus = 'issued' | 'credit_note_applied' | 'voided';
+export type ElectronicInvoiceStatus = 'not_configured' | 'pending' | 'accepted' | 'rejected';
 
 export interface InvoiceLineSnapshot {
   productId: string;
@@ -18,11 +19,15 @@ export interface InvoiceSnapshot {
     email: string;
     taxId?: string | null;
     phone?: string | null;
+    documentType?: 'CC' | 'NIT';
+    legalOrganizationCode?: '1' | '2';
+    municipalityCode?: string;
   };
   shippingAddress: {
     addressLine: string;
     municipality: string;
     department: string;
+    daneCode?: string;
   };
   company?: {
     storeName?: string;
@@ -37,6 +42,7 @@ export interface InvoiceSnapshot {
   subtotalCents: number;
   taxCents: number;
   taxIncluded?: boolean;
+  taxRatePercent?: number;
   shippingCostCents: number;
   shippingCollectionCents?: number;
   transactionFeeCents?: number;
@@ -45,6 +51,7 @@ export interface InvoiceSnapshot {
   currency: string;
   paymentMethod: string;
   paymentReference?: string | null;
+  paymentMethodCode?: string;
 }
 
 export interface InvoiceProps {
@@ -65,6 +72,11 @@ export interface InvoiceProps {
   currency?: string;
   paymentMethod: string;
   paymentReference?: string | null;
+  electronicStatus?: ElectronicInvoiceStatus;
+  electronicNumber?: string | null;
+  cufe?: string | null;
+  electronicEmailSent?: boolean;
+  electronicErrors?: Record<string, string> | null;
   status?: InvoiceStatus;
   pdfR2Key?: string | null;
   snapshot: InvoiceSnapshot;
@@ -84,12 +96,18 @@ export class Invoice {
   public readonly subtotalCents: number;
   public readonly taxCents: number;
   public readonly taxIncluded: boolean;
+  public readonly taxRatePercent: number;
   public readonly shippingCostCents: number;
   public readonly discountCents: number;
   public readonly totalCents: number;
   public readonly currency: string;
   public readonly paymentMethod: string;
   public readonly paymentReference: string | null;
+  public electronicStatus: ElectronicInvoiceStatus;
+  public electronicNumber: string | null;
+  public cufe: string | null;
+  public electronicEmailSent: boolean;
+  public electronicErrors: Record<string, string> | null;
   public status: InvoiceStatus;
   public pdfR2Key: string | null;
   public readonly snapshot: InvoiceSnapshot;
@@ -112,12 +130,18 @@ export class Invoice {
     this.subtotalCents = props.subtotalCents;
     this.taxCents = props.taxCents;
     this.taxIncluded = props.taxIncluded ?? false;
+    this.taxRatePercent = Number(props.snapshot.taxRatePercent ?? 0);
     this.shippingCostCents = props.shippingCostCents;
     this.discountCents = props.discountCents || 0;
     this.totalCents = props.totalCents;
     this.currency = props.currency || 'COP';
     this.paymentMethod = props.paymentMethod;
     this.paymentReference = props.paymentReference || null;
+    this.electronicStatus = props.electronicStatus || 'not_configured';
+    this.electronicNumber = props.electronicNumber || null;
+    this.cufe = props.cufe || null;
+    this.electronicEmailSent = props.electronicEmailSent ?? false;
+    this.electronicErrors = props.electronicErrors || null;
     this.status = props.status || 'issued';
     this.pdfR2Key = props.pdfR2Key || null;
     this.snapshot = props.snapshot;
@@ -138,12 +162,18 @@ export class Invoice {
       subtotalCents: this.subtotalCents,
       taxCents: this.taxCents,
       taxIncluded: this.taxIncluded,
+      taxRatePercent: this.taxRatePercent,
       shippingCostCents: this.shippingCostCents,
       discountCents: this.discountCents,
       totalCents: this.totalCents,
       currency: this.currency,
       paymentMethod: this.paymentMethod,
       paymentReference: this.paymentReference,
+      electronicStatus: this.electronicStatus,
+      electronicNumber: this.electronicNumber,
+      cufe: this.cufe,
+      electronicEmailSent: this.electronicEmailSent,
+      electronicErrors: this.electronicErrors,
       status: this.status,
       pdfR2Key: this.pdfR2Key,
       snapshot: this.snapshot,

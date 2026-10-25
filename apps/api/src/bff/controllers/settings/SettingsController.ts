@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
+import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 
 const updateSettingsSchema = z.object({
   storeName: z.string().min(1).max(100).optional(),
@@ -16,6 +17,9 @@ const updateSettingsSchema = z.object({
   companyAddress: z.string().max(200).optional(),
   companyCity: z.string().max(100).optional(),
   companyCountry: z.string().max(100).optional(),
+  factusMode: z.enum(['disabled', 'sandbox', 'production']).optional(),
+  factusNumberingRangeId: z.string().max(40).optional(),
+  factusCreditNoteNumberingRangeId: z.string().max(40).optional(),
   socialInstagramUrl: socialUrlSchema('instagram.com'),
   socialTiktokUrl: socialUrlSchema('tiktok.com'),
   socialFacebookUrl: socialUrlSchema('facebook.com'),
@@ -23,7 +27,7 @@ const updateSettingsSchema = z.object({
 }).strict();
 
 export class SettingsController {
-  public static createRoutes(gateway: SettingsGateway, identityGateway: IdentityGateway): Hono {
+  public static createRoutes(gateway: SettingsGateway, identityGateway: IdentityGateway, auditGateway?: AuditGateway): Hono {
     const router = new Hono();
 
     router.get('/', createAuthMiddleware(identityGateway, 'admin', 'settings:read'), async (c) => {
@@ -45,6 +49,12 @@ export class SettingsController {
         }
 
         const updated = await gateway.updateSettings(parsed.data);
+        const factusChanges = Object.fromEntries(Object.entries(parsed.data).filter(([key]) => key.startsWith('factus')));
+        if (Object.keys(factusChanges).length && auditGateway) await auditGateway.record({
+          actorId: c.get('actorId'), actorType: 'admin', action: 'settings.factus_configuration.updated',
+          entityType: 'settings_store', entityId: 'default', changes: factusChanges,
+          traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId,
+        });
         return c.json({ data: updated });
       } catch (error) {
         return c.json({ error: 'Error al actualizar la configuración' }, 500);

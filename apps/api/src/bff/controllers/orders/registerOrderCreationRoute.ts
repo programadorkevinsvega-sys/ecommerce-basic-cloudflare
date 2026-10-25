@@ -35,8 +35,17 @@ export function registerOrderCreationRoute(
   app.post('/api/v1/orders', async (c) => {
     let body: any;
     try { body = await c.req.json(); } catch { return c.json({ error: 'Body JSON inválido' }, 400); }
-    if (!body.customerEmail || !body.customerName || !body.customerPhone) {
+    if (typeof body.customerEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.customerEmail) ||
+      typeof body.customerName !== 'string' || body.customerName.trim().length < 2 || body.customerName.length > 180 ||
+      typeof body.customerPhone !== 'string' || body.customerPhone.trim().length < 7 || body.customerPhone.length > 30) {
       return c.json({ error: 'customerEmail, customerName y customerPhone son requeridos' }, 400);
+    }
+    if (typeof body.customerTaxId !== 'string' || body.customerTaxId.trim().length < 5 || body.customerTaxId.trim().length > 30 ||
+      !['CC', 'NIT'].includes(body.customerTaxIdType) || !['1', '2'].includes(body.customerLegalOrganizationCode)) {
+      return c.json({ error: 'Identificación tributaria, tipo de documento y tipo de persona son requeridos' }, 400);
+    }
+    if (body.customerLegalOrganizationCode === '1' && body.customerTaxIdType !== 'NIT') {
+      return c.json({ error: 'Las personas jurídicas deben identificarse con NIT' }, 400);
     }
     if (!body.paymentMethod || !['wompi', 'cash_on_delivery'].includes(body.paymentMethod)) {
       return c.json({ error: 'paymentMethod debe ser wompi o cash_on_delivery' }, 400);
@@ -111,6 +120,8 @@ export function registerOrderCreationRoute(
       const order = await deps.orders.createOrder({
         customerId, guestCartIdHash, customerEmail: body.customerEmail, customerName: body.customerName,
         customerPhone: body.customerPhone, customerTaxId: body.customerTaxId || null, shippingAddress,
+        customerTaxIdType: body.customerTaxIdType,
+        customerLegalOrganizationCode: body.customerLegalOrganizationCode,
         shippingZoneId: zone.id, shippingCostCents,
         shippingDiscountCents,
         shippingCollectionCents: effectiveChargeMode === 'collect_at_delivery' ? quotedShippingCents : 0,

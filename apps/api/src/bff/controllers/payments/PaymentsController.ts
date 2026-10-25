@@ -18,6 +18,7 @@ import { hasReservedStock } from './hasReservedStock.js';
 import { hashGuestCartId } from '../../security/GuestCartCapability.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createShipmentForEligibleOrder } from '../shipping/createShipmentForEligibleOrder.js';
+import { isFactusCustomerEmailEnabled } from './isFactusCustomerEmailEnabled.js';
 
 export class PaymentsController {
   public static createRoutes(
@@ -159,6 +160,8 @@ export class PaymentsController {
           orderId: res.orderId,
           traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown',
           paymentMethod: 'wompi',
+          paymentMethodCode: resolveFactusPaymentMethodCode(canonical.payment_method),
+          factusCustomerEmailEnabled: isFactusCustomerEmailEnabled(c.env, (await settingsGateway.getSettings()).factusMode),
           paymentReference: String(canonical.id || ''),
           actor: 'wompi-webhook',
           ordersGateway,
@@ -192,4 +195,12 @@ export class PaymentsController {
 
     return app;
   }
+}
+
+function resolveFactusPaymentMethodCode(method: any): string {
+  const type = String(method?.type || '').toUpperCase();
+  if (type === 'CARD') return String(method?.extra?.card_type || '').toUpperCase() === 'DEBIT' ? '49' : '48';
+  if (['PSE', 'NEQUI', 'BANCOLOMBIA_TRANSFER'].includes(type)) return '47';
+  if (type === 'CASH') return '10';
+  return '1';
 }

@@ -1,9 +1,12 @@
 import { Invoice } from '../../../../domain/entities/Invoice.js';
 import { CreditNote } from '../../../../domain/entities/CreditNote.js';
 import { IInvoiceRepository } from '../../../../domain/ports/IInvoiceRepository.js';
+import { D1CreditNoteRepository } from './D1CreditNoteRepository.js';
+import { invoiceFilters, mapD1Invoice } from './InvoicePersistenceMapper.js';
 
 export class D1InvoiceRepository implements IInvoiceRepository {
-  constructor(private readonly db: D1Database) {}
+  private readonly creditNotes: D1CreditNoteRepository;
+  constructor(private readonly db: D1Database) { this.creditNotes = new D1CreditNoteRepository(db); }
 
   public async getNextInvoiceNumber(prefix = 'FAC'): Promise<string> {
     // Incremento atómico en D1
@@ -27,11 +30,17 @@ export class D1InvoiceRepository implements IInvoiceRepository {
         id, invoice_number, order_id, customer_id, customer_name, customer_email,
         customer_tax_id, customer_phone, subtotal_cents, tax_cents, shipping_cost_cents,
         discount_cents, total_cents, currency, payment_method, payment_reference,
-        status, pdf_r2_key, snapshot_json, created_at, updated_at, tax_included
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        status, pdf_r2_key, snapshot_json, created_at, updated_at, tax_included,
+        electronic_status, electronic_number, cufe, electronic_email_sent, electronic_errors_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         status = excluded.status,
         pdf_r2_key = excluded.pdf_r2_key,
+        electronic_status = excluded.electronic_status,
+        electronic_number = excluded.electronic_number,
+        cufe = excluded.cufe,
+        electronic_email_sent = excluded.electronic_email_sent,
+        electronic_errors_json = excluded.electronic_errors_json,
         updated_at = excluded.updated_at
     `;
 
@@ -57,23 +66,64 @@ export class D1InvoiceRepository implements IInvoiceRepository {
       JSON.stringify(invoice.snapshot),
       invoice.createdAt,
       invoice.updatedAt,
-      invoice.taxIncluded ? 1 : 0
+      invoice.taxIncluded ? 1 : 0,
+      invoice.electronicStatus,
+      invoice.electronicNumber,
+      invoice.cufe,
+      invoice.electronicEmailSent ? 1 : 0,
+      invoice.electronicErrors ? JSON.stringify(invoice.electronicErrors) : null
     ).run();
+  }
+
+  public async createForElectronicIssue(invoice: Invoice, traceId: string): Promise<void> {
+    const eventId = crypto.randomUUID();
+    const payload = JSON.stringify({ invoiceId: invoice.id });
+    const invoiceInsert = this.db.prepare(`INSERT INTO invoicing_invoices (
+      id, invoice_number, order_id, customer_id, customer_name, customer_email, customer_tax_id, customer_phone,
+      subtotal_cents, tax_cents, shipping_cost_cents, discount_cents, total_cents, currency, payment_method,
+      payment_reference, status, pdf_r2_key, snapshot_json, created_at, updated_at, tax_included,
+      electronic_status, electronic_eligible
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1)`);
+    const outboxInsert = this.db.prepare(`INSERT INTO invoicing_outbox_events
+      (id, event_type, payload_json, created_at, event_id, event_version, payload, trace_id, status, attempts)
+      VALUES (?, 'invoicing.invoice.issue.requested', ?, ?, ?, 1, ?, ?, 'pending', 0)`);
+    await this.db.batch([
+      invoiceInsert.bind(invoice.id, invoice.invoiceNumber, invoice.orderId, invoice.customerId, invoice.customerName,
+        invoice.customerEmail, invoice.customerTaxId, invoice.customerPhone, invoice.subtotalCents, invoice.taxCents,
+        invoice.shippingCostCents, invoice.discountCents, invoice.totalCents, invoice.currency, invoice.paymentMethod,
+        invoice.paymentReference, invoice.status, invoice.pdfR2Key, JSON.stringify(invoice.snapshot), invoice.createdAt,
+        invoice.updatedAt, invoice.taxIncluded ? 1 : 0),
+      outboxInsert.bind(eventId, payload, invoice.createdAt, eventId, payload, traceId.slice(0, 100)),
+    ]);
+  }
+
+  public async updateElectronicResult(invoice: Invoice): Promise<void> {
+    await this.db.prepare(`UPDATE invoicing_invoices SET electronic_status = ?, electronic_number = ?, cufe = ?,
+      electronic_email_sent = ?, electronic_errors_json = ?, updated_at = ? WHERE id = ?`)
+      .bind(invoice.electronicStatus, invoice.electronicNumber, invoice.cufe, invoice.electronicEmailSent ? 1 : 0,
+        invoice.electronicErrors ? JSON.stringify(invoice.electronicErrors) : null, invoice.updatedAt, invoice.id).run();
+  }
+
+  public async listPendingElectronic(limit: number): Promise<Invoice[]> {
+    const { results } = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE electronic_eligible = 1
+      AND electronic_status IN ('pending', 'not_configured') ORDER BY updated_at ASC LIMIT ?`)
+      .bind(Math.max(1, Math.min(limit, 50))).all<Record<string, unknown>>();
+    return (results || []).map(mapD1Invoice);
   }
 
   public async findById(id: string): Promise<Invoice | null> {
     const row = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE id = ?`).bind(id).first<Record<string, unknown>>();
-    return row ? this.mapRowToInvoice(row) : null;
+    return row ? mapD1Invoice(row) : null;
   }
 
   public async findByOrderId(orderId: string): Promise<Invoice | null> {
     const row = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE order_id = ?`).bind(orderId).first<Record<string, unknown>>();
-    return row ? this.mapRowToInvoice(row) : null;
+    return row ? mapD1Invoice(row) : null;
   }
 
   public async findByNumber(invoiceNumber: string): Promise<Invoice | null> {
     const row = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE invoice_number = ?`).bind(invoiceNumber).first<Record<string, unknown>>();
-    return row ? this.mapRowToInvoice(row) : null;
+    return row ? mapD1Invoice(row) : null;
   }
 
   public async list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
@@ -82,7 +132,7 @@ export class D1InvoiceRepository implements IInvoiceRepository {
     const where = invoiceFilters(filters);
     const res = await this.db.prepare(`SELECT * FROM invoicing_invoices${where.sql} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`)
       .bind(...where.values, limit, offset).all<Record<string, unknown>>();
-    return (res.results || []).map((r) => this.mapRowToInvoice(r));
+    return (res.results || []).map(mapD1Invoice);
   }
 
   public async count(filters?: { customerId?: string; query?: string }): Promise<number> {
@@ -93,77 +143,27 @@ export class D1InvoiceRepository implements IInvoiceRepository {
   }
 
   public async saveCreditNote(creditNote: CreditNote): Promise<void> {
-    await this.db
-      .prepare(`INSERT INTO invoicing_credit_notes (id, credit_note_number, invoice_id, reason, amount_in_cents, issued_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-      .bind(
-        creditNote.id,
-        creditNote.creditNoteNumber,
-        creditNote.invoiceId,
-        creditNote.reason,
-        creditNote.amountInCents,
-        creditNote.issuedBy,
-        creditNote.createdAt
-      )
-      .run();
+    return this.creditNotes.save(creditNote);
+  }
+
+  public async createCreditNoteForElectronicIssue(note: CreditNote, traceId: string): Promise<void> {
+    return this.creditNotes.createForElectronicIssue(note, traceId);
+  }
+
+  public async updateElectronicCreditNote(note: CreditNote): Promise<void> {
+    return this.creditNotes.updateElectronic(note);
+  }
+
+  public async findCreditNoteById(id: string): Promise<CreditNote | null> {
+    return this.creditNotes.findById(id);
+  }
+
+  public async listPendingElectronicCreditNotes(limit: number): Promise<CreditNote[]> {
+    return this.creditNotes.listPending(limit);
   }
 
   public async listCreditNotes(invoiceId: string): Promise<CreditNote[]> {
-    const res = await this.db
-      .prepare(`SELECT * FROM invoicing_credit_notes WHERE invoice_id = ? ORDER BY created_at DESC`)
-      .bind(invoiceId)
-      .all<Record<string, unknown>>();
-
-    return (res.results || []).map(
-      (r) =>
-        new CreditNote({
-          id: r.id as string,
-          creditNoteNumber: r.credit_note_number as string,
-          invoiceId: r.invoice_id as string,
-          reason: r.reason as string,
-          amountInCents: r.amount_in_cents as number,
-          issuedBy: r.issued_by as string,
-          createdAt: r.created_at as string,
-        })
-    );
+    return this.creditNotes.list(invoiceId);
   }
 
-  private mapRowToInvoice(r: Record<string, unknown>): Invoice {
-    return new Invoice({
-      id: r.id as string,
-      invoiceNumber: r.invoice_number as string,
-      orderId: r.order_id as string,
-      customerId: (r.customer_id as string) || null,
-      customerName: r.customer_name as string,
-      customerEmail: r.customer_email as string,
-      customerTaxId: (r.customer_tax_id as string) || null,
-      customerPhone: (r.customer_phone as string) || null,
-      subtotalCents: r.subtotal_cents as number,
-      taxCents: r.tax_cents as number,
-      taxIncluded: r.tax_included === 1,
-      shippingCostCents: r.shipping_cost_cents as number,
-      discountCents: (r.discount_cents as number) || 0,
-      totalCents: r.total_cents as number,
-      currency: (r.currency as string) || 'COP',
-      paymentMethod: r.payment_method as string,
-      paymentReference: (r.payment_reference as string) || null,
-      status: r.status as any,
-      pdfR2Key: (r.pdf_r2_key as string) || null,
-      snapshot: JSON.parse((r.snapshot_json as string) || '{}'),
-      createdAt: r.created_at as string,
-      updatedAt: r.updated_at as string,
-    });
-  }
-}
-
-function invoiceFilters(filters?: { customerId?: string; query?: string }): { sql: string; values: unknown[] } {
-  const clauses: string[] = [];
-  const values: unknown[] = [];
-  if (filters?.customerId) { clauses.push('customer_id = ?'); values.push(filters.customerId); }
-  if (filters?.query) {
-    const query = `%${filters.query.replace(/[\\%_]/g, '\\$&')}%`;
-    clauses.push("(invoice_number LIKE ? ESCAPE '\\' OR order_id LIKE ? ESCAPE '\\' OR customer_name LIKE ? ESCAPE '\\' OR customer_email LIKE ? ESCAPE '\\' OR CAST(ROUND(total_cents / 100.0) AS TEXT) LIKE ?)");
-    const digits = filters.query.replace(/\D/g, '');
-    values.push(query, query, query, query, digits ? `%${digits}%` : '');
-  }
-  return { sql: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '', values };
 }

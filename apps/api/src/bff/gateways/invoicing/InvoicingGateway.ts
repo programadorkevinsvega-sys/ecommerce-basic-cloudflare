@@ -5,6 +5,10 @@ import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/
 
 export interface InvoicingGateway {
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
+  processElectronicInvoice(invoiceId: string): Promise<void>;
+  reconcileElectronicInvoices(limit?: number): Promise<number>;
+  processElectronicCreditNote(creditNoteId: string): Promise<void>;
+  reconcileElectronicCreditNotes(limit?: number): Promise<number>;
   getInvoice(query: { id?: string; orderId?: string; invoiceNumber?: string }): Promise<Invoice | null>;
   getInvoiceDocument(invoiceId: string): Promise<{ stream: ReadableStream; sizeBytes: number; etag: string } | null>;
   listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]>;

@@ -59,7 +59,9 @@ function renderContactFields(): string {
     <div class="checkout-field"><label for="cust-name">Nombre completo *</label><input id="cust-name" type="text" autocomplete="name" required placeholder="Como aparece en tu documento"></div>
     <div class="checkout-field"><label for="cust-phone">Teléfono o WhatsApp *</label><input id="cust-phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="300 123 4567"><small>Lo usamos para coordinar la entrega.</small></div>
     <div class="checkout-field"><label for="cust-email">Correo electrónico *</label><input id="cust-email" type="email" autocomplete="email" required placeholder="nombre@correo.com"><small>Aquí recibirás la confirmación del pedido.</small></div>
-    <div class="checkout-field"><label for="cust-tax-id">Cédula o NIT *</label><input id="cust-tax-id" type="text" inputmode="numeric" autocomplete="off" required placeholder="Solo números, sin puntos"></div>
+    <div class="checkout-field"><label for="cust-tax-type">Tipo de identificación *</label><select id="cust-tax-type" required onchange="if(this.value==='CC')document.getElementById('cust-organization').value='2'"><option value="CC">Cédula de ciudadanía</option><option value="NIT">NIT</option></select></div>
+    <div class="checkout-field"><label for="cust-organization">Tipo de persona *</label><select id="cust-organization" required onchange="if(this.value==='1')document.getElementById('cust-tax-type').value='NIT'"><option value="2">Persona natural</option><option value="1">Persona jurídica</option></select></div>
+    <div class="checkout-field"><label for="cust-tax-id">Número de identificación *</label><input id="cust-tax-id" type="text" inputmode="numeric" autocomplete="off" required placeholder="Sin puntos ni espacios"></div>
   </div></fieldset>`;
 }
 

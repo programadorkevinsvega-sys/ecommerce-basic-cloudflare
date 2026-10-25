@@ -53,8 +53,16 @@ export function renderInvoicingAdminScript(): string {
         '<td><code>#' + escapeHtml(invoice.orderId.replace('ord-', '')) + '</code></td>' +
         '<td><div class="invoice-client"><strong>' + escapeHtml(invoice.customerName) + '</strong><small>' + escapeHtml(invoice.customerEmail) + '</small></div></td>' +
         '<td><strong class="invoice-total">$' + Math.round(Number(invoice.totalCents) / 100).toLocaleString('es-CO') + '</strong></td>' +
-        '<td><span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span></td>' +
+        '<td><span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span>' +
+        '<small class="invoice-electronic-status">DIAN: ' + escapeHtml(electronicStatusLabel(invoice.electronicStatus)) +
+        (invoice.electronicNumber ? ' · ' + escapeHtml(invoice.electronicNumber) : '') + '</small>' +
+        (invoice.cufe ? '<small class="invoice-electronic-status">CUFE: ' + escapeHtml(invoice.cufe) + '</small>' : '') +
+        (invoice.electronicErrors ? '<small class="invoice-electronic-status invoice-electronic-error">' + escapeHtml(Object.values(invoice.electronicErrors).join('; ')) + '</small>' : '') + '</td>' +
         '<td>' + escapeHtml(new Date(invoice.createdAt).toLocaleString('es-CO')) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
+    }
+
+    function electronicStatusLabel(status) {
+      return ({ accepted: 'Aceptada', pending: 'Pendiente de validación', rejected: 'Rechazada', not_configured: 'Proveedor sin configurar' })[status] || 'Sin estado';
     }
 
     function openCreditNoteModal(invoiceId, invoiceNumber, totalCents) {
@@ -62,6 +70,7 @@ export function renderInvoicingAdminScript(): string {
       document.getElementById('cn-modal-invoice-num').innerText = 'Factura: #' + invoiceNumber;
       window.setCopInputValue('cn-amount', Math.round(totalCents / 100));
       document.getElementById('cn-reason').value = '';
+      document.getElementById('cn-concept').value = '1';
       document.getElementById('credit-note-modal').style.display = 'flex';
     }
 
@@ -73,13 +82,14 @@ export function renderInvoicingAdminScript(): string {
     async function submitCreditNote() {
       if (!_activeCnInvoiceId) return;
       const reason = document.getElementById('cn-reason').value.trim();
+      const correctionConceptCode = document.getElementById('cn-concept').value;
       const amountInCents = window.copPesosToCents('cn-amount');
       if (!reason || !Number.isSafeInteger(amountInCents) || amountInCents <= 0) return alert('Por favor indica motivo y monto válido');
       const response = await fetch('/api/v1/admin/invoices/' + _activeCnInvoiceId + '/credit-notes', {
-        method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ reason, amountInCents }),
+        method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ reason, amountInCents, correctionConceptCode }),
       });
       if (response.ok) {
-        alert('¡Nota crédito emitida con éxito!');
+        alert('Solicitud de nota crédito guardada. La emisión DIAN queda en proceso de validación.');
         closeCreditNoteModal();
         loadAdminInvoices();
       } else {
