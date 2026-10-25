@@ -4,13 +4,19 @@ import { Invoice } from '../../../modules/invoicing/domain/entities/Invoice.js';
 import { CreditNote } from '../../../modules/invoicing/domain/entities/CreditNote.js';
 import { IssueInvoiceCommand } from '../../../modules/invoicing/application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/use-cases/CreateCreditNoteUseCase.js';
+import { NewNumberingRange, NumberingRangeFilters } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
 
 export class InProcessInvoicingGateway implements InvoicingGateway {
   constructor(private readonly publicApi: InvoicingPublicApi) {}
 
-  public listElectronicNumberingRanges() {
-    return this.publicApi.listElectronicNumberingRanges();
-  }
+  public listElectronicNumberingRanges(filters?: NumberingRangeFilters) { return this.publicApi.listElectronicNumberingRanges(filters); }
+  public getElectronicNumberingRange(id: string) { return this.publicApi.getElectronicNumberingRange(id); }
+  public listFactusSoftwareRanges() { return this.publicApi.listFactusSoftwareRanges(); }
+  public createElectronicNumberingRange(input: NewNumberingRange) { return this.publicApi.createElectronicNumberingRange(input); }
+  public toggleElectronicNumberingRange(id: string) { return this.publicApi.toggleElectronicNumberingRange(id); }
+  public updateElectronicNumberingRangeCurrent(id: string, current: number) { return this.publicApi.updateElectronicNumberingRangeCurrent(id, current); }
+  public deleteElectronicNumberingRange(id: string) { return this.publicApi.deleteElectronicNumberingRange(id); }
+  public restoreElectronicNumberingRange(id: string) { return this.publicApi.restoreElectronicNumberingRange(id); }
 
   public async issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice> {
     return this.publicApi.issueInvoice(cmd);

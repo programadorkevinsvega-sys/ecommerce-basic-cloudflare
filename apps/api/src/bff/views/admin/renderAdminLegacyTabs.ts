@@ -15,6 +15,7 @@ import { renderOrderTrackingAdminSection } from './renderOrderTrackingAdminSecti
 import { renderBlogManagementSection } from './renderBlogManagementSection.js';
 import { renderAdminReviewsSection } from './renderAdminReviewsSection.js';
 import { renderMenuManagementSection } from './renderMenuManagementSection.js';
+import { renderFactusRangesManagement } from './renderFactusRangesManagement.js';
 
 export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
   return `    <div id="tab-products" class="tab-content active">
@@ -109,9 +110,10 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
             <div><label for="factusInvoiceRange">Rango de facturas</label><input id="factusInvoiceRange" list="factusInvoiceRanges" value="${escapeHtml(props.settings.factusNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusInvoiceRanges"></datalist></div>
             <div><label for="factusCreditRange">Rango de notas crédito</label><input id="factusCreditRange" list="factusCreditRanges" value="${escapeHtml(props.settings.factusCreditNoteNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusCreditRanges"></datalist></div>
           </div>
-          <p class="settings-help">Consulta los rangos activos del entorno guardado. Si dejas un campo vacío, Factus selecciona automáticamente su rango predeterminado. Los rangos son autorizados en Factus; aquí solo se consultan y seleccionan.</p>
+          <p class="settings-help">Elige aquí el rango que usará cada documento. Si dejas un campo vacío, Factus usa su rango predeterminado. La administración completa de rangos está disponible abajo.</p>
           <div class="settings-actions"><button type="button" class="btn-secondary" id="loadFactusRanges">Consultar rangos activos</button><button type="button" class="btn-primary" id="saveFactusSettings">Guardar Factus</button></div><div id="factusSettingsMessage" class="msg" role="status"></div>
         </div>
+        ${renderFactusRangesManagement()}
       </section>
     </div>`;
 }

@@ -2,10 +2,17 @@ import { Invoice } from '../../../modules/invoicing/domain/entities/Invoice.js';
 import { CreditNote } from '../../../modules/invoicing/domain/entities/CreditNote.js';
 import { IssueInvoiceCommand } from '../../../modules/invoicing/application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/use-cases/CreateCreditNoteUseCase.js';
-import { ElectronicNumberingRange } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
+import { ElectronicNumberingRange, NewNumberingRange, NumberingRangeFilters } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
 
 export interface InvoicingGateway {
-  listElectronicNumberingRanges(): Promise<ElectronicNumberingRange[]>;
+  listElectronicNumberingRanges(filters?: NumberingRangeFilters): Promise<ElectronicNumberingRange[]>;
+  getElectronicNumberingRange(id: string): Promise<ElectronicNumberingRange>;
+  listFactusSoftwareRanges(): Promise<Array<Record<string, string | number | boolean | null>>>;
+  createElectronicNumberingRange(input: NewNumberingRange): Promise<ElectronicNumberingRange>;
+  toggleElectronicNumberingRange(id: string): Promise<ElectronicNumberingRange>;
+  updateElectronicNumberingRangeCurrent(id: string, current: number): Promise<ElectronicNumberingRange>;
+  deleteElectronicNumberingRange(id: string): Promise<void>;
+  restoreElectronicNumberingRange(id: string): Promise<void>;
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   processElectronicInvoice(invoiceId: string): Promise<void>;
   reconcileElectronicInvoices(limit?: number): Promise<number>;

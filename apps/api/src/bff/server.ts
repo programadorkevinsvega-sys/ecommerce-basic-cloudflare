@@ -39,6 +39,7 @@ import { PaymentsController } from './controllers/payments/PaymentsController.js
 import { RealtimeController } from './controllers/realtime/RealtimeController.js';
 import { StorefrontCheckoutController } from './controllers/checkout/StorefrontCheckoutController.js';
 import { InvoicingController } from './controllers/invoicing/InvoicingController.js';
+import { FactusNumberingRangesController } from './controllers/invoicing/FactusNumberingRangesController.js';
 import { CustomerAccountController } from './controllers/account/CustomerAccountController.js';
 import { CustomerAccountSecurityController } from './controllers/account/CustomerAccountSecurityController.js';
 import { AuditController } from './controllers/audit/AuditController.js';
@@ -124,6 +125,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   ));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway, cRoot.identityGateway));
   app.route('/', InvoicingController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway));
+  app.route('/', FactusNumberingRangesController.createRoutes(cRoot.invoicingGateway, cRoot.identityGateway, cRoot.auditGateway, cRoot.settingsGateway));
   app.route('/', AuditController.createRoutes(cRoot.auditGateway, cRoot.identityGateway));
 
   // Storefront Checkout Pages (/carrito, /checkout, /checkout/resultado) y Cuenta del cliente (/cuenta)

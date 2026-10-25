@@ -12,6 +12,8 @@ const numberingRangeSchema = z.object({
   start_date: z.string().max(30).nullable().optional(),
   end_date: z.string().max(30).nullable().optional(),
   is_expired: z.union([z.boolean(), z.number().int()]).optional(),
+  is_active: z.union([z.boolean(), z.number().int()]).optional(),
+  deleted_at: z.string().nullable().optional(),
 }).passthrough();
 
 const responseSchema = z.object({
@@ -23,4 +25,10 @@ export function parseFactusNumberingRangePage(input: unknown) {
   const parsed = responseSchema.safeParse(input);
   if (!parsed.success) throw new Error('FACTUS_NUMBERING_RANGES_INVALID_RESPONSE');
   return parsed.data;
+}
+
+export function parseFactusNumberingRange(input: unknown) {
+  const parsed = z.object({ data: numberingRangeSchema }).passthrough().safeParse(input);
+  if (!parsed.success) throw new Error('FACTUS_NUMBERING_RANGE_INVALID_RESPONSE');
+  return parsed.data.data;
 }

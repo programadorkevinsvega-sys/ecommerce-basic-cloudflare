@@ -8,7 +8,7 @@ import { ListInvoicesUseCase } from './application/use-cases/ListInvoicesUseCase
 import { CreateCreditNoteUseCase } from './application/use-cases/CreateCreditNoteUseCase.js';
 import { R2InvoiceDocumentStorageAdapter } from './infrastructure/adapters/R2InvoiceDocumentStorageAdapter.js';
 import { GetInvoiceDocumentUseCase } from './application/use-cases/GetInvoiceDocumentUseCase.js';
-import { ListElectronicNumberingRangesUseCase } from './application/use-cases/ListElectronicNumberingRangesUseCase.js';
+import { ManageElectronicNumberingRangesUseCase } from './application/use-cases/ManageElectronicNumberingRangesUseCase.js';
 
 export interface InvoicingModuleDependencies {
   db: D1Database;
@@ -31,14 +31,14 @@ export class InvoicingModuleContainer {
   public readonly listInvoicesUseCase: ListInvoicesUseCase;
   public readonly createCreditNoteUseCase: CreateCreditNoteUseCase;
   public readonly getInvoiceDocumentUseCase: GetInvoiceDocumentUseCase;
-  public readonly listElectronicNumberingRangesUseCase: ListElectronicNumberingRangesUseCase;
+  public readonly manageElectronicNumberingRangesUseCase: ManageElectronicNumberingRangesUseCase;
 
   constructor(deps: InvoicingModuleDependencies) {
     this.repo = new D1InvoiceRepository(deps.db);
     this.pdfAdapter = new PdfInvoiceAdapter(deps.bucket);
     this.getInvoiceDocumentUseCase = new GetInvoiceDocumentUseCase(this.repo, new R2InvoiceDocumentStorageAdapter(deps.bucket), this.pdfAdapter);
     this.electronicAdapter = new FactusElectronicInvoicingAdapter(deps.factus);
-    this.listElectronicNumberingRangesUseCase = new ListElectronicNumberingRangesUseCase(this.electronicAdapter);
+    this.manageElectronicNumberingRangesUseCase = new ManageElectronicNumberingRangesUseCase(this.electronicAdapter);
 
     this.issueInvoiceUseCase = new IssueInvoiceUseCase(this.repo, this.pdfAdapter);
     this.processElectronicInvoiceUseCase = new ProcessElectronicInvoiceUseCase(this.repo, this.electronicAdapter);

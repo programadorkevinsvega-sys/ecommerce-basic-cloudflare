@@ -1,10 +1,11 @@
 import { Invoice } from '../../domain/entities/Invoice.js';
 import { CreditNote } from '../../domain/entities/CreditNote.js';
-import { ElectronicInvoiceSubmissionResult, ElectronicNumberingRange, IElectronicInvoicingPort } from '../../domain/ports/IElectronicInvoicingPort.js';
+import { ElectronicInvoiceSubmissionResult, IElectronicInvoicingPort, NewNumberingRange, NumberingRangeFilters } from '../../domain/ports/IElectronicInvoicingPort.js';
 import { mapInvoiceToFactus } from './FactusInvoiceMapper.js';
 import { mapCreditNoteItems } from './FactusCreditNoteMapper.js';
 import { resolveFactusApiUrl } from './resolveFactusApiUrl.js';
-import { readFactusNumberingRanges } from './FactusNumberingRangeReader.js';
+import { FactusNumberingRangeManager } from './FactusNumberingRangeManager.js';
+import { paymentCode, pendingConflict, toResult } from './FactusSubmissionMapper.js';
 
 export interface FactusCredentials { clientId?: string; clientSecret?: string; username?: string; password?: string; }
 export interface FactusConfig {
@@ -12,7 +13,7 @@ export interface FactusConfig {
   numberingRangeId?: string; creditNoteNumberingRangeId?: string;
   getOperationalConfig?: () => Promise<{ mode: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
 }
-type FactusResponse = { data?: any; message?: string; errors?: unknown };
+type FactusResponse = { data?: any; message?: string; errors?: unknown; httpStatus?: number };
 
 export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPort {
   private token: string | null = null;
@@ -20,13 +21,20 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   private refreshToken: string | null = null;
   private tokenFlight: Promise<string | null> | null = null;
   private activeConfig: FactusConfig;
-  constructor(private readonly config: FactusConfig, private readonly fetcher: typeof fetch = fetch) { this.activeConfig = config; }
-
-  public async listNumberingRanges(): Promise<ElectronicNumberingRange[]> {
-    await this.loadOperationalConfig();
-    if (!this.mode() || !this.hasCredentials()) throw new Error('FACTUS_NOT_CONFIGURED');
-    return readFactusNumberingRanges((path) => this.request(path, { method: 'GET' }));
+  private readonly numberingRanges: FactusNumberingRangeManager;
+  constructor(private readonly config: FactusConfig, private readonly fetcher: typeof fetch = fetch) {
+    this.activeConfig = config;
+    this.numberingRanges = new FactusNumberingRangeManager((path, init = { method: 'GET' }) => this.request(path, init), () => this.ensureConfigured());
   }
+
+  public listNumberingRanges(filters?: NumberingRangeFilters) { return this.numberingRanges.list(filters); }
+  public getNumberingRange(id: string) { return this.numberingRanges.get(id); }
+  public listSoftwareAssociatedRanges() { return this.numberingRanges.associated(); }
+  public createNumberingRange(input: NewNumberingRange) { return this.numberingRanges.create(input); }
+  public toggleNumberingRange(id: string) { return this.numberingRanges.toggle(id); }
+  public updateNumberingRangeCurrent(id: string, current: number) { return this.numberingRanges.updateCurrent(id, current); }
+  public deleteNumberingRange(id: string) { return this.numberingRanges.delete(id); }
+  public restoreNumberingRange(id: string) { return this.numberingRanges.restore(id); }
 
   public async submitToTaxAuthority(invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {
     await this.loadOperationalConfig();
@@ -103,6 +111,11 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     this.activeConfig = { ...this.config, ...operational };
   }
 
+  private async ensureConfigured(): Promise<void> {
+    await this.loadOperationalConfig();
+    if (!this.mode() || !this.hasCredentials()) throw new Error('FACTUS_NOT_CONFIGURED');
+  }
+
   private credentials(): FactusCredentials {
     return this.activeConfig.credentials || {};
   }
@@ -130,9 +143,9 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
         const refreshed = await this.getAccessToken();
         if (refreshed) return this.request(path, init, true);
       }
-      if ([400, 422].includes(response.status)) return data;
+      if ([400, 422].includes(response.status)) return { ...data, httpStatus: response.status };
       if (!response.ok) throw new Error(`FACTUS_HTTP_${response.status}`);
-      return data;
+      return { ...data, httpStatus: response.status };
     } finally { clearTimeout(timeout); }
   }
 
@@ -160,39 +173,4 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     this.tokenExpiry = Date.now() + Math.max(60, (payload.expires_in || 3600) - 60) * 1000;
     return this.token;
   }
-}
-
-function toResult(data: any, reference: string, emailRequested = false): ElectronicInvoiceSubmissionResult {
-  const validated = data?.is_validated === true;
-  const errors = sanitizeErrors(data?.errors);
-  return { providerTransactionId: String(data?.reference_code || reference),
-    providerInvoiceNumber: typeof data?.number === 'string' ? data.number : undefined,
-    cufe: typeof data?.cufe === 'string' ? data.cufe : undefined,
-    dianValidationStatus: validated ? 'accepted' : errors && Object.keys(errors).length ? 'rejected' : 'pending',
-    emailSent: validated && (data?.send_email === true || emailRequested), errors };
-}
-
-function sanitizeErrors(raw: unknown): Record<string, string> | undefined {
-  if (!raw || typeof raw !== 'object') return undefined;
-  return Object.fromEntries(Object.entries(raw).slice(0, 30).map(([key, value]) => {
-    const safe = String(Array.isArray(value) ? value.join(' ') : value).slice(0, 300)
-      .replace(/[\w.+-]+@[\w.-]+\.[A-Z]{2,}/gi, '[correo]')
-      .replace(/\b\d{7,}\b/g, '[identificación]');
-    return [key.slice(0, 30), safe];
-  }));
-}
-
-function pendingConflict(reference: string): ElectronicInvoiceSubmissionResult {
-  return { providerTransactionId: reference, dianValidationStatus: 'pending', emailSent: false,
-    errors: { factusState: 'pending_conflict', status: 'Factus reporta el documento pendiente de respuesta DIAN; se consultará sin volver a crearlo.' } };
-}
-
-function paymentCode(invoice: Invoice): string {
-  if (invoice.snapshot.paymentMethodCode) return invoice.snapshot.paymentMethodCode;
-  const method = invoice.paymentMethod.toLowerCase();
-  if (method.includes('cash') || method.includes('contra')) return '10';
-  if (method.includes('debit')) return '49';
-  if (method.includes('credit') || method.includes('card') || method.includes('wompi')) return '48';
-  if (method.includes('transfer') || method.includes('pse') || method.includes('nequi')) return '47';
-  return '1';
 }

@@ -3,7 +3,7 @@ import { Invoice } from './domain/entities/Invoice.js';
 import { CreditNote } from './domain/entities/CreditNote.js';
 import { IssueInvoiceCommand } from './application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from './application/use-cases/CreateCreditNoteUseCase.js';
-import { ElectronicNumberingRange } from './domain/ports/IElectronicInvoicingPort.js';
+import { ElectronicNumberingRange, NewNumberingRange, NumberingRangeFilters } from './domain/ports/IElectronicInvoicingPort.js';
 
 export class InvoicingPublicApi {
   constructor(private readonly container: InvoicingModuleContainer) {}
@@ -12,9 +12,14 @@ export class InvoicingPublicApi {
     return this.container.issueInvoiceUseCase.execute(cmd);
   }
 
-  public listElectronicNumberingRanges(): Promise<ElectronicNumberingRange[]> {
-    return this.container.listElectronicNumberingRangesUseCase.execute();
-  }
+  public listElectronicNumberingRanges(filters?: NumberingRangeFilters): Promise<ElectronicNumberingRange[]> { return this.container.manageElectronicNumberingRangesUseCase.list(filters); }
+  public getElectronicNumberingRange(id: string): Promise<ElectronicNumberingRange> { return this.container.manageElectronicNumberingRangesUseCase.get(id); }
+  public listFactusSoftwareRanges() { return this.container.manageElectronicNumberingRangesUseCase.associated(); }
+  public createElectronicNumberingRange(input: NewNumberingRange) { return this.container.manageElectronicNumberingRangesUseCase.create(input); }
+  public toggleElectronicNumberingRange(id: string) { return this.container.manageElectronicNumberingRangesUseCase.toggle(id); }
+  public updateElectronicNumberingRangeCurrent(id: string, current: number) { return this.container.manageElectronicNumberingRangesUseCase.updateCurrent(id, current); }
+  public deleteElectronicNumberingRange(id: string) { return this.container.manageElectronicNumberingRangesUseCase.delete(id); }
+  public restoreElectronicNumberingRange(id: string) { return this.container.manageElectronicNumberingRangesUseCase.restore(id); }
 
   public async processElectronicInvoice(invoiceId: string): Promise<void> {
     return this.container.processElectronicInvoiceUseCase.execute(invoiceId);
