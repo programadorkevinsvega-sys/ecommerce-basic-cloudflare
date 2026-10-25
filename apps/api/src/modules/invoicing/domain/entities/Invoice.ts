@@ -8,6 +8,7 @@ export interface InvoiceLineSnapshot {
   quantity: number;
   unitPriceCents: number;
   totalCents: number;
+  electronicInvoiceEnabled?: boolean;
 }
 
 export interface InvoiceSnapshot {

@@ -49,9 +49,9 @@ export class InvoicingController {
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
       if (!hasPermission(adminRes.permissions, 'invoices:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
-      const parsed = invoicePageQuery.safeParse({ page: c.req.query('page') || '1', pageSize: c.req.query('pageSize') || '25', query: c.req.query('q') || undefined });
+      const parsed = invoicePageQuery.safeParse({ page: c.req.query('page') || '1', pageSize: c.req.query('pageSize') || '25', query: c.req.query('q') || undefined, electronicOnly: c.req.query('electronicOnly') === '1', electronicStatus: c.req.query('electronicStatus') || undefined });
       if (!parsed.success) return c.json({ error: 'Búsqueda o paginación inválida' }, 400);
-      const filters = { query: parsed.data.query?.trim() || undefined };
+      const filters = { query: parsed.data.query?.trim() || undefined, electronicOnly: parsed.data.electronicOnly, electronicStatus: parsed.data.electronicStatus };
       const [invoices, total] = await Promise.all([
         invoicingGateway.listInvoices({ ...filters, limit: parsed.data.pageSize, offset: (parsed.data.page - 1) * parsed.data.pageSize }),
         invoicingGateway.countInvoices(filters),
@@ -109,6 +109,8 @@ const invoicePageQuery = z.object({
   page: z.coerce.number().int().min(1).max(1_000_000),
   pageSize: z.coerce.number().int().min(1).max(50),
   query: z.string().max(120).optional(),
+  electronicOnly: z.boolean().default(false),
+  electronicStatus: z.enum(['pending', 'accepted', 'rejected', 'not_configured']).optional(),
 }).strict();
 
 function getSessionToken(authorization?: string, cookieHeader?: string, adminOnly = false): string | null {

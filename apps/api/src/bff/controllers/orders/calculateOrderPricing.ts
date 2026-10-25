@@ -3,7 +3,7 @@ import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.j
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 
 export interface AuthoritativeOrderPricing {
-  lines: Array<{ productId: string; productName: string; productSku: string; quantity: number; unitPriceCents: number }>;
+  lines: Array<{ productId: string; productName: string; productSku: string; quantity: number; unitPriceCents: number; electronicInvoiceEnabled: boolean }>;
   policyItems: Array<{ product: { productId: string; name: string; allowsCashOnDelivery: boolean; shippingScope: 'national' | 'local'; localCoverageZones: string[]; allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> }; quantity: number }>;
   subtotalCents: number;
   discountCents: number;
@@ -33,7 +33,7 @@ export async function calculateOrderPricing(
   const versions = new Set<number>();
   let allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> | null = null;
   const discountInputs: Array<{ productId: string; categoryIds: string[]; unitPriceCents: number; quantity: number }> = [];
-  const lineProducts = new Map<string, { productName: string; productSku: string }>();
+  const lineProducts = new Map<string, { productName: string; productSku: string; electronicInvoiceEnabled: boolean }>();
   for (const input of inputs as Array<{ productId?: unknown; quantity?: unknown }>) {
     const product = byId.get(String(input?.productId ?? ''));
     const quantity = Number(input?.quantity);
@@ -48,8 +48,11 @@ export async function calculateOrderPricing(
     if (product.stockQuantity < quantity) throw new Error('Inventario insuficiente');
     discountInputs.push({ productId: product.id, categoryIds: product.categoryIds,
       unitPriceCents: product.priceInCents, quantity });
-    lineProducts.set(product.id, { productName: product.name, productSku: product.sku });
+    lineProducts.set(product.id, { productName: product.name, productSku: product.sku, electronicInvoiceEnabled: product.electronicInvoiceEnabled === true });
     policyItems.push({ product: { productId: product.id, name: product.name, allowsCashOnDelivery: product.salePolicy.allowsCashOnDelivery, shippingScope: product.salePolicy.shippingScope, localCoverageZones: product.salePolicy.localCoverageZones, allowedPaymentMethods: productMethods }, quantity });
+  }
+  if (new Set([...lineProducts.values()].map((product) => product.electronicInvoiceEnabled)).size > 1) {
+    throw new Error('No puedes finalizar una compra que mezcle productos con y sin factura electrónica. Separa los productos en compras distintas.');
   }
   const evaluatedDiscounts = await promotions.evaluateCartDiscounts(discountInputs);
   const discountsByProduct = new Map(evaluatedDiscounts.map((discount) => [discount.productId, discount]));
@@ -58,7 +61,8 @@ export async function calculateOrderPricing(
     const unitPriceCents = discount?.finalPriceCents ?? item.unitPriceCents;
     if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0) throw new Error('Precio no válido');
     return { productId: item.productId, productName: lineProducts.get(item.productId)?.productName ?? 'Producto',
-      productSku: lineProducts.get(item.productId)?.productSku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents };
+      productSku: lineProducts.get(item.productId)?.productSku ?? item.productId.slice(0, 8), quantity: item.quantity, unitPriceCents,
+      electronicInvoiceEnabled: lineProducts.get(item.productId)?.electronicInvoiceEnabled ?? false };
   });
   let subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
   const couponCode = typeof couponInput === 'string' ? couponInput.trim() : '';

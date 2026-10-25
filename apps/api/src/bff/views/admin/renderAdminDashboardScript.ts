@@ -158,7 +158,7 @@ export function renderAdminDashboardScript(): string {
         document.getElementById('pSeoTitle').value = p.seoTitle || '';
         document.getElementById('pCanonical').value = p.canonicalUrl || '';
         document.getElementById('pSeoDesc').value = p.seoDescription || '';
-        document.getElementById('pNoindex').checked = Boolean(p.noindex);
+        document.getElementById('pNoindex').checked = Boolean(p.noindex); document.getElementById('pElectronicInvoice').checked = Boolean(p.electronicInvoiceEnabled);
 
         // Soporte de hasta 5 imágenes en edición
         if (Array.isArray(p.mediaIds)) {

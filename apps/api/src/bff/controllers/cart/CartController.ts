@@ -5,6 +5,7 @@ import { CartGateway } from '../../gateways/cart/CartGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { isValidGuestCartId } from '../../security/GuestCartCapability.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
+import { assertSingleElectronicInvoiceMode } from './assertSingleElectronicInvoiceMode.js';
 
 export class CartController {
   public static createRoutes(cartGateway: CartGateway, identityGateway: IdentityGateway, catalogGateway: CatalogGateway): Hono<{ Bindings: Env }> {
@@ -57,6 +58,9 @@ export class CartController {
       try { product = await catalogGateway.getProductById(body.productId); }
       catch { return c.json({ error: 'Producto no disponible' }, 404); }
       if (product.status !== 'published') return c.json({ error: 'Producto no disponible' }, 404);
+      const currentCart = await cartGateway.getCart(cartId, customerId);
+      try { await assertSingleElectronicInvoiceMode([...currentCart.items.map((item) => item.productId), body.productId], catalogGateway); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : 'No se pudo validar la modalidad de facturación' }, 409); }
       const cart = await cartGateway.addItem(
         cartId,
         body.productId,
@@ -105,6 +109,11 @@ export class CartController {
       if (!customerId) {
         return c.json({ error: 'No autorizado' }, 401);
       }
+      const [guestCart, customerCart] = await Promise.all([
+        cartGateway.getCart(guestCartId), cartGateway.getCart(guestCartId, customerId),
+      ]);
+      try { await assertSingleElectronicInvoiceMode([...guestCart.items, ...customerCart.items].map((item) => item.productId), catalogGateway); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : 'No se pudo validar la modalidad de facturación' }, 409); }
       const cart = await cartGateway.mergeCart(guestCartId, customerId);
       return c.json({ success: true, cart }, 200, { 'Cache-Control': 'private, no-store', Vary: 'Cookie' });
     });

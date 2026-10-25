@@ -11,7 +11,7 @@ export interface InvoicingGateway {
   reconcileElectronicCreditNotes(limit?: number): Promise<number>;
   getInvoice(query: { id?: string; orderId?: string; invoiceNumber?: string }): Promise<Invoice | null>;
   getInvoiceDocument(invoiceId: string): Promise<{ stream: ReadableStream; sizeBytes: number; etag: string } | null>;
-  listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]>;
-  countInvoices(filters?: { customerId?: string; query?: string }): Promise<number>;
+  listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]>;
+  countInvoices(filters?: { customerId?: string; query?: string; electronicOnly?: boolean; electronicStatus?: string }): Promise<number>;
   createCreditNote(cmd: CreateCreditNoteCommand): Promise<CreditNote>;
 }

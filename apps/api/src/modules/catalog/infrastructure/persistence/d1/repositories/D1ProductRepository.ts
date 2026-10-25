@@ -33,8 +33,8 @@ export class D1ProductRepository implements IProductRepository {
           id, name, slug, description, price_in_cents, supplier_cost_cents, target_margin_basis_points, pricing_target_type, target_profit_cents, packed_width_cm, packed_length_cm, packed_height_cm, packed_weight_grams, allowed_payment_methods, pricing_version, legacy_price_before_tax_cents, sku, stock_quantity,
           status, condition, specifications, brand, product_type, tags, guide_title, guide_content, related_blog_post_ids, barcode_gtin,
           seo_title, seo_description, canonical_url, og_image_id, noindex,
-          allows_cash_on_delivery, shipping_scope, sale_mode, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          allows_cash_on_delivery, shipping_scope, sale_mode, electronic_invoice_enabled, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           slug = excluded.slug,
@@ -71,6 +71,7 @@ export class D1ProductRepository implements IProductRepository {
           allows_cash_on_delivery = excluded.allows_cash_on_delivery,
           shipping_scope = excluded.shipping_scope,
           sale_mode = excluded.sale_mode,
+          electronic_invoice_enabled = excluded.electronic_invoice_enabled,
           updated_at = excluded.updated_at`
       ).bind(
         p.id, p.name, p.slug, p.description, p.priceInCents, p.supplierCostCents, p.targetMarginBasisPoints,
@@ -82,7 +83,7 @@ export class D1ProductRepository implements IProductRepository {
         p.seoTitle ?? null, p.seoDescription ?? null, p.canonicalUrl ?? null,
         p.ogImageId ?? null, p.noindex ? 1 : 0,
         p.salePolicy.allowsCashOnDelivery ? 1 : 0, p.salePolicy.shippingScope,
-        p.salePolicy.saleMode, p.createdAt, p.updatedAt
+        p.salePolicy.saleMode, p.electronicInvoiceEnabled ? 1 : 0, p.createdAt, p.updatedAt
       ),
       this.db.prepare('DELETE FROM catalog_product_categories WHERE product_id = ?').bind(p.id),
       this.db.prepare('DELETE FROM catalog_product_images WHERE product_id = ?').bind(p.id),

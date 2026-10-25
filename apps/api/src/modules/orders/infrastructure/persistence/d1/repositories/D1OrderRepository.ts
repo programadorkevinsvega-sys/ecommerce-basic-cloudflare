@@ -46,9 +46,9 @@ export class D1OrderRepository implements IOrderRepository {
 
     for (const l of order.lines) {
       await this.db.prepare(
-        `INSERT INTO orders_lines (id, order_id, product_id, product_name, product_sku, quantity, unit_price_cents, total_cents)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      ).bind(l.id, order.id, l.productId, l.productName, l.productSku, l.quantity, l.unitPriceCents, l.totalCents).run();
+        `INSERT INTO orders_lines (id, order_id, product_id, product_name, product_sku, quantity, unit_price_cents, total_cents, electronic_invoice_enabled)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(l.id, order.id, l.productId, l.productName, l.productSku, l.quantity, l.unitPriceCents, l.totalCents, l.electronicInvoiceEnabled ? 1 : 0).run();
     }
     if (order.shippingFulfillmentMethod === 'merchant_local' && order.status !== 'cancelled') {
       await this.db.prepare('INSERT OR IGNORE INTO orders_local_delivery_labels (order_id, created_at) VALUES (?, ?)')
@@ -119,6 +119,7 @@ export class D1OrderRepository implements IOrderRepository {
       quantity: r.quantity,
       unitPriceCents: r.unit_price_cents,
       totalCents: r.total_cents,
+      electronicInvoiceEnabled: r.electronic_invoice_enabled === 1,
     }));
   }
 

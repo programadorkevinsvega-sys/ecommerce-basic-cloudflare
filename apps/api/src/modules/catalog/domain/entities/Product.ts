@@ -37,6 +37,7 @@ export interface ProductProps {
   canonicalUrl?: string;
   ogImageId?: string;
   noindex: boolean;
+  electronicInvoiceEnabled?: boolean;
   salePolicy: ProductSalePolicy;
   categoryIds: string[];
   mediaIds: string[];
@@ -87,6 +88,7 @@ export class Product {
   public get canonicalUrl(): string | undefined { return this.props.canonicalUrl; }
   public get ogImageId(): string | undefined { return this.props.ogImageId; }
   public get noindex(): boolean { return this.props.noindex; }
+  public get electronicInvoiceEnabled(): boolean { return this.props.electronicInvoiceEnabled ?? false; }
   public get salePolicy(): ProductSalePolicy { return this.props.salePolicy; }
   public get categoryIds(): string[] { return [...this.props.categoryIds]; }
   public get mediaIds(): string[] { return [...this.props.mediaIds]; }
@@ -137,6 +139,7 @@ export class Product {
     if (updates.canonicalUrl !== undefined) this.props.canonicalUrl = updates.canonicalUrl;
     if (updates.ogImageId !== undefined) this.props.ogImageId = updates.ogImageId;
     if (updates.noindex !== undefined) this.props.noindex = updates.noindex;
+    if (updates.electronicInvoiceEnabled !== undefined) this.props.electronicInvoiceEnabled = updates.electronicInvoiceEnabled;
     if (updates.salePolicy !== undefined) this.props.salePolicy = updates.salePolicy;
     if (updates.categoryIds !== undefined) this.props.categoryIds = [...updates.categoryIds];
     if (updates.mediaIds !== undefined) this.props.mediaIds = [...updates.mediaIds];

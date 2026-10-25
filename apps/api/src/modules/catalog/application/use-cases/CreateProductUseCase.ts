@@ -38,6 +38,7 @@ export interface CreateProductInput {
   canonicalUrl?: string;
   ogImageId?: string;
   noindex?: boolean;
+  electronicInvoiceEnabled?: boolean;
   allowsCashOnDelivery: boolean;
   shippingScope: ShippingScope;
   localCoverageZones?: string[];
@@ -109,6 +110,7 @@ export class CreateProductUseCase {
         canonicalUrl: input.canonicalUrl,
         ogImageId: input.ogImageId,
         noindex: Boolean(input.noindex),
+        electronicInvoiceEnabled: Boolean(input.electronicInvoiceEnabled),
         salePolicy,
         categoryIds: input.categoryIds || [],
         mediaIds: input.mediaIds || [],

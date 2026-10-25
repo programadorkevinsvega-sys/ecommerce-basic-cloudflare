@@ -128,6 +128,12 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
               <input type="checkbox" id="pNoindex" style="width: auto;" /> Ocultar de motores de búsqueda (noindex)
             </label>
           </div>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="pElectronicInvoice" style="width: auto;" /> Requiere factura electrónica de Factus
+            </label>
+            <small>Si está desactivado, se enviará el documento comercial normal cuando el pedido sea facturable.</small>
+          </div>
 
           <label>Vista previa de Google (SERP Preview):</label>
           <div class="serp-card">

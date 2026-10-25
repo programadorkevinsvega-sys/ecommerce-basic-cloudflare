@@ -126,7 +126,7 @@ export class D1InvoiceRepository implements IInvoiceRepository {
     return row ? mapD1Invoice(row) : null;
   }
 
-  public async list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
+  public async list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]> {
     const limit = filters?.limit || 50;
     const offset = filters?.offset || 0;
     const where = invoiceFilters(filters);
@@ -135,7 +135,7 @@ export class D1InvoiceRepository implements IInvoiceRepository {
     return (res.results || []).map(mapD1Invoice);
   }
 
-  public async count(filters?: { customerId?: string; query?: string }): Promise<number> {
+  public async count(filters?: { customerId?: string; query?: string; electronicOnly?: boolean; electronicStatus?: string }): Promise<number> {
     const where = invoiceFilters(filters);
     const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM invoicing_invoices${where.sql}`)
       .bind(...where.values).first<{ total: number }>();

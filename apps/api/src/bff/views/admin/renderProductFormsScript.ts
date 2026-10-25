@@ -108,6 +108,7 @@ export function renderProductFormsScript(): string {
         seoDescription: document.getElementById('pSeoDesc').value || undefined,
         canonicalUrl: document.getElementById('pCanonical').value || undefined,
         noindex: document.getElementById('pNoindex').checked,
+        electronicInvoiceEnabled: document.getElementById('pElectronicInvoice').checked,
         specifications: specs,
         tags,
         guideTitle: document.getElementById('pGuideTitle').value.trim(),

@@ -20,10 +20,12 @@ export function mapD1Invoice(row: Record<string, unknown>): Invoice {
   });
 }
 
-export function invoiceFilters(filters?: { customerId?: string; query?: string }): { sql: string; values: unknown[] } {
+export function invoiceFilters(filters?: { customerId?: string; query?: string; electronicOnly?: boolean; electronicStatus?: string }): { sql: string; values: unknown[] } {
   const clauses: string[] = [];
   const values: unknown[] = [];
   if (filters?.customerId) { clauses.push('customer_id = ?'); values.push(filters.customerId); }
+  if (filters?.electronicOnly) clauses.push('electronic_eligible = 1');
+  if (filters?.electronicStatus) { clauses.push('electronic_status = ?'); values.push(filters.electronicStatus); }
   if (filters?.query) {
     const query = `%${filters.query.replace(/[\\%_]/g, '\\$&')}%`;
     clauses.push("(invoice_number LIKE ? ESCAPE '\\' OR order_id LIKE ? ESCAPE '\\' OR customer_name LIKE ? ESCAPE '\\' OR customer_email LIKE ? ESCAPE '\\' OR CAST(ROUND(total_cents / 100.0) AS TEXT) LIKE ?)");

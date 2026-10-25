@@ -74,8 +74,10 @@ export class IssueInvoiceUseCase {
     const docResult = await this.pdfPort.generateInvoiceDocument(invoice);
     invoice.pdfR2Key = docResult.r2Key;
 
-    // Persistir factura y solicitud fiscal juntas; Factus se procesa después del pago.
-    await this.repo.createForElectronicIssue(invoice, cmd.traceId || 'unknown');
+    // Solo los pedidos habilitados generan un evento fiscal; el resto conserva el comprobante comercial.
+    const electronicRequired = invoice.snapshot.lines.length > 0 && invoice.snapshot.lines.every((line) => line.electronicInvoiceEnabled === true);
+    if (electronicRequired) await this.repo.createForElectronicIssue(invoice, cmd.traceId || 'unknown');
+    else await this.repo.save(invoice);
 
     return invoice;
   }

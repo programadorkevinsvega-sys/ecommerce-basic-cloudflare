@@ -5,6 +5,17 @@ export function renderInvoicingAdminScript(): string {
     let _invoicePage = 1;
     let _invoiceMeta = { total: 0, hasMore: false };
     let _invoiceSearchTimer;
+    let _invoiceView = 'all';
+
+    function showAdminInvoicePage(view = 'all') {
+      _invoiceView = view === 'electronic' ? 'electronic' : 'all';
+      const title = document.getElementById('invoices-title');
+      const description = document.getElementById('invoices-description');
+      if (title) title.textContent = _invoiceView === 'electronic' ? 'Facturación electrónica' : 'Facturación';
+      if (description) description.textContent = _invoiceView === 'electronic'
+        ? 'Consulta y filtra los documentos procesados por Factus y su estado ante DIAN.'
+        : 'Consulta documentos comerciales y su estado electrónico.';
+    }
 
     async function loadAdminInvoices(page = _invoicePage) {
       const tbody = document.getElementById('invoices-table-body');
@@ -13,6 +24,9 @@ export function renderInvoicingAdminScript(): string {
         const params = new URLSearchParams({ page: String(page), pageSize: '25' });
         const query = document.getElementById('invoices-search')?.value.trim() || '';
         if (query) params.set('q', query);
+        if (_invoiceView === 'electronic') params.set('electronicOnly', '1');
+        const electronicStatus = document.getElementById('invoices-electronic-status')?.value || '';
+        if (electronicStatus) params.set('electronicStatus', electronicStatus);
         const response = await fetch('/api/v1/admin/invoices?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const data = await response.json();
         if (!response.ok || !data.success || !Array.isArray(data.invoices)) throw new Error(data.error || 'No se pudieron cargar las facturas');
@@ -99,6 +113,7 @@ export function renderInvoicingAdminScript(): string {
     }
 
     window.loadAdminInvoices = loadAdminInvoices;
+    window.showAdminInvoicePage = showAdminInvoicePage;
     window.filterAdminInvoices = filterAdminInvoices;
     window.openCreditNoteModal = openCreditNoteModal;
     window.closeCreditNoteModal = closeCreditNoteModal;

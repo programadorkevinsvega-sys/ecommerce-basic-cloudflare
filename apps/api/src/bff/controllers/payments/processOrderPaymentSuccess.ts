@@ -85,6 +85,7 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
           quantity: l.quantity,
           unitPriceCents: l.unitPriceCents,
           totalCents: l.totalCents,
+          electronicInvoiceEnabled: l.electronicInvoiceEnabled,
         })),
         customer: {
           id: order.customerId,
@@ -137,13 +138,15 @@ export async function processOrderPaymentSuccess(params: ProcessPaymentSuccessPa
   try {
     const invoiceAttachment = await createInvoiceAttachment(invoicingGateway, invoiceId, invoiceNumber);
     // 3.1 Al Cliente
-    const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference, factusCustomerEmailEnabled);
+    const electronicRequired = order.lines.length > 0 && order.lines.every((line) => line.electronicInvoiceEnabled);
+    const customerHtml = OrderEmailTemplates.renderCustomerPaidEmail(order, invoiceNumber, paymentReference, factusCustomerEmailEnabled && electronicRequired, electronicRequired);
     await notificationsGateway.sendEmail({
       recipientEmail: order.customerEmail,
       templateName: 'order_confirmed_customer',
       subject: `¡Pago confirmado! Pedido #${order.id}`,
       idempotencyKey: `email_cust_${order.id}`,
       html: customerHtml,
+      ...(!electronicRequired && invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
     });
 
     // 3.2 A la Empresa / Administrador

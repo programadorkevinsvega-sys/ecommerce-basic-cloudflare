@@ -6,6 +6,8 @@ export interface ListInvoicesQuery {
   query?: string;
   limit?: number;
   offset?: number;
+  electronicOnly?: boolean;
+  electronicStatus?: string;
 }
 
 export class ListInvoicesUseCase {
@@ -15,7 +17,7 @@ export class ListInvoicesUseCase {
     return this.repo.list(query);
   }
 
-  public count(query?: Pick<ListInvoicesQuery, 'customerId' | 'query'>): Promise<number> {
+  public count(query?: Pick<ListInvoicesQuery, 'customerId' | 'query' | 'electronicOnly' | 'electronicStatus'>): Promise<number> {
     return this.repo.count(query);
   }
 }

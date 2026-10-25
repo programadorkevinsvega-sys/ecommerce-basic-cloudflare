@@ -19,6 +19,7 @@ export interface OrderRow {
 export interface OrderLineRow {
   id: string; order_id: string; product_id: string; product_name: string;
   product_sku: string; quantity: number; unit_price_cents: number; total_cents: number;
+  electronic_invoice_enabled?: number;
 }
 
 export function hydrateD1Order(row: OrderRow, lines: OrderLine[]): Order {

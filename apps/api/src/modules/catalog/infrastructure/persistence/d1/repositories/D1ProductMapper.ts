@@ -35,6 +35,7 @@ export interface ProductRow {
   canonical_url?: string;
   og_image_id?: string;
   noindex: number;
+  electronic_invoice_enabled?: number;
   allows_cash_on_delivery: number;
   shipping_scope: string;
   sale_mode: string;
@@ -67,6 +68,7 @@ export class D1ProductMapper {
       guideTitle: row.guide_title ?? undefined, guideContent: row.guide_content ?? undefined, relatedBlogPostIds: parseArray(row.related_blog_post_ids || '[]'),
       seoTitle: row.seo_title, seoDescription: row.seo_description, canonicalUrl: row.canonical_url,
       ogImageId: row.og_image_id, noindex: row.noindex === 1,
+      electronicInvoiceEnabled: row.electronic_invoice_enabled === 1,
       salePolicy: new ProductSalePolicy({
         allowsCashOnDelivery: row.allows_cash_on_delivery === 1,
         shippingScope: row.shipping_scope as ShippingScope,

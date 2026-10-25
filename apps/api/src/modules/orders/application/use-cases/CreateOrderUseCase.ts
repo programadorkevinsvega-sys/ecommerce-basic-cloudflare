@@ -9,6 +9,7 @@ export interface CreateOrderLineInput {
   productSku: string;
   quantity: number;
   unitPriceCents: number;
+  electronicInvoiceEnabled?: boolean;
 }
 
 export interface CreateOrderCommand {
@@ -66,6 +67,7 @@ export class CreateOrderUseCase {
       quantity: l.quantity,
       unitPriceCents: l.unitPriceCents,
       totalCents: l.quantity * l.unitPriceCents,
+      electronicInvoiceEnabled: l.electronicInvoiceEnabled,
     }));
 
     const order = new Order({

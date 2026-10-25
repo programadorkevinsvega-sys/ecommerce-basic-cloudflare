@@ -36,7 +36,7 @@ export interface CreateProductGatewayRequest {
   seoDescription?: string;
   canonicalUrl?: string;
   ogImageId?: string;
-  noindex?: boolean;
+  noindex?: boolean; electronicInvoiceEnabled?: boolean;
   allowsCashOnDelivery: boolean;
   shippingScope: 'national' | 'local';
   localCoverageZones?: string[];
@@ -75,7 +75,7 @@ export interface UpdateProductGatewayRequest {
   seoDescription?: string;
   canonicalUrl?: string;
   ogImageId?: string;
-  noindex?: boolean;
+  noindex?: boolean; electronicInvoiceEnabled?: boolean;
   allowsCashOnDelivery?: boolean;
   shippingScope?: 'national' | 'local';
   localCoverageZones?: string[];
@@ -113,7 +113,7 @@ export interface CatalogProductDto {
   seoDescription?: string;
   canonicalUrl?: string;
   ogImageId?: string;
-  noindex: boolean;
+  noindex: boolean; electronicInvoiceEnabled?: boolean;
   salePolicy: {
     allowsCashOnDelivery: boolean;
     shippingScope: 'national' | 'local';

@@ -18,6 +18,9 @@ El módulo `invoicing` genera una representación comercial interna, pero no tra
 - Las notas crédito requieren el concepto DIAN elegido por el administrador y se enlazan con el número Factus de una factura aceptada. La factura interna solo queda totalmente acreditada después de que Factus confirme una nota por su total.
 - `FACTUS_API_URL` vive como variable Cloudflare; el modo y los rangos de numeración se administran en Configuración. Se utiliza un único conjunto de cuatro secretos OAuth `FACTUS_PRODUCTION_CLIENT_ID`, `FACTUS_PRODUCTION_CLIENT_SECRET`, `FACTUS_PRODUCTION_USERNAME`, `FACTUS_PRODUCTION_PASSWORD`; el administrador coloca allí las credenciales del entorno seleccionado. La URL se limita a los hosts HTTPS oficiales sandbox y producción.
 - Los precios, descuentos, impuestos, formas de pago, líneas de envío y datos del comprador se forman desde snapshots del servidor. No se aceptan importes fiscales calculados por el navegador.
+- Cada producto podrá indicar si requiere facturación electrónica. El catálogo guarda la opción y el pedido congela su valor en cada línea; los productos históricos y el valor omitido quedan en `false` para preservar su comprobante comercial normal.
+- El carrito no puede mezclar productos con y sin facturación electrónica. La restricción se aplica al agregar productos, al fusionar carritos y de nuevo en el cálculo autoritativo del checkout. La factura interna y su envío por Resend siguen siendo el flujo para pedidos cuyos productos tienen la opción desactivada; solo pedidos con todos los productos habilitados generan el evento Factus.
+- El admin dispondrá de una entrada Facturación electrónica con filtros de estado del proceso Factus/DIAN. Esta vista opera sobre el listado paginado de facturas, filtrado en D1.
 
 ## Recuperación y operación
 

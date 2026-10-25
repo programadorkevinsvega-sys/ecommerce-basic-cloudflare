@@ -38,6 +38,7 @@ export interface UpdateProductInput {
   canonicalUrl?: string;
   ogImageId?: string;
   noindex?: boolean;
+  electronicInvoiceEnabled?: boolean;
   allowsCashOnDelivery?: boolean;
   shippingScope?: ShippingScope;
   localCoverageZones?: string[];

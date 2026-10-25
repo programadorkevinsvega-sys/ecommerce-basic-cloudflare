@@ -14,8 +14,8 @@ export interface IInvoiceRepository {
   findById(id: string): Promise<Invoice | null>;
   findByOrderId(orderId: string): Promise<Invoice | null>;
   findByNumber(invoiceNumber: string): Promise<Invoice | null>;
-  list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]>;
-  count(filters?: { customerId?: string; query?: string }): Promise<number>;
+  list(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]>;
+  count(filters?: { customerId?: string; query?: string; electronicOnly?: boolean; electronicStatus?: string }): Promise<number>;
   saveCreditNote(creditNote: CreditNote): Promise<void>;
   listCreditNotes(invoiceId: string): Promise<CreditNote[]>;
 }

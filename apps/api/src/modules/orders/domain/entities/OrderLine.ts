@@ -7,6 +7,7 @@ export interface OrderLineProps {
   quantity: number;
   unitPriceCents: number;
   totalCents?: number;
+  electronicInvoiceEnabled?: boolean;
 }
 
 export class OrderLine {
@@ -18,6 +19,7 @@ export class OrderLine {
   public readonly quantity: number;
   public readonly unitPriceCents: number;
   public readonly totalCents: number;
+  public readonly electronicInvoiceEnabled: boolean;
 
   constructor(props: OrderLineProps) {
     if (!props.productId) throw new Error('productId is required in OrderLine');
@@ -32,6 +34,7 @@ export class OrderLine {
     this.quantity = props.quantity;
     this.unitPriceCents = props.unitPriceCents;
     this.totalCents = props.totalCents !== undefined ? props.totalCents : props.quantity * props.unitPriceCents;
+    this.electronicInvoiceEnabled = props.electronicInvoiceEnabled ?? false;
   }
 
   public toJSON() {
@@ -44,6 +47,7 @@ export class OrderLine {
       quantity: this.quantity,
       unitPriceCents: this.unitPriceCents,
       totalCents: this.totalCents,
+      electronicInvoiceEnabled: this.electronicInvoiceEnabled,
     };
   }
 }

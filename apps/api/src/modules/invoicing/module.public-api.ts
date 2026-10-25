@@ -39,11 +39,11 @@ export class InvoicingPublicApi {
     return this.container.getInvoiceDocumentUseCase.execute(invoiceId);
   }
 
-  public async listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number }): Promise<Invoice[]> {
+  public async listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]> {
     return this.container.listInvoicesUseCase.execute(filters);
   }
 
-  public countInvoices(filters?: { customerId?: string; query?: string }): Promise<number> {
+  public countInvoices(filters?: { customerId?: string; query?: string; electronicOnly?: boolean; electronicStatus?: string }): Promise<number> {
     return this.container.listInvoicesUseCase.count(filters);
   }
 
