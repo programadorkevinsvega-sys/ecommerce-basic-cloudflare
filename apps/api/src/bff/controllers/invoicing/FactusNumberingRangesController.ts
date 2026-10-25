@@ -129,7 +129,7 @@ async function authorize(c: Context, identity: IdentityGateway, permission: stri
 }
 
 function providerError(c: Context, error?: unknown) {
-  const code = error instanceof Error ? error.message : '';
+  const code = getSafeFailureCode(error);
   const messages: Record<string, string> = {
     FACTUS_NOT_CONFIGURED: 'Configura FACTUS_API_URL y los cuatro secretos OAuth de Factus en Cloudflare.',
     FACTUS_INVALID_API_URL: 'FACTUS_API_URL debe ser https://api-sandbox.factus.com.co o https://api.factus.com.co; usa secretos del mismo entorno.',
@@ -142,12 +142,19 @@ function providerError(c: Context, error?: unknown) {
     FACTUS_HTTP_401: 'Factus rechazó el token de acceso. Revisa las credenciales y el entorno seleccionado.',
     FACTUS_NUMBERING_RANGE_HTTP_400: 'Factus rechazó los datos enviados. Revisa el prefijo, resolución, tipo documental y consecutivo autorizado.',
     FACTUS_NUMBERING_RANGE_HTTP_422: 'Factus no acepta los datos para este rango. Revisa la autorización asociada y el consecutivo.',
+    FACTUS_NETWORK_ERROR: 'El Worker no pudo establecer conexión con Factus. Revisa FACTUS_API_URL y vuelve a intentar.',
+    FACTUS_TIMEOUT: 'Factus tardó demasiado en responder. Vuelve a intentar en unos minutos.',
   };
   const notConfigured = code === 'FACTUS_NOT_CONFIGURED';
   const status = notConfigured ? 503 : code.startsWith('FACTUS_NUMBERING_RANGE_HTTP_') ? 400 : 502;
-  return c.json({ error: messages[code] || `No se pudo completar la operación con Factus (${safeFactusCode(code)}).` }, status);
+  if (!messages[code]) console.error(JSON.stringify({ event: 'factus.numbering_ranges.failed', code,
+    error_type: error instanceof Error ? error.name : 'non_error', trace_id: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown' }));
+  return c.json({ error: messages[code] || `Falló la conexión con Factus (${code}).` }, status);
 }
 
-function safeFactusCode(code: string): string {
-  return /^FACTUS_[A-Z0-9_]{1,70}$/.test(code) ? code : 'ERROR_NO_CLASIFICADO';
+function getSafeFailureCode(error: unknown): string {
+  if (error instanceof TypeError) return 'FACTUS_NETWORK_ERROR';
+  if (error instanceof Error && error.name === 'AbortError') return 'FACTUS_TIMEOUT';
+  const code = error instanceof Error ? error.message : '';
+  return /^FACTUS_[A-Z0-9_]{1,70}$/.test(code) ? code : 'FACTUS_UNEXPECTED_ERROR';
 }
