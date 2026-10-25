@@ -71,7 +71,6 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
-    "FACTUS_API_URL": "https://api.factus.com.co",
     "MI_PAQUETE_API_URL": "https://api-v2.mpr.mipaquete.com",
     "RESEND_FROM_EMAIL": "Vega Store <no-reply@jnmtortas.com>"
   }
