@@ -88,7 +88,7 @@ export class FactusNumberingRangeManager {
 
   private async call(path: string, init?: RequestInit) {
     const response = await this.request(path, init);
-    if (response.httpStatus && response.httpStatus >= 400) throw new Error('FACTUS_NUMBERING_RANGE_REJECTED');
+    if (response.httpStatus && response.httpStatus >= 400) throw new Error(`FACTUS_NUMBERING_RANGE_HTTP_${response.httpStatus}`);
     return response;
   }
 }

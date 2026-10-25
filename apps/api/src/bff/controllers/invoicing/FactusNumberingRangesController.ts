@@ -129,6 +129,25 @@ async function authorize(c: Context, identity: IdentityGateway, permission: stri
 }
 
 function providerError(c: Context, error?: unknown) {
-  const notConfigured = error instanceof Error && error.message === 'FACTUS_NOT_CONFIGURED';
-  return c.json({ error: notConfigured ? 'Configura y guarda el entorno y las credenciales de Factus antes de continuar.' : 'No se pudo completar la operación con Factus. Revisa el entorno y los datos enviados.' }, notConfigured ? 503 : 502);
+  const code = error instanceof Error ? error.message : '';
+  const messages: Record<string, string> = {
+    FACTUS_NOT_CONFIGURED: 'Configura y guarda el entorno y las credenciales de Factus antes de continuar.',
+    FACTUS_INVALID_API_URL: 'FACTUS_API_URL debe usar uno de los hosts oficiales de Factus; el entorno guardado selecciona automáticamente sandbox o producción.',
+    FACTUS_AUTH_HTTP_400: 'Factus rechazó la autenticación. Verifica las credenciales asignadas al entorno seleccionado.',
+    FACTUS_AUTH_HTTP_401: 'Factus rechazó las credenciales del entorno seleccionado. Comprueba client ID, secreto, usuario y contraseña.',
+    FACTUS_AUTH_INVALID_RESPONSE: 'Factus no devolvió un token válido. Revisa las credenciales del entorno seleccionado.',
+    FACTUS_ASSOCIATED_RANGES_INVALID_RESPONSE: 'Factus respondió con un formato inesperado al consultar los rangos asociados al software.',
+    FACTUS_NUMBERING_RANGES_INVALID_RESPONSE: 'Factus respondió con un formato inesperado al listar rangos.',
+    FACTUS_NUMBERING_RANGE_INVALID_RESPONSE: 'Factus respondió con un formato inesperado al consultar el rango.',
+    FACTUS_HTTP_401: 'Factus rechazó el token de acceso. Revisa las credenciales y el entorno seleccionado.',
+    FACTUS_NUMBERING_RANGE_HTTP_400: 'Factus rechazó los datos enviados. Revisa el prefijo, resolución, tipo documental y consecutivo autorizado.',
+    FACTUS_NUMBERING_RANGE_HTTP_422: 'Factus no acepta los datos para este rango. Revisa la autorización asociada y el consecutivo.',
+  };
+  const notConfigured = code === 'FACTUS_NOT_CONFIGURED';
+  const status = notConfigured ? 503 : code.startsWith('FACTUS_NUMBERING_RANGE_HTTP_') ? 400 : 502;
+  return c.json({ error: messages[code] || `No se pudo completar la operación con Factus (${safeFactusCode(code)}).` }, status);
+}
+
+function safeFactusCode(code: string): string {
+  return /^FACTUS_[A-Z0-9_]{1,70}$/.test(code) ? code : 'ERROR_NO_CLASIFICADO';
 }
