@@ -1,9 +1,10 @@
 import { Invoice } from '../../domain/entities/Invoice.js';
 import { CreditNote } from '../../domain/entities/CreditNote.js';
-import { ElectronicInvoiceSubmissionResult, IElectronicInvoicingPort } from '../../domain/ports/IElectronicInvoicingPort.js';
+import { ElectronicInvoiceSubmissionResult, ElectronicNumberingRange, IElectronicInvoicingPort } from '../../domain/ports/IElectronicInvoicingPort.js';
 import { mapInvoiceToFactus } from './FactusInvoiceMapper.js';
 import { mapCreditNoteItems } from './FactusCreditNoteMapper.js';
 import { resolveFactusApiUrl } from './resolveFactusApiUrl.js';
+import { readFactusNumberingRanges } from './FactusNumberingRangeReader.js';
 
 export interface FactusCredentials { clientId?: string; clientSecret?: string; username?: string; password?: string; }
 export interface FactusConfig {
@@ -20,6 +21,12 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   private tokenFlight: Promise<string | null> | null = null;
   private activeConfig: FactusConfig;
   constructor(private readonly config: FactusConfig, private readonly fetcher: typeof fetch = fetch) { this.activeConfig = config; }
+
+  public async listNumberingRanges(): Promise<ElectronicNumberingRange[]> {
+    await this.loadOperationalConfig();
+    if (!this.mode() || !this.hasCredentials()) throw new Error('FACTUS_NOT_CONFIGURED');
+    return readFactusNumberingRanges((path) => this.request(path, { method: 'GET' }));
+  }
 
   public async submitToTaxAuthority(invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {
     await this.loadOperationalConfig();
@@ -64,7 +71,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
         reference_code: invoice.paymentReference || invoice.orderId, amount }],
       items: mapCreditNoteItems(note, invoice),
     };
-    const rangeId = this.config.creditNoteNumberingRangeId || this.config.numberingRangeId;
+    const rangeId = this.config.creditNoteNumberingRangeId;
     if (rangeId) body.numbering_range_id = Number(rangeId);
     try {
       const result = await this.request('/v2/credit-notes/validate', { method: 'POST', body: JSON.stringify(body) });

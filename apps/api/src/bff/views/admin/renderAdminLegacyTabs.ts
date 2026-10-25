@@ -106,10 +106,11 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
           <div class="settings-card-heading"><h2>Facturación electrónica · Factus</h2><p>Las credenciales OAuth se configuran como secretos en Cloudflare. Aquí defines el entorno y los rangos autorizados.</p></div>
           <div class="form-grid">
             <div><label for="factusMode">Entorno Factus</label><select id="factusMode"><option value="disabled" ${props.settings.factusMode === 'disabled' ? 'selected' : ''}>Desactivado</option><option value="sandbox" ${props.settings.factusMode === 'sandbox' ? 'selected' : ''}>Pruebas</option><option value="production" ${props.settings.factusMode === 'production' ? 'selected' : ''}>Producción</option></select></div>
-            <div><label for="factusInvoiceRange">Rango de facturas</label><input id="factusInvoiceRange" value="${escapeHtml(props.settings.factusNumberingRangeId || '')}" maxlength="40" /></div>
-            <div><label for="factusCreditRange">Rango de notas crédito</label><input id="factusCreditRange" value="${escapeHtml(props.settings.factusCreditNoteNumberingRangeId || '')}" maxlength="40" /></div>
+            <div><label for="factusInvoiceRange">Rango de facturas</label><input id="factusInvoiceRange" list="factusInvoiceRanges" value="${escapeHtml(props.settings.factusNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusInvoiceRanges"></datalist></div>
+            <div><label for="factusCreditRange">Rango de notas crédito</label><input id="factusCreditRange" list="factusCreditRanges" value="${escapeHtml(props.settings.factusCreditNoteNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusCreditRanges"></datalist></div>
           </div>
-          <div class="settings-actions"><button type="button" class="btn-primary" id="saveFactusSettings">Guardar Factus</button></div><div id="factusSettingsMessage" class="msg" role="status"></div>
+          <p class="settings-help">Consulta los rangos activos del entorno guardado. Si dejas un campo vacío, Factus selecciona automáticamente su rango predeterminado. Los rangos son autorizados en Factus; aquí solo se consultan y seleccionan.</p>
+          <div class="settings-actions"><button type="button" class="btn-secondary" id="loadFactusRanges">Consultar rangos activos</button><button type="button" class="btn-primary" id="saveFactusSettings">Guardar Factus</button></div><div id="factusSettingsMessage" class="msg" role="status"></div>
         </div>
       </section>
     </div>`;

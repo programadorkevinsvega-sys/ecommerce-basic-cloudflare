@@ -3,12 +3,17 @@ import { Invoice } from './domain/entities/Invoice.js';
 import { CreditNote } from './domain/entities/CreditNote.js';
 import { IssueInvoiceCommand } from './application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from './application/use-cases/CreateCreditNoteUseCase.js';
+import { ElectronicNumberingRange } from './domain/ports/IElectronicInvoicingPort.js';
 
 export class InvoicingPublicApi {
   constructor(private readonly container: InvoicingModuleContainer) {}
 
   public async issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice> {
     return this.container.issueInvoiceUseCase.execute(cmd);
+  }
+
+  public listElectronicNumberingRanges(): Promise<ElectronicNumberingRange[]> {
+    return this.container.listElectronicNumberingRangesUseCase.execute();
   }
 
   public async processElectronicInvoice(invoiceId: string): Promise<void> {

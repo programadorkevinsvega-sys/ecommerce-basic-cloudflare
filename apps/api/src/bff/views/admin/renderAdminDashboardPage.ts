@@ -47,6 +47,7 @@ import { renderOrderTrackingAdminScript } from './renderOrderTrackingAdminScript
 import { renderOrderTrackingAdminCss } from './renderOrderTrackingAdminCss.js';
 import { renderAdminNavigationStateScript } from './renderAdminNavigationStateScript.js';
 import { renderProductEditorialFieldsScript } from './renderProductEditorialFieldsScript.js';
+import { renderFactusSettingsScript } from './renderFactusSettingsScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -105,6 +106,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderBrandImageScript()}</script>
   <script>${renderMarketingNavigationScript()}</script>
   <script>${renderStorefrontFormsScript()}</script>
+  <script>${renderFactusSettingsScript()}</script>
   <script>${renderCmsEditorToolbarScript()}</script>
   <script>${renderCmsFormsScript()}</script>
   <script>${renderBlogAdminScript()}</script>

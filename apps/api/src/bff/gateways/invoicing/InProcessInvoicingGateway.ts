@@ -8,6 +8,10 @@ import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/
 export class InProcessInvoicingGateway implements InvoicingGateway {
   constructor(private readonly publicApi: InvoicingPublicApi) {}
 
+  public listElectronicNumberingRanges() {
+    return this.publicApi.listElectronicNumberingRanges();
+  }
+
   public async issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice> {
     return this.publicApi.issueInvoice(cmd);
   }

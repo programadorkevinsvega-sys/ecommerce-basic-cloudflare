@@ -12,6 +12,24 @@ export class InvoicingController {
   ): Hono {
     const app = new Hono();
 
+    app.get('/api/v1/admin/factus/numbering-ranges', async (c) => {
+      const token = getSessionToken(c.req.header('authorization'), c.req.header('cookie'), true);
+      if (!token) return c.json({ error: 'No autorizado' }, 401);
+      const admin = await identityGateway.validateSession(token);
+      if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
+      if (!hasPermission(admin.permissions, 'settings:read') && !hasPermission(admin.permissions, 'settings:edit')) {
+        return c.json({ error: 'Permiso insuficiente' }, 403);
+      }
+      try {
+        const ranges = await invoicingGateway.listElectronicNumberingRanges();
+        return c.json({ success: true, ranges }, 200, { 'Cache-Control': 'no-store' });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : '';
+        const status = code === 'FACTUS_NOT_CONFIGURED' ? 503 : 502;
+        return c.json({ error: status === 503 ? 'Configura y guarda el entorno y las credenciales de Factus antes de consultar rangos.' : 'Factus no pudo entregar los rangos. Verifica el entorno y vuelve a intentar.' }, status);
+      }
+    });
+
     // GET /api/v1/invoices/:id/document — Descarga autenticada del PDF de la factura
     app.get('/api/v1/invoices/:id/document', async (c) => {
       const id = c.req.param('id');

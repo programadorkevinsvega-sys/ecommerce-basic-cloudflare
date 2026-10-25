@@ -2,8 +2,10 @@ import { Invoice } from '../../../modules/invoicing/domain/entities/Invoice.js';
 import { CreditNote } from '../../../modules/invoicing/domain/entities/CreditNote.js';
 import { IssueInvoiceCommand } from '../../../modules/invoicing/application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/use-cases/CreateCreditNoteUseCase.js';
+import { ElectronicNumberingRange } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
 
 export interface InvoicingGateway {
+  listElectronicNumberingRanges(): Promise<ElectronicNumberingRange[]>;
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   processElectronicInvoice(invoiceId: string): Promise<void>;
   reconcileElectronicInvoices(limit?: number): Promise<number>;

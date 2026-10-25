@@ -185,26 +185,5 @@ export function renderStorefrontFormsScript(): string {
       }
     });
 
-    document.getElementById('saveFactusSettings')?.addEventListener('click', async (e) => {
-      const button = e.currentTarget;
-      const message = document.getElementById('factusSettingsMessage');
-      button.disabled = true;
-      try {
-        const response = await fetch('/api/v1/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ factusMode: document.getElementById('factusMode').value,
-            factusNumberingRangeId: document.getElementById('factusInvoiceRange').value,
-            factusCreditNoteNumberingRangeId: document.getElementById('factusCreditRange').value }) });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'No se pudo guardar Factus');
-        message.textContent = 'Configuración Factus guardada.';
-        message.style.background = '#065f46';
-      } catch (error) {
-        message.textContent = error.message || 'No se pudo guardar Factus';
-        message.style.background = '#7f1d1d';
-      } finally {
-        message.style.display = 'block';
-        button.disabled = false;
-      }
-    });
   `;
 }
