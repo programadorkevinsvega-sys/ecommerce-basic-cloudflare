@@ -6,8 +6,7 @@ export class OrderEmailTemplates {
     const totalFormatted = (order.totalCents / 100).toLocaleString('es-CO');
     const subtotalFormatted = (order.subtotalCents / 100).toLocaleString('es-CO');
     const taxFormatted = (calculateOrderTaxCents(order) / 100).toLocaleString('es-CO');
-    const billedShippingCents = Math.max(0, order.shippingCostCents - order.shippingDiscountCents);
-    const shippingFormatted = (billedShippingCents / 100).toLocaleString('es-CO');
+    const shippingFormatted = (order.shippingCostCents / 100).toLocaleString('es-CO');
     const addr = order.shippingAddress || {} as any;
 
     return `
@@ -49,13 +48,12 @@ export class OrderEmailTemplates {
           <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>$${subtotalFormatted}</span></div>
           ${order.discountCents > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento:</span><span>-$${(order.discountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;"><span>IVA incluido:</span><span>$${taxFormatted}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span>${order.shippingChargeMode === 'collect_at_delivery' ? 'Envío incluido en factura:' : 'Envío:'}</span><span>$${shippingFormatted}</span></div>
+          ${order.shippingCollectionCents === 0 ? `<div style="display:flex;justify-content:space-between;"><span>Envío:</span><span>$${shippingFormatted}</span></div>` : ''}
           ${order.shippingDiscountCents ? `<div style="display:flex;justify-content:space-between;"><span>Envío cubierto por la tienda:</span><span>-$${(order.shippingDiscountCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.shippingCollectionCents ? `<div style="display:flex;justify-content:space-between;"><span>Envío por pagar al recibir:</span><span>$${(order.shippingCollectionCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
-          ${order.transactionFeeCents ? `<div style="display:flex;justify-content:space-between;"><span>Costo de transacción Wompi:</span><span>$${(order.transactionFeeCents / 100).toLocaleString('es-CO')}</span></div>` : ''}
           <div style="display:flex;justify-content:space-between;border-top:2px solid #0284c7;font-size:1.1rem;font-weight:700;color:#0284c7;padding-top:0.5rem;margin-top:0.5rem;">
-            <span>TOTAL PAGADO:</span><span>$${totalFormatted} COP</span>
+            <span>TOTAL PAGADO AHORA:</span><span>$${totalFormatted} COP</span>
           </div>
         </div>
         <div style="background:#f8fafc;padding:1rem;border-radius:8px;font-size:0.85rem;line-height:1.5;">

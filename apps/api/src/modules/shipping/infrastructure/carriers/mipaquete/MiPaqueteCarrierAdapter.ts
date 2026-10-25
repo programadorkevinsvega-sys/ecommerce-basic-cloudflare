@@ -26,7 +26,8 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
     return parsed.data.map((quote) => ({
       quoteId: quote.id, deliveryCompanyId: quote.deliveryCompanyId,
       deliveryCompanyName: quote.deliveryCompanyName, shippingCostCop: Math.ceil(quote.shippingCost),
-      collectionCommissionCop: Math.ceil(Math.max(quote.collectionCommissionWithRate || 0, quote.collectionCommissionWithOutRate || 0)),
+      collectionCommissionCop: input.cashOnDelivery
+        ? Math.ceil(Math.max(quote.collectionCommissionWithRate || 0, quote.collectionCommissionWithOutRate || 0)) : 0,
       deliveryMinutes: Math.ceil(quote.shippingTime),
     }));
   }

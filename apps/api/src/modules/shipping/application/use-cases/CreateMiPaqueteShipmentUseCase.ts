@@ -55,7 +55,7 @@ export class CreateMiPaqueteShipmentUseCase {
       widthCm: quote.packageWidthCm, lengthCm: quote.packageLengthCm,
       heightCm: quote.packageHeightCm, weightKg: quote.packageWeightKg,
       quantity: 1, declaredValueCop: Math.ceil(quote.declaredValueCents / 100),
-      saleValueCop: Math.ceil(saleValueCents / 100),
+      saleValueCop: order.paymentMethod === 'cash_on_delivery' ? Math.ceil(saleValueCents / 100) : 0,
       cashOnDelivery: order.paymentMethod === 'cash_on_delivery' || collectShippingAtDelivery,
     });
     const selected = currentOptions.find((option) => option.deliveryCompanyId === quote.deliveryCompanyId);

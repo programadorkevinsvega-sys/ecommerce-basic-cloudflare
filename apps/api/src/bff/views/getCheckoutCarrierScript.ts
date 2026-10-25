@@ -21,9 +21,15 @@ export function getCheckoutCarrierScript(): string {
           if (!response.ok || !result.success) throw new Error(result.error || 'No fue posible cotizar el envío.');
           freeShippingRule = result.freeShippingRule || null;
           const fmt = cents => '$' + (cents / 100).toLocaleString('es-CO');
+          const shippingNowHelp = paymentMethod === 'wompi'
+            ? 'Lo pagas ahora junto con tu compra.'
+            : 'Se suma al total que pagarás al recibir el pedido.';
+          const shippingDeliveryHelp = paymentMethod === 'wompi'
+            ? 'La transportadora cobra solo el flete al entregar. No se suma al pago en línea.'
+            : 'La transportadora cobra el flete al entregar, además del valor de los productos.';
           const chargeModes = qualifiesForFreeShipping() ? '<p class="checkout-shipping-promo">Envío gratis aplicado: ' + escapeCarrierText(freeShippingRule.name) + '.</p>' : '<strong>¿Cómo quieres pagar el envío?</strong>' +
-            '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="included" ' + (shippingChargeMode === 'included' ? 'checked' : '') + '><span><strong>Sumarlo al pedido</strong><small>Lo pagas ahora junto con tu compra.</small></span></label>' +
-            '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="collect_at_delivery" ' + (shippingChargeMode === 'collect_at_delivery' ? 'checked' : '') + '><span><strong>Pagarlo al recibir</strong><small>La transportadora cobra el flete al entregar. Este valor no se suma al pago en línea.</small></span></label>';
+            '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="included" ' + (shippingChargeMode === 'included' ? 'checked' : '') + '><span><strong>Sumarlo al pedido</strong><small>' + shippingNowHelp + '</small></span></label>' +
+            '<label class="checkout-carrier-option"><input type="radio" name="shipping-charge-mode" value="collect_at_delivery" ' + (shippingChargeMode === 'collect_at_delivery' ? 'checked' : '') + '><span><strong>Pagarlo al recibir</strong><small>' + shippingDeliveryHelp + '</small></span></label>';
           if (!result.quotes.length) {
             box.innerHTML = chargeModes + '<p role="status">MiPaquete no devolvió transportadoras para este destino. El pedido seguirá bloqueado hasta obtener una tarifa.</p>';
             box.querySelectorAll('input[name="shipping-charge-mode"]').forEach(input => input.addEventListener('change', () => { shippingChargeMode = input.value; loadCarrierQuotes(); }));

@@ -23,13 +23,15 @@ export class QuoteCarrierShippingUseCase {
     }
     const parcel = packOrderIntoConfiguredBox(input.items, setup.packageProfiles);
     if (!parcel) throw new Error('Los productos no caben en las cajas configuradas. Se requiere embalaje manual.');
-    const packageFingerprint = await createCarrierPackageFingerprint(input);
+    const saleValueCents = input.paymentMethod === 'cash_on_delivery' ? input.saleValueCents : 0;
+    const fingerprintInput = { ...input, saleValueCents };
+    const packageFingerprint = await createCarrierPackageFingerprint(fingerprintInput);
     const options = await this.carrier.quote({
       originDaneCode: setup.originDaneCode as string, destinationDaneCode: input.destinationDaneCode,
       widthCm: parcel.widthCm, lengthCm: parcel.lengthCm,
       heightCm: parcel.heightCm, weightKg: parcel.weightKg,
       quantity: 1, declaredValueCop: Math.ceil(input.declaredValueCents / 100),
-      saleValueCop: Math.ceil(input.saleValueCents / 100),
+      saleValueCop: Math.ceil(saleValueCents / 100),
       cashOnDelivery: input.paymentMethod === 'cash_on_delivery' || input.shippingChargeMode === 'collect_at_delivery',
     });
     if (options.length === 0) console.info(JSON.stringify({ event: 'shipping.mipaquete.quote_empty',
@@ -43,7 +45,7 @@ export class QuoteCarrierShippingUseCase {
       deliveryCompanyName: option.deliveryCompanyName, shippingCostCents: option.shippingCostCop * 100,
       collectionCommissionCents: option.collectionCommissionCop * 100, deliveryMinutes: option.deliveryMinutes,
       paymentMethod: input.paymentMethod, destinationDaneCode: input.destinationDaneCode,
-      declaredValueCents: input.declaredValueCents, saleValueCents: input.saleValueCents,
+      declaredValueCents: input.declaredValueCents, saleValueCents,
       packageProfileId: parcel.profileId, packageWidthCm: parcel.widthCm,
       packageLengthCm: parcel.lengthCm, packageHeightCm: parcel.heightCm,
       packageWeightGrams: parcel.weightGrams, packageWeightKg: parcel.weightKg,

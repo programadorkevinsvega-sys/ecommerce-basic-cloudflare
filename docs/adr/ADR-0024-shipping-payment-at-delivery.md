@@ -13,6 +13,10 @@ Guardar en `orders` la modalidad seleccionada, el valor incluido en el total y e
 
 La opción de cobro en entrega requiere una cotización MiPaquete válida. El servidor determina todos los importes desde la cotización persistida; no confía en importes del navegador. `paymentType` continúa representando el método de liquidación del comercio con MiPaquete y no la preferencia del comprador.
 
+El valor de venta enviado a MiPaquete solo representa mercancía que la transportadora recauda. Para pedidos Wompi, ese valor es cero tanto en la cotización como en la creación: si el cliente difiere el flete, el único `valueCollection` es el flete cotizado. La comisión del servicio de recaudo es un costo operativo de la tienda y no se agrega a la suma prometida al cliente. El selector `paymentType` configura la liquidación del flete con MiPaquete.
+
+El checkout adapta el texto de “Sumarlo al pedido” al método de pago: en Wompi se paga ahora; en contra entrega se suma a lo que el cliente paga al recibir. “Pagarlo al recibir” identifica el flete aparte en ambas modalidades.
+
 ## Consecuencias y límites
 
 - La opción solo se presenta cuando la integración y la cotización logística están disponibles.
