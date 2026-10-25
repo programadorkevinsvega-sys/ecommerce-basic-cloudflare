@@ -104,9 +104,8 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
         </form>
         </div>
         <div class="settings-card">
-          <div class="settings-card-heading"><h2>Facturación electrónica · Factus</h2><p>Las credenciales OAuth se configuran como secretos en Cloudflare. Aquí defines el entorno y los rangos autorizados.</p></div>
+          <div class="settings-card-heading"><h2>Facturación electrónica · Factus</h2><p>El entorno lo define FACTUS_API_URL en Cloudflare: sandbox usa api-sandbox.factus.com.co y producción usa api.factus.com.co. Los cuatro secretos OAuth deben corresponder a esa URL; aquí se asignan los rangos autorizados.</p></div>
           <div class="form-grid">
-            <div><label for="factusMode">Entorno Factus</label><select id="factusMode"><option value="disabled" ${props.settings.factusMode === 'disabled' ? 'selected' : ''}>Desactivado</option><option value="sandbox" ${props.settings.factusMode === 'sandbox' ? 'selected' : ''}>Pruebas</option><option value="production" ${props.settings.factusMode === 'production' ? 'selected' : ''}>Producción</option></select></div>
             <div><label for="factusInvoiceRange">Rango de facturas</label><input id="factusInvoiceRange" list="factusInvoiceRanges" value="${escapeHtml(props.settings.factusNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusInvoiceRanges"></datalist></div>
             <div><label for="factusCreditRange">Rango de notas crédito</label><input id="factusCreditRange" list="factusCreditRanges" value="${escapeHtml(props.settings.factusCreditNoteNumberingRangeId || '')}" maxlength="40" placeholder="Selecciona o escribe el ID" /><datalist id="factusCreditRanges"></datalist></div>
           </div>

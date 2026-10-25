@@ -161,7 +161,7 @@ export class PaymentsController {
           traceId: (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown',
           paymentMethod: 'wompi',
           paymentMethodCode: resolveFactusPaymentMethodCode(canonical.payment_method),
-          factusCustomerEmailEnabled: isFactusCustomerEmailEnabled(c.env, (await settingsGateway.getSettings()).factusMode),
+          factusCustomerEmailEnabled: isFactusCustomerEmailEnabled(c.env),
           paymentReference: String(canonical.id || ''),
           actor: 'wompi-webhook',
           ordersGateway,

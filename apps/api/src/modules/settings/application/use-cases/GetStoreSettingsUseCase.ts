@@ -24,7 +24,6 @@ export class GetStoreSettingsUseCase {
         supportEmail: 'contacto@tienda.com',
         supportPhone: '+57 300 0000000',
         companyCountry: 'Colombia',
-        factusMode: 'disabled',
         requireCodVerification: true,
         updatedAt: new Date().toISOString(),
       });

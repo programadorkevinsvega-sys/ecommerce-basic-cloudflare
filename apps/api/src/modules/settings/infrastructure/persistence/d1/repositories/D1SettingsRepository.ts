@@ -12,7 +12,7 @@ export class D1SettingsRepository implements ISettingsRepository {
     const query = `
       SELECT id, store_name, footer_copyright_text, currency, tax_rate_percent, support_email, support_phone,
              company_nit, company_legal_name, company_address, company_city, company_country,
-             factus_mode, factus_numbering_range_id, factus_credit_note_numbering_range_id,
+             factus_numbering_range_id, factus_credit_note_numbering_range_id,
              social_instagram_url, social_tiktok_url, social_facebook_url,
              require_cod_verification, updated_at
       FROM settings_store
@@ -39,7 +39,6 @@ export class D1SettingsRepository implements ISettingsRepository {
       companyAddress: (result.company_address as string) || undefined,
       companyCity: (result.company_city as string) || undefined,
       companyCountry: (result.company_country as string) || undefined,
-      factusMode: (result.factus_mode as 'disabled' | 'sandbox' | 'production') || 'disabled',
       factusNumberingRangeId: (result.factus_numbering_range_id as string) || undefined,
       factusCreditNoteNumberingRangeId: (result.factus_credit_note_numbering_range_id as string) || undefined,
       socialInstagramUrl: (result.social_instagram_url as string) || undefined,
@@ -56,10 +55,10 @@ export class D1SettingsRepository implements ISettingsRepository {
       INSERT INTO settings_store (
         id, store_name, footer_copyright_text, currency, tax_rate_percent, support_email, support_phone,
         company_nit, company_legal_name, company_address, company_city, company_country,
-        factus_mode, factus_numbering_range_id, factus_credit_note_numbering_range_id,
+        factus_numbering_range_id, factus_credit_note_numbering_range_id,
         social_instagram_url, social_tiktok_url, social_facebook_url,
         require_cod_verification, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         store_name = excluded.store_name,
         footer_copyright_text = excluded.footer_copyright_text,
@@ -72,7 +71,6 @@ export class D1SettingsRepository implements ISettingsRepository {
         company_address = excluded.company_address,
         company_city = excluded.company_city,
         company_country = excluded.company_country,
-        factus_mode = excluded.factus_mode,
         factus_numbering_range_id = excluded.factus_numbering_range_id,
         factus_credit_note_numbering_range_id = excluded.factus_credit_note_numbering_range_id,
         social_instagram_url = excluded.social_instagram_url,
@@ -97,7 +95,6 @@ export class D1SettingsRepository implements ISettingsRepository {
         snapshot.companyAddress || null,
         snapshot.companyCity || null,
         snapshot.companyCountry || null,
-        snapshot.factusMode,
         snapshot.factusNumberingRangeId || null,
         snapshot.factusCreditNoteNumberingRangeId || null,
         snapshot.socialInstagramUrl || null,

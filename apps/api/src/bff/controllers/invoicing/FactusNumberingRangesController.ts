@@ -131,8 +131,8 @@ async function authorize(c: Context, identity: IdentityGateway, permission: stri
 function providerError(c: Context, error?: unknown) {
   const code = error instanceof Error ? error.message : '';
   const messages: Record<string, string> = {
-    FACTUS_NOT_CONFIGURED: 'Configura y guarda el entorno y las credenciales de Factus antes de continuar.',
-    FACTUS_INVALID_API_URL: 'FACTUS_API_URL debe usar uno de los hosts oficiales de Factus; el entorno guardado selecciona automáticamente sandbox o producción.',
+    FACTUS_NOT_CONFIGURED: 'Configura FACTUS_API_URL y los cuatro secretos OAuth de Factus en Cloudflare.',
+    FACTUS_INVALID_API_URL: 'FACTUS_API_URL debe ser https://api-sandbox.factus.com.co o https://api.factus.com.co; usa secretos del mismo entorno.',
     FACTUS_AUTH_HTTP_400: 'Factus rechazó la autenticación. Verifica las credenciales asignadas al entorno seleccionado.',
     FACTUS_AUTH_HTTP_401: 'Factus rechazó las credenciales del entorno seleccionado. Comprueba client ID, secreto, usuario y contraseña.',
     FACTUS_AUTH_INVALID_RESPONSE: 'Factus no devolvió un token válido. Revisa las credenciales del entorno seleccionado.',

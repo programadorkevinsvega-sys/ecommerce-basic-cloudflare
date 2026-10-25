@@ -104,7 +104,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 
 ## 7. Configuración Fiscal de la Tienda y Facturación Dinámica
 
-La integración Factus recibe `FACTUS_API_URL` como variable Cloudflare HTTPS y solo acepta los hosts oficiales. El modo guardado en el panel decide cuál host usar (sandbox o producción), así una URL desactualizada nunca cambia el destino ni envía pruebas a producción. Un único conjunto de credenciales OAuth (`FACTUS_PRODUCTION_CLIENT_ID`, `FACTUS_PRODUCTION_CLIENT_SECRET`, `FACTUS_PRODUCTION_USERNAME`, `FACTUS_PRODUCTION_PASSWORD`) se guarda como secretos Cloudflare y contiene los valores del entorno seleccionado. El modo y los IDs de rangos de factura/nota crédito se administran en Configuración del panel. No copiar credenciales reales al `.env` compartido, al repositorio ni a logs. Revisa ADR-0032 antes de habilitar producción.
+La integración Factus recibe `FACTUS_API_URL` como variable Cloudflare HTTPS; su host determina sandbox (`api-sandbox.factus.com.co`) o producción (`api.factus.com.co`). Los cuatro secretos OAuth (`FACTUS_PRODUCTION_CLIENT_ID`, `FACTUS_PRODUCTION_CLIENT_SECRET`, `FACTUS_PRODUCTION_USERNAME`, `FACTUS_PRODUCTION_PASSWORD`) deben contener credenciales del mismo entorno que esa URL. Los IDs de rangos de factura y nota crédito se administran en Configuración del panel. No existe selector duplicado de entorno en el panel. No copiar credenciales reales al `.env` compartido, al repositorio ni a logs. Revisa ADR-0032 antes de habilitar producción.
 
 - **Datos de la Empresa en `settings_store`:**
   - `store_name`: Nombre comercial de la tienda (ej. *Vega Store*).

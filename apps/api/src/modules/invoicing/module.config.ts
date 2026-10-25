@@ -14,8 +14,8 @@ export interface InvoicingModuleDependencies {
   db: D1Database;
   bucket: R2Bucket;
   factus: {
-    mode?: string; apiUrl?: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string;
-    getOperationalConfig?: () => Promise<{ mode: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
+    apiUrl?: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string;
+    getOperationalConfig?: () => Promise<{ numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
     credentials?: { clientId?: string; clientSecret?: string; username?: string; password?: string };
   };
 }

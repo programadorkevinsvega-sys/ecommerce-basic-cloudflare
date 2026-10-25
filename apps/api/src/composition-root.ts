@@ -177,7 +177,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     factus: { apiUrl: env.FACTUS_API_URL,
       getOperationalConfig: async () => {
         const settings = await settingsGateway.getSettings();
-        return { mode: settings.factusMode || 'disabled', numberingRangeId: settings.factusNumberingRangeId,
+        return { numberingRangeId: settings.factusNumberingRangeId,
           creditNoteNumberingRangeId: settings.factusCreditNoteNumberingRangeId };
       },
       credentials: { clientId: env.FACTUS_PRODUCTION_CLIENT_ID, clientSecret: env.FACTUS_PRODUCTION_CLIENT_SECRET,

@@ -17,7 +17,6 @@ const updateSettingsSchema = z.object({
   companyAddress: z.string().max(200).optional(),
   companyCity: z.string().max(100).optional(),
   companyCountry: z.string().max(100).optional(),
-  factusMode: z.enum(['disabled', 'sandbox', 'production']).optional(),
   factusNumberingRangeId: z.string().max(40).optional(),
   factusCreditNoteNumberingRangeId: z.string().max(40).optional(),
   socialInstagramUrl: socialUrlSchema('instagram.com'),

@@ -19,7 +19,7 @@ export function renderFactusSettingsScript(): string {
         const button = event.currentTarget; button.disabled = true;
         notice('factusSettingsMessage', 'Guardando configuración de Factus…');
         try {
-          await request('/api/v1/settings', { method: 'PATCH', body: JSON.stringify({ factusMode: get('factusMode').value,
+          await request('/api/v1/settings', { method: 'PATCH', body: JSON.stringify({
             factusNumberingRangeId: get('factusInvoiceRange').value.trim(), factusCreditNoteNumberingRangeId: get('factusCreditRange').value.trim() }) });
           notice('factusSettingsMessage', 'Configuración Factus guardada.', true);
         } catch (error) { notice('factusSettingsMessage', error.message); }
@@ -27,7 +27,6 @@ export function renderFactusSettingsScript(): string {
       });
 
       get('loadFactusRanges')?.addEventListener('click', async () => {
-        if (get('factusMode').value === 'disabled') return notice('factusSettingsMessage', 'Selecciona y guarda Pruebas o Producción antes de consultar.');
         const button = get('loadFactusRanges'); button.disabled = true;
         try {
           const { ranges } = await request(rangeUrl);

@@ -11,7 +11,6 @@ export interface StoreSettingsDTO {
   companyAddress?: string;
   companyCity?: string;
   companyCountry?: string;
-  factusMode?: 'disabled' | 'sandbox' | 'production';
   factusNumberingRangeId?: string;
   factusCreditNoteNumberingRangeId?: string;
   socialInstagramUrl?: string;

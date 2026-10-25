@@ -3,15 +3,15 @@ import { CreditNote } from '../../domain/entities/CreditNote.js';
 import { ElectronicInvoiceSubmissionResult, IElectronicInvoicingPort, NewNumberingRange, NumberingRangeFilters } from '../../domain/ports/IElectronicInvoicingPort.js';
 import { mapInvoiceToFactus } from './FactusInvoiceMapper.js';
 import { mapCreditNoteItems } from './FactusCreditNoteMapper.js';
-import { resolveFactusApiUrl } from './resolveFactusApiUrl.js';
+import { resolveFactusApiUrl, resolveFactusEnvironment } from './resolveFactusApiUrl.js';
 import { FactusNumberingRangeManager } from './FactusNumberingRangeManager.js';
 import { paymentCode, pendingConflict, toResult } from './FactusSubmissionMapper.js';
 
 export interface FactusCredentials { clientId?: string; clientSecret?: string; username?: string; password?: string; }
 export interface FactusConfig {
-  mode?: string; apiUrl?: string; credentials?: FactusCredentials;
+  apiUrl?: string; credentials?: FactusCredentials;
   numberingRangeId?: string; creditNoteNumberingRangeId?: string;
-  getOperationalConfig?: () => Promise<{ mode: string; numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
+  getOperationalConfig?: () => Promise<{ numberingRangeId?: string; creditNoteNumberingRangeId?: string }>;
 }
 type FactusResponse = { data?: any; message?: string; errors?: unknown; httpStatus?: number };
 
@@ -102,7 +102,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
   }
 
   private mode(): 'sandbox' | 'production' | null {
-    return this.activeConfig.mode === 'sandbox' || this.activeConfig.mode === 'production' ? this.activeConfig.mode : null;
+    return resolveFactusEnvironment(this.activeConfig.apiUrl);
   }
 
   private async loadOperationalConfig(): Promise<void> {
@@ -131,7 +131,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
     try {
-      const response = await this.fetcher(`${resolveFactusApiUrl(this.mode()!, this.activeConfig.apiUrl)}${path}`, {
+      const response = await this.fetcher(`${resolveFactusApiUrl(this.activeConfig.apiUrl)}${path}`, {
         ...init, signal: controller.signal,
         headers: { Accept: 'application/json', Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json', ...init.headers },
@@ -163,7 +163,7 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     const form = new URLSearchParams({ grant_type: this.refreshToken ? 'refresh_token' : 'password',
       client_id: credentials.clientId, client_secret: credentials.clientSecret,
       ...(this.refreshToken ? { refresh_token: this.refreshToken } : { username: credentials.username, password: credentials.password }) });
-    const response = await this.fetcher(`${resolveFactusApiUrl(mode, this.activeConfig.apiUrl)}/oauth/token`, { method: 'POST', body: form,
+    const response = await this.fetcher(`${resolveFactusApiUrl(this.activeConfig.apiUrl)}/oauth/token`, { method: 'POST', body: form,
       headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' } });
     if (!response.ok) { this.refreshToken = null; throw new Error(`FACTUS_AUTH_HTTP_${response.status}`); }
     const payload = await response.json() as { access_token?: string; refresh_token?: string; expires_in?: number };

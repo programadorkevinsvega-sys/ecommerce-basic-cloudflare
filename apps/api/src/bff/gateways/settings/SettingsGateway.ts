@@ -11,7 +11,6 @@ export interface StoreSettingsResponse {
   companyAddress?: string;
   companyCity?: string;
   companyCountry?: string;
-  factusMode?: 'disabled' | 'sandbox' | 'production';
   factusNumberingRangeId?: string;
   factusCreditNoteNumberingRangeId?: string;
   socialInstagramUrl?: string;
@@ -33,7 +32,6 @@ export interface UpdateStoreSettingsRequest {
   companyAddress?: string;
   companyCity?: string;
   companyCountry?: string;
-  factusMode?: 'disabled' | 'sandbox' | 'production';
   factusNumberingRangeId?: string;
   factusCreditNoteNumberingRangeId?: string;
   socialInstagramUrl?: string;
