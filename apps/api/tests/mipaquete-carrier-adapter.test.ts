@@ -28,7 +28,7 @@ describe('MiPaqueteCarrierAdapter', () => {
     const party = { name: 'Tienda', surname: 'Vega', phone: '3000000000', email: 'store@example.com', address: 'Calle 1', identification: '123', identificationType: 'NIT' as const };
     const created = await adapter.create({ orderId: 'order-1', sender: party, recipient: { ...party, identificationType: 'CC' }, package: { widthCm: 10, lengthCm: 20, heightCm: 5, weightKg: 1, quantity: 1, declaredValueCop: 50000 }, originDaneCode: '05001000', destinationDaneCode: '11001000', carrierId: 'carrier-1', criterion: 'price', paymentType: 101, collectionValueCop: 0, saleValueCop: 0, requestPickup: false, description: 'Pedido' });
     expect(created.mipaqueteCode).toBe('98765');
-    expect(sentBody.requestPickup).toBe('false');
+    expect(sentBody.requestPickup).toBe(false);
     expect(sentBody.deliveryCompany).toBe('carrier-1');
     expect(sentBody).not.toHaveProperty('criteria');
   });
