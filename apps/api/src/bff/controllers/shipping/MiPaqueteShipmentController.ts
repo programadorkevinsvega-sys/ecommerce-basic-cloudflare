@@ -66,7 +66,7 @@ export class MiPaqueteShipmentController {
           destinationAddress: order.shippingAddress.addressLine, recipient, sender,
           description: order.lines.map((line) => `${line.quantity}x ${line.productName}`).join(', ').slice(0, 200),
         });
-        if (shipment.guideNumber) await deps.orders.saveOrderShippingDetails(order.id, {
+        await deps.orders.saveOrderShippingDetails(order.id, {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });
@@ -93,7 +93,7 @@ export class MiPaqueteShipmentController {
             await notifyOrderStatusChanged(updated, nextStatus, undefined, deps.notifications, 'mipaquete:authenticated_sync');
           }
         }
-        if (shipment.guideNumber) await deps.orders.saveOrderShippingDetails(shipment.orderId, {
+        if (order && order.status !== 'cancelled') await deps.orders.saveOrderShippingDetails(shipment.orderId, {
           shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
           shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
         });

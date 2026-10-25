@@ -94,7 +94,7 @@ async function reconcileCarrierShipments(root: AppCompositionRoot): Promise<void
           note, actor: 'mipaquete:scheduled_sync' });
         await notifyOrderStatusChanged(updated, nextStatus, undefined, root.notificationsGateway, 'mipaquete:scheduled_sync');
       }
-      if (shipment.guideNumber) await root.ordersGateway.saveOrderShippingDetails(order.id, {
+      await root.ordersGateway.saveOrderShippingDetails(order.id, {
         shippingCarrier: shipment.carrierName || 'MiPaquete', shippingTrackingNumber: shipment.guideNumber,
         shippingTrackingUrl: shipment.guideUrl, estimatedDeliveryDate: null,
       });

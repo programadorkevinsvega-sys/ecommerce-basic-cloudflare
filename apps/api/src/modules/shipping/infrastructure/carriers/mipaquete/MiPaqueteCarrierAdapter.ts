@@ -55,9 +55,9 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
       mipaqueteCode: parsed.data.mpCode === undefined
         ? parsed.data.code === undefined ? null : String(parsed.data.code)
         : String(parsed.data.mpCode),
-      guideNumber: parsed.data.guideNumber === undefined ? null : String(parsed.data.guideNumber),
+      guideNumber: nullableProviderValue(parsed.data.guideNumber),
       guideUrls: parsed.data.pdfGuide || [],
-      pickupCode: parsed.data.pickupCode === undefined ? null : String(parsed.data.pickupCode),
+      pickupCode: nullableProviderValue(parsed.data.pickupCode),
       status: parsed.data.tracking?.at(-1)?.updateState || 'Envío creado',
     };
   }
@@ -70,7 +70,7 @@ export class MiPaqueteCarrierAdapter implements IShippingCarrierPort {
     if (!sending) return null;
     return {
       mipaqueteCode,
-      guideNumber: sending['Número de Guía'] === undefined ? null : String(sending['Número de Guía']),
+      guideNumber: nullableProviderValue(sending['Número de Guía']),
       guideUrls: sending.pdfGuide || [], carrierName: sending['Transportadora'] || null,
       status: sending['Estado actual del envío'] || sending.tracking?.at(-1)?.updateState || 'Pendiente',
       tracking: (sending.tracking || []).map((event) => ({ status: event.updateState, occurredAt: event.date || null })),
@@ -123,9 +123,15 @@ function lookupResult(item: { _id?: string; 'Código mipaquete': string | number
   pdfGuide?: string[] } | undefined): CarrierShipmentLookup {
   if (!item) return { kind: 'not_found' };
   return { kind: 'found', providerShipmentId: item._id || null, mipaqueteCode: String(item['Código mipaquete']),
-    guideNumber: item['Número de Guía'] === undefined ? null : String(item['Número de Guía']),
-    guideUrls: item.pdfGuide || [], pickupCode: item['Número de Recolección'] === undefined ? null : String(item['Número de Recolección']),
+    guideNumber: nullableProviderValue(item['Número de Guía']),
+    guideUrls: item.pdfGuide || [], pickupCode: nullableProviderValue(item['Número de Recolección']),
     carrierName: item['Transportadora'] || null, status: item['Estado actual del envío'] || 'Envío creado' };
+}
+
+function nullableProviderValue(value: string | number | undefined): string | null {
+  if (value === undefined) return null;
+  const normalized = String(value).trim();
+  return !normalized || /^(no disponible|n\/?a|null|undefined)$/i.test(normalized) ? null : normalized;
 }
 
 function describeQuoteResponse(response: unknown, issues: Array<{ path: PropertyKey[]; message: string }>): string {

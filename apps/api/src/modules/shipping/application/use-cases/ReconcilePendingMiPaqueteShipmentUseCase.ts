@@ -30,6 +30,7 @@ export class ReconcilePendingMiPaqueteShipmentUseCase {
 function normalizeStatus(value: string): CarrierShipment['status'] {
   const status = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   if (status.includes('entreg')) return 'delivered';
+  if (status.includes('pendiente por pago') || status.includes('pendiente de pago')) return 'creation_pending';
   if (status.includes('cancel') || status.includes('anulad')) return 'cancelled';
   if (status.includes('novedad') || status.includes('devol') || status.includes('fall')) return 'exception';
   if (status.includes('transit') || status.includes('ruta') || status.includes('despach')) return 'in_transit';
