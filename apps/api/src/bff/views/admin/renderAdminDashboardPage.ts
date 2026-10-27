@@ -48,6 +48,8 @@ import { renderOrderTrackingAdminCss } from './renderOrderTrackingAdminCss.js';
 import { renderAdminNavigationStateScript } from './renderAdminNavigationStateScript.js';
 import { renderProductEditorialFieldsScript } from './renderProductEditorialFieldsScript.js';
 import { renderFactusSettingsScript } from './renderFactusSettingsScript.js';
+import { renderProductLandingEditorCss } from './renderProductLandingEditorCss.js';
+import { renderProductLandingEditorScript } from './renderProductLandingEditorScript.js';
 
 export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   return `<!DOCTYPE html>
@@ -56,7 +58,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración | Vega Store</title>
-  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderBlogDashboardCss()}${renderAdminReviewsCss()}${renderMenuAdminCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}${renderOrderTrackingAdminCss()}</style>
+  <style>${renderAdminDashboardCss()}${renderInventoryDashboardCss()}${renderPaymentsDashboardCss()}${renderShippingInvoicesDashboardCss()}${renderProductsDashboardCss()}${renderTaxonomyDashboardCss()}${renderCmsDashboardCss()}${renderBlogDashboardCss()}${renderAdminReviewsCss()}${renderMenuAdminCss()}${renderMarketingDashboardCss()}${renderSystemDashboardCss()}${renderAdminPaginationCss()}${renderAdminActionTokensCss()}${renderOrderTrackingAdminCss()}${renderProductLandingEditorCss()}</style>
 </head>
 <body>
   <a class="skip-link" href="#admin-main">Saltar al contenido</a>
@@ -99,6 +101,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderStorefrontActionsScript()}</script>
   <script>${renderProductFormsScript()}</script>
   ${renderProductListScript()}
+  <script>${renderProductLandingEditorScript()}</script>
   <script>${renderProductPriceMigrationScript()}</script>
   <script>${renderTaxonomyFormsScript()}</script>
   <script>${renderTaxonomyActionsScript()}</script>

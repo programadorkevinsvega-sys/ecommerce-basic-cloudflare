@@ -1,6 +1,7 @@
 import type { AdminDashboardProps } from './AdminDashboardProps.js';
 import { renderProductFormCard } from './renderProductFormCard.js';
 import { renderProductTable } from './renderProductTable.js';
+import { renderProductLandingEditorCard } from './renderProductLandingEditorCard.js';
 import { renderOrdersManagementSection } from './renderOrdersManagementSection.js';
 import { renderInventoryManagementSection } from './renderInventoryManagementSection.js';
 import { renderPaymentsManagementSection } from './renderPaymentsManagementSection.js';
@@ -21,6 +22,7 @@ export function renderAdminLegacyTabs(props: AdminDashboardProps): string {
   return `    <div id="tab-products" class="tab-content active">
       ${renderProductTable(props.products)}
       ${renderProductFormCard(props.shippingZones, props.settings.taxRatePercent, props.brands, props.products.map((product) => product.brand || ''), props.attributes, props.productTags || [], props.blogPosts || [])}
+      ${renderProductLandingEditorCard()}
     </div>
 
     <div id="tab-orders" class="tab-content">

@@ -476,7 +476,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [ ] Modelo y persistencia \`ProductLandingConfig\` propios de \`catalog\`, con migración D1 aditiva, límites de contenido, plantilla y secciones permitidas.
 - [ ] Gateway dedicado para que BFF acceda a la configuración sin importar internals del módulo; caso de uso verifica que el producto exista.
 - [ ] API administrativa con Zod, RBAC \`catalog:read/edit\`, MFA global y auditoría de mutaciones.
-- [ ] Editor en administración para activar/desactivar la landing, elegir plantilla, editar textos, beneficios, preguntas frecuentes y secciones.
+- [ ] Editor en administración para activar/desactivar la landing, elegir plantilla, editar textos, beneficios, preguntas frecuentes y secciones. La interfaz y el guardado ya están en `feat/product-landing-admin-editor`; falta validar con CI.
 - [ ] Renderizador SSR para las plantillas estándar, conversión y lanzamiento; contenido siempre escapado y CTA conectado al carrito actual.
 - [ ] SEO por página, URL canónica consistente, JSON-LD seguro y fallback a ficha estándar si no existe o no se puede leer una configuración.
 - [ ] Invalidación de caché tras guardar contenido y TTL finito para páginas públicas.
