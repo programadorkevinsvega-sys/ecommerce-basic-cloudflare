@@ -47,7 +47,7 @@ import { AuditController } from './controllers/audit/AuditController.js';
 import { ReviewsController } from './controllers/reviews/ReviewsController.js';
 import { ReviewsAdminController } from './controllers/reviews/ReviewsAdminController.js';
 import { OrderTrackingController } from './controllers/orders/OrderTrackingController.js';
-import { AppCompositionRoot } from '../composition-root.js';
+import type { AppCompositionRoot } from '../composition-root.js';
 import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
 import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
 import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
