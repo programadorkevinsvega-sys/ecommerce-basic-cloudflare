@@ -21,11 +21,9 @@ export function renderProductLandingEditorScript(): string {
         if (lines.length > max) throw new Error('Admite máximo ' + max + ' filas en ' + (id === 'plBenefits' ? 'beneficios.' : 'preguntas frecuentes.'));
         return lines.map((line, index) => {
           const separator = line.indexOf('|');
-          if (separator < 1 || !line.slice(separator + 1).trim()) {
-            throw new Error('Revisa la línea ' + (index + 1) + ': usa Título | Descripción.');
-          }
+          if (separator < 0) throw new Error('Revisa la línea ' + (index + 1) + ': usa Título | Descripción.');
           const firstValue = line.slice(0, separator).trim(), secondValue = line.slice(separator + 1).trim();
-          if (id === 'plFaqs' && (!firstValue || !secondValue)) throw new Error('Cada pregunta debe tener pregunta y respuesta.');
+          if (!firstValue || !secondValue) throw new Error('Cada línea necesita título/pregunta y descripción/respuesta.');
           return { [first]: firstValue, [second]: secondValue };
         });
       }
@@ -82,8 +80,9 @@ export function renderProductLandingEditorScript(): string {
       window.openProductLandingEditor = openEditor;
       closeButtons.forEach((button) => button.addEventListener('click', closeEditor));
       document.addEventListener('click', (event) => {
-        const button = event.target.closest?.('[data-open-product-landing]');
-        if (button) openEditor(button.dataset.openProductLanding);
+        const target = event.target;
+        const button = target instanceof Element ? target.closest('[data-open-product-landing]') : null;
+        if (button instanceof HTMLElement) openEditor(button.dataset.openProductLanding || '');
       });
       document.addEventListener('keydown', (event) => {
         if (!modal || modal.hidden) return;
