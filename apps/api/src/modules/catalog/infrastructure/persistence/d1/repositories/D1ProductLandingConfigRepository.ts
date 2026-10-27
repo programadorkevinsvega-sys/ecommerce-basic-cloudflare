@@ -15,6 +15,8 @@ interface ProductLandingContent {
   headline?: string;
   subtitle?: string;
   ctaLabel?: string;
+  seoTitle?: string;
+  seoDescription?: string;
   benefits?: ProductLandingConfigProps['benefits'];
   faqs?: ProductLandingConfigProps['faqs'];
   sections?: ProductLandingConfigProps['sections'];
@@ -34,7 +36,8 @@ export class D1ProductLandingConfigRepository implements IProductLandingConfigRe
     const value = config.toPrimitives();
     const content: ProductLandingContent = {
       eyebrow: value.eyebrow, headline: value.headline, subtitle: value.subtitle,
-      ctaLabel: value.ctaLabel, benefits: value.benefits, faqs: value.faqs, sections: value.sections,
+      ctaLabel: value.ctaLabel, seoTitle: value.seoTitle, seoDescription: value.seoDescription,
+      benefits: value.benefits, faqs: value.faqs, sections: value.sections,
     };
     await this.db.prepare(
       'INSERT INTO catalog_product_landing_configs (product_id, enabled, template_key, config_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ' +
@@ -54,6 +57,8 @@ function mapLandingRow(row: ProductLandingConfigRow): ProductLandingConfig {
     headline: content.headline ?? '',
     subtitle: content.subtitle ?? '',
     ctaLabel: content.ctaLabel ?? 'Comprar ahora',
+    seoTitle: content.seoTitle ?? '',
+    seoDescription: content.seoDescription ?? '',
     benefits: content.benefits ?? [],
     faqs: content.faqs ?? [],
     sections: content.sections ?? ['benefits', 'specifications', 'guides', 'reviews', 'faq', 'related'],

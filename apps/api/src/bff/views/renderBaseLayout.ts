@@ -11,6 +11,7 @@ import { StorefrontStoreProfile } from './StorefrontStoreProfile.js';
 import { renderStoreFooterDetails, renderStoreLegalIdentity, renderStoreSocialLinks } from './renderStoreFooterDetails.js';
 import { storefrontBlogStyles } from './storefrontBlogStyles.js';
 import { storefrontReviewStyles } from './storefrontReviewStyles.js';
+import { storefrontProductLandingStyles } from './storefrontProductLandingStyles.js';
 import { renderAnnouncementBar, type AnnouncementBarItem } from './renderAnnouncementBar.js';
 import { renderSearchSuggestionsScript } from './renderSearchSuggestionsScript.js';
 
@@ -89,7 +90,7 @@ export function renderBaseLayout(props: LayoutProps): string {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="robots" content="${robots}">
   ${jsonLdScript}
-  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}${storefrontNotFoundStyles}${storefrontBlogStyles}${storefrontReviewStyles}</style>
+  <style>${storefrontBaseStyles}${storefrontComponentStyles}${storefrontProductStyles}${storefrontDetailStyles}${storefrontCartStyles}${storefrontCatalogStyles}${storefrontCheckoutStyles}${storefrontCmsStyles}${storefrontNotFoundStyles}${storefrontBlogStyles}${storefrontReviewStyles}${storefrontProductLandingStyles}</style>
 </head>
 <body class="${props.checkoutMode ? 'checkout-mode' : ''}">
   ${props.checkoutMode ? '' : topBarHtml}

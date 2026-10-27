@@ -34,6 +34,8 @@ export function renderProductLandingEditorScript(): string {
         field('plHeadline').value = config.headline || '';
         field('plSubtitle').value = config.subtitle || '';
         field('plCtaLabel').value = config.ctaLabel || 'Comprar ahora';
+        field('plSeoTitle').value = config.seoTitle || '';
+        field('plSeoDescription').value = config.seoDescription || '';
         field('plBenefits').value = encodeRows(config.benefits, 'title', 'description');
         field('plFaqs').value = encodeRows(config.faqs, 'question', 'answer');
         const selected = new Set(config.sections || []);
@@ -51,7 +53,7 @@ export function renderProductLandingEditorScript(): string {
         field('plProductName').textContent = product.name;
         field('plPreview').href = '/productos/' + encodeURIComponent(product.slug);
         fillConfig({ enabled: false, templateKey: 'standard', eyebrow: '', headline: '', subtitle: '',
-          ctaLabel: 'Comprar ahora', benefits: [], faqs: [],
+          ctaLabel: 'Comprar ahora', seoTitle: '', seoDescription: '', benefits: [], faqs: [],
           sections: ['benefits', 'specifications', 'guides', 'reviews', 'faq', 'related'] });
         showMessage('Cargando configuración…');
         modal.hidden = false;
@@ -104,6 +106,7 @@ export function renderProductLandingEditorScript(): string {
           enabled: field('plEnabled').checked, templateKey: field('plTemplateKey').value,
           eyebrow: field('plEyebrow').value.trim(), headline: field('plHeadline').value.trim(),
           subtitle: field('plSubtitle').value.trim(), ctaLabel: field('plCtaLabel').value.trim(),
+          seoTitle: field('plSeoTitle').value.trim(), seoDescription: field('plSeoDescription').value.trim(),
           benefits, faqs, sections,
         };
         const save = field('plSave');

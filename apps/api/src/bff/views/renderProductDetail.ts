@@ -2,7 +2,15 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductDiscountDto } from '../gateways/promotions/PromotionsGateway.js';
 import { renderProductShippingWidget } from './renderProductShippingWidget.js';
 
-export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto, reviews?: { average: number; count: number; isDemo?: boolean; demoCount?: number }): string {
+export interface ProductDetailRenderOptions {
+  introHtml?: string;
+  sections?: readonly string[];
+}
+
+export function renderProductDetail(product: CatalogProductDto, discount?: ProductDiscountDto, reviews?: { average: number; count: number; isDemo?: boolean; demoCount?: number }, options: ProductDetailRenderOptions = {}): string {
+  const showSpecifications = !options.sections || options.sections.includes('specifications');
+  const showReviews = !options.sections || options.sections.includes('reviews');
+  const titleMarkup = options.introHtml ? '' : `<h1>${escapeHtml(product.name)}</h1>`;
   const salePrice = discount?.hasDiscount ? discount.finalPriceCents : product.priceInCents;
   const formatPrice = (cents: number): string => (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const condition = product.condition === 'refurbished' ? 'Reacondicionado' : product.condition === 'used' ? 'Usado' : 'Nuevo';
@@ -18,7 +26,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
       ${primaryImage ? `<img id="main-product-img" src="/media/${escapeHtml(primaryImage)}" alt="${escapeHtml(product.name)}" fetchpriority="high" onerror="this.hidden=true;this.nextElementSibling.hidden=false" /><span class="detail-image-empty" hidden>Imagen no disponible</span>` : '<span class="detail-image-empty">Imagen no disponible</span>'}
     </div>
     ${images.length > 1 ? `<div class="detail-thumbnails" role="group" aria-label="Galería de imágenes">${images.map((id, index) => `<button type="button" class="detail-thumb ${index === 0 ? 'is-active' : ''}" data-image-src="/media/${escapeHtml(id)}" aria-label="Ver imagen ${index + 1}" aria-pressed="${index === 0}"><img src="/media/${escapeHtml(id)}" alt="" loading="lazy" /></button>`).join('')}</div>` : ''}
-    ${specifications.length ? `<details class="detail-specifications" open><summary><span>Especificaciones técnicas</span><span class="detail-chevron" aria-hidden="true">⌄</span></summary><dl>${specifications.map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(String(value))}</dd></div>`).join('')}</dl></details>` : ''}
+    ${showSpecifications && specifications.length ? `<details class="detail-specifications" open><summary><span>Especificaciones técnicas</span><span class="detail-chevron" aria-hidden="true">⌄</span></summary><dl>${specifications.map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(String(value))}</dd></div>`).join('')}</dl></details>` : ''}
   </section>`;
   const discountBadge = discount?.discountPercentage !== undefined ? `−${discount.discountPercentage}%` : 'Descuento';
   const price = `<section class="detail-price-panel" aria-label="Precio"><div class="detail-price-row"><strong class="detail-price"><span class="sr-only">Precio actual: </span>${formatPrice(salePrice)}</strong>${discount?.hasDiscount ? `<span class="detail-price-old"><span class="sr-only">Precio anterior: </span>${formatPrice(product.priceInCents)}</span><span class="detail-discount">${discountBadge}</span>` : ''}</div>${discount?.hasDiscount ? `<p class="detail-saving">Ahorras ${formatPrice(Math.max(0, product.priceInCents - salePrice))}${discount.promotionName ? ` · ${escapeHtml(discount.promotionName)}` : ''}</p>` : ''}<p class="detail-currency">Precios en pesos colombianos (COP). Impuestos incluidos.</p></section>`;
@@ -29,12 +37,12 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
   const brandHtml = product.brand ? `<a href="/productos?q=${encodeURIComponent(product.brand)}">${escapeHtml(product.brand)}</a>` : '<span class="detail-store-name">Vega Store</span>';
   const productId = JSON.stringify(product.id).replace(/</g, '\\u003c');
 
-  return `${breadcrumb}<article class="detail-layout"><div class="detail-gallery-col">${gallery}</div><div class="detail-info-col">
+  return `${breadcrumb}${options.introHtml || ''}<article class="detail-layout"><div class="detail-gallery-col">${gallery}</div><div class="detail-info-col">
     <header class="detail-product-heading"><div class="detail-brand-sku">${brandHtml}<span>SKU ${escapeHtml(product.sku)}</span></div>
-      <h1>${escapeHtml(product.name)}</h1><a class="detail-review-summary" href="/productos/${encodeURIComponent(product.slug)}/opiniones#opiniones" aria-label="Ver opiniones">${reviews?.count ? `<span aria-hidden="true">★</span> ${reviews.average.toFixed(1)} · ${reviews.count} ${reviews.count === 1 ? 'opinión' : 'opiniones'}` : reviews?.isDemo ? `${reviews.demoCount||0} opiniones` : 'Sé la primera persona en opinar'} <span aria-hidden="true">↓</span></a><div class="detail-product-meta"><span class="stock-dot ${product.stockQuantity > 0 ? 'is-available' : ''}" aria-hidden="true"></span><span>${stockLabel}</span><span aria-hidden="true">·</span><span>${escapeHtml(saleMode)}</span></div>
+      ${titleMarkup}${showReviews ? `<a class="detail-review-summary" href="/productos/${encodeURIComponent(product.slug)}/opiniones#opiniones" aria-label="Ver opiniones">${reviews?.count ? `<span aria-hidden="true">★</span> ${reviews.average.toFixed(1)} · ${reviews.count} ${reviews.count === 1 ? 'opinión' : 'opiniones'}` : reviews?.isDemo ? `${reviews.demoCount||0} opiniones` : 'Sé la primera persona en opinar'} <span aria-hidden="true">↓</span></a>` : ''}<div class="detail-product-meta"><span class="stock-dot ${product.stockQuantity > 0 ? 'is-available' : ''}" aria-hidden="true"></span><span>${stockLabel}</span><span aria-hidden="true">·</span><span>${escapeHtml(saleMode)}</span></div>
     </header>
     ${price}<p class="detail-description">${escapeHtml(product.description)}</p>
-    <section class="detail-purchase" aria-label="Añadir producto al carrito"><div class="detail-quantity"><span id="quantity-label">Cantidad</span><div><button type="button" data-quantity-change="-1" aria-label="Disminuir cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>−</button><input id="buy-qty" type="number" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" step="1" aria-labelledby="quantity-label" ${product.stockQuantity < 1 ? 'disabled' : ''} /><button type="button" data-quantity-change="1" aria-label="Aumentar cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>+</button></div></div>
+    <section id="detail-purchase" class="detail-purchase" aria-label="Añadir producto al carrito"><div class="detail-quantity"><span id="quantity-label">Cantidad</span><div><button type="button" data-quantity-change="-1" aria-label="Disminuir cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>−</button><input id="buy-qty" type="number" value="1" min="1" max="${Math.max(1, product.stockQuantity)}" step="1" aria-labelledby="quantity-label" ${product.stockQuantity < 1 ? 'disabled' : ''} /><button type="button" data-quantity-change="1" aria-label="Aumentar cantidad" ${product.stockQuantity < 1 ? 'disabled' : ''}>+</button></div></div>
       <button type="button" id="btn-add-cart" class="detail-add-button" ${product.stockQuantity < 1 ? 'disabled' : ''}><span aria-hidden="true">＋</span>Añadir al carrito · <span id="detail-total">${formatPrice(salePrice)}</span></button></section>
     <div id="cart-msg" class="detail-cart-message" role="status" aria-live="polite" hidden></div>
     <section class="detail-wishlist" aria-label="Lista de deseos" style="margin-top:1rem"><button type="button" id="btn-wishlist-add" style="padding:.7rem 1rem;border:1px solid #20563c;border-radius:8px;background:#fff;color:#20563c;cursor:pointer">♡ Guardar en favoritos</button><p id="wishlist-msg" class="detail-cart-message" role="status" aria-live="polite" hidden></p></section>

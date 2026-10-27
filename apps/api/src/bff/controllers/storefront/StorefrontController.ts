@@ -7,6 +7,7 @@ import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ReviewsGateway } from '../../gateways/reviews/ReviewsGateway.js';
+import { ProductLandingGateway } from '../../gateways/catalog/ProductLandingGateway.js';
 import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
@@ -22,6 +23,7 @@ import { buildStorefrontCatalogPageHref, parseStorefrontCatalogFilters } from '.
 export class StorefrontController {
   public static createRoutes(
     catalogGateway: CatalogGateway,
+    productLandingGateway: ProductLandingGateway,
     identityGateway: IdentityGateway,
     storefrontGateway: StorefrontGateway,
     seoGateway: SeoGateway,
@@ -154,7 +156,7 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    router.route('/', ProductDetailController.createRoutes(catalogGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
+    router.route('/', ProductDetailController.createRoutes(catalogGateway, productLandingGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
 
     router.get('/auth/login', async (c) => {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);

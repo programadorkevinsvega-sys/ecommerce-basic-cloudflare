@@ -45,7 +45,7 @@ function defaultLanding(productId: string) {
   const now = new Date().toISOString();
   return {
     productId, enabled: false, templateKey: 'standard' as const, eyebrow: '', headline: '',
-    subtitle: '', ctaLabel: 'Comprar ahora', benefits: [], faqs: [],
+    subtitle: '', ctaLabel: 'Comprar ahora', seoTitle: '', seoDescription: '', benefits: [], faqs: [],
     sections: ['benefits', 'specifications', 'guides', 'reviews', 'faq', 'related'] as const,
     createdAt: now, updatedAt: now,
   };

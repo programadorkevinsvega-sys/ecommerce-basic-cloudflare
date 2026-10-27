@@ -148,6 +148,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   // Storefront público SSR
   app.route('/', StorefrontController.createRoutes(
     cRoot.catalogGateway,
+    cRoot.productLandingGateway,
     cRoot.identityGateway,
     cRoot.storefrontGateway,
     cRoot.seoGateway,

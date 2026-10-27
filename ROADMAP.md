@@ -467,21 +467,23 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 
 ## Fase 14 — Landing pages dinámicas de producto
 
-**Tamaño:** M · **Bounded context:** \`catalog\` con presentación SSR en BFF/storefront.
+**Tamaño:** M · **Bounded context:** `catalog` con presentación SSR en BFF/storefront.
 **Contrato aplicable:** §1.bis, §2, §4.1–4.6, §5, §6.1–6.2, §7, §9–10, §14, §19–20.
-**Seguridad y recuperación:** SEC-VAL-02/05, SEC-ADM-01/03, SEC-CMS-01/03/05, SEC-FE-01/03, SEC-MOD-01/02/04, SEC-WEB-02/04, SEC-LOG-01..03 · \`ROLLBACK_RECOVERY.md\`: migración aditiva y compatible hacia atrás; no aplicar migración remota sin revisar ledger, respaldo y recuperación.
+**Seguridad y recuperación:** SEC-VAL-02/05, SEC-ADM-01/03, SEC-CMS-01/03/05, SEC-FE-01/03, SEC-MOD-01/02/04, SEC-WEB-02/04, SEC-LOG-01..03 · `ROLLBACK_RECOVERY.md`: migración aditiva y compatible hacia atrás; no aplicar migración remota sin revisar ledger, respaldo y recuperación.
 
 **Objetivo:** permitir que cada producto use una plantilla de presentación configurable, con secciones editoriales administrables, manteniendo la ficha de producto actual como opción predeterminada y reutilizando precios, inventario, promociones, reseñas, carrito y checkout existentes.
 
-- [ ] Modelo y persistencia \`ProductLandingConfig\` propios de \`catalog\`, con migración D1 aditiva, límites de contenido, plantilla y secciones permitidas.
+- [ ] Modelo y persistencia `ProductLandingConfig` propios de `catalog`, con migración D1 aditiva, límites de contenido, plantilla y secciones permitidas.
 - [ ] Gateway dedicado para que BFF acceda a la configuración sin importar internals del módulo; caso de uso verifica que el producto exista.
-- [ ] API administrativa con Zod, RBAC \`catalog:read/edit\`, MFA global y auditoría de mutaciones.
+- [ ] API administrativa con Zod, RBAC `catalog:read/edit`, MFA global y auditoría de mutaciones.
 - [ ] Editor en administración para activar/desactivar la landing, elegir plantilla, editar textos, beneficios, preguntas frecuentes y secciones. La interfaz y el guardado ya están en `feat/product-landing-admin-editor`; falta validar con CI.
-- [ ] Renderizador SSR para las plantillas estándar, conversión y lanzamiento; contenido siempre escapado y CTA conectado al carrito actual.
-- [ ] SEO por página, URL canónica consistente, JSON-LD seguro y fallback a ficha estándar si no existe o no se puede leer una configuración.
+- [ ] Renderizador SSR para las plantillas estándar, conversión y lanzamiento; contenido siempre escapado y CTA conectado al carrito actual. El SSR dinámico, FAQ/beneficios y selección de secciones están implementados en `feat/product-landing-ssr-templates`; falta validar con CI.
+- [ ] SEO por página, URL canónica consistente, JSON-LD seguro y fallback a ficha estándar si no existe o no se puede leer una configuración. El título y la descripción SEO pueden configurarse por landing; falta validar con CI.
 - [ ] Invalidación de caché tras guardar contenido y TTL finito para páginas públicas.
 - [ ] Pruebas unitarias, D1/Worker, seguridad del editor, persistencia, fallback, plantillas, carrito, SEO, migración vacía/actualización y aislamiento de tablas.
 - [ ] Validación local y CI completa en cada PR de fase; fusionar únicamente con los checks requeridos disponibles y exitosos. La aplicación de migración en un entorno remoto es una operación separada y debe verificarse explícitamente.
+
+**Estado del trabajo (2026-10-27):** las fases de modelo/API (`feat/product-landing-config-foundation`), editor (`feat/product-landing-admin-editor`) y SSR (`feat/product-landing-ssr-templates`) tienen commits y PR separados/apilados. GitHub Actions falla antes de iniciar runners en ejecuciones del repositorio, así que ningún PR se fusiona hasta disponer de validaciones reales y exitosas. No se han aplicado migraciones en D1 remota.
 
 **Criterio de salida:** un administrador configura una landing para un producto publicado; la URL existente sirve la plantilla seleccionada en SSR; se mantienen precio y descuento del servidor, stock, reseñas, CTA de compra, SEO y comportamiento estándar para productos no configurados; las pruebas de arquitectura, seguridad, migraciones y Worker pasan.
 

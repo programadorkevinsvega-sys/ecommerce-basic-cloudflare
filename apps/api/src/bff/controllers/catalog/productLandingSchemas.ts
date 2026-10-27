@@ -17,6 +17,8 @@ export const saveProductLandingSchema = z.object({
   headline: z.string().max(160).default(''),
   subtitle: z.string().max(400).default(''),
   ctaLabel: z.string().trim().min(1).max(40).default('Comprar ahora'),
+  seoTitle: z.string().trim().max(100).default(''),
+  seoDescription: z.string().trim().max(300).default(''),
   benefits: z.array(benefitSchema).max(6).default([]),
   faqs: z.array(faqSchema).max(10).default([]),
   sections: z.array(z.enum(['benefits', 'specifications', 'guides', 'reviews', 'faq', 'related'])).max(6),

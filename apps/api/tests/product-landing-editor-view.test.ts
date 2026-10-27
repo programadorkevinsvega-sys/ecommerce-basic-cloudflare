@@ -8,6 +8,7 @@ describe('editor administrativo de landing de producto', () => {
     const markup = renderProductLandingEditorCard();
     expect(markup).toContain('id="productLandingForm"');
     expect(markup).toContain('id="plHeadline"');
+    expect(markup).toContain('id="plSeoTitle"');
     expect(markup).toContain('value="conversion"');
     expect(markup).toContain('value="launch"');
     expect(markup).toContain('value="benefits"');
@@ -21,6 +22,7 @@ describe('editor administrativo de landing de producto', () => {
     expect(script).toContain("'/landing'");
     expect(script).toContain('JSON.stringify(payload)');
     expect(script).toContain('decodeRows');
+    expect(script).toContain('seoDescription: field');
     expect(script).not.toContain('insertAdjacentHTML');
     expect(renderProductLandingEditorCss()).toContain('.landing-modal[hidden]');
   });

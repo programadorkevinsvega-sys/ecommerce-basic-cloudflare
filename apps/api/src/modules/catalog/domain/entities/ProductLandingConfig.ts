@@ -23,6 +23,8 @@ export interface ProductLandingConfigProps {
   headline: string;
   subtitle: string;
   ctaLabel: string;
+  seoTitle?: string;
+  seoDescription?: string;
   benefits: ProductLandingBenefit[];
   faqs: ProductLandingFaq[];
   sections: ProductLandingSection[];
@@ -41,6 +43,8 @@ export class ProductLandingConfig {
       headline: props.headline.trim(),
       subtitle: props.subtitle.trim(),
       ctaLabel: props.ctaLabel.trim(),
+      seoTitle: (props.seoTitle ?? '').trim(),
+      seoDescription: (props.seoDescription ?? '').trim(),
       benefits: props.benefits.map((item) => ({ title: item.title.trim(), description: item.description.trim() })),
       faqs: props.faqs.map((item) => ({ question: item.question.trim(), answer: item.answer.trim() })),
       sections: [...new Set(props.sections)],
@@ -73,6 +77,8 @@ function validateProps(props: ProductLandingConfigProps): void {
   validateText(props.headline, 160, 'El titular');
   validateText(props.subtitle, 400, 'El subtítulo');
   validateText(props.ctaLabel, 40, 'El texto del botón');
+  validateText(props.seoTitle ?? '', 100, 'El título SEO');
+  validateText(props.seoDescription ?? '', 300, 'La descripción SEO');
   if (!Array.isArray(props.benefits) || props.benefits.length > 6) throw new Error('La landing admite hasta 6 beneficios');
   if (!Array.isArray(props.faqs) || props.faqs.length > 10) throw new Error('La landing admite hasta 10 preguntas frecuentes');
   if (!Array.isArray(props.sections) || props.sections.some((item) => !PRODUCT_LANDING_SECTIONS.includes(item))) {
