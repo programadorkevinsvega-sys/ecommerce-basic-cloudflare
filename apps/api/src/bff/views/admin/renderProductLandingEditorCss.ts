@@ -1,5 +1,5 @@
 export function renderProductLandingEditorCss(): string {
-  return \`
+  return `
     .products-actions .btn-action-landing { background:#e8edff; color:#344a9a; }
     .landing-modal[hidden] { display:none!important; }
     .landing-modal { position:fixed; inset:0; z-index:1900; display:flex; align-items:center; justify-content:center; padding:22px; }
@@ -18,5 +18,5 @@ export function renderProductLandingEditorCss(): string {
     .landing-form-footer { display:flex; flex-wrap:wrap; align-items:center; gap:9px; padding-top:8px; border-top:1px solid #e5e9ef; }.landing-form-footer #plMsg { flex:1 1 100%; min-height:18px; color:#526075; font-size:12px; }.landing-form-footer #plMsg.is-error { color:#b42318; }.landing-form-footer #plMsg.is-success { color:#18764b; }
     .landing-primary,.landing-secondary { min-height:40px; border-radius:8px; padding:0 14px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }.landing-primary { border:0; background:#344a9a; color:#fff; }.landing-primary:disabled { opacity:.6; cursor:wait; }.landing-secondary { border:1px solid #cbd3df; background:#fff; color:#344054; }.landing-form-footer a { color:#344a9a; font-size:12px; font-weight:650; text-decoration:none; margin-right:auto; }
     @media(max-width:640px) { .landing-modal { padding:8px; }.landing-modal-dialog { max-height:calc(100vh - 16px); }.landing-modal-heading,.landing-form { padding:16px; }.landing-form-grid,.landing-section-picker { grid-template-columns:1fr; }.landing-form .landing-wide { grid-column:auto; }.landing-form-footer a { flex-basis:100%; } }
-  \`;
+  `;
 }
