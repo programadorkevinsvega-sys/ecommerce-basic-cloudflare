@@ -54,7 +54,8 @@ export function renderProductRows(products: CatalogProductDto[]): string {
         <td>${statusBadge}</td>
         <td>${cod}</td>
         <td class="products-actions">
-          <a class="btn-action btn-action-view" href="/productos/${escapeHtml(p.slug)}" target="_blank">Ver</a>
+          <a class="btn-action btn-action-view" href="/productos/${escapeHtml(p.slug)}" target="_blank" rel="noopener noreferrer">Ver</a>
+          <button class="btn-action btn-action-landing" type="button" data-open-product-landing="${escapeHtml(p.id)}">Landing</button>
           <button class="btn-action btn-action-edit" onclick="editProduct('${p.id}')">Editar</button>
           ${toggleAction}
           <button class="btn-action btn-action-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>
