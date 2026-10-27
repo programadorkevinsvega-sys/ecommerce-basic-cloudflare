@@ -15,6 +15,8 @@ import { CatalogGateway } from './bff/gateways/catalog/CatalogGateway.js';
 import { InProcessCatalogGateway } from './bff/gateways/catalog/InProcessCatalogGateway.js';
 import { createCatalogModule } from './modules/catalog/module.config.js';
 import { CatalogPublicApi } from './modules/catalog/module.public-api.js';
+import { ProductLandingGateway } from './bff/gateways/catalog/ProductLandingGateway.js';
+import { InProcessProductLandingGateway } from './bff/gateways/catalog/InProcessProductLandingGateway.js';
 import { StorefrontGateway } from './bff/gateways/storefront/StorefrontGateway.js';
 import { InProcessStorefrontGateway } from './bff/gateways/storefront/InProcessStorefrontGateway.js';
 import { createStorefrontModule } from './modules/storefront/module.config.js';
@@ -82,6 +84,7 @@ export interface AppCompositionRoot {
   identityGateway: IdentityGateway;
   mediaGateway: MediaGateway;
   catalogGateway: CatalogGateway;
+  productLandingGateway: ProductLandingGateway;
   storefrontGateway: StorefrontGateway;
   seoGateway: SeoGateway;
   cmsGateway: CmsGateway;
@@ -136,7 +139,9 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const mediaGateway = new InProcessMediaGateway(new MediaPublicApi(mediaContainer));
 
   const catalogContainer = createCatalogModule(env);
-  const catalogGateway = new InProcessCatalogGateway(new CatalogPublicApi(catalogContainer));
+  const catalogPublicApi = new CatalogPublicApi(catalogContainer);
+  const catalogGateway = new InProcessCatalogGateway(catalogPublicApi);
+  const productLandingGateway = new InProcessProductLandingGateway(catalogPublicApi);
 
   const storefrontContainer = createStorefrontModule(env);
   const storefrontGateway = new InProcessStorefrontGateway(new StorefrontPublicApi(storefrontContainer));
@@ -198,6 +203,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     identityGateway,
     mediaGateway,
     catalogGateway,
+    productLandingGateway,
     storefrontGateway,
     seoGateway,
     cmsGateway,
