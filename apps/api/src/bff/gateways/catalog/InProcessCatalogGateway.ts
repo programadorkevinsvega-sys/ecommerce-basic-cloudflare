@@ -175,6 +175,15 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public saveProductTag(input: Parameters<CatalogGateway['saveProductTag']>[0]) { return this.publicApi.saveProductTag(input); }
   public deleteProductTag(id: string): Promise<void> { return this.publicApi.deleteProductTag(id); }
 
+  public async getProductLandingConfig(productId: string) {
+    const config = await this.publicApi.getProductLandingConfig(productId);
+    return config?.toPrimitives() ?? null;
+  }
+
+  public async saveProductLandingConfig(input: Parameters<CatalogGateway['saveProductLandingConfig']>[0]) {
+    return (await this.publicApi.saveProductLandingConfig(input)).toPrimitives();
+  }
+
   public async previewLegacyPriceMigration(taxRateBasisPoints: number) {
     return this.publicApi.previewLegacyPriceMigration(taxRateBasisPoints);
   }
