@@ -41,5 +41,5 @@ export interface AppCompositionRoot {
   notificationsGateway: NotificationsGateway;
   auditGateway: AuditGateway;
   outboxRelayService: OutboxRelayService;
-  mediaOrphanCollector: ReturnType<typeof createMediaModule>['collectOrphanedMediaUseCase'];
+  mediaOrphanCollector: { execute(cursor?: string, now?: Date): Promise<{ deleted: number; cursor?: string }> };
 }
