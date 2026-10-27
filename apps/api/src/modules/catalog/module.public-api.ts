@@ -19,6 +19,8 @@ import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from './application/use-ca
 import { CollectionInput } from './application/use-cases/ManageCollectionUseCase.js';
 import { Collection } from './domain/entities/Collection.js';
 import { ProductTag, SaveProductTagInput } from './domain/entities/ProductTag.js';
+import { ProductLandingConfig } from './domain/entities/ProductLandingConfig.js';
+import { SaveProductLandingConfigInput } from './application/use-cases/SaveProductLandingConfigUseCase.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -57,6 +59,8 @@ export interface ICatalogPublicApi {
   countProductTags(includeInactive?: boolean): Promise<number>;
   saveProductTag(input: SaveProductTagInput): Promise<ProductTag>;
   deleteProductTag(id: string): Promise<void>;
+  getProductLandingConfig(productId: string): Promise<ProductLandingConfig | null>;
+  saveProductLandingConfig(input: SaveProductLandingConfigInput): Promise<ProductLandingConfig>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
 }
@@ -193,6 +197,16 @@ export class CatalogPublicApi implements ICatalogPublicApi {
   public countProductTags(includeInactive = true): Promise<number> { return this.container.manageProductTagsUseCase.count(includeInactive); }
   public saveProductTag(input: SaveProductTagInput): Promise<ProductTag> { return this.container.manageProductTagsUseCase.save(input); }
   public deleteProductTag(id: string): Promise<void> { return this.container.manageProductTagsUseCase.delete(id); }
+
+  public getProductLandingConfig(productId: string): Promise<ProductLandingConfig | null> {
+    return this.container.getProductLandingConfigUseCase.execute(productId);
+  }
+
+  public async saveProductLandingConfig(input: SaveProductLandingConfigInput): Promise<ProductLandingConfig> {
+    const result = await this.container.saveProductLandingConfigUseCase.execute(input);
+    if (result.isFail()) throw result.error;
+    return result.value;
+  }
 
   public async previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview> {
     return this.container.migrateLegacyProductPricesUseCase.preview(taxRateBasisPoints);

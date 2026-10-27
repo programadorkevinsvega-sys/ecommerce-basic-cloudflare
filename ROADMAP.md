@@ -44,6 +44,7 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
 | 12 | Evolución | — | 🔄 Parcial | Reseñas y seguimiento implementados; wishlist, i18n y extracción siguen pendientes |
 | 13 | Envíos con MiPaquete | M | 🔄 Operativa con validación pendiente | Cotización nacional, perfiles de empaque, guías, trazabilidad y conciliación ambigua |
+| 14 | Landing pages dinámicas de producto | M | 🔄 En implementación | Configuración por producto, editor administrativo, plantillas SSR, SEO y reutilización del checkout |
 
 ```text
 0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12 ─► 13
@@ -461,3 +462,26 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 7. Pantallas de admin y tienda con el cliente generado desde OpenAPI.
 8. Eventos, caché e invalidación.
 9. Verificación contra el Definition of Done (§19) y despliegue a staging.
+
+---
+
+## Fase 14 — Landing pages dinámicas de producto
+
+**Tamaño:** M · **Bounded context:** \`catalog\` con presentación SSR en BFF/storefront.
+**Contrato aplicable:** §1.bis, §2, §4.1–4.6, §5, §6.1–6.2, §7, §9–10, §14, §19–20.
+**Seguridad y recuperación:** SEC-VAL-02/05, SEC-ADM-01/03, SEC-CMS-01/03/05, SEC-FE-01/03, SEC-MOD-01/02/04, SEC-WEB-02/04, SEC-LOG-01..03 · \`ROLLBACK_RECOVERY.md\`: migración aditiva y compatible hacia atrás; no aplicar migración remota sin revisar ledger, respaldo y recuperación.
+
+**Objetivo:** permitir que cada producto use una plantilla de presentación configurable, con secciones editoriales administrables, manteniendo la ficha de producto actual como opción predeterminada y reutilizando precios, inventario, promociones, reseñas, carrito y checkout existentes.
+
+- [ ] Modelo y persistencia \`ProductLandingConfig\` propios de \`catalog\`, con migración D1 aditiva, límites de contenido, plantilla y secciones permitidas.
+- [ ] Gateway dedicado para que BFF acceda a la configuración sin importar internals del módulo; caso de uso verifica que el producto exista.
+- [ ] API administrativa con Zod, RBAC \`catalog:read/edit\`, MFA global y auditoría de mutaciones.
+- [ ] Editor en administración para activar/desactivar la landing, elegir plantilla, editar textos, beneficios, preguntas frecuentes y secciones.
+- [ ] Renderizador SSR para las plantillas estándar, conversión y lanzamiento; contenido siempre escapado y CTA conectado al carrito actual.
+- [ ] SEO por página, URL canónica consistente, JSON-LD seguro y fallback a ficha estándar si no existe o no se puede leer una configuración.
+- [ ] Invalidación de caché tras guardar contenido y TTL finito para páginas públicas.
+- [ ] Pruebas unitarias, D1/Worker, seguridad del editor, persistencia, fallback, plantillas, carrito, SEO, migración vacía/actualización y aislamiento de tablas.
+- [ ] Validación local y CI completa en cada PR de fase; fusionar únicamente con los checks requeridos disponibles y exitosos. La aplicación de migración en un entorno remoto es una operación separada y debe verificarse explícitamente.
+
+**Criterio de salida:** un administrador configura una landing para un producto publicado; la URL existente sirve la plantilla seleccionada en SSR; se mantienen precio y descuento del servidor, stock, reseñas, CTA de compra, SEO y comportamiento estándar para productos no configurados; las pruebas de arquitectura, seguridad, migraciones y Worker pasan.
+

@@ -29,6 +29,9 @@ import { D1CollectionRepository } from './infrastructure/persistence/d1/reposito
 import { ManageCollectionUseCase } from './application/use-cases/ManageCollectionUseCase.js';
 import { D1ProductTagRepository } from './infrastructure/persistence/d1/repositories/D1ProductTagRepository.js';
 import { ManageProductTagsUseCase } from './application/use-cases/ManageProductTagsUseCase.js';
+import { D1ProductLandingConfigRepository } from './infrastructure/persistence/d1/repositories/D1ProductLandingConfigRepository.js';
+import { GetProductLandingConfigUseCase } from './application/use-cases/GetProductLandingConfigUseCase.js';
+import { SaveProductLandingConfigUseCase } from './application/use-cases/SaveProductLandingConfigUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -53,6 +56,8 @@ export interface CatalogModuleContainer {
   manageCatalogTaxonomyUseCase: ManageCatalogTaxonomyUseCase;
   manageCollectionUseCase: ManageCollectionUseCase;
   manageProductTagsUseCase: ManageProductTagsUseCase;
+  getProductLandingConfigUseCase: GetProductLandingConfigUseCase;
+  saveProductLandingConfigUseCase: SaveProductLandingConfigUseCase;
 }
 
 export function createCatalogModule(env: Env): CatalogModuleContainer {
@@ -64,6 +69,7 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
   const variantRepo = new D1ProductVariantRepository(env.DB);
   const collectionRepo = new D1CollectionRepository(env.DB);
   const productTagRepo = new D1ProductTagRepository(env.DB);
+  const productLandingConfigRepo = new D1ProductLandingConfigRepository(env.DB);
 
   return {
     createProductUseCase: new CreateProductUseCase(productRepo),
@@ -88,5 +94,7 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     manageCatalogTaxonomyUseCase: new ManageCatalogTaxonomyUseCase(categoryRepo, brandRepo, attributeRepo, supplierRepo, variantRepo),
     manageCollectionUseCase: new ManageCollectionUseCase(collectionRepo, productRepo),
     manageProductTagsUseCase: new ManageProductTagsUseCase(productTagRepo),
+    getProductLandingConfigUseCase: new GetProductLandingConfigUseCase(productLandingConfigRepo),
+    saveProductLandingConfigUseCase: new SaveProductLandingConfigUseCase(productRepo, productLandingConfigRepo),
   };
 }

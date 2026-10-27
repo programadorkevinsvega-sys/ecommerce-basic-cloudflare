@@ -8,6 +8,7 @@ import { CustomerAuthController } from './controllers/auth/CustomerAuthControlle
 import { AdminAuthController } from './controllers/auth/AdminAuthController.js';
 import { MediaController } from './controllers/media/MediaController.js';
 import { CatalogController } from './controllers/catalog/CatalogController.js';
+import { ProductLandingAdminController } from './controllers/catalog/ProductLandingAdminController.js';
 import { CatalogSearchSuggestionsController } from './controllers/catalog/CatalogSearchSuggestionsController.js';
 import { CatalogBrandAdminController } from './controllers/catalog/CatalogBrandAdminController.js';
 import { CatalogAuxiliaryAdminController } from './controllers/catalog/CatalogAuxiliaryAdminController.js';
@@ -46,7 +47,7 @@ import { AuditController } from './controllers/audit/AuditController.js';
 import { ReviewsController } from './controllers/reviews/ReviewsController.js';
 import { ReviewsAdminController } from './controllers/reviews/ReviewsAdminController.js';
 import { OrderTrackingController } from './controllers/orders/OrderTrackingController.js';
-import { AppCompositionRoot } from '../composition-root.js';
+import type { AppCompositionRoot } from '../composition-root.js';
 import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
 import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
 import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
@@ -167,6 +168,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/api/v1/settings', SettingsController.createRoutes(cRoot.settingsGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/media', MediaController.createRoutes(cRoot.mediaGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.auditGateway, cRoot.shippingGateway, cRoot.inventoryGateway));
+  app.route('/api/v1', ProductLandingAdminController.createRoutes(cRoot.catalogGateway, cRoot.productLandingGateway, cRoot.identityGateway));
   app.route('/api/v1', CatalogSearchSuggestionsController.createRoutes(cRoot.catalogGateway));
   app.route('/api/v1', CatalogBrandAdminController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway, cRoot.auditGateway));
   app.route('/api/v1', CatalogTaxonomyListController.createRoutes(cRoot.catalogGateway, cRoot.identityGateway));
