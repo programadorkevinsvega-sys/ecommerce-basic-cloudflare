@@ -44,6 +44,7 @@ Plan de construcción por fases. Cada fase termina en algo **desplegable y verif
 | 11 | Endurecimiento y lanzamiento | M | 📋 Planificada | Carga, caos, seguridad, alertas, go-live |
 | 12 | Evolución | — | 🔄 Parcial | Reseñas y seguimiento implementados; wishlist, i18n y extracción siguen pendientes |
 | 13 | Envíos con MiPaquete | M | 🔄 Operativa con validación pendiente | Cotización nacional, perfiles de empaque, guías, trazabilidad y conciliación ambigua |
+| 14 | Landing pages dinámicas de producto | M | 🔄 En implementación | Configuración por producto, editor administrativo, plantillas SSR, SEO y reutilización del checkout |
 
 ```text
 0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11 ─► 12 ─► 13
