@@ -14,6 +14,7 @@ import { renderProductGuides } from '../../views/renderProductGuides.js';
 import { renderRelatedProducts } from '../../views/renderRelatedProducts.js';
 import { renderProductLandingHero } from '../../views/renderProductLandingHero.js';
 import { renderProductLandingFaq } from '../../views/renderProductLandingFaq.js';
+import { renderProductLandingBenefits } from '../../views/renderProductLandingBenefits.js';
 import { renderNotFoundPage } from '../../views/renderNotFoundPage.js';
 import { ProductSeoHelper } from '../../../modules/catalog/domain/services/ProductSeoHelper.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
@@ -43,12 +44,13 @@ export class ProductDetailController {
         const landingHero = activeLanding ? renderProductLandingHero(activeLanding, product) : '';
         const detailOptions = activeLanding ? { introHtml: landingHero || undefined, sections: activeLanding.sections } : {};
         const detailHtml = renderProductDetail(product, discount, { ...reviewPage.summary, demoCount: reviewPage.total }, detailOptions);
+        const benefitsHtml = activeLanding?.templateKey === 'standard' ? renderProductLandingBenefits(activeLanding) : '';
         const guidesHtml = !activeLanding || activeLanding.sections.includes('guides')
           ? renderProductGuides(product.guideTitle, product.guideContent, publishedArticles) : '';
         const faqHtml = activeLanding ? renderProductLandingFaq(activeLanding) : '';
         const relatedHtml = !activeLanding || activeLanding.sections.includes('related')
           ? renderRelatedProducts(related, relatedDiscounts, relatedReviews) : '';
-        const body = `${renderProductList([], undefined, marketing.banners)}${detailHtml}${guidesHtml}${faqHtml}${relatedHtml}`;
+        const body = `${renderProductList([], undefined, marketing.banners)}${detailHtml}${benefitsHtml}${guidesHtml}${faqHtml}${relatedHtml}`;
         const storeUrl = 'https://vega.jnmtortas.com', canonical = product.canonicalUrl || `${storeUrl}/productos/${product.slug}`;
         const productJsonLd = ProductSeoHelper.generateJsonLd({name:product.name,description:product.description,priceInCents:discount?.hasDiscount?discount.finalPriceCents:product.priceInCents,sku:product.sku,brand:product.brand,stockQuantity:product.stockQuantity,condition:product.condition,url:canonical,imageUrl:product.mediaIds?.[0]?`/media/${product.mediaIds[0]}`:undefined,ratingValue:reviewPage.summary.isDemo?0:reviewPage.summary.average,reviewCount:reviewPage.summary.isDemo?0:reviewPage.summary.count});
         const breadcrumbs = StructuredDataHelper.generateBreadcrumbList([{name:'Inicio',url:`${storeUrl}/`},{name:'Catálogo',url:`${storeUrl}/productos`},{name:product.name,url:canonical}]);
