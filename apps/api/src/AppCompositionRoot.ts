@@ -1,0 +1,45 @@
+import type { SettingsGateway } from './bff/gateways/settings/SettingsGateway.js';
+import type { IdentityGateway } from './bff/gateways/identity/IdentityGateway.js';
+import type { MediaGateway } from './bff/gateways/media/MediaGateway.js';
+import type { CatalogGateway } from './bff/gateways/catalog/CatalogGateway.js';
+import type { ProductLandingGateway } from './bff/gateways/catalog/ProductLandingGateway.js';
+import type { StorefrontGateway } from './bff/gateways/storefront/StorefrontGateway.js';
+import type { SeoGateway } from './bff/gateways/seo/SeoGateway.js';
+import type { CmsGateway } from './bff/gateways/cms/CmsGateway.js';
+import type { PromotionsGateway } from './bff/gateways/promotions/PromotionsGateway.js';
+import type { ShippingGateway } from './bff/gateways/shipping/ShippingGateway.js';
+import type { InventoryGateway } from './bff/gateways/inventory/InventoryGateway.js';
+import type { CartGateway } from './bff/gateways/cart/CartGateway.js';
+import type { OrdersGateway } from './bff/gateways/orders/OrdersGateway.js';
+import type { ReviewsGateway } from './bff/gateways/reviews/ReviewsGateway.js';
+import type { WishlistGateway } from './bff/gateways/wishlist/WishlistGateway.js';
+import type { PaymentsGateway } from './bff/gateways/payments/PaymentsGateway.js';
+import type { RealtimeGateway } from './bff/gateways/realtime/RealtimeGateway.js';
+import type { InvoicingGateway } from './bff/gateways/invoicing/InvoicingGateway.js';
+import type { NotificationsGateway } from './bff/gateways/notifications/NotificationsGateway.js';
+import type { AuditGateway } from './bff/gateways/audit/AuditGateway.js';
+
+export interface AppCompositionRoot {
+  settingsGateway: SettingsGateway;
+  identityGateway: IdentityGateway;
+  mediaGateway: MediaGateway;
+  catalogGateway: CatalogGateway;
+  productLandingGateway: ProductLandingGateway;
+  storefrontGateway: StorefrontGateway;
+  seoGateway: SeoGateway;
+  cmsGateway: CmsGateway;
+  promotionsGateway: PromotionsGateway;
+  shippingGateway: ShippingGateway;
+  inventoryGateway: InventoryGateway;
+  cartGateway: CartGateway;
+  ordersGateway: OrdersGateway;
+  reviewsGateway:ReviewsGateway;
+  wishlistGateway: WishlistGateway;
+  paymentsGateway: PaymentsGateway;
+  realtimeGateway: RealtimeGateway;
+  invoicingGateway: InvoicingGateway;
+  notificationsGateway: NotificationsGateway;
+  auditGateway: AuditGateway;
+  outboxRelayService: OutboxRelayService;
+  mediaOrphanCollector: ReturnType<typeof createMediaModule>['collectOrphanedMediaUseCase'];
+}
