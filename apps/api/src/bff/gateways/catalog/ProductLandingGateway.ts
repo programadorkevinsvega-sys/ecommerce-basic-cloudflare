@@ -19,6 +19,8 @@ export interface ProductLandingConfigDto {
   headline: string;
   subtitle: string;
   ctaLabel: string;
+  seoTitle?: string;
+  seoDescription?: string;
   benefits: ProductLandingBenefitDto[];
   faqs: ProductLandingFaqDto[];
   sections: ProductLandingSectionDto[];
