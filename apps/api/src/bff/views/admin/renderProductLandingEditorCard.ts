@@ -1,5 +1,5 @@
 export function renderProductLandingEditorCard(): string {
-  return \`
+  return `
     <div id="product-landing-modal" class="landing-modal" hidden>
       <button class="landing-modal-backdrop" type="button" data-close-product-landing aria-label="Cerrar editor"></button>
       <section class="landing-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pl-title" tabindex="-1">
@@ -24,19 +24,19 @@ export function renderProductLandingEditorCard(): string {
           <div class="landing-editor-help"><strong>Preguntas frecuentes</strong><p>Una línea por pregunta, con el formato <code>Pregunta | Respuesta</code>. Máximo 10 preguntas.</p></div>
           <textarea id="plFaqs" rows="5" placeholder="¿Tiene garantía? | Sí, consulta las condiciones de garantía."></textarea>
           <fieldset class="landing-section-picker"><legend>Secciones que se muestran en la landing</legend>
-            \${renderSectionOption('benefits', 'Beneficios')}
-            \${renderSectionOption('specifications', 'Especificaciones técnicas')}
-            \${renderSectionOption('guides', 'Guías y contenido editorial')}
-            \${renderSectionOption('reviews', 'Reseñas y valoraciones')}
-            \${renderSectionOption('faq', 'Preguntas frecuentes')}
-            \${renderSectionOption('related', 'Productos relacionados')}
+            ${renderSectionOption('benefits', 'Beneficios')}
+            ${renderSectionOption('specifications', 'Especificaciones técnicas')}
+            ${renderSectionOption('guides', 'Guías y contenido editorial')}
+            ${renderSectionOption('reviews', 'Reseñas y valoraciones')}
+            ${renderSectionOption('faq', 'Preguntas frecuentes')}
+            ${renderSectionOption('related', 'Productos relacionados')}
           </fieldset>
           <div class="landing-form-footer"><span id="plMsg" role="status" aria-live="polite"></span><a id="plPreview" href="/productos" target="_blank" rel="noopener noreferrer">Ver producto ↗</a><button type="button" class="landing-secondary" data-close-product-landing>Cancelar</button><button type="submit" class="landing-primary" id="plSave">Guardar landing</button></div>
         </form>
       </section>
-    </div>\`;
+    </div>`;
 }
 
 function renderSectionOption(value: string, label: string): string {
-  return \`<label><input type="checkbox" name="plSection" value="\${value}" checked />\${label}</label>\`;
+  return `<label><input type="checkbox" name="plSection" value="${value}" checked />${label}</label>`;
 }
