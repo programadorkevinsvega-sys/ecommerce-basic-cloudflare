@@ -4,6 +4,13 @@ export class AdminMutationSnapshotProvider {
   constructor(private readonly gateways: AppCompositionRoot) {}
 
   public async read(path: string, body?: Record<string, unknown>, token?: string): Promise<unknown> {
+    const landingMutation = path.match(/^\/api\/v1\/admin\/products\/([^/]+)\/landing$/);
+    if (landingMutation?.[1]) {
+      const config = await this.gateways.productLandingGateway.getProductLandingConfig(decodeURIComponent(landingMutation[1]));
+      return config ? { productId: config.productId, enabled: config.enabled, templateKey: config.templateKey,
+        sections: config.sections, benefitsCount: config.benefits.length, faqsCount: config.faqs.length,
+        hasHeadline: Boolean(config.headline.trim()), updatedAt: config.updatedAt } : null;
+    }
     const trackingMutation = path.match(/^\/api\/v1\/admin\/orders\/tracking\/([^/]+)\/shipping$/);
     if (trackingMutation?.[1]) {
       const tracking = await this.gateways.ordersGateway.getAdminOrderTracking(decodeURIComponent(trackingMutation[1]));
