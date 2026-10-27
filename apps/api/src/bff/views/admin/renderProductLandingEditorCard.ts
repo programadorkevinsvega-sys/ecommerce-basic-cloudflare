@@ -19,6 +19,8 @@ export function renderProductLandingEditorCard(): string {
             <label class="landing-wide">Subtítulo <textarea id="plSubtitle" maxlength="400" rows="2" placeholder="Resume la propuesta de valor del producto."></textarea></label>
             <label>Texto del botón principal <input id="plCtaLabel" maxlength="40" value="Comprar ahora" required /></label>
           </div>
+          <div class="landing-editor-help"><strong>SEO de esta landing</strong><p>Si los dejas vacíos, se usan los metadatos SEO del producto.</p></div>
+          <div class="landing-form-grid"><label>Título SEO <input id="plSeoTitle" maxlength="100" placeholder="Título para buscadores" /></label><label>Descripción SEO <textarea id="plSeoDescription" maxlength="300" rows="2" placeholder="Descripción para buscadores"></textarea></label></div>
           <div class="landing-editor-help"><strong>Beneficios destacados</strong><p>Una línea por beneficio, con el formato <code>Título | Descripción</code>. Máximo 6 beneficios.</p></div>
           <textarea id="plBenefits" rows="5" placeholder="Rendimiento | Potencia para tus tareas&#10;Diseño cómodo | Ideal para usar a diario"></textarea>
           <div class="landing-editor-help"><strong>Preguntas frecuentes</strong><p>Una línea por pregunta, con el formato <code>Pregunta | Respuesta</code>. Máximo 10 preguntas.</p></div>
