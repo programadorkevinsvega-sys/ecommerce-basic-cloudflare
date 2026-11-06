@@ -7,7 +7,7 @@ import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js
 describe('cart price source', () => {
   it('ignores a browser supplied price and stores the current published catalog price', async () => {
     const addItem = vi.fn().mockResolvedValue({ items: [], subtotalCents: 0 });
-    const cart = { addItem } as unknown as CartGateway;
+    const cart = { getCart: vi.fn().mockResolvedValue({ items: [] }), addItem } as unknown as CartGateway;
     const catalog = { getProductById: vi.fn().mockResolvedValue({ id: 'product-1', status: 'published', priceInCents: 259900 }) } as unknown as CatalogGateway;
     const identity = {} as IdentityGateway;
     const app = CartController.createRoutes(cart, identity, catalog);
