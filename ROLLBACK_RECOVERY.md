@@ -92,7 +92,7 @@ Health + métricas + revisión de errores, DLQ y pagos pendientes
 
 ### Staging aislado (requisito)
 
-El repositorio **no debe usar producción para ensayar**. Antes de usar este flujo, crear y documentar para staging: Worker, D1, bucket R2, KV, Queues + DLQ, secretos y bindings **independientes**, con **Wompi sandbox** y un dominio/clave de prueba de **Resend**. Nunca ejecutar una prueba de rollback contra datos reales de producción.
+El repositorio **no debe usar producción para ensayar**. Antes de usar este flujo, crear y documentar para staging: Worker, D1, bucket R2, KV, Queues + DLQ, secretos y bindings **independientes**, con **Wompi sandbox** y un dominio/clave de prueba de **Resend**. Nunca ejecutar una prueba de rollback contra datos reales de producción.\n\nLa configuración preparada está en [`apps/api/wrangler.staging.jsonc`](./apps/api/wrangler.staging.jsonc); el workflow manual de despliegue es [`.github/workflows/staging.yml`](./.github/workflows/staging.yml). Ambos permanecen inoperantes hasta reemplazar los IDs D1/KV y provisionar D1, R2, KV, Queue y DLQ en Cloudflare. Ejecuta `pnpm staging:check` antes de cualquier operación. La lista de recursos, secretos, prueba Wompi y evidencia exigida está en [`docs/CI_STAGING_SETUP.md`](./docs/CI_STAGING_SETUP.md).\n\n**Estado de este repositorio al 2026-11-06:** staging está preparado en código, pero aún no provisionado ni desplegado. No se ha ejecutado un ensayo de rollback o restauración. No usar el estado de preparación como evidencia de que el Worker esté desplegado.
 
 ## Rollback del Worker
 
