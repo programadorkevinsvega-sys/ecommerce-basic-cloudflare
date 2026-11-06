@@ -79,7 +79,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
 - [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba. Existe la plantilla `apps/api/wrangler.staging.jsonc` y el workflow manual `Deploy Staging`; faltan crear recursos reales y sustituir IDs pendientes. Ver `docs/CI_STAGING_SETUP.md`.
 - [x] Escaneo de secretos Gitleaks configurado en CI con `gitleaks-action@v3` (pendiente validar en runner).
-- [ ] Protección efectiva de `main`: la verificación actual no muestra una regla activa; activar PR obligatorio, checks requeridos y bloqueo de force-push/eliminación.
+- [ ] Protección efectiva de `main`: no hay regla activa. Este repositorio es privado y GitHub Free no ofrece branch protection/rulesets para repositorios privados; requiere GitHub Pro o superior. No hacer público el ecommerce para habilitarla.
 - [x] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en el Worker (SEC-WEB-02).
 - [x] Módulo de referencia (`settings`, mínimo) como plantilla para los demás.
 - [x] Documentar en el repo cómo entregar el contrato como contexto a agentes de IA antes de generar código.
