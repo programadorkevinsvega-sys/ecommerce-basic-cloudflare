@@ -2,7 +2,7 @@
 
 ## Alcance de esta entrega
 
-El workflow de CI usa runtimes actuales de GitHub Actions y Gitleaks v3. El job de staging solo se ejecuta por `workflow_dispatch`, usa el GitHub Environment `staging`, migra la D1 cuyo nombre está fijado a `ecommerce-vega-staging` y despliega el Worker `ecommerce-basic-cloudflare-staging`. No contiene un paso de despliegue a producción.
+El workflow de CI usa runtimes actuales de GitHub Actions y Gitleaks v3. El job de staging solo se ejecuta por `workflow_dispatch`, usa secretos de Actions exclusivos para staging, migra la D1 cuyo nombre está fijado a `ecommerce-vega-staging` y despliega el Worker `ecommerce-basic-cloudflare-staging`. No contiene un paso de despliegue a producción.
 
 La configuración de staging se deja con IDs deliberadamente sin completar. Hasta registrar los IDs reales, `pnpm staging:check` y el despliegue deben fallar. La protección de `main` requiere una configuración de administración del repositorio y no se activa desde un workflow.
 
@@ -39,9 +39,10 @@ En Settings → Secrets and variables → Actions, agrega como *repository secre
 
 El workflow es manual (`workflow_dispatch`) y usa nombres de secretos exclusivos para staging. No reutilices un token que pueda modificar producción. En repositorios privados de GitHub Free no están disponibles GitHub Environments ni sus environment secrets; con GitHub Pro o superior se puede crear el Environment `staging`, mover allí esos secretos y añadir `environment: staging` al job para habilitar aprobaciones/reglas de despliegue.
 
-En Cloudflare, configura por separado los Worker secrets de staging. Nunca copies valores de producción:
+En Cloudflare, configura por separado los Worker secrets de staging. Nunca copies valores de producción; también crea `ADMIN_PASSWORD` como secreto independiente y define `ADMIN_EMAIL` en las variables del Worker:
 
 ```bash
+pnpm exec wrangler secret put ADMIN_PASSWORD --config apps/api/wrangler.staging.jsonc
 pnpm exec wrangler secret put WOMPI_PRIVATE_KEY --config apps/api/wrangler.staging.jsonc
 pnpm exec wrangler secret put WOMPI_INTEGRITY_SECRET --config apps/api/wrangler.staging.jsonc
 pnpm exec wrangler secret put WOMPI_EVENTS_SECRET --config apps/api/wrangler.staging.jsonc
@@ -49,7 +50,7 @@ pnpm exec wrangler secret put RESEND_API_KEY --config apps/api/wrangler.staging.
 pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --config apps/api/wrangler.staging.jsonc
 ```
 
-Usa credenciales Wompi test y la API key de Resend autorizada para pruebas. `WOMPI_ENVIRONMENT=sandbox` ya está fijado en el config. Configura la public key `WOMPI_PUBLIC_KEY` como variable de staging con prefijo `pub_test_`; configura también el site key de Turnstile de pruebas si el flujo lo requiere. El remitente por defecto es `onboarding@resend.dev`, sujeto a las restricciones de Resend.
+Usa credenciales Wompi test y la API key de Resend autorizada para pruebas. `WOMPI_ENVIRONMENT=sandbox` ya está fijado en el config. Configura `ADMIN_EMAIL` como variable con un correo de prueba y `WOMPI_PUBLIC_KEY` como variable de staging con prefijo `pub_test_` (el preflight rechaza una llave pública live). Configura también `TURNSTILE_SITE_KEY` y `TURNSTILE_HOSTNAMES` con los valores del entorno de staging. El hostname `workers.dev` se conoce tras el primer despliegue; actualízalo antes de probar registro/login. El secreto `ADMIN_PASSWORD`, la llave privada de Wompi y el resto de secretos deben ser creados exclusivamente para staging. El remitente por defecto es `onboarding@resend.dev`, sujeto a las restricciones de Resend.
 
 MiPaquete y Factus quedan sin credenciales ni endpoints en staging hasta que exista una estrategia de sandbox aprobada. No apuntes esos adaptadores a servicios reales.
 
