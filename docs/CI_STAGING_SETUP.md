@@ -6,6 +6,12 @@ El workflow de CI usa runtimes actuales de GitHub Actions y Gitleaks v3. El job 
 
 La configuración de staging se deja con IDs deliberadamente sin completar. Hasta registrar los IDs reales, `pnpm staging:check` y el despliegue deben fallar. La protección de `main` requiere una configuración de administración del repositorio y no se activa desde un workflow.
 
+## Previews de ramas en Cloudflare Workers Builds
+
+Los builds de ramas usan `npx wrangler preview`. Las dos configuraciones Wrangler contienen un bloque `previews.vars` explícito con `ENVIRONMENT=preview`, Wompi en sandbox y remitente de Resend de prueba. **No se copian bindings de D1, KV, R2, Queues ni rate limits de producción.**
+
+Mientras no existan los recursos aislados de staging, Cloudflare puede crear el Preview pero avisará que faltan bindings; el runtime de rutas que necesitan D1, KV, R2 o Queues no está listo para pruebas funcionales. Esto es intencional y evita exponer datos productivos. Tras crear recursos reales y exclusivos, agrega sus bindings en el bloque `previews` tanto en `wrangler.jsonc` como en `apps/api/wrangler.jsonc`, con IDs/nombres distintos de producción, y ejecuta `pnpm cloudflare:check-bindings`. Nunca sustituyas este aislamiento copiando IDs productivos.
+
 ## 1. Crear recursos Cloudflare independientes
 
 Usa una **cuenta Cloudflare dedicada a staging** y crea allí los recursos. El `CLOUDFLARE_STAGING_ACCOUNT_ID` de GitHub debe ser esa cuenta, nunca la cuenta de producción. Crea el API token de staging con los permisos mínimos para Worker Scripts, D1, R2, Workers KV y Queues en esa cuenta, sin permisos de escritura sobre producción. Si no puedes separar cuentas, usa únicamente un token realmente limitado a recursos staging; no continúes con un token que pueda modificar Workers/D1 productivos. Crea estos recursos (no reutilices ningún identificador productivo):
