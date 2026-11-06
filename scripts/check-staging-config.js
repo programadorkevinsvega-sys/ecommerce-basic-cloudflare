@@ -36,7 +36,8 @@ for (const name of ['AUTH_LIMITER', 'CHECKOUT_LIMITER', 'API_WRITE_LIMITER']) {
   if (!stagingLimit || stagingLimit.namespace_id === productionLimit?.namespace_id) fail(`Rate limit ${name} debe tener namespace_id propio`);
 }
 if (staging.vars?.WOMPI_ENVIRONMENT !== 'sandbox') fail('WOMPI_ENVIRONMENT debe ser sandbox');
-for (const key of ['WOMPI_PRIVATE_KEY', 'WOMPI_INTEGRITY_SECRET', 'WOMPI_EVENTS_SECRET', 'RESEND_API_KEY', 'MI_PAQUETE_TRANSPORTADORA', 'FACTUS_PRODUCTION_CLIENT_SECRET', 'FACTUS_PRODUCTION_PASSWORD']) {
+if (staging.vars?.WOMPI_PUBLIC_KEY && !staging.vars.WOMPI_PUBLIC_KEY.startsWith('pub_test_')) fail('WOMPI_PUBLIC_KEY debe ser una llave pública de Wompi test (pub_test_).');
+for (const key of ['WOMPI_PRIVATE_KEY', 'WOMPI_INTEGRITY_SECRET', 'WOMPI_EVENTS_SECRET', 'RESEND_API_KEY', 'MI_PAQUETE_TRANSPORTADORA', 'FACTUS_PRODUCTION_CLIENT_ID', 'FACTUS_PRODUCTION_CLIENT_SECRET', 'FACTUS_PRODUCTION_USERNAME', 'FACTUS_PRODUCTION_PASSWORD']) {
   if (staging.vars?.[key] !== undefined) fail(`${key} no puede estar en vars del repositorio; usa secrets exclusivos de staging o déjalo sin configurar`);
 }
 if (staging.vars?.FACTUS_API_URL || staging.vars?.MI_PAQUETE_API_URL) fail('No configures integraciones externas de producción en staging');
