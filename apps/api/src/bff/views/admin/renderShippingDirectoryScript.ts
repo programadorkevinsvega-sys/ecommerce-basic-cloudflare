@@ -53,6 +53,7 @@ export function renderShippingDirectoryScript(): string {
       return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td><div class="shipping-row-actions">' + view + action + '</div></td></tr>';
     }
     ${renderShippingLocationDetailsScript()}
+    loadShippingZones();
     function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
     function filterShippingLocations() {
       const select = document.getElementById('shLocationsSelect');
