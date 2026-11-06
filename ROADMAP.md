@@ -74,7 +74,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] Lint: dominio/aplicación sin imports de Cloudflare, sin imports entre módulos, límite de 200 líneas, prohibido `utils.ts`/`helpers.ts`.
 - [x] Outbox genérico y relay por Cron; publisher y consumer base de Queues con ack manual (§6.5, §8).
 - [x] Workflow de CI en GitHub Actions configurado para ejecutar las validaciones; no despliega a producción ni a staging.
-- [ ] Confirmar que todos los checks pasan en una PR. Los runners hospedados ya ejecutaron los jobs en PR #10; Gitleaks, typecheck y migraciones pasaron, pero el lint detectó tres archivos por encima del límite de 200 líneas, ahora refactorizados. Falta la ejecución final completa.
+- [x] CI de GitHub completo verificado en PR #10, ejecución 42242801997: Gitleaks, TypeScript, consistencia y aplicación de migraciones, Wrangler, lint de arquitectura, aislamiento D1, 213 pruebas unitarias y pruebas Worker/Miniflare aprobaron. El check externo de Cloudflare Workers Builds se corrige separadamente con una configuración Preview sin bindings productivos; el runtime Preview completo queda pendiente de recursos staging aislados.
 - [x] `docs/PROJECT_RULES.md` (§22) y ADRs 0002–0013.
 - [x] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
 - [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba. Existe la plantilla `apps/api/wrangler.staging.jsonc` y el workflow manual `Deploy Staging`; faltan crear recursos reales y sustituir IDs pendientes. Ver `docs/CI_STAGING_SETUP.md`.
