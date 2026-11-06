@@ -28,6 +28,33 @@ function expectedImagesBinding(config) {
   return config.images?.binding;
 }
 
+
+for (const { file, config } of configs) {
+  const previewVars = config.previews?.vars;
+  if (previewVars?.ENVIRONMENT !== 'preview' || previewVars?.WOMPI_ENVIRONMENT !== 'sandbox') {
+    errors.push(`${file} debe definir previews.vars con ENVIRONMENT=preview y WOMPI_ENVIRONMENT=sandbox`);
+  }
+  if (previewVars?.MI_PAQUETE_API_URL || previewVars?.FACTUS_API_URL) {
+    errors.push(`${file} no debe dirigir Previews a integraciones reales de producción`);
+  }
+  const previewD1 = config.previews?.d1_databases ?? [];
+  const previewKv = config.previews?.kv_namespaces ?? [];
+  const previewR2 = config.previews?.r2_buckets ?? [];
+  const previewQueues = config.previews?.queues?.producers ?? [];
+  if (previewD1.some((binding) => config.d1_databases?.some((prod) => prod.binding === binding.binding && prod.database_id === binding.database_id))) {
+    errors.push(`${file} no puede reutilizar D1 de producción en Previews`);
+  }
+  if (previewKv.some((binding) => config.kv_namespaces?.some((prod) => prod.binding === binding.binding && prod.id === binding.id))) {
+    errors.push(`${file} no puede reutilizar KV de producción en Previews`);
+  }
+  if (previewR2.some((binding) => config.r2_buckets?.some((prod) => prod.binding === binding.binding && prod.bucket_name === binding.bucket_name))) {
+    errors.push(`${file} no puede reutilizar R2 de producción en Previews`);
+  }
+  if (previewQueues.some((binding) => config.queues?.producers?.some((prod) => prod.binding === binding.binding && prod.queue === binding.queue))) {
+    errors.push(`${file} no puede reutilizar Queues de producción en Previews`);
+  }
+}
+
 for (const name of required) {
   const binding = expected[name];
   if (!binding || !actual[name]) errors.push(`${name} falta en una configuración Wrangler`);
