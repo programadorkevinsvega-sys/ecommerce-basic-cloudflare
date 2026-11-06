@@ -8,7 +8,7 @@ La configuración de staging se deja con IDs deliberadamente sin completar. Hast
 
 ## 1. Crear recursos Cloudflare independientes
 
-Autentícate con un token de cuenta con permisos de escritura para Workers Scripts, D1, R2, Workers KV y Queues. Crea estos recursos (no reutilices ningún identificador productivo):
+Usa una **cuenta Cloudflare dedicada a staging** y crea allí los recursos. El `CLOUDFLARE_STAGING_ACCOUNT_ID` de GitHub debe ser esa cuenta, nunca la cuenta de producción. Crea el API token de staging con los permisos mínimos para Worker Scripts, D1, R2, Workers KV y Queues en esa cuenta, sin permisos de escritura sobre producción. Si no puedes separar cuentas, usa únicamente un token realmente limitado a recursos staging; no continúes con un token que pueda modificar Workers/D1 productivos. Crea estos recursos (no reutilices ningún identificador productivo):
 
 ```bash
 pnpm exec wrangler d1 create ecommerce-vega-staging
@@ -20,7 +20,7 @@ pnpm exec wrangler queues create ecommerce-vega-events-dlq-staging
 
 Copia el UUID D1 y el ID KV devueltos en `apps/api/wrangler.staging.jsonc`, reemplazando ambos valores `REPLACE_WITH_...`. No cambies los nombres reservados de D1, R2, Queue o DLQ. Los namespace_id de rate limiting ya son distintos de producción.
 
-La ruta de staging no declara dominio custom: Cloudflare asignará el subdominio `workers.dev`. La binding `IMAGES` reutiliza el servicio de Cloudflare Images de la cuenta y no almacena objetos; las imágenes/media de negocio sí deben ir al bucket R2 de staging. Para pruebas de archivos usa exclusivamente datos sintéticos.
+La ruta de staging no declara dominio custom: Cloudflare asignará el subdominio `workers.dev`. Habilita también Cloudflare Images en la cuenta de staging, porque la binding `IMAGES` opera a nivel de cuenta. No reutilices el servicio Images de producción. Las imágenes/media de negocio sí deben ir al bucket R2 de staging. Para pruebas de archivos usa exclusivamente datos sintéticos.
 
 Después de editar el archivo, ejecuta:
 
