@@ -32,10 +32,12 @@ La comprobación rechaza IDs pendientes, rutas custom, recursos productivos comp
 
 ## 2. Preparar secretos de staging
 
-En GitHub, crea el Environment `staging` y agrega como *environment secrets*:
+En Settings → Secrets and variables → Actions, agrega como *repository secrets*:
 
-- `CLOUDFLARE_API_TOKEN`: token dedicado a staging, sin permisos de producción.
-- `CLOUDFLARE_ACCOUNT_ID`: cuenta Cloudflare que contiene los recursos de staging.
+- `CLOUDFLARE_STAGING_API_TOKEN`: token dedicado a staging, sin permisos de producción.
+- `CLOUDFLARE_STAGING_ACCOUNT_ID`: cuenta Cloudflare que contiene los recursos de staging.
+
+El workflow es manual (`workflow_dispatch`) y usa nombres de secretos exclusivos para staging. No reutilices un token que pueda modificar producción. En repositorios privados de GitHub Free no están disponibles GitHub Environments ni sus environment secrets; con GitHub Pro o superior se puede crear el Environment `staging`, mover allí esos secretos y añadir `environment: staging` al job para habilitar aprobaciones/reglas de despliegue.
 
 En Cloudflare, configura por separado los Worker secrets de staging. Nunca copies valores de producción:
 
@@ -62,7 +64,7 @@ La ejecución del workflow no cambia bindings ni rutas de producción. La config
 
 ## 4. Protección efectiva de main
 
-En Settings → Rules → Rulesets (o Settings → Branches → Branch protection rules), crea una regla dirigida exactamente a `main`:
+**Restricción del plan:** este repo es privado. GitHub documenta que Branch protection y Rulesets en repositorios privados requieren GitHub Pro, Team o Enterprise; en GitHub Free solo están disponibles para repositorios públicos. No hagas público este repositorio para obtener esa función. Actualiza el plan de la cuenta a GitHub Pro o superior y después, en Settings → Rules → Rulesets (o Settings → Branches → Branch protection rules), crea una regla dirigida exactamente a `main`:
 
 - Exigir Pull Request para integrar cambios.
 - Exigir los checks `Lint, Arquitectura y Aislamiento de Tablas` y `Escaneo de Secretos (Gitleaks)`.
@@ -72,7 +74,7 @@ En Settings → Rules → Rulesets (o Settings → Branches → Branch protectio
 - Bloquear force-push y eliminación de `main`.
 - Aplicar la regla a administradores (sin bypass rutinario).
 
-Verifica después por API/UI que la protección/ruleset está activo y que una PR con un check fallido no puede fusionarse. Actualiza `ROADMAP.md` solo tras comprobarlo. El manifiesto de rama no sustituye la evidencia de protección.
+Verifica después por API/UI que la protección/ruleset está activo y que una PR con un check fallido no puede fusionarse. Si el plan no se actualiza, `main` seguirá sin protección efectiva: Actions checks por sí solos no impiden pushes directos ni merges. Actualiza `ROADMAP.md` solo tras comprobarlo. El manifiesto de rama no sustituye la evidencia de protección.
 
 ## 5. Ensayo de recuperación en staging
 
