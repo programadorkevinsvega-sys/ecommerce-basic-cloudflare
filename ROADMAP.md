@@ -64,7 +64,7 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 **Objetivo:** dejar el esqueleto que hace cumplir la arquitectura desde el primer commit.
 
 - [x] Monorepo (`pnpm workspaces`): `apps/api`, `apps/storefront`, `apps/admin`, `docs`, `tests`.
-- [x] `wrangler.jsonc` del Worker único con bindings de producción para D1, R2, KV, Queue/DLQ, Analytics Engine y Cron. La configuración aislada de staging no está lista.
+- [x] `wrangler.jsonc` del Worker único con bindings de producción para D1, R2, KV, Queue/DLQ, Analytics Engine y Cron. Se añadió `apps/api/wrangler.staging.jsonc` como plantilla separada; sus IDs D1/KV y los recursos físicos de staging aún deben provisionarse.
 - [x] Estructura base de §3: `bff/`, `modules/`, `shared-kernel/`, `platform/`, `composition-root.ts`, `index.ts` (`fetch`, `queue`, `scheduled`).
 - [x] `shared-kernel` mínimo (§11): `Result<T,E>`, `UUID`, `IClock`, errores base.
 - [x] `platform`: logger JSON con `trace_id`/`request_id` (§12), manejo de errores, propagación de `traceparent`.
@@ -73,16 +73,18 @@ Las fases 4, 5, 6 y 7 son módulos independientes y pueden solaparse si hay más
 - [x] **Test/lint de aislamiento de tablas** (§6.1, ADR-0001): falla si un módulo referencia tablas de otro prefijo.
 - [x] Lint: dominio/aplicación sin imports de Cloudflare, sin imports entre módulos, límite de 200 líneas, prohibido `utils.ts`/`helpers.ts`.
 - [x] Outbox genérico y relay por Cron; publisher y consumer base de Queues con ack manual (§6.5, §8).
-- [x] CI en GitHub Actions para las validaciones configuradas; no despliega a staging.
+- [x] Workflow de CI en GitHub Actions configurado para ejecutar las validaciones; no despliega a producción ni a staging.
+- [x] CI de GitHub completo verificado en PR #10, ejecución 42242801997: Gitleaks, TypeScript, consistencia y aplicación de migraciones, Wrangler, lint de arquitectura, aislamiento D1, 213 pruebas unitarias y pruebas Worker/Miniflare aprobaron. El check externo de Cloudflare Workers Builds se corrige separadamente con una configuración Preview sin bindings productivos; el runtime Preview completo queda pendiente de recursos staging aislados.
 - [x] `docs/PROJECT_RULES.md` (§22) y ADRs 0002–0013.
 - [x] `docs/migrations/manifest.md`: registro de migraciones por módulo y entorno.
-- [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba, según `ROLLBACK_RECOVERY.md`.
-- [x] Escaneo de secretos (gitleaks) y auditoría de dependencias en CI; protección de la rama `main`.
+- [ ] **Staging aislado** (Worker, D1, R2, KV, Queues, secretos) con Wompi sandbox y Resend de prueba. Existe la plantilla `apps/api/wrangler.staging.jsonc` y el workflow manual `Deploy Staging`; faltan crear recursos reales y sustituir IDs pendientes. Ver `docs/CI_STAGING_SETUP.md`.
+- [x] Escaneo de secretos Gitleaks configurado en CI con `gitleaks-action@v3` (pendiente validar en runner).
+- [ ] Protección efectiva de `main`: no hay regla activa. Este repositorio es privado y GitHub Free no ofrece branch protection/rulesets para repositorios privados; requiere GitHub Pro o superior. No hacer público el ecommerce para habilitarla.
 - [x] Cabeceras de seguridad base (CSP, HSTS, nosniff, etc.) en el Worker (SEC-WEB-02).
 - [x] Módulo de referencia (`settings`, mínimo) como plantilla para los demás.
 - [x] Documentar en el repo cómo entregar el contrato como contexto a agentes de IA antes de generar código.
 
-**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando ante una violación. **Estado parcial:** el repositorio tiene Worker/CI, pero staging aislado y evidencia del ensayo de rollback siguen pendientes; ver `ROLLBACK_RECOVERY.md`.
+**Criterio de salida:** `GET /health` desplegado en staging, CI en verde y el test de aislamiento fallando ante una violación. **Estado parcial:** Worker y workflow configurados; runner real, recursos de staging, protección efectiva de `main` y ensayo de recuperación continúan pendientes. No declarar la CI ni rollback como certificados sin una ejecución verificable; ver `docs/CI_STAGING_SETUP.md` y `ROLLBACK_RECOVERY.md`.
 
 ---
 

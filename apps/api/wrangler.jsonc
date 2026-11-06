@@ -69,6 +69,13 @@
   "triggers": {
     "crons": ["*/5 * * * *"]
   },
+  "previews": {
+    "vars": {
+      "ENVIRONMENT": "preview",
+      "WOMPI_ENVIRONMENT": "sandbox",
+      "RESEND_FROM_EMAIL": "Vega Store <onboarding@resend.dev>"
+    }
+  },
   "vars": {
     "ENVIRONMENT": "production",
     "MI_PAQUETE_API_URL": "https://api-v2.mpr.mipaquete.com",

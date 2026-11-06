@@ -18,6 +18,7 @@ import type { RealtimeGateway } from './bff/gateways/realtime/RealtimeGateway.js
 import type { InvoicingGateway } from './bff/gateways/invoicing/InvoicingGateway.js';
 import type { NotificationsGateway } from './bff/gateways/notifications/NotificationsGateway.js';
 import type { AuditGateway } from './bff/gateways/audit/AuditGateway.js';
+import type { OutboxRelayService } from './platform/outbox/OutboxRelayService.js';
 
 export interface AppCompositionRoot {
   settingsGateway: SettingsGateway;

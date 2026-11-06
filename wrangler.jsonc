@@ -65,5 +65,12 @@
   ],
   "triggers": {
     "crons": ["*/5 * * * *"]
+  },
+  "previews": {
+    "vars": {
+      "ENVIRONMENT": "preview",
+      "WOMPI_ENVIRONMENT": "sandbox",
+      "RESEND_FROM_EMAIL": "Vega Store <onboarding@resend.dev>"
+    }
   }
 }

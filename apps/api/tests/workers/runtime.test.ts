@@ -129,7 +129,7 @@ describe('Worker API security and runtime bindings', () => {
     const app = OrdersController.createRoutes(orders as any, {} as any, shipping as any, catalog as any, {} as any, { reserveStock } as any, {} as any, settings as any, promotions as any);
     const response = await app.fetch(new Request('https://shop.test/api/v1/orders', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'vega_cart_id=cart_123e4567-e89b-42d3-a456-426614174000' },
-      body: JSON.stringify({ customerEmail: 'customer@example.test', customerName: 'Customer', customerPhone: '3000000000', paymentMethod: 'wompi', shippingZoneId: zone.id, shippingAddress: { daneCode: '11001' }, lines: [{ productId: product.id, quantity: 1, unitPriceCents: 1 }] }),
+      body: JSON.stringify({ customerEmail: 'customer@example.test', customerName: 'Customer', customerPhone: '3000000000', customerTaxId: '1234567890', customerTaxIdType: 'CC', customerLegalOrganizationCode: '2', paymentMethod: 'wompi', shippingZoneId: zone.id, shippingAddress: { daneCode: '11001' }, lines: [{ productId: product.id, quantity: 1, unitPriceCents: 1 }] }),
     }));
     expect(response.status).toBe(409);
     expect(reserveStock).toHaveBeenCalledOnce();

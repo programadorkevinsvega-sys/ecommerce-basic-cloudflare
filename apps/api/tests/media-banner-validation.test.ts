@@ -135,7 +135,8 @@ describe('media and banner input validation', () => {
   it('renders functioning filters and an accessible auto-rotating public carousel', () => {
     const adminMarkup = renderStorefrontManagementSection([], []);
     expect(adminMarkup.match(/class="form-grid banner-filters"/g)).toHaveLength(2);
-    expect(adminMarkup).toContain('Filtrar tipo');
+    expect(adminMarkup.match(/aria-label="Filtrar ubicación"/g)).toHaveLength(2);
+    expect(adminMarkup.match(/aria-label="Filtrar estado"/g)).toHaveLength(2);
     const destinations = renderStorefrontManagementSection([], [], [
       { value: 'collection:verano', label: 'Verano', group: 'Colecciones' },
       { value: 'blog:guia-de-compra', label: 'Guía de compra', group: 'Artículos del blog' },
@@ -145,7 +146,12 @@ describe('media and banner input validation', () => {
     expect(destinations).toContain('value="collection:verano"');
     expect(destinations).toContain('value="cms:politica-de-envios"');
     expect(destinations).toContain('value="catalog"');
-    expect(renderStorefrontActionsScript()).toContain("card.querySelector('.banner-filters')");
+    const actionsScript = renderStorefrontActionsScript();
+    expect(actionsScript).toContain("card?.querySelector('input[type=\"search\"]')");
+    expect(actionsScript).toContain("card?.querySelector('[aria-label=\"Filtrar ubicación\"]')");
+    expect(actionsScript).toContain("card?.querySelector('[aria-label=\"Filtrar estado\"]')");
+    expect(actionsScript).toContain("({active:'true',inactive:'false'})");
+    expect(actionsScript).toContain("loadStorefrontPage(card.dataset.marketingPage === 'info-banners' ? 'info' : 'promo', 1)");
 
     const publicMarkup = renderStorefrontBanners([
       { id: 'one', title: 'Uno', imageUrl: '/media/one', linkUrl: '/productos', altText: 'Uno' },
