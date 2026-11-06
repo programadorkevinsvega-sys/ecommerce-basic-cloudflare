@@ -66,6 +66,9 @@ jobs:
 
   security-scan:
     name: Escaneo de Secretos (Gitleaks)
+    permissions:
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
