@@ -135,7 +135,8 @@ describe('media and banner input validation', () => {
   it('renders functioning filters and an accessible auto-rotating public carousel', () => {
     const adminMarkup = renderStorefrontManagementSection([], []);
     expect(adminMarkup.match(/class="form-grid banner-filters"/g)).toHaveLength(2);
-    expect(adminMarkup).toContain('Filtrar tipo');
+    expect(adminMarkup.match(/aria-label="Filtrar ubicación"/g)).toHaveLength(2);
+    expect(adminMarkup.match(/aria-label="Filtrar estado"/g)).toHaveLength(2);
     const destinations = renderStorefrontManagementSection([], [], [
       { value: 'collection:verano', label: 'Verano', group: 'Colecciones' },
       { value: 'blog:guia-de-compra', label: 'Guía de compra', group: 'Artículos del blog' },
