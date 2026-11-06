@@ -1,6 +1,7 @@
 import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import type { MarketingDestinationOption } from './AdminDashboardProps.js';
 import { renderMarketingDestinationOptions } from './renderMarketingDestinationOptions.js';
+import { escapeAdminJavaScriptString } from './escapeAdminJavaScriptString.js';
 
 export function renderStorefrontManagementSection(
   banners: BannerItemDto[],
@@ -50,7 +51,7 @@ export function renderStorefrontManagementSection(
           </td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
             ${isPromo && hasCta ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
-            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeJs(b.title)}', '${escapeJs(b.linkUrl)}', '${escapeJs(b.altText)}', '${escapeJs(b.imageUrl)}', '${b.placement}', '${escapeJs(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeJs(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
+            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeAdminJavaScriptString(b.title)}', '${escapeAdminJavaScriptString(b.linkUrl)}', '${escapeAdminJavaScriptString(b.altText)}', '${escapeAdminJavaScriptString(b.imageUrl)}', '${b.placement}', '${escapeAdminJavaScriptString(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeAdminJavaScriptString(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
             <button class="btn-action" onclick="duplicateBanner('${b.id}')">Duplicar</button>
             ${toggle}
             <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
@@ -193,7 +194,7 @@ export function renderStorefrontManagementSection(
             </td>
             <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
               ${a.linkUrl ? `<a class="btn-action btn-action-view" href="${escapeHtml(a.linkUrl)}" target="_blank">Ver</a>` : ''}
-              <button class="btn-action" style="background:#475569; color:#fff;" onclick="editAnnouncement('${a.id}', '${escapeJs(a.message)}', '${escapeJs(a.linkUrl || '')}', '${a.placement}')">Editar</button>
+              <button class="btn-action" style="background:#475569; color:#fff;" onclick="editAnnouncement('${a.id}', '${escapeAdminJavaScriptString(a.message)}', '${escapeAdminJavaScriptString(a.linkUrl || '')}', '${a.placement}')">Editar</button>
               ${a.isActive ? `<button class="btn-action btn-action-hide" onclick="setAnnouncementStatus('${a.id}', false)">Ocultar</button>` : `<button class="btn-action btn-action-publish" onclick="setAnnouncementStatus('${a.id}', true)">Publicar</button>`}
               <button class="btn-action btn-action-delete" onclick="deleteAnnouncement('${a.id}')">Eliminar</button>
             </td>
@@ -209,6 +210,3 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function escapeJs(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
-}
