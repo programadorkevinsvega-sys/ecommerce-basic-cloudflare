@@ -1,6 +1,6 @@
 import { InventoryStock } from '../../../../domain/entities/InventoryStock.js';
 import { IInventoryRepository, InventoryMovementRecord } from '../../../../domain/ports/IInventoryRepository.js';
-import { recordLegacyInventoryConsumption } from '../recordLegacyInventoryConsumption.js';
+import { recordLegacyInventoryConsumption } from './recordLegacyInventoryConsumption.js';
 
 interface InventoryStockRow {
   product_id: string;
