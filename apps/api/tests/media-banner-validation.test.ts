@@ -146,7 +146,12 @@ describe('media and banner input validation', () => {
     expect(destinations).toContain('value="collection:verano"');
     expect(destinations).toContain('value="cms:politica-de-envios"');
     expect(destinations).toContain('value="catalog"');
-    expect(renderStorefrontActionsScript()).toContain("card.querySelector('.banner-filters')");
+    const actionsScript = renderStorefrontActionsScript();
+    expect(actionsScript).toContain("card?.querySelector('input[type=\"search\"]')");
+    expect(actionsScript).toContain("card?.querySelector('[aria-label=\"Filtrar ubicación\"]')");
+    expect(actionsScript).toContain("card?.querySelector('[aria-label=\"Filtrar estado\"]')");
+    expect(actionsScript).toContain("({active:'true',inactive:'false'})");
+    expect(actionsScript).toContain("loadStorefrontPage(card.dataset.marketingPage === 'info-banners' ? 'info' : 'promo', 1)");
 
     const publicMarkup = renderStorefrontBanners([
       { id: 'one', title: 'Uno', imageUrl: '/media/one', linkUrl: '/productos', altText: 'Uno' },
