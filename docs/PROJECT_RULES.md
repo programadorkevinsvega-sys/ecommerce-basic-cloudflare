@@ -21,7 +21,7 @@ Todos los recursos operan directamente en el entorno de producción configurado 
 
 Esta configuración referencia recursos de producción. No hay que leer estos nombres como prueba de que un release concreto esté desplegado o saludable; verificar deployments, `/health` y el ledger antes de una operación productiva.
 
-Workers Cache no es un binding ni un namespace KV: está habilitado para el Worker en Wrangler, cachea HTML SSR público con TTL de 30 segundos y purga la etiqueta `storefront-public-html` tras las mutaciones relevantes. La evidencia de producción está en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md).
+Workers Cache no es un binding ni un namespace KV: está habilitado para el Worker en Wrangler, cachea HTML SSR público con TTL de 30 segundos y purga la etiqueta `storefront-public-html` tras las mutaciones relevantes. La evidencia de producción está en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md).\n\nStaging tiene una configuración Wrangler separada en [`apps/api/wrangler.staging.jsonc`](../apps/api/wrangler.staging.jsonc) y un Worker dedicado `ecommerce-basic-cloudflare-staging`. Sus recursos D1/R2/KV/Queues y namespaces de rate limit deben ser exclusivos; los IDs placeholder bloquean el despliegue hasta provisionarlos. El config de producción `apps/api/wrangler.jsonc` y el Worker `ecommerce-basic-cloudflare` no se reutilizan. Procedimiento y secretos: [`CI_STAGING_SETUP.md`](./CI_STAGING_SETUP.md).
 
 ---
 
