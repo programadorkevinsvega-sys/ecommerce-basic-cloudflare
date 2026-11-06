@@ -81,7 +81,7 @@ describe('Colecciones', () => {
     const response = await app.request('/admin/collection-products?q=SUN-1', { headers:{ Authorization:'Bearer admin-session' } });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ data:[{ id:'p1', name:'Gafas', sku:'SUN-1' }] });
-    expect(catalog.listProducts).toHaveBeenCalledWith({ limit:30, offset:0, status:'published', searchQuery:'SUN 1' });
+    expect(catalog.listProducts).toHaveBeenCalledWith({ limit:26, offset:0, status:'published', searchQuery:'SUN 1' });
   });
 
   it('incluye solo las colecciones públicas en el sitemap de páginas', async () => {
