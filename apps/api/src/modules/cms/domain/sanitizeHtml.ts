@@ -1,14 +1,34 @@
-/**
- * Sanitizador de HTML en el servidor para evitar ataques XSS
- * Conforme a SEC-SAN-01: No permitir scripts, event handlers ni esquemas javascript:
- */
+import xss from 'xss';
+import type { IFilterXSSOptions } from 'xss';
+import { sanitizeCmsImageUrl, sanitizeCmsLink } from './sanitizeCmsUrl.js';
+
+const options: IFilterXSSOptions = {
+  whiteList: {
+    a: [], b: [], blockquote: [], br: [], caption: [], code: [],
+    dd: [], div: [], dl: [], dt: [], em: [], figcaption: [], figure: [],
+    h1: [], h2: [], h3: [], h4: [], hr: [], i: [], img: ['alt', 'height', 'loading', 'width'],
+    li: [], ol: [], p: [], pre: [], s: [], small: [], span: [], strong: [],
+    sub: [], sup: [], table: [], tbody: [], td: ['colspan', 'rowspan'],
+    tfoot: [], th: ['colspan', 'rowspan'], thead: [], tr: [], u: [], ul: [],
+  },
+  stripIgnoreTag: true,
+  stripIgnoreTagBody: ['applet', 'embed', 'form', 'iframe', 'math', 'noembed', 'noframes', 'noscript', 'object', 'script', 'style', 'svg', 'template', 'textarea'],
+  css: false,
+  onIgnoreTagAttr: (tag, name, value) => {
+    const cleanValue = tag === 'a' && name === 'href' ? sanitizeCmsLink(value)
+      : tag === 'img' && name === 'src' ? sanitizeCmsImageUrl(value) : '';
+    if (!cleanValue) return;
+    return `${name}="${escapeAttribute(cleanValue)}"`;
+  },
+};
+
 export function sanitizeHtml(dirty: string): string {
   if (!dirty || typeof dirty !== 'string') return '';
-  return dirty
-    .replace(/<\s*(script|style|iframe|object|embed|applet|form|base|meta|link)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
-    .replace(/<\s*(script|style|iframe|object|embed|applet|form|base|meta|link)[^>]*>/gi, '')
-    .replace(/\s+on[a-zA-Z0-9_-]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/href\s*=\s*(?:"\s*javascript:[^"]*"|'\s*javascript:[^']*'|[^\s>]*javascript:[^\s>]*)/gi, 'href="#"')
-    .replace(/src\s*=\s*(?:"\s*javascript:[^"]*"|'\s*javascript:[^']*'|[^\s>]*javascript:[^\s>]*)/gi, 'src=""')
-    .trim();
+  return xss(dirty, options).trim();
+}
+
+function escapeAttribute(value: string): string {
+  return value.replace(/[&"<>']/g, (char) => ({
+    '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;', "'": '&#039;',
+  })[char] || char);
 }

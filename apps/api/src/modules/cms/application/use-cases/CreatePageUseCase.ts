@@ -2,7 +2,7 @@ import { Result } from '../../../../shared-kernel/Result.js';
 import { Page, PageStatus, CmsBlock } from '../../domain/entities/Page.js';
 import { IPageRepository } from '../../domain/ports/IPageRepository.js';
 import { validateAndFormatSlug } from '../../domain/validateCmsSlug.js';
-import { sanitizeHtml } from '../../domain/sanitizeHtml.js';
+import { sanitizeCmsBlocks } from '../../domain/sanitizeCmsBlocks.js';
 
 export interface CreatePageInput {
   title: string;
@@ -29,16 +29,7 @@ export class CreatePageUseCase {
         return Result.fail(new Error(`Ya existe una página con el slug '${validSlug}'`));
       }
 
-      const sanitizedBlocks: CmsBlock[] = (input.blocks || []).map((b) => {
-        const content = { ...b.content };
-        if (typeof content['html'] === 'string') {
-          content['html'] = sanitizeHtml(content['html']);
-        }
-        if (typeof content['text'] === 'string') {
-          content['text'] = sanitizeHtml(content['text']);
-        }
-        return { ...b, content };
-      });
+      const sanitizedBlocks = sanitizeCmsBlocks(input.blocks || []);
 
       const now = new Date().toISOString();
       const page = new Page({

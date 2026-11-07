@@ -24,6 +24,7 @@
     "hono": "^4.7.0",
     "pdf-lib": "^1.17.1",
     "qrcode-svg": "^1.1.0",
+    "xss": "^1.0.17",
     "zod": "^3.24.2"
   },
   "devDependencies": {

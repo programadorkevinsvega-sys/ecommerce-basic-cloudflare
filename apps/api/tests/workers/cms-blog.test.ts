@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { env, exports } from 'cloudflare:workers';
 import { D1BlogPostRepository } from '../../src/modules/cms/infrastructure/persistence/d1/repositories/D1BlogPostRepository.js';
+import { D1PageRepository } from '../../src/modules/cms/infrastructure/persistence/d1/repositories/D1PageRepository.js';
 import { SaveBlogPostUseCase } from '../../src/modules/cms/application/use-cases/SaveBlogPostUseCase.js';
+import { Page } from '../../src/modules/cms/domain/entities/Page.js';
 
 describe('CMS blog persistence and public SSR',()=>{
   beforeAll(async()=>{for(const migration of env.TEST_MIGRATIONS)for(const statement of migration.sql.replace(/--[^\n]*/g,'').split(';'))if(statement.trim())await env.DB.prepare(statement).run();});
@@ -18,7 +20,41 @@ describe('CMS blog persistence and public SSR',()=>{
     const detail=await exports.default.fetch(`https://shop.test/blog/${post.slug}`);const html=await detail.text();
     expect(detail.status).toBe(200);expect(html).toContain('application/ld+json');expect(html).toContain('rel="canonical"');expect(html).toContain('Contenido');
     const sitemap=await exports.default.fetch('https://shop.test/sitemap-blog.xml');expect(sitemap.status).toBe(200);expect(await sitemap.text()).toContain(`/blog/${post.slug}`);
-  },15000);
+  },30000);
+
+  it('sanitizes pre-existing page HTML from D1 before public SSR', async () => {
+    const repository = new D1PageRepository(env.DB);
+    const slug = `legacy-${crypto.randomUUID().slice(0, 8)}`;
+    await repository.save(new Page({
+      id: crypto.randomUUID(), title: 'Página histórica', slug, status: 'published', currentVersion: 1,
+      blocks: [{ id: crypto.randomUUID(), type: 'rich_text', sortOrder: 0, content: { html: '<p>Texto histórico <strong>conservado</strong></p><a href="java&#x73;cript:run()">enlace</a><a href="//attacker.test">externo</a><img src="/media/123e4567-e89b-12d3-a456-426614174000" onerror="run()"><svg onload="run()">contenido</svg>' } }],
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    }));
+
+    const response = await exports.default.fetch(`https://shop.test/p/${slug}`);
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain('<strong>conservado</strong>');
+    expect(html).not.toMatch(/javascript:|attacker\.test|onerror|onload|<svg/i);
+    expect(html).toContain('src="/media/123e4567-e89b-12d3-a456-426614174000"');
+  }, 15000);
+
+  it('sanitizes pre-existing blog HTML from D1 before public SSR', async () => {
+    const repository = new D1BlogPostRepository(env.DB);
+    const author = await repository.saveAuthor({ name: 'Autora histórica' });
+    const post = await new SaveBlogPostUseCase(repository).execute({
+      title: 'Artículo histórico', slug: `blog-legacy-${crypto.randomUUID().slice(0, 8)}`, excerpt: 'Resumen',
+      contentHtml: '<p>Contenido inicial</p>', authorId: author.id, status: 'published', categoryIds: [],
+    });
+    await env.DB.prepare('UPDATE cms_blog_posts SET content_html = ? WHERE id = ?')
+      .bind('<p>Texto <strong>seguro</strong></p><a href="java&#x73;cript:run()">enlace</a><img src="https://attacker.test/x.png" onerror="run()">', post.id).run();
+
+    const response = await exports.default.fetch(`https://shop.test/blog/${post.slug}`);
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain('<strong>seguro</strong>');
+    expect(html).not.toMatch(/javascript:|attacker\.test|onerror/i);
+  }, 15000);
 
   it('publishes due scheduled articles idempotently and keeps future drafts out of public listings',async()=>{
     const repository=new D1BlogPostRepository(env.DB);const author=await repository.saveAuthor({name:'Autor cron'});

@@ -1,5 +1,6 @@
 import { Page, PageStatus, CmsBlock } from '../../../../domain/entities/Page.js';
 import { IPageRepository } from '../../../../domain/ports/IPageRepository.js';
+import { sanitizeCmsBlocks } from '../../../../domain/sanitizeCmsBlocks.js';
 
 interface PageRow {
   id: string;
@@ -97,7 +98,9 @@ export class D1PageRepository implements IPageRepository {
 
     let blocks: CmsBlock[] = [];
     if (version?.blocks) {
-      try { blocks = JSON.parse(version.blocks); } catch { blocks = []; }
+      try {
+        blocks = sanitizeCmsBlocks(JSON.parse(version.blocks) as CmsBlock[]);
+      } catch { blocks = []; }
     }
 
     return new Page({

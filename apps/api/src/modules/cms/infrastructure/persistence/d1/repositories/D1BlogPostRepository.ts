@@ -2,6 +2,7 @@ import { BlogPost, BlogPostStatus } from '../../../../domain/entities/BlogPost.j
 import { BlogPage, IBlogRepository } from '../../../../domain/ports/IBlogRepository.js';
 import { BlogAuthor, BlogCategory, BlogTaxonomyInput } from '../../../../domain/entities/BlogAuthor.js';
 import { D1BlogTaxonomyRepository } from './D1BlogTaxonomyRepository.js';
+import { sanitizeBlogHtml } from '../../../../domain/sanitizeBlogHtml.js';
 
 interface PostRow { id:string; title:string; slug:string; excerpt:string; content_html:string; author_id:string; featured_image_media_id:string|null; featured_image_alt:string; status:BlogPostStatus; scheduled_at:string|null; published_at:string|null; seo_title:string; seo_description:string; canonical_url:string|null; noindex:number; created_at:string; updated_at:string; }
 
@@ -68,6 +69,6 @@ export class D1BlogPostRepository implements IBlogRepository {
       this.db.prepare('SELECT c.id,c.name FROM cms_blog_categories c JOIN cms_blog_post_categories pc ON pc.category_id=c.id WHERE pc.post_id=? AND c.active=1 ORDER BY c.name').bind(row.id).all<{id:string;name:string}>(),
     ]);
     const categories=categoryRows.results||[];
-    return new BlogPost({id:row.id,title:row.title,slug:row.slug,excerpt:row.excerpt,contentHtml:row.content_html,authorId:row.author_id,authorName:author?.name||'',authorBio:author?.bio||'',authorImageMediaId:author?.image_media_id||undefined,featuredImageMediaId:row.featured_image_media_id||undefined,featuredImageAlt:row.featured_image_alt,status:row.status,scheduledAt:row.scheduled_at||undefined,publishedAt:row.published_at||undefined,seoTitle:row.seo_title,seoDescription:row.seo_description,canonicalUrl:row.canonical_url||undefined,noindex:row.noindex===1,categoryIds:categories.map((item)=>item.id),categoryNames:categories.map((item)=>item.name),createdAt:row.created_at,updatedAt:row.updated_at});
+    return new BlogPost({id:row.id,title:row.title,slug:row.slug,excerpt:row.excerpt,contentHtml:sanitizeBlogHtml(row.content_html),authorId:row.author_id,authorName:author?.name||'',authorBio:author?.bio||'',authorImageMediaId:author?.image_media_id||undefined,featuredImageMediaId:row.featured_image_media_id||undefined,featuredImageAlt:row.featured_image_alt,status:row.status,scheduledAt:row.scheduled_at||undefined,publishedAt:row.published_at||undefined,seoTitle:row.seo_title,seoDescription:row.seo_description,canonicalUrl:row.canonical_url||undefined,noindex:row.noindex===1,categoryIds:categories.map((item)=>item.id),categoryNames:categories.map((item)=>item.name),createdAt:row.created_at,updatedAt:row.updated_at});
   }
 }

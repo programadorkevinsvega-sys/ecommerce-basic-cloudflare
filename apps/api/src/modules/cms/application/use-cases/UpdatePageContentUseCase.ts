@@ -2,7 +2,7 @@ import { Result } from '../../../../shared-kernel/Result.js';
 import { Page, CmsBlock } from '../../domain/entities/Page.js';
 import { IPageRepository } from '../../domain/ports/IPageRepository.js';
 import { validateAndFormatSlug } from '../../domain/validateCmsSlug.js';
-import { sanitizeHtml } from '../../domain/sanitizeHtml.js';
+import { sanitizeCmsBlocks } from '../../domain/sanitizeCmsBlocks.js';
 
 export interface UpdatePageContentInput {
   id: string;
@@ -44,16 +44,7 @@ export class UpdatePageContentUseCase {
 
       let blocks = page.blocks;
       if (input.blocks) {
-        blocks = input.blocks.map((b) => {
-          const content = { ...b.content };
-          if (typeof content['html'] === 'string') {
-            content['html'] = sanitizeHtml(content['html']);
-          }
-          if (typeof content['text'] === 'string') {
-            content['text'] = sanitizeHtml(content['text']);
-          }
-          return { ...b, content };
-        });
+        blocks = sanitizeCmsBlocks(input.blocks);
       }
 
       page.updateContent(
