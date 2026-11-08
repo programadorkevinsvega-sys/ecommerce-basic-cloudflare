@@ -36,7 +36,7 @@ describe('admin dashboard presentation', () => {
     expect(html).toContain('collectionImageFile');
     expect(html.indexOf("showCatalogPage('collections', this)")).toBeLessThan(html.indexOf("showCatalogPage('categories', this)"));
     expect(html).toContain('function switchTab(tabId, navButton)');
-    expect(html).toContain("fetch('/api/v1/admin/orders'");
+    expect(html).toContain("fetch('/api/v1/admin/orders?");
     expect(html).toContain('VEGA STORE');
     expect(html).not.toContain('$286.790');
   });

@@ -12,6 +12,7 @@ describe('admin dashboard permissions', () => {
   it('does not fetch settings, promotion, or shipping data for an editor role', async () => {
     const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'editor-1', actorType: 'admin', mfaEnabled: true, permissions: ['catalog:*', 'storefront:*', 'cms:*'] }) } as unknown as IdentityGateway;
     const catalog = {
+      listAdminProducts: vi.fn().mockResolvedValue([]),
       listProducts: vi.fn().mockResolvedValue([]), listCategories: vi.fn().mockResolvedValue([]),
       listBrands: vi.fn().mockResolvedValue([]), listAttributes: vi.fn().mockResolvedValue([]),
       listCollections: vi.fn().mockResolvedValue([]), listSuppliers: vi.fn().mockResolvedValue([]),
@@ -31,7 +32,7 @@ describe('admin dashboard permissions', () => {
     const html = await response.text();
 
     expect(response.status).toBe(200);
-    expect(catalog.listProducts).toHaveBeenCalledOnce();
+    expect(catalog.listAdminProducts).toHaveBeenCalledOnce();
     expect(storefront.listAdminBanners).toHaveBeenCalledOnce();
     expect(settings.getSettings).not.toHaveBeenCalled();
     expect(promotions.listCoupons).not.toHaveBeenCalled();

@@ -58,6 +58,7 @@ import { renderNotFoundPage } from './views/renderNotFoundPage.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './controllers/storefront/StorefrontNavigationHelper.js';
 import { PublicHtmlCacheMiddleware } from './middleware/PublicHtmlCacheMiddleware.js';
 import { PublicHtmlCacheInvalidationMiddleware } from './middleware/PublicHtmlCacheInvalidationMiddleware.js';
+import { bodyLimit } from 'hono/body-limit';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -70,6 +71,10 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     c.header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     c.header('Vary', 'Cookie, Authorization');
   });
+  app.use('/api/*', bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: 'La solicitud supera el límite de 1 MiB' }, 413),
+  }));
   app.use('/api/*', RateLimitMiddleware);
   app.use('/media/upload', RateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);
