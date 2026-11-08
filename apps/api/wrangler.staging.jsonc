@@ -18,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "ecommerce-vega-staging",
-      "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
+      "database_id": "6ec6a3ec-f1a8-41e1-9017-72226b5926ef",
       "migrations_dir": "migrations"
     }
   ],
@@ -32,7 +32,7 @@
   "kv_namespaces": [
     {
       "binding": "CACHE",
-      "id": "REPLACE_WITH_STAGING_KV_NAMESPACE_ID"
+      "id": "2f5a5fa3ec584e9697cbe668f5e1505d"
     }
   ],
   "queues": {
