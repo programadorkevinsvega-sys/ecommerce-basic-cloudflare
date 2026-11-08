@@ -2,7 +2,7 @@ export function renderOrdersAdminScript(): string {
   return `
     window._adminOrdersCache = {};
     window._adminOrdersPage = 1;
-    window._adminOrdersMeta = { total: 0, hasMore: false, statusCounts: {} };
+    window._adminOrdersMeta = { total: 0, hasMore: false };
     let _activeModalOrderId = null;
 
     async function loadAdminOrders(page = window._adminOrdersPage || 1) {
@@ -34,12 +34,20 @@ export function renderOrdersAdminScript(): string {
       }
     }
 
-    function openOrderDetailModal(orderId) {
-      const order = window._adminOrdersCache[orderId];
-      if (!order) return;
+    async function openOrderDetailModal(orderId) {
       _activeModalOrderId = orderId;
-
-      document.getElementById('modal-order-id').innerText = '#' + order.id;
+      const modal = document.getElementById('order-detail-modal');
+      modal.style.display = 'flex';
+      const linesBody = document.getElementById('modal-order-lines-body');
+      linesBody.innerHTML = '<tr><td colspan="5" style="padding:1rem;text-align:center;">Cargando pedido…</td></tr>';
+      try {
+        const response = await fetch('/api/v1/admin/orders/' + encodeURIComponent(orderId), { headers: adminHeaders(), cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.order) throw new Error(result.error || 'No fue posible cargar el pedido.');
+        if (_activeModalOrderId !== orderId) return;
+        const order = result.order;
+        window._adminOrdersCache[order.id] = order;
+        document.getElementById('modal-order-id').innerText = '#' + order.id;
       document.getElementById('modal-order-date').innerText = new Date(order.createdAt).toLocaleString('es-CO');
       
       const stEl = document.getElementById('modal-order-status');
@@ -73,7 +81,6 @@ export function renderOrdersAdminScript(): string {
       }
 
       // Líneas de productos
-      const linesBody = document.getElementById('modal-order-lines-body');
       const lines = order.lines || [];
       if (lines.length === 0) {
         linesBody.innerHTML = '<tr><td colspan="5" style="padding:1rem; text-align:center; color:var(--muted);">Sin líneas registradas</td></tr>';
@@ -112,7 +119,11 @@ export function renderOrdersAdminScript(): string {
       const selectEl = document.getElementById('modal-change-status-select');
       if (selectEl) selectEl.value = order.status;
 
-      document.getElementById('order-detail-modal').style.display = 'flex';
+      } catch (error) {
+        if (_activeModalOrderId === orderId) {
+          linesBody.innerHTML = '<tr><td colspan="5" style="padding:1rem;text-align:center;">' + escapeHtml(error.message || 'No fue posible cargar el pedido.') + '</td></tr>';
+        }
+      }
     }
 
     function closeOrderDetailModal() {

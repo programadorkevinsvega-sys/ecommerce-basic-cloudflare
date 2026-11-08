@@ -4,6 +4,7 @@ import { ProductSalePolicy, ShippingScope, SaleMode } from '../../domain/entitie
 import { ProductSeoHelper } from '../../domain/services/ProductSeoHelper.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
 import { calculateRecommendedPrice } from '../../domain/services/CalculateRecommendedPrice.js';
+import { validateProductRelationships } from '../../domain/services/ProductAggregateLimits.js';
 
 export interface CreateProductInput {
   name: string;
@@ -55,6 +56,8 @@ export class CreateProductUseCase {
   }
 
   public async execute(input: CreateProductInput): Promise<Result<Product, Error>> {
+    const relationshipError = validateProductRelationships(input);
+    if (relationshipError) return Result.fail(relationshipError);
     const rawSlug = input.slug && input.slug.trim().length > 0
       ? input.slug.trim()
       : ProductSeoHelper.slugify(input.name);

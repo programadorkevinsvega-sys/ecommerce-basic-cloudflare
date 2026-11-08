@@ -2,6 +2,7 @@ import { LegacyPriceMigrationPreview } from '../../../modules/catalog/applicatio
 import { CatalogPageQuery } from '../../../modules/catalog/domain/ports/CatalogPageQuery.js';
 import { ProductListFilters } from '../../../modules/catalog/domain/ports/ProductListQuery.js';
 import { CatalogTaxonomyKind, CatalogTaxonomyUpdate } from '../../../modules/catalog/application/use-cases/ManageCatalogTaxonomyUseCase.js';
+import { ProductAdminListItem } from '../../../modules/catalog/domain/ports/ProductAdminListItem.js';
 export interface CatalogProductTagDto { id:string; name:string; description:string; status:'active'|'inactive'; productCount:number; createdAt:string; updatedAt:string; }
 export interface SaveCatalogProductTagRequest { id?:string; name:string; description:string; status:'active'|'inactive'; }
 export interface CatalogCollectionDto { id:string; name:string; slug:string; description:string; imageMediaId?:string; productIds:string[]; status:'active'|'inactive'; seoTitle?:string; seoDescription?:string; createdAt:string; updatedAt:string; }
@@ -173,7 +174,7 @@ export interface CatalogGateway {
   getProductBySlug(slug: string): Promise<CatalogProductDto>;
   getProductById(id: string): Promise<CatalogProductDto>;
   listProducts(params: { limit?: number; offset?: number; status?: string; searchQuery?: string; relatedToId?: string } & ProductListFilters): Promise<CatalogProductDto[]>;
-  countProducts(status?: string, query?: string): Promise<number>;
+  listAdminProducts(params: { limit?: number; offset?: number; status?: string; query?: string }): Promise<ProductAdminListItem[]>; countProducts(status?: string, query?: string): Promise<number>;
   createCategory(request: { name: string; slug: string; description?: string; parentId?: string }): Promise<CategoryDto>;
   listCategories(query?: CatalogPageQuery): Promise<CategoryDto[]>;
   getCategoryById(id: string): Promise<CategoryDto | null>;

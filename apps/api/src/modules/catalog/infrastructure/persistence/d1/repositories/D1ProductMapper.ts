@@ -50,6 +50,34 @@ export class D1ProductMapper {
       db.prepare('SELECT media_id FROM catalog_product_images WHERE product_id = ? ORDER BY sort_order ASC').bind(row.id).all<{ media_id: string }>(),
       db.prepare('SELECT zone_id FROM catalog_product_coverage WHERE product_id = ?').bind(row.id).all<{ zone_id: string }>(),
     ]);
+    return this.fromRelations(row,
+      (categories.results || []).map((item) => item.category_id),
+      (images.results || []).map((item) => item.media_id),
+      (coverage.results || []).map((item) => item.zone_id));
+  }
+
+  public static async hydrateMany(rows: ProductRow[], db: D1Database): Promise<Product[]> {
+    const relations = new Map<string, { categories: string[]; images: string[]; coverage: string[] }>();
+    for (const row of rows) relations.set(row.id, { categories: [], images: [], coverage: [] });
+    for (let start = 0; start < rows.length; start += 100) {
+      const ids = rows.slice(start, start + 100).map((row) => row.id);
+      const placeholders = ids.map(() => '?').join(', ');
+      const [categories, images, coverage] = await Promise.all([
+        db.prepare(`SELECT product_id, category_id FROM catalog_product_categories WHERE product_id IN (${placeholders})`).bind(...ids).all<{ product_id: string; category_id: string }>(),
+        db.prepare(`SELECT product_id, media_id FROM catalog_product_images WHERE product_id IN (${placeholders}) ORDER BY sort_order ASC`).bind(...ids).all<{ product_id: string; media_id: string }>(),
+        db.prepare(`SELECT product_id, zone_id FROM catalog_product_coverage WHERE product_id IN (${placeholders})`).bind(...ids).all<{ product_id: string; zone_id: string }>(),
+      ]);
+      for (const item of categories.results || []) relations.get(item.product_id)?.categories.push(item.category_id);
+      for (const item of images.results || []) relations.get(item.product_id)?.images.push(item.media_id);
+      for (const item of coverage.results || []) relations.get(item.product_id)?.coverage.push(item.zone_id);
+    }
+    return rows.map((row) => {
+      const relation = relations.get(row.id);
+      return this.fromRelations(row, relation?.categories || [], relation?.images || [], relation?.coverage || []);
+    });
+  }
+
+  private static fromRelations(row: ProductRow, categories: string[], images: string[], coverage: string[]): Product {
     return new Product({
       id: row.id, name: row.name, slug: row.slug, description: row.description,
       priceInCents: row.price_in_cents, supplierCostCents: row.supplier_cost_cents,
@@ -72,11 +100,11 @@ export class D1ProductMapper {
       salePolicy: new ProductSalePolicy({
         allowsCashOnDelivery: row.allows_cash_on_delivery === 1,
         shippingScope: row.shipping_scope as ShippingScope,
-        localCoverageZones: (coverage.results || []).map((item) => item.zone_id),
+        localCoverageZones: coverage,
         saleMode: row.sale_mode as SaleMode,
       }),
-      categoryIds: (categories.results || []).map((item) => item.category_id),
-      mediaIds: (images.results || []).map((item) => item.media_id),
+      categoryIds: categories,
+      mediaIds: images,
       createdAt: row.created_at, updatedAt: row.updated_at,
     });
   }

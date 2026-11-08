@@ -5,6 +5,7 @@ import { CreditNote } from '../../../modules/invoicing/domain/entities/CreditNot
 import { IssueInvoiceCommand } from '../../../modules/invoicing/application/use-cases/IssueInvoiceUseCase.js';
 import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/use-cases/CreateCreditNoteUseCase.js';
 import { NewNumberingRange, NumberingRangeFilters } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
+import { InvoicingQueueEvent } from './InvoicingGateway.js';
 
 export class InProcessInvoicingGateway implements InvoicingGateway {
   constructor(private readonly publicApi: InvoicingPublicApi) {}
@@ -24,6 +25,10 @@ export class InProcessInvoicingGateway implements InvoicingGateway {
 
   public processElectronicInvoice(invoiceId: string): Promise<void> {
     return this.publicApi.processElectronicInvoice(invoiceId);
+  }
+
+  public processQueueEvent(event: InvoicingQueueEvent) {
+    return this.publicApi.processQueueEvent(event);
   }
 
   public reconcileElectronicInvoices(limit?: number): Promise<number> {

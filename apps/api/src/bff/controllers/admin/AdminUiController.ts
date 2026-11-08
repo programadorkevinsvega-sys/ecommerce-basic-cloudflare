@@ -84,7 +84,7 @@ export class AdminUiController {
           settings,
           marketingCollections,
         ] = await Promise.all([
-          can('catalog:read') ? catalogGateway.listProducts({ limit: 25 }) : Promise.resolve([]),
+          can('catalog:read') ? catalogGateway.listAdminProducts({ limit: 25 }) : Promise.resolve([]),
           can('catalog:read') ? catalogGateway.listCategories({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
           can('catalog:read') ? catalogGateway.listBrands({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
           can('catalog:read') ? catalogGateway.listAttributes({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),

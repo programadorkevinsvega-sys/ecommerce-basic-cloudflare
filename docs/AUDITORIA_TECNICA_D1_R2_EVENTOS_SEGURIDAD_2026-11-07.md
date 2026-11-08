@@ -114,7 +114,7 @@ El resultado actual es que al menos los tipos de wishlist publicados llegan al c
 
 **Evidencia:** [MediaController.ts](../apps/api/src/bff/controllers/media/MediaController.ts) limita multipart a 11 MiB y convierte el archivo a `Uint8Array`; [UploadMediaUseCase.ts](../apps/api/src/modules/media/application/use-cases/UploadMediaUseCase.ts) procesa la imagen, escribe a R2 y hace `HEAD` para verificar tamaño. [R2MediaStorageAdapter.ts](../apps/api/src/modules/media/infrastructure/storage/r2/R2MediaStorageAdapter.ts) usa `put/get/head/delete` y lista hasta 1.000 objetos por página.
 
-**Evaluación:** la verificación `HEAD` aumenta operaciones, pero está exigida por SEC-R2-07 y no debe quitarse sin un control equivalente. El límite hace el uso de memoria acotado por request, aunque parser, array buffer y conversión pueden elevar el pico concurrente. La respuesta pública declara `max-age=31536000, immutable` con IDs inmutables, lo cual es coherente; no se confirmó que exista caché en edge para `/media/*` ni la configuración de bucket/lifecycle remota.
+**Evaluación:** la verificación `HEAD` aumenta operaciones, pero está exigida por SEC-R2-07 y no debe quitarse sin un control equivalente. El límite hace el uso de memoria acotado por request, aunque parser, array buffer y conversión pueden elevar el pico concurrente. La respuesta pública declara `max-age=31536000, immutable` con IDs inmutables, lo cual es coherente; el repositorio ahora consulta/escribe `caches.default` para media pública con una clave canónica por ID, después de que el caso de uso haya rechazado media privada.
 
 **Cierre requerido:** medir bytes y duración de procesamiento, concurrencia, operaciones R2 por upload/lectura y cache hit ratio; confirmar que el bucket no es público (`r2.dev`/dominio), que los privados no se listan ni sirven por la ruta pública, y que lifecycle no borra documentos. Mantener el `HEAD` o reemplazarlo solo por una garantía verificable de tamaño. Aplicar cache de edge únicamente con claves inmutables y sin cachear respuestas privadas.
 
@@ -147,12 +147,16 @@ Estas observaciones son de código/configuración; no certifican configuración 
 
 ### Fase 0 | Preparar evidencia y entorno seguro
 
+**Estado verificado en este workspace:** bloqueada por falta de acceso operativo a una cuenta Cloudflare dedicada de staging. `pnpm staging:check` se ejecutó y falló de forma esperada porque `apps/api/wrangler.staging.jsonc` aún contiene los placeholders del UUID D1 y del ID KV. `wrangler whoami` confirmó que Wrangler no está autenticado. No se crearon ni modificaron recursos remotos y no se ejecutaron comandos contra producción.
+
+Por esta razón, todavía no se declara completado ningún entregable que requiera staging: no se sembró un dataset remoto, no se capturó un baseline representativo del Worker desplegado, no se verificaron backups/restauración y no se designó responsable operativo. La guía y el workflow manual existentes están en [CI_STAGING_SETUP.md](./CI_STAGING_SETUP.md) y [.github/workflows/staging.yml](../.github/workflows/staging.yml); no sustituyen la evidencia de una ejecución real.
+
 1. Provisionar staging aislado con recursos distintos a producción y ejecutar el check de configuración (`pnpm staging:check`) cuando el entorno tenga Node/pnpm.
 2. Crear dataset no sensible con volúmenes representativos de catálogo, pedidos, líneas y eventos.
 3. Capturar baseline: p50/p95/p99 por endpoint, número de consultas D1, `EXPLAIN QUERY PLAN`, tamaño/edad de outbox, operaciones R2, cache hit ratio y errores.
 4. Confirmar backups disponibles, restauración posible y responsable de operaciones. No probar restauración ni migraciones destructivas en producción.
 
-**Salida:** staging funcional, baseline reproducible y plan de recuperación aprobado.
+**Salida pendiente:** staging funcional, baseline reproducible y plan de recuperación aprobado. Reanudar desde el paso 1 cuando haya acceso limitado a la cuenta dedicada de staging y se hayan creado sus recursos; conservar evidencia fechada para cada paso.
 
 ### Fase 1 | Cerrar XSS CMS
 
@@ -168,6 +172,39 @@ Estas observaciones son de código/configuración; no certifican configuración 
 
 ### Fase 2 | Hacer confiable el pipeline de eventos
 
+**Estado actual del workspace (2026-11-07):** parcial; no cerrar la fase todavía. Se documentó el inventario estático de 16 tablas outbox y sus estados más abajo. El único flujo Queue habilitado es invoicing v1, con dos handlers registrados; tipos desconocidos, versiones sin handler y contratos inválidos reciben retry, nunca ACK. Se deshabilitaron los relays de settings/wishlist y wishlist dejó de emitir eventos sin consumer.
+
+Se añadieron schemas Zod por tipo/version, registry explícito `producer:event:version`, recibos D1 persistentes propiedad de `invoicing`, lease/token condicional recuperable en consumer y relay, y métricas agregadas en logs JSON/Analytics Engine opcional. Pruebas locales verifican retries/ACK, claims concurrentes, release/expiración de leases, send exitoso/fallido, actualización fallida después de send, recuperación, tipo desconocido y recibos duplicados. El efecto externo no es transaccional con D1: Factus se reconcilia por referencia estable; esto ofrece entrega at-least-once y mitigación de duplicados, no “exactly once”.
+
+La migración `invoicing__0004_event_pipeline_reliability.sql` solo se verificó en Workers local; **no** se aplicó en staging ni producción. El test de retry no simula la entrega real a DLQ, no hay replay operativo verificado y no existen dashboards/umbrales de alerta ni evidencia de conteo remoto de DLQ. Por ello, a pesar de las correcciones en código, **el gate de la fase sigue pendiente**.
+
+#### Inventario estático de outbox (código y migraciones revisados)
+
+| Tabla | Clasificación | Productor observado / eventos persistidos | Consumer Queue operativo |
+|---|---|---|---|
+| `invoicing_outbox_events` | Activo | `D1InvoiceRepository`: `invoicing.invoice.issue.requested`; `D1CreditNoteRepository`: `invoicing.credit_note.issue.requested` (ambos v1) | Worker registry → API Factus, recibo D1 |
+| `wishlist_outbox_events` | Retirado para emisión | Históricos: `wishlist.item.added.v1`, `wishlist.item.removed.v1`; nuevos inserts deshabilitados | Ninguno; relay deshabilitado |
+| `settings_outbox_events` | Pendiente/inactivo | Tabla presente; no se encontró productor ni tipo de evento activo | Ninguno; relay deshabilitado |
+| `cart_outbox_events` | Pendiente | `D1CartOutboxRepository`: `cart.item.added.v1`; esquema legacy `event_name/payload` | Ninguno; no se relaya |
+| `orders_outbox_events` | Pendiente | `D1OrderAggregateStatements`: `orders.order.placed.v1`, `orders.order.status_changed.v1`; ahora se escriben en el batch del agregado; esquema legacy | Ninguno; no se relaya |
+| `inventory_outbox_events` | Pendiente | `D1InventoryOutboxRepository`: `inventory.stock.adjusted.v1`, `.released.v1`, `.reserved.v1`; `D1InventoryRepository`: `inventory.stock.consumed.v1`; esquema legacy | Ninguno; no se relaya |
+| `payments_outbox_events` | Pendiente | `D1PaymentOutboxRepository`: `payments.transaction_created`, `payments.transaction_approved`, `payments.transaction_declined`, `payments.cod_collected`; persistencia legacy/expandida | Ninguno; no se relaya |
+| `shipping_outbox_events` | Pendiente | `D1ShippingOutboxRepository`: `shipping.zone.changed.v1`; esquema legacy | Ninguno; no se relaya |
+| `catalog_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `cms_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `identity_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `media_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `notifications_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `promotions_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `seo_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+| `storefront_outbox_events` | Pendiente/inactivo | Tabla legacy; no se encontró inserción activa de outbox | Ninguno; no se relaya |
+
+“Pendiente/inactivo” significa que se conserva el esquema, pero no se publica a Queue hasta definir el evento versionado y consumer idempotente. Las filas legacy existentes requieren inspección/reconciliación antes de cualquier reactivación; esta auditoría no las borra ni las modifica.
+
+**Pendiente para el gate:** aplicar y verificar la migración en staging aislado; probar DLQ/replay en esa Queue y replay idempotente; configurar alertas de backlog/edad/fallos/DLQ/eventos desconocidos y comprobarlas; confirmar el comportamiento de reconciliación de Factus tras un efecto remoto aceptado y fallo posterior. No aplicar migraciones remotas sin acceso, backup verificado y autorización operativa.
+
+**Evidencia local (2026-11-07):** `pnpm --filter @ecommerce/api typecheck`, `test:architecture`, `test:isolation`, `test` (70 archivos / 232 tests), `vitest run --config vitest.workers.config.ts --maxWorkers=1` (12 archivos / 33 tests), `pnpm db:check-migrations`, `pnpm db:test-migrations` y `git diff --check` pasaron. Workers se ejecutó en serie porque la ejecución paralela agotaba los timeouts de dos pruebas runtime; la repetición serial aprobó toda la suite. Estas pruebas son locales y no sustituyen staging, una Queue/DLQ remota ni alertas verificadas.
+
 1. Inventariar todas las tablas/productores outbox y clasificarlos como activos, retirados o pendientes; documentar quién consume cada evento.
 2. Unificar envelope/versionado y schemas Zod. Crear registry explícito producer/event/version -> handler.
 3. Deshabilitar emisión de eventos sin consumer operativo. Rechazar/cuarentenar tipos desconocidos; nunca ACKearlos como éxito sin acción definida.
@@ -179,6 +216,14 @@ Estas observaciones son de código/configuración; no certifican configuración 
 **Gate:** ningún evento de negocio se pierde por ACK desconocido; reintentos no duplican efectos; backlog/DLQ es observable.
 
 ### Fase 3 | Atomizar agregados D1
+
+**Estado actual del workspace:** implementada y validada en Workers local para las escrituras cubiertas. `catalog` construye un solo batch prefijado `catalog_*` con producto, FTS, categorías, imágenes y cobertura. `orders` construye un batch prefijado `orders_*` con pedido, líneas, etiqueta local cuando aplica, historial y outbox; alta y cambios de estado usan la misma operación atómica.
+
+Los límites previos a persistencia son explícitos: máximo 30 relaciones por tipo y 100 sentencias por batch de producto, máximo 50 líneas y 100 sentencias por batch de pedido, e input serializado de agregado limitado a 256 KiB. Son límites de aplicación conservadores; no sustituyen una medición de throughput en staging.
+
+La fault injection reemplaza cada posición del batch por una sentencia D1 inválida. Los tests Workers verifican rollback total en cada posición para creación y actualización de producto, y para creación y actualización de pedido; también comprueban persistencia completa, el flujo de `CreateOrderUseCase` y el rechazo del volumen excesivo. Resultado local: 3 tests de catálogo y 5 de pedidos pasan; typecheck, arquitectura e aislamiento de tablas pasan. No se agregó migración porque el esquema existente ya contiene las tablas y columnas usadas.
+
+**Gate local:** aprobado para los agregados y escenarios probados en Miniflare/Workers. **Pendiente operativo:** no se validó tamaño/rendimiento de batches contra staging ni límites reales bajo carga; la Fase 0 continúa bloqueada por falta de recursos y acceso operativo.
 
 1. En `catalog`, preparar las sentencias del producto y sus categorías/imágenes/cobertura en un mismo batch prefijado `catalog_*`.
 2. En `orders`, preparar pedido, líneas y estado auxiliar del agregado en un batch prefijado `orders_*`; coordinar outbox en la misma transacción cuando corresponda.
@@ -199,6 +244,12 @@ Estas observaciones son de código/configuración; no certifican configuración 
 
 **Gate:** los requests D1 de listas no crecen linealmente con filas; planes no muestran scans/sorts evitables para consultas de alto volumen; mejora medida contra baseline.
 
+**Estado local (2026-11-07):** el listado de catálogo usa un DTO compacto sin relaciones; la hidratación de entidades agrupa categorías, imágenes y coverage por lotes de hasta 100 IDs. La lista administrativa de productos usa una consulta proyectada y carga el agregado completo únicamente al editar. La lista paginada de pedidos selecciona solo columnas de tabla y no hidrata líneas; estas se cargan al abrir el detalle. El resumen administrativo usa otra proyección acotada a 100 pedidos y no consulta líneas. Se retiraron los conteos globales de estado de la consulta paginada y sus badges. La búsqueda administrativa de pedidos queda definida como ID exacto/prefijo y prefijo para nombre, correo y teléfono; `%`, `_` y `\` se escapan y no se usa un comodín inicial. Las páginas aceptan máximo 50 filas y hasta 1.000 páginas.
+
+La paginación sigue usando `OFFSET`; keyset se mantiene como evaluación pendiente hasta conocer cardinalidades y planes reales. No se agregaron índices ni se declara mejora de latencia: faltan staging, baseline y `EXPLAIN QUERY PLAN` reales, incluyendo costo de escritura/tamaño. El gate de esta fase queda **parcial** hasta medir esas consultas y comparar contra el baseline de la Fase 0.
+
+**Evidencia local:** ejecutadas una por una: `tests/d1-list-query-optimization.test.ts` (5 pruebas), `tests/workers/catalog-read-optimization.test.ts` (1 con D1 real en Workers), `tests/workers/orders-read-optimization.test.ts` (1 con D1 real en Workers), `tests/admin-product-list-presentation.test.ts` (2), `tests/admin-orders-presentation.test.ts` (2) y `tests/storefront-catalog-filters.test.ts` (6). También pasan `pnpm --filter @ecommerce/api typecheck`, `test:architecture`, `test:isolation` y `git diff --check`. Esto no sustituye pruebas con staging, baseline ni confirma índices o rendimiento remoto.
+
 ### Fase 5 | Optimizar y certificar R2
 
 1. Verificar bucket privado, bindings de mínimo privilegio y ausencia de acceso público directo.
@@ -209,6 +260,12 @@ Estas observaciones son de código/configuración; no certifican configuración 
 6. Ejecutar reconciliación D1/R2 y documentar cómo se recuperan objetos faltantes sin exponer claves privadas.
 
 **Gate:** pruebas de privacidad y consistencia pasan; lifecycle y cache se verifican en staging con evidencia.
+
+**Estado local (2026-11-07):** las subidas devuelven únicamente metadatos de negocio; no exponen `storageKey` y una carga privada no recibe `publicUrl`. El `GET /media/:id` almacena solo respuestas exitosas del caso de uso público en el Cache API del Worker, usando una clave sin cookies ni query string; errores de lectura/escritura del caché se registran y no impiden servir desde R2. Las rutas privadas siguen fallando antes de leer R2 y no se cachean. La política segura de retención queda definida así: no configurar expiración R2 por prefijo; el recolector de aplicación es el único que puede borrar `media/`, tras siete días y comprobación de referencia D1; `private/` (incluidas facturas/documentos) no tiene expiración automática. Una regla R2 por edad podría borrar medios todavía referenciados y no se activa sin inventario y evidencia de staging.
+
+**Evidencia local secuencial:** `tests/media-r2-safety.test.ts` (4 pruebas), `tests/workers/media-edge-cache.test.ts` (1 prueba; confirma Cache API local, hit tras retirar el objeto origen y que el privado no se cachea), `tests/workers/media-runtime.test.ts` (1; valida escritura/lectura consistente D1/R2 y `HEAD`), `tests/media-orphan-cleanup.test.ts` (2) y `tests/media-banner-validation.test.ts` (12). Todas pasaron individualmente. `pnpm staging:check` se ejecutó sin contactar Cloudflare y bloqueó como esperado por los IDs placeholder de D1 y KV.
+
+**Pendiente de staging/cuenta Cloudflare:** no se verificó la configuración efectiva del bucket (privacidad, `r2.dev`/dominio público), permisos efectivos del binding, listado de objetos, cache hit en edge remoto, métricas reales de `put + head`, memoria bajo concurrencia ni reconciliación completa del inventario. No hay un listado seguro de staging para autorizar borrado, no se activa lifecycle R2 ni se prueba contra producción. La prueba local de consistencia cubre el objeto recién creado, no sustituye un inventario completo. Antes de reanudar operaciones tras incidente, comparar referencias D1 con `HEAD` de sus claves R2 y reportar solo conteos/IDs internos; recuperar un objeto desde una copia autorizada en su clave exacta, nunca imprimir ni devolver claves privadas. El gate de la fase permanece **parcial** hasta adjuntar evidencia real de staging y responsable operativo.
 
 ### Fase 6 | Carga, seguridad y operación
 

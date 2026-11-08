@@ -40,6 +40,10 @@ export class OrdersPublicApi {
     return this.container.listAdminOrdersUseCase.execute(query);
   }
 
+  public listAdminOrderSummary(limit: number) {
+    return this.container.listAdminOrdersUseCase.summary(limit);
+  }
+
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
     return this.container.updateOrderStatusUseCase.execute(cmd);
   }

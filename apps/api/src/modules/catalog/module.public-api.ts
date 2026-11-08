@@ -21,6 +21,7 @@ import { Collection } from './domain/entities/Collection.js';
 import { ProductTag, SaveProductTagInput } from './domain/entities/ProductTag.js';
 import { ProductLandingConfig } from './domain/entities/ProductLandingConfig.js';
 import { SaveProductLandingConfigInput } from './application/use-cases/SaveProductLandingConfigUseCase.js';
+import { ProductAdminListItem } from './domain/ports/ProductAdminListItem.js';
 
 export interface ICatalogPublicApi {
   createProduct(input: CreateProductInput): Promise<Product>;
@@ -29,6 +30,7 @@ export interface ICatalogPublicApi {
   getProductBySlug(slug: string): Promise<Product>;
   getProductById(id: string): Promise<Product>;
   listProducts(input: ListProductsInput): Promise<Product[]>;
+  listAdminProducts(input: { limit?: number; offset?: number; status?: string; query?: string }): Promise<ProductAdminListItem[]>;
   countProducts(status?: string, query?: string): Promise<number>;
   createCategory(input: CreateCategoryInput): Promise<Category>;
   listCategories(query?: CatalogPageQuery): Promise<Category[]>;
@@ -105,6 +107,10 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     const res = await this.container.listProductsUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public listAdminProducts(input: { limit?: number; offset?: number; status?: string; query?: string }): Promise<ProductAdminListItem[]> {
+    return this.container.listProductsUseCase.adminList(input);
   }
 
   public countProducts(status?: string, query?: string): Promise<number> { return this.container.listProductsUseCase.count(status, query); }

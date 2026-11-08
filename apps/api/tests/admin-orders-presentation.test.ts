@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderOrdersManagementSection } from '../src/bff/views/admin/renderOrdersManagementSection.js';
 import { renderOrdersAdminListScript } from '../src/bff/views/admin/renderOrdersAdminListScript.js';
 import { renderOrdersAdminScript } from '../src/bff/views/admin/renderOrdersAdminScript.js';
+import { renderAdminSummaryScript } from '../src/bff/views/admin/renderAdminSummaryScript.js';
 
 describe('admin orders presentation', () => {
   it('renders the order filters, actions and original detail modal fields', () => {
@@ -24,5 +25,7 @@ describe('admin orders presentation', () => {
     expect(script).toContain('pedidos.csv');
     expect(script).toContain("data-orders-status");
     expect(script).not.toContain('BASE =');
+    expect(renderOrdersAdminScript()).toContain('/api/v1/admin/orders/');
+    expect(renderAdminSummaryScript()).toContain('/api/v1/admin/orders/summary');
   });
 });

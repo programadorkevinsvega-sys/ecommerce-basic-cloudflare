@@ -5,6 +5,12 @@ import { IssueInvoiceCommand } from './application/use-cases/IssueInvoiceUseCase
 import { CreateCreditNoteCommand } from './application/use-cases/CreateCreditNoteUseCase.js';
 import { ElectronicNumberingRange, NewNumberingRange, NumberingRangeFilters } from './domain/ports/IElectronicInvoicingPort.js';
 
+export type InvoicingQueueEvent = {
+  eventId: string;
+  eventType: 'invoicing.invoice.issue.requested' | 'invoicing.credit_note.issue.requested';
+  entityId: string;
+};
+
 export class InvoicingPublicApi {
   constructor(private readonly container: InvoicingModuleContainer) {}
 
@@ -28,6 +34,8 @@ export class InvoicingPublicApi {
   public processElectronicCreditNote(creditNoteId: string): Promise<void> {
     return this.container.processElectronicInvoiceUseCase.executeCreditNote(creditNoteId);
   }
+
+  public processQueueEvent(event: InvoicingQueueEvent) { return this.container.processQueueEventUseCase.execute(event); }
 
   public async reconcileElectronicInvoices(limit = 20): Promise<number> {
     const invoices = await this.container.repo.listPendingElectronic(limit);

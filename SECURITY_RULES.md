@@ -123,7 +123,7 @@ La gestión administrativa usa `catalog:read`, `catalog:edit` y `catalog:delete`
 - **SEC-R2-07** Verificar el tamaño real con `HEAD` tras subir; si excede el límite, borrar y rechazar. La limpieza Cron solo considera `media/` público con más de siete días, comprueba cada clave contra `media_assets` antes de borrarla y nunca barre prefijos privados/documentales.
 - **SEC-R2-08** Verificar consistencia entre metadatos D1 y objetos R2 antes de reanudar operaciones críticas tras un incidente.
 
-Estado de implementación: la validación estructural inicial se complementa con `IMAGES.info()` y una salida WebP que fuerza el decode/re-encode completo en Cloudflare Workers, quitando metadatos de origen. La ruta se prueba en runtime Workers local; la transformación remota facturable aún no se ha ejecutado. La recolección Cron se valida unitariamente, pero no se ha ejecutado contra R2 de producción.
+Estado de implementación: la validación estructural inicial se complementa con `IMAGES.info()` y una salida WebP que fuerza el decode/re-encode completo en Cloudflare Workers, quitando metadatos de origen. Las respuestas públicas se guardan en el Cache API del Worker solo después de comprobar que la media no es privada; las cargas no exponen claves R2 y las privadas no reciben URL pública. Esto tiene prueba local Workers, no evidencia de cache hit en edge remoto. La transformación remota facturable aún no se ha ejecutado. La recolección Cron se valida unitariamente, pero no se ha ejecutado contra R2 remoto. La privacidad ACL/dominio del bucket y sus permisos efectivos siguen pendientes de verificación en staging.
 
 ## 10. Frontend (FE)
 

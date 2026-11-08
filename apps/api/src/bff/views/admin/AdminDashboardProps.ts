@@ -1,4 +1,5 @@
-import type { CatalogProductDto, CategoryDto, BrandDto, AttributeDto, SupplierDto, ProductVariantDto, CatalogCollectionDto } from '../../gateways/catalog/CatalogGateway.js';
+import type { CategoryDto, BrandDto, AttributeDto, SupplierDto, ProductVariantDto, CatalogCollectionDto } from '../../gateways/catalog/CatalogGateway.js';
+import type { ProductAdminListItem } from '../../../modules/catalog/domain/ports/ProductAdminListItem.js';
 import type { CatalogProductTagDto } from '../../gateways/catalog/CatalogGateway.js';
 import type { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import type { StoreSettingsResponse as SettingsDto } from '../../gateways/settings/SettingsGateway.js';
@@ -10,7 +11,7 @@ import type { ShippingZoneDto, DivipolaLocationDto, CarrierIntegrationConfigDto 
 export interface MarketingDestinationOption { value: string; label: string; group: string; }
 
 export interface AdminDashboardProps {
-  products: CatalogProductDto[];
+  products: ProductAdminListItem[];
   categories: CategoryDto[];
   brands: BrandDto[];
   attributes: AttributeDto[];

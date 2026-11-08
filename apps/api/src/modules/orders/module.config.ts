@@ -1,6 +1,5 @@
 import { Env } from '../../platform/Env.js';
 import { D1OrderRepository } from './infrastructure/persistence/d1/repositories/D1OrderRepository.js';
-import { D1OrderOutboxRepository } from './infrastructure/persistence/d1/repositories/D1OrderOutboxRepository.js';
 import { EvaluateCheckoutPolicyUseCase } from './application/use-cases/EvaluateCheckoutPolicyUseCase.js';
 import { CreateOrderUseCase } from './application/use-cases/CreateOrderUseCase.js';
 import { GetOrderUseCase } from './application/use-cases/GetOrderUseCase.js';
@@ -35,19 +34,18 @@ export interface OrdersModuleContainer {
 
 export function createOrdersModule(env: Env): OrdersModuleContainer {
   const repo = new D1OrderRepository(env.DB);
-  const adminOrderList = new D1AdminOrderListRepository(env.DB, repo);
-  const outbox = new D1OrderOutboxRepository(env.DB);
+  const adminOrderList = new D1AdminOrderListRepository(env.DB);
   const tracking = new D1OrderTrackingRepository(env.DB);
   const localLabels = new D1LocalDeliveryLabelRepository(env.DB);
   const codCandidates = new D1LocalCodCollectionCandidateRepository(env.DB);
 
   return {
     evaluateCheckoutPolicyUseCase: new EvaluateCheckoutPolicyUseCase(),
-    createOrderUseCase: new CreateOrderUseCase(repo, outbox),
+    createOrderUseCase: new CreateOrderUseCase(repo),
     getOrderUseCase: new GetOrderUseCase(repo),
     listOrdersUseCase: new ListOrdersUseCase(repo),
     listAdminOrdersUseCase: new ListAdminOrdersUseCase(adminOrderList),
-    updateOrderStatusUseCase: new UpdateOrderStatusUseCase(repo, outbox),
+    updateOrderStatusUseCase: new UpdateOrderStatusUseCase(repo),
     hasDeliveredProductPurchaseUseCase:new HasDeliveredProductPurchaseUseCase(repo),
     getDeliveredProductPaymentMethodUseCase: new GetDeliveredProductPaymentMethodUseCase(repo),
     getOrderTrackingUseCase: new GetOrderTrackingUseCase(tracking),

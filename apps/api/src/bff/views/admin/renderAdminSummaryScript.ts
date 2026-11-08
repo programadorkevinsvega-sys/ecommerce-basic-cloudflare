@@ -7,13 +7,11 @@ export function renderAdminSummaryScript(): string {
       const body = document.getElementById('summary-orders-body');
       if (!body) return;
       try {
-        const response = await fetch('/api/v1/admin/orders', { headers: adminHeaders() });
+        const response = await fetch('/api/v1/admin/orders/summary', { headers: adminHeaders() });
         if (response.status === 403) throw new Error('No tienes permiso para consultar pedidos.');
         if (!response.ok) throw new Error('No fue posible consultar los pedidos.');
         const result = await response.json();
         summaryOrders = Array.isArray(result.orders) ? result.orders : [];
-        const pending = document.getElementById('orders-pending-count');
-        if (pending) pending.textContent = String(summaryOrders.filter(order => order.status === 'placed').length);
         renderAdminSummary();
         loadAdminPaymentAttention();
       } catch (error) {
@@ -44,7 +42,7 @@ export function renderAdminSummaryScript(): string {
     function renderSummaryRecentOrders(orders) {
       const body = document.getElementById('summary-orders-body');
       const query = normalizeSummarySearch(document.getElementById('summary-search')?.value || '');
-      const rows = orders.filter(order => !query || normalizeSummarySearch([order.id, order.customerName, order.customerEmail, order.customerPhone, order.shippingAddress?.municipality, ...(order.lines || []).map(line => line.productSku)].join(' ')).includes(query)).slice(0, 6);
+      const rows = orders.filter(order => !query || normalizeSummarySearch([order.id, order.customerName, order.customerEmail, order.customerPhone, order.shippingAddress?.municipality].join(' ')).includes(query)).slice(0, 6);
       if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="summary-empty">No hay pedidos para los filtros seleccionados.</td></tr>'; return; }
       body.innerHTML = rows.map(order => {
         const address = order.shippingAddress || {};

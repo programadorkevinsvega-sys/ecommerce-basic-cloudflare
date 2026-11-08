@@ -4,6 +4,12 @@ import { IssueInvoiceCommand } from '../../../modules/invoicing/application/use-
 import { CreateCreditNoteCommand } from '../../../modules/invoicing/application/use-cases/CreateCreditNoteUseCase.js';
 import { ElectronicNumberingRange, NewNumberingRange, NumberingRangeFilters } from '../../../modules/invoicing/domain/ports/IElectronicInvoicingPort.js';
 
+export type InvoicingQueueEvent = {
+  eventId: string;
+  eventType: 'invoicing.invoice.issue.requested' | 'invoicing.credit_note.issue.requested';
+  entityId: string;
+};
+
 export interface InvoicingGateway {
   listElectronicNumberingRanges(filters?: NumberingRangeFilters): Promise<ElectronicNumberingRange[]>;
   getElectronicNumberingRange(id: string): Promise<ElectronicNumberingRange>;
@@ -15,6 +21,7 @@ export interface InvoicingGateway {
   restoreElectronicNumberingRange(id: string): Promise<void>;
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   processElectronicInvoice(invoiceId: string): Promise<void>;
+  processQueueEvent(event: InvoicingQueueEvent): Promise<'processed' | 'duplicate' | 'busy'>;
   reconcileElectronicInvoices(limit?: number): Promise<number>;
   processElectronicCreditNote(creditNoteId: string): Promise<void>;
   reconcileElectronicCreditNotes(limit?: number): Promise<number>;

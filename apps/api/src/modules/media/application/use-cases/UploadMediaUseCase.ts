@@ -16,12 +16,11 @@ export interface UploadMediaInput {
 
 export interface UploadMediaOutput {
   id: string;
-  storageKey: string;
   originalFileName: string;
   mimeType: string;
   fileSizeBytes: number;
   altText: string;
-  publicUrl: string;
+  publicUrl: string | null;
 }
 
 export class UploadMediaUseCase {
@@ -104,12 +103,11 @@ export class UploadMediaUseCase {
 
     return Result.ok({
       id: asset.id,
-      storageKey: asset.storageKey,
       originalFileName: asset.originalFileName,
       mimeType: asset.mimeType,
       fileSizeBytes: asset.fileSizeBytes,
       altText: asset.altText,
-      publicUrl: `/media/${asset.id}`,
+      publicUrl: isPrivate ? null : `/media/${asset.id}`,
     });
   }
 }

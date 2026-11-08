@@ -11,7 +11,7 @@ describe('Wishlist D1 persistence', () => {
     }
   });
 
-  it('is idempotent and emits only events for real mutations', async () => {
+  it('is idempotent without emitting events that have no active consumer', async () => {
     const repo = new D1WishlistRepository(env.DB);
     const customerId = crypto.randomUUID();
     const productId = crypto.randomUUID();
@@ -22,13 +22,11 @@ describe('Wishlist D1 persistence', () => {
     expect(duplicate.created).toBe(false);
     expect(duplicate.item.id).toBe(first.item.id);
     const events = await env.DB.prepare('SELECT event_type FROM wishlist_outbox_events WHERE trace_id = ?').bind(traceId).all<{ event_type: string }>();
-    expect(events.results).toHaveLength(1);
-    expect(events.results?.[0]?.event_type).toBe('wishlist.item.added.v1');
+    expect(events.results).toHaveLength(0);
     await repo.remove(customerId, productId, traceId);
     await repo.remove(customerId, productId, traceId);
     const finalEvents = await env.DB.prepare('SELECT event_type FROM wishlist_outbox_events WHERE trace_id = ?').bind(traceId).all<{ event_type: string }>();
-    expect(finalEvents.results).toHaveLength(2);
-    expect(finalEvents.results?.map((event) => event.event_type)).toContain('wishlist.item.removed.v1');
+    expect(finalEvents.results).toHaveLength(0);
   });
 
   it('cannot list or remove items belonging to another customer', async () => {

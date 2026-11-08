@@ -10,10 +10,15 @@ export interface OrderHistoryRecord {
   createdAt?: string;
 }
 
+export interface OrderOutboxEvent {
+  name: string;
+  payload: Record<string, unknown>;
+}
+
 export interface IOrderRepository {
   findById(id: string): Promise<Order | null>;
   save(order: Order): Promise<void>;
-  addHistory(record: OrderHistoryRecord): Promise<void>;
+  saveAggregate(order: Order, history: OrderHistoryRecord, event: OrderOutboxEvent): Promise<void>;
   list(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;
   hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>;
   getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;

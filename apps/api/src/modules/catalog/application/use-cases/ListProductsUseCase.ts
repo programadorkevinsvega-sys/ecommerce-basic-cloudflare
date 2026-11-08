@@ -2,6 +2,7 @@ import { Result } from '../../../../shared-kernel/Result.js';
 import { Product } from '../../domain/entities/Product.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
 import { ProductListFilters } from '../../domain/ports/ProductListQuery.js';
+import { ProductAdminListItem } from '../../domain/ports/ProductAdminListItem.js';
 
 export interface ListProductsInput extends ProductListFilters {
   limit?: number;
@@ -21,6 +22,12 @@ export class ListProductsUseCase {
   public count(status?: string, query?: string): Promise<number> {
     if (this.productRepo.count) return this.productRepo.count(status, query);
     return this.productRepo.list(100, 0, status).then((products) => products.length);
+  }
+
+  public adminList(input: { limit?: number; offset?: number; status?: string; query?: string }): Promise<ProductAdminListItem[]> {
+    const limit = Math.min(Math.max(input.limit ?? 25, 1), 50);
+    const offset = Math.max(input.offset ?? 0, 0);
+    return this.productRepo.listAdmin(limit, offset, input.status, input.query);
   }
 
   public async execute(input: ListProductsInput): Promise<Result<Product[], Error>> {

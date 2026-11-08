@@ -9,12 +9,11 @@ export interface MediaUploadRequest {
 
 export interface MediaUploadResponse {
   id: string;
-  storageKey: string;
   originalFileName: string;
   mimeType: string;
   fileSizeBytes: number;
   altText: string;
-  publicUrl: string;
+  publicUrl: string | null;
 }
 
 export interface MediaServeResponse {

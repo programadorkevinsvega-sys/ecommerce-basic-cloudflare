@@ -34,10 +34,10 @@ export const createProductSchema = z.object({
   electronicInvoiceEnabled: z.boolean().default(false),
   allowsCashOnDelivery: z.boolean().default(true),
   shippingScope: z.enum(['national', 'local']).default('national'),
-  localCoverageZones: z.array(z.string()).default([]),
+  localCoverageZones: z.array(z.string().min(1).max(120)).max(30).default([]),
   saleMode: z.enum(['cash', 'credit', 'both']).default('cash'),
-  categoryIds: z.array(z.string()).default([]),
-  mediaIds: z.array(z.string()).default([]),
+  categoryIds: z.array(z.string().min(1).max(120)).max(30).default([]),
+  mediaIds: z.array(z.string().min(1).max(120)).max(30).default([]),
 }).strict();
 
 export const updateProductSchema = z.object({
@@ -75,10 +75,10 @@ export const updateProductSchema = z.object({
   electronicInvoiceEnabled: z.boolean().optional(),
   allowsCashOnDelivery: z.boolean().optional(),
   shippingScope: z.enum(['national', 'local']).optional(),
-  localCoverageZones: z.array(z.string()).optional(),
+  localCoverageZones: z.array(z.string().min(1).max(120)).max(30).optional(),
   saleMode: z.enum(['cash', 'credit', 'both']).optional(),
-  categoryIds: z.array(z.string()).optional(),
-  mediaIds: z.array(z.string()).optional(),
+  categoryIds: z.array(z.string().min(1).max(120)).max(30).optional(),
+  mediaIds: z.array(z.string().min(1).max(120)).max(30).optional(),
 }).strict();
 
 export const createCategorySchema = z.object({

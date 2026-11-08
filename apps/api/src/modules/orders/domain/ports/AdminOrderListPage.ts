@@ -1,4 +1,5 @@
-import { Order, OrderPaymentStatus, OrderStatus } from '../entities/Order.js';
+import { AdminOrderListItem } from './AdminOrderListItem.js';
+import { OrderPaymentStatus, OrderStatus } from '../entities/Order.js';
 
 export interface AdminOrderListQuery {
   page: number;
@@ -10,10 +11,9 @@ export interface AdminOrderListQuery {
 }
 
 export interface AdminOrderListPage {
-  items: Order[];
+  items: AdminOrderListItem[];
   total: number;
   page: number;
   pageSize: number;
   hasMore: boolean;
-  statusCounts: Record<OrderStatus, number>;
 }

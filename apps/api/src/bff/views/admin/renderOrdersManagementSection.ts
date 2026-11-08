@@ -27,7 +27,7 @@ export function renderOrdersManagementSection(): string {
 }
 
 function statusTab(status: string, label: string): string {
-  return `<button class="order-filter-tab${status === 'all' ? ' selected' : ''}" type="button" data-orders-status="${status}" aria-pressed="${status === 'all'}">${label}<span data-orders-count="${status}">0</span></button>`;
+  return `<button class="order-filter-tab${status === 'all' ? ' selected' : ''}" type="button" data-orders-status="${status}" aria-pressed="${status === 'all'}">${label}</button>`;
 }
 
 function icon(name: 'refresh' | 'search'): string {

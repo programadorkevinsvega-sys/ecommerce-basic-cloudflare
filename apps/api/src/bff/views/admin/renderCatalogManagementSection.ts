@@ -1,7 +1,8 @@
-import type { AttributeDto, BrandDto, CategoryDto, CatalogProductDto, ProductVariantDto, SupplierDto, CatalogCollectionDto } from '../../gateways/catalog/CatalogGateway.js';
+import type { AttributeDto, BrandDto, CategoryDto, ProductVariantDto, SupplierDto, CatalogCollectionDto } from '../../gateways/catalog/CatalogGateway.js';
 import type { CatalogProductTagDto } from '../../gateways/catalog/CatalogGateway.js';
+import type { ProductAdminListItem } from '../../../modules/catalog/domain/ports/ProductAdminListItem.js';
 
-export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: CatalogProductDto[], collections:CatalogCollectionDto[], tags:CatalogProductTagDto[]): string {
+export function renderCatalogManagementSection(categories: CategoryDto[], brands: BrandDto[], attributes: AttributeDto[], suppliers: SupplierDto[], variants: ProductVariantDto[], products: ProductAdminListItem[], collections:CatalogCollectionDto[], tags:CatalogProductTagDto[]): string {
   return `<section class="taxonomy-screen" aria-label="Gestión del catálogo">
     <header class="taxonomy-heading"><div><h1 id="taxonomy-page-title">Categorías</h1><p id="taxonomy-page-description">Organiza los productos en categorías independientes.</p></div></header>
     ${categoryPage(categories)}${brandPage(brands)}${supplierPage(suppliers)}${attributePage(attributes)}${variantPage(variants, products, attributes)}${collectionPage(collections)}${tagPage(tags)}
@@ -38,7 +39,7 @@ function attributePage(items: AttributeDto[]): string {
   return page('attributes', 'Atributos', 'Define características que se pueden asignar a los productos.', items.length, 'Atributo', 'Crear atributo', form, 'newAttributeForm', '<th>Atributo</th><th>Código</th><th>Tipo</th><th>Opciones</th><th>Estado</th><th>Acciones</th>', rows, 'Aún no hay atributos.');
 }
 
-function variantPage(items: ProductVariantDto[], products: CatalogProductDto[], attributes: AttributeDto[]): string {
+function variantPage(items: ProductVariantDto[], products: ProductAdminListItem[], attributes: AttributeDto[]): string {
   const names = new Map(products.map((x) => [x.id, x.name]));
   const rows = items.map((x) => `<tr><td><strong>${e(x.name)}</strong><small>${e(Object.entries(x.options).map(([k,v]) => `${k}: ${v}`).join(' · ') || 'Sin opciones')}</small></td><td>${e(names.get(x.productId) || x.productId)}</td><td><code>${e(x.sku)}</code></td><td>${cop(x.priceInCents)} </td><td>${x.stockQuantity}</td><td><span class="taxonomy-status ${x.status}">${x.status === 'active' ? 'Activa' : 'Inactiva'}</span></td></tr>`).join('');
   const options = products.map((x) => `<option value="${e(x.id)}">${e(x.name)} · ${e(x.sku)}</option>`).join('');

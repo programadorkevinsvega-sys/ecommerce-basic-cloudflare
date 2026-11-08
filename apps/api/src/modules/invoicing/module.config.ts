@@ -9,6 +9,8 @@ import { CreateCreditNoteUseCase } from './application/use-cases/CreateCreditNot
 import { R2InvoiceDocumentStorageAdapter } from './infrastructure/adapters/R2InvoiceDocumentStorageAdapter.js';
 import { GetInvoiceDocumentUseCase } from './application/use-cases/GetInvoiceDocumentUseCase.js';
 import { ManageElectronicNumberingRangesUseCase } from './application/use-cases/ManageElectronicNumberingRangesUseCase.js';
+import { D1QueueEventReceiptRepository } from './infrastructure/persistence/d1/repositories/D1QueueEventReceiptRepository.js';
+import { ProcessInvoicingQueueEventUseCase } from './application/use-cases/ProcessInvoicingQueueEventUseCase.js';
 
 export interface InvoicingModuleDependencies {
   db: D1Database;
@@ -32,6 +34,7 @@ export class InvoicingModuleContainer {
   public readonly createCreditNoteUseCase: CreateCreditNoteUseCase;
   public readonly getInvoiceDocumentUseCase: GetInvoiceDocumentUseCase;
   public readonly manageElectronicNumberingRangesUseCase: ManageElectronicNumberingRangesUseCase;
+  public readonly processQueueEventUseCase: ProcessInvoicingQueueEventUseCase;
 
   constructor(deps: InvoicingModuleDependencies) {
     this.repo = new D1InvoiceRepository(deps.db);
@@ -42,6 +45,10 @@ export class InvoicingModuleContainer {
 
     this.issueInvoiceUseCase = new IssueInvoiceUseCase(this.repo, this.pdfAdapter);
     this.processElectronicInvoiceUseCase = new ProcessElectronicInvoiceUseCase(this.repo, this.electronicAdapter);
+    this.processQueueEventUseCase = new ProcessInvoicingQueueEventUseCase(
+      new D1QueueEventReceiptRepository(deps.db),
+      this.processElectronicInvoiceUseCase,
+    );
     this.getInvoiceUseCase = new GetInvoiceUseCase(this.repo);
     this.listInvoicesUseCase = new ListInvoicesUseCase(this.repo);
     this.createCreditNoteUseCase = new CreateCreditNoteUseCase(this.repo);

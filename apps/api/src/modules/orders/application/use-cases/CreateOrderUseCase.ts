@@ -1,7 +1,7 @@
 import { Order, ShippingAddressSnapshot, ShippingFulfillmentMethod } from '../../domain/entities/Order.js';
 import { OrderLine } from '../../domain/entities/OrderLine.js';
-import { IOrderOutboxRepository } from '../../domain/ports/IOrderOutboxRepository.js';
 import { IOrderRepository } from '../../domain/ports/IOrderRepository.js';
+import { MAX_ORDER_AGGREGATE_BYTES, MAX_ORDER_LINES } from '../../domain/services/OrderAggregateLimits.js';
 
 export interface CreateOrderLineInput {
   productId: string;
@@ -45,14 +45,18 @@ export interface CreateOrderCommand {
 
 export class CreateOrderUseCase {
   private readonly repo: IOrderRepository;
-  private readonly outbox: IOrderOutboxRepository;
 
-  public constructor(repo: IOrderRepository, outbox: IOrderOutboxRepository) {
+  public constructor(repo: IOrderRepository) {
     this.repo = repo;
-    this.outbox = outbox;
   }
 
   public async execute(cmd: CreateOrderCommand): Promise<Order> {
+    if (!Array.isArray(cmd.lines) || cmd.lines.length === 0 || cmd.lines.length > MAX_ORDER_LINES) {
+      throw new Error(`El pedido debe contener entre 1 y ${MAX_ORDER_LINES} líneas`);
+    }
+    if (new TextEncoder().encode(JSON.stringify(cmd)).byteLength > MAX_ORDER_AGGREGATE_BYTES) {
+      throw new Error('La entrada del pedido excede el límite de tamaño D1');
+    }
     if (cmd.customerId && cmd.guestCartIdHash || !cmd.customerId && !/^[a-f0-9]{64}$/.test(cmd.guestCartIdHash || '')) {
       throw new Error('El mecanismo de acceso del pedido no es válido');
     }
@@ -106,24 +110,17 @@ export class CreateOrderUseCase {
       updatedAt: now,
     });
 
-    await this.repo.save(order);
-    await this.repo.addHistory({
-      orderId,
-      fromStatus: null,
-      toStatus: 'placed',
-      note: `Pedido creado con método ${cmd.paymentMethod}`,
-      actor: cmd.customerEmail,
-      createdAt: now,
-    });
-
-    await this.outbox.publish('orders.order.placed.v1', {
-      orderId: order.id,
-      customerEmail: order.customerEmail,
-      customerName: order.customerName,
-      totalCents: order.totalCents,
-      paymentMethod: order.paymentMethod,
-      items: order.lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
-      timestamp: now,
+    await this.repo.saveAggregate(order, {
+      orderId, fromStatus: null, toStatus: 'placed',
+      note: `Pedido creado con método ${cmd.paymentMethod}`, actor: cmd.customerEmail, createdAt: now,
+    }, {
+      name: 'orders.order.placed.v1',
+      payload: {
+        orderId: order.id, customerEmail: order.customerEmail, customerName: order.customerName,
+        totalCents: order.totalCents, paymentMethod: order.paymentMethod,
+        items: order.lines.map((line) => ({ productId: line.productId, quantity: line.quantity })),
+        timestamp: now,
+      },
     });
 
     return order;

@@ -18,13 +18,6 @@ export function renderOrdersAdminListScript(): string {
     function renderAdminOrdersTable() {
       const orders = window._adminOrdersList || [];
       const meta = window._adminOrdersMeta || {};
-      const counts = meta.statusCounts || {};
-      document.querySelectorAll('[data-orders-count]').forEach(node => {
-        const status = node.dataset.ordersCount;
-        node.textContent = String(status === 'all' ? Object.values(counts).reduce((sum, value) => sum + Number(value || 0), 0) : Number(counts[status] || 0));
-      });
-      const pendingCount = document.getElementById('orders-pending-count');
-      if (pendingCount) pendingCount.textContent = String(Number(counts.placed || 0));
       const visible = filteredAdminOrders();
       const body = document.getElementById('orders-table-body');
       const region = document.getElementById('orders-table-region');

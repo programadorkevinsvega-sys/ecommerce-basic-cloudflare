@@ -1,6 +1,6 @@
-import { CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
+import { ProductAdminListItem } from '../../../modules/catalog/domain/ports/ProductAdminListItem.js';
 
-export function renderProductTable(products: CatalogProductDto[]): string {
+export function renderProductTable(products: ProductAdminListItem[]): string {
   const published = products.filter((p) => p.status === 'published').length;
   const drafts = products.filter((p) => p.status === 'draft').length;
   const lowStock = products.filter((p) => p.stockQuantity < 10).length;
@@ -26,14 +26,16 @@ export function renderProductTable(products: CatalogProductDto[]): string {
   `;
 }
 
-export function renderProductRows(products: CatalogProductDto[]): string {
+export function renderProductRows(products: ProductAdminListItem[]): string {
   return products.map((p) => {
     const price = (p.priceInCents / 100).toLocaleString('es-CO', {
       style: 'currency',
       currency: 'COP',
       maximumFractionDigits: 0,
     });
-    const cod = p.salePolicy.allowsCashOnDelivery ? '✅ Sí' : '❌ No';
+    const allowsCashOnDelivery = p.allowsCashOnDelivery;
+    const imageMediaId = p.imageMediaId;
+    const cod = allowsCashOnDelivery ? '✅ Sí' : '❌ No';
     const statusBadge = p.status === 'published'
       ? '<span class="badge badge-published">Publicado</span>'
       : p.status === 'draft'
@@ -46,7 +48,7 @@ export function renderProductRows(products: CatalogProductDto[]): string {
 
     return `
       <tr class="products-row" data-search="${escapeHtml(`${p.name} ${p.sku} ${p.slug} ${p.brand || ''}`.toLocaleLowerCase())}" data-status="${escapeHtml(p.status)}">
-        <td><div class="products-product-cell">${p.mediaIds?.[0] ? `<img src="/media/${escapeHtml(p.mediaIds[0])}" alt="" loading="lazy">` : '<span class="products-product-placeholder" aria-hidden="true">□</span>'}<span><strong>${escapeHtml(p.name)}</strong><small>/productos/${escapeHtml(p.slug)}</small></span></div>
+        <td><div class="products-product-cell">${imageMediaId ? `<img src="/media/${escapeHtml(imageMediaId)}" alt="" loading="lazy">` : '<span class="products-product-placeholder" aria-hidden="true">□</span>'}<span><strong>${escapeHtml(p.name)}</strong><small>/productos/${escapeHtml(p.slug)}</small></span></div>
         </td>
         <td><code>${escapeHtml(p.sku)}</code></td>
         <td class="products-price">${price}</td>

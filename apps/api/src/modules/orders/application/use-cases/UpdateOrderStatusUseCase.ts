@@ -1,5 +1,4 @@
 import { Order, OrderPaymentStatus, OrderStatus } from '../../domain/entities/Order.js';
-import { IOrderOutboxRepository } from '../../domain/ports/IOrderOutboxRepository.js';
 import { IOrderRepository } from '../../domain/ports/IOrderRepository.js';
 
 export interface UpdateOrderStatusCommand {
@@ -12,11 +11,9 @@ export interface UpdateOrderStatusCommand {
 
 export class UpdateOrderStatusUseCase {
   private readonly repo: IOrderRepository;
-  private readonly outbox: IOrderOutboxRepository;
 
-  public constructor(repo: IOrderRepository, outbox: IOrderOutboxRepository) {
+  public constructor(repo: IOrderRepository) {
     this.repo = repo;
-    this.outbox = outbox;
   }
 
   public async execute(cmd: UpdateOrderStatusCommand): Promise<Order> {
@@ -47,22 +44,19 @@ export class UpdateOrderStatusUseCase {
       order.status = cmd.status;
     }
 
-    await this.repo.save(order);
-    await this.repo.addHistory({
+    await this.repo.saveAggregate(order, {
       orderId: order.id,
       fromStatus,
       toStatus: order.status,
       note: cmd.note || `Cambio de estado a ${order.status}`,
       actor: cmd.actor,
       createdAt: new Date().toISOString(),
-    });
-
-    await this.outbox.publish('orders.order.status_changed.v1', {
-      orderId: order.id,
-      fromStatus,
-      toStatus: order.status,
-      paymentStatus: order.paymentStatus,
-      actor: cmd.actor,
+    }, {
+      name: 'orders.order.status_changed.v1',
+      payload: {
+        orderId: order.id, fromStatus, toStatus: order.status,
+        paymentStatus: order.paymentStatus, actor: cmd.actor,
+      },
     });
 
     return order;

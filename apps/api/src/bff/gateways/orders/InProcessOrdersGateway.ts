@@ -37,6 +37,10 @@ export class InProcessOrdersGateway implements OrdersGateway {
     return this.publicApi.listAdminOrders(query);
   }
 
+  public listAdminOrderSummary(limit: number) {
+    return this.publicApi.listAdminOrderSummary(limit);
+  }
+
   public async updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order> {
     return this.publicApi.updateOrderStatus(cmd);
   }

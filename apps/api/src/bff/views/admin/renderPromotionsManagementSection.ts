@@ -1,11 +1,12 @@
 import { PromotionRuleDto, CouponDto } from '../../gateways/promotions/PromotionsGateway.js';
-import { CatalogProductDto, CategoryDto } from '../../gateways/catalog/CatalogGateway.js';
+import { CategoryDto } from '../../gateways/catalog/CatalogGateway.js';
+import { ProductAdminListItem } from '../../../modules/catalog/domain/ports/ProductAdminListItem.js';
 import { renderPromotionRulesTableRows, renderCouponsTableRows } from './renderPromotionsTableRows.js';
 
 export function renderPromotionsManagementSection(
   rules: PromotionRuleDto[],
   coupons: CouponDto[],
-  products: CatalogProductDto[] = [],
+  products: ProductAdminListItem[] = [],
   categories: CategoryDto[] = []
 ): string {
   const productMap = new Map<string, string>();

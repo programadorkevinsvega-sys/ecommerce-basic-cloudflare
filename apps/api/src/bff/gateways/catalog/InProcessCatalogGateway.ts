@@ -55,6 +55,10 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return products.map((p) => p.toPrimitives());
   }
 
+  public listAdminProducts(params: { limit?: number; offset?: number; status?: string; query?: string }) {
+    return this.publicApi.listAdminProducts(params);
+  }
+
   public countProducts(status?: string, query?: string): Promise<number> { return this.publicApi.countProducts(status, query); }
 
   public async createCategory(request: {
@@ -183,4 +187,3 @@ export class InProcessCatalogGateway implements CatalogGateway {
     return this.publicApi.migrateLegacyPrices(taxRateBasisPoints, expectedCount, expectedFingerprint);
   }
 }
-

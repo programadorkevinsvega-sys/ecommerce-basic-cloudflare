@@ -6,7 +6,8 @@ export class ProcessElectronicInvoiceUseCase {
 
   public async execute(invoiceId: string): Promise<void> {
     const invoice = await this.invoices.findById(invoiceId);
-    if (!invoice || invoice.electronicStatus === 'accepted' || invoice.electronicStatus === 'rejected') return;
+    if (!invoice) throw new Error('INVOICING_INVOICE_NOT_FOUND');
+    if (invoice.electronicStatus === 'accepted' || invoice.electronicStatus === 'rejected') return;
     const existing = await this.provider.findByReference(invoice.id);
     const result = existing || (invoice.electronicErrors?.factusState === 'pending_conflict'
       ? { dianValidationStatus: 'pending' as const, emailSent: false, errors: invoice.electronicErrors }
@@ -22,7 +23,8 @@ export class ProcessElectronicInvoiceUseCase {
 
   public async executeCreditNote(noteId: string): Promise<void> {
     const note = await this.invoices.findCreditNoteById(noteId);
-    if (!note || note.electronicStatus === 'accepted' || note.electronicStatus === 'rejected') return;
+    if (!note) throw new Error('INVOICING_CREDIT_NOTE_NOT_FOUND');
+    if (note.electronicStatus === 'accepted' || note.electronicStatus === 'rejected') return;
     const invoice = await this.invoices.findById(note.invoiceId);
     if (!invoice) throw new Error('FACTUS_CREDIT_NOTE_INVOICE_NOT_FOUND');
     if (invoice.electronicStatus !== 'accepted' || !invoice.electronicNumber) {

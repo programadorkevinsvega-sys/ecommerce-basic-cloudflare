@@ -154,7 +154,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   });
   const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
 
-  const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE);
+  const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE, env.ANALYTICS);
 
   return {
     settingsGateway,

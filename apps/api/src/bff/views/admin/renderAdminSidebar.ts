@@ -6,7 +6,7 @@ export function renderAdminSidebar(adminLabel: string): string {
     <nav class="admin-nav" aria-label="Principal">
       <section class="admin-nav-group"><h2>Operación</h2><ul>
         ${navItem('summary', 'Resumen', 'switchTab(\'summary\')', true)}
-        ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();", false, 'orders-pending-count', 'por atender')}
+        ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();")}
         ${navItem('inventory', 'Inventario', "switchTab('inventory'); loadAdminInventory();", false, 'inventory-alert-count', 'con stock bajo o agotados')}
         ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping', this); showAdminShippingPage('zones')")}
         ${navItem('shipping', 'Municipios DANE', "switchTab('shipping', this); showAdminShippingPage('locations')", false, undefined, undefined, true)}

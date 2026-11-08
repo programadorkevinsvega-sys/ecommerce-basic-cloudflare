@@ -45,7 +45,7 @@ describe('Media D1 and R2 integration', () => {
       const row = await env.DB.prepare('SELECT width, height FROM media_assets WHERE id = ?').bind(uploaded.value.id).first<{ width: number; height: number }>();
       expect(row).toEqual({ width: 1, height: 1 });
     } finally {
-      await env.MEDIA_BUCKET.delete(uploaded.value.storageKey);
+      await env.MEDIA_BUCKET.delete(`media/${uploaded.value.id}`);
       await env.DB.prepare('DELETE FROM media_assets WHERE id = ?').bind(uploaded.value.id).run();
     }
   });

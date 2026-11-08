@@ -3,6 +3,7 @@ import { Product, ProductStatus, ProductCondition } from '../../domain/entities/
 import { ProductSalePolicy, ShippingScope, SaleMode } from '../../domain/entities/ProductSalePolicy.js';
 import { IProductRepository } from '../../domain/ports/IProductRepository.js';
 import { calculateRecommendedPrice } from '../../domain/services/CalculateRecommendedPrice.js';
+import { validateProductRelationships } from '../../domain/services/ProductAggregateLimits.js';
 
 export interface UpdateProductInput {
   id: string;
@@ -55,6 +56,8 @@ export class UpdateProductUseCase {
   }
 
   public async execute(input: UpdateProductInput): Promise<Result<Product, Error>> {
+    const relationshipError = validateProductRelationships(input);
+    if (relationshipError) return Result.fail(relationshipError);
     const product = await this.productRepo.findById(input.id);
     if (!product) {
       return Result.fail(new Error('Producto no encontrado'));

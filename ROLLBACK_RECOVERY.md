@@ -216,6 +216,10 @@ Las subidas nuevas se decodifican y re-encodean a WebP mediante el binding Cloud
 
 El cron de medios revisa hasta 1.000 objetos `media/` por ejecución diaria, conserva un cursor en KV y solo elimina un objeto si su edad supera siete días y no existe `media_assets.storage_key` asociado. Excluye los prefijos privados y de facturación. La operación es idempotente para claves ya borradas, pero no restaura objetos eliminados; ante una referencia inconsistente o incidente, detener el Worker/Cron y recuperar el objeto desde la retención/copia disponible antes de reanudar. No ejecutar un borrado masivo de R2 como rollback.
 
+No configurar lifecycle de expiración automática en R2 para `media/`: una regla por edad no puede comprobar si D1 aún referencia el objeto. `private/` (incluidos documentos/facturas) no debe tener expiración automática; aplicar la retención aprobada para cada tipo documental. Antes de cualquier borrado, revisar un listado de staging, validar prefijos y referencias y conservar evidencia; staging no está listo mientras sus bindings tengan placeholders.
+
+Para reconciliar objetos faltantes, detener la recolección y las operaciones que dependan de los objetos afectados; comparar las referencias `media_assets.storage_key` con `HEAD` de R2 sin exportar claves privadas a logs, URLs ni respuestas. Restaurar desde una copia autorizada en la clave exacta solo después de confirmar el ID/metadato propietario; no recrear contenido vacío ni cambiar referencias para ocultar el faltante. Si no existe copia, mantener el recurso como no disponible y escalar la recuperación. Reanudar el Cron únicamente tras repetir la comprobación de consistencia y registrar conteos, fecha y responsable, sin adjuntar claves privadas al reporte.
+
 ### MFA administrativo
 
 Al desplegar el control obligatorio, una cuenta con `mfa_enabled=0` solo puede entrar a `/admin/mfa-setup`; APIs y datos de administración permanecen bloqueados hasta confirmar un TOTP con la contraseña revalidada. Después, el login exige TOTP. Antes de revertir el Worker, considerar que una versión anterior podría permitir saltarse MFA. No revertir a una versión sin el gate mientras haya una cuenta con MFA deshabilitado; si se necesita rollback por incidente, mantener acceso de administrador detenido hasta volver a aplicar una versión con el gate. Guardar el secreto TOTP en un gestor de contraseñas seguro durante el enrolamiento.
@@ -231,6 +235,16 @@ El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (cont
 - Antes de revertir, evaluar si conviene **pausar el consumidor** (para no procesar mensajes con código incompatible) y **detener el relay de outbox** de Cron.
 - Tras el rollback, revisar profundidad, antigüedad, errores y DLQ **antes** de volver a procesar o reproducir mensajes.
 - Los eventos de pagos (`payments.payment.confirmed.v1`) y de pedidos no se reproducen a ciegas: pasan por la reconciliación anterior.
+
+### Estado del pipeline invoicing (2026-11-07)
+
+El relay habilitado procesa únicamente `invoicing.invoice.issue.requested` y `invoicing.credit_note.issue.requested`, versión 1. Usa `invoicing_outbox_events` con claim condicional, vencimiento de lease y token de propietario; los handlers mantienen recibos persistentes por `eventId` en `invoicing_queue_event_receipts`. Si una entrega encuentra un lease activo, se reintenta; un recibo completado se ACKea como duplicado. Un evento sin contrato/handler se reintenta para que la política de Queue lo envíe a DLQ; no se descarta ni ACKea silenciosamente.
+
+La migración `invoicing__0004_event_pipeline_reliability.sql` es expand-only. Los esquemas nuevos y tabla de recibos no eliminan datos; al volver a código previo, conservar columnas, tabla y ledger. El código anterior puede ignorar las adiciones, pero antes de reactivar un Worker anterior deben pausarse/inspeccionarse las Queues y evaluarse su compatibilidad con mensajes v1 pendientes. La migración solo está verificada localmente; su aplicación en staging/producción y el plan de backup son pendientes. No ejecutar el runner remoto desde esta nota.
+
+La garantía es at-least-once, no exactly-once. Si Queue acepta el mensaje y el estado outbox no se confirma, el relay puede reenviar el mismo `eventId`; la deduplicación del consumidor lo hace seguro para entregas completadas. Factus consulta por referencia estable antes de someter factura/nota, para reconciliar una respuesta ambigua. El efecto externo no forma una transacción con D1, por lo que toda recuperación debe confirmar el estado del documento en Factus antes de reprocesar un caso ambiguo. No hacer replay manual de una DLQ sin revisar `eventId`, estado del recibo y referencia Factus.
+
+El inventario actual del resto de tablas outbox está en [`docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md`](./docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md). Los relays de settings y wishlist están deshabilitados; wishlist dejó de emitir eventos nuevos sin consumer. El conteo remoto de DLQ, dashboards, alertas y un ensayo real de replay todavía no se han verificado; el estado operativo de Queues/DLQ sigue **PENDIENTE**.
 
 ## Workers Cache y KV
 

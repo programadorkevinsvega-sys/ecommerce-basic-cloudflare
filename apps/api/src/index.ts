@@ -5,7 +5,8 @@ import { JsonLogger } from './platform/JsonLogger.js';
 import { notifyShippingGuideAvailable } from './bff/controllers/shipping/notifyShippingGuideAvailable.js';
 import { notifyOrderStatusChanged } from './bff/controllers/orders/notifyOrderStatusChanged.js';
 import { purgePublicHtmlCache } from './platform/PurgePublicHtmlCache.js';
-import { z } from 'zod';
+import { processQueueBatch } from './platform/messaging/QueueBatchProcessor.js';
+import { QueueEventTelemetry } from './platform/messaging/QueueEventTelemetry.js';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -18,27 +19,7 @@ export default {
   async queue(batch: MessageBatch<unknown>, env: Env, _ctx: ExecutionContext): Promise<void> {
     const logger = new JsonLogger('queue-consumer');
     const root = buildCompositionRoot(env);
-
-    for (const message of batch.messages) {
-      try {
-        const parsed = invoiceEventSchema.safeParse(message.body);
-        if (!parsed.success && isInvoicingEvent(message.body)) throw new Error('INVALID_INVOICING_EVENT');
-        const event = parsed.success ? parsed.data : message.body as { eventType?: string; payload?: { invoiceId?: string; creditNoteId?: string }; traceId?: string };
-        if (event.eventType === 'invoicing.invoice.issue.requested' && event.payload?.invoiceId) {
-          await root.invoicingGateway.processElectronicInvoice(event.payload.invoiceId);
-          logger.info('Factura electrónica procesada', { id: message.id, trace_id: event.traceId });
-        } else if (event.eventType === 'invoicing.credit_note.issue.requested' && event.payload?.creditNoteId) {
-          await root.invoicingGateway.processElectronicCreditNote(event.payload.creditNoteId);
-          logger.info('Nota crédito electrónica procesada', { id: message.id, trace_id: event.traceId });
-        } else {
-          logger.info('Mensaje sin consumer registrado', { id: message.id, queue: batch.queue });
-        }
-        message.ack();
-      } catch (err) {
-        logger.error(`Error procesando mensaje ${message.id} en ${batch.queue}`, err);
-        message.retry({ delaySeconds: 10 });
-      }
-    }
+    await processQueueBatch(batch, root.invoicingGateway, logger, new QueueEventTelemetry(env.ANALYTICS, logger));
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
@@ -66,38 +47,13 @@ export default {
 
     ctx.waitUntil((async () => {
       try {
-        const published = await compositionRoot.outboxRelayService.relayPendingEvents('invoicing_outbox_events', 'invoicing');
+        const published = await compositionRoot.outboxRelayService.relayPendingEvents();
         const reconciled = await compositionRoot.invoicingGateway.reconcileElectronicInvoices(20);
         const reconciledNotes = await compositionRoot.invoicingGateway.reconcileElectronicCreditNotes(20);
         if (published || reconciled || reconciledNotes) logger.info('Reconciliación Factus completada', { published, reconciled, reconciledNotes });
       } catch (error) { logger.error('Falló la reconciliación de facturas Factus', error); }
     })());
 
-    ctx.waitUntil(
-      (async () => {
-        try {
-          // Outbox relay de los módulos activos
-          const relayed = await compositionRoot.outboxRelayService.relayPendingEvents(
-            'settings_outbox_events',
-            'settings'
-          );
-          if (relayed > 0) {
-            logger.info(`Outbox events relayed para settings: ${relayed}`);
-          }
-        } catch (err) {
-          logger.error('Error durante la ejecución del cron outbox relay', err);
-        }
-      })()
-    );
-
-    ctx.waitUntil((async () => {
-      try {
-        const published = await compositionRoot.outboxRelayService.relayPendingEvents('wishlist_outbox_events', 'wishlist');
-        if (published > 0) logger.info('Wishlist events relayed', { count: published });
-      } catch (error) {
-        logger.error('Error relaying wishlist outbox events', error);
-      }
-    })());
   },
 };
 
@@ -140,24 +96,4 @@ async function collectOldMedia(collector: AppCompositionRoot['mediaOrphanCollect
   } catch (error) {
     logger.error('Falló la limpieza de medios; no se alteraron referencias D1', error);
   }
-}
-
-const invoiceEventMetadata = {
-  eventId: z.string().uuid(),
-  eventVersion: z.number().int().positive(),
-  occurredAt: z.string().min(1),
-  producerModule: z.literal('invoicing'),
-  traceId: z.string().min(1).max(100),
-};
-const invoiceEventSchema = z.union([
-  z.object({ ...invoiceEventMetadata, eventType: z.literal('invoicing.invoice.issue.requested'),
-    payload: z.object({ invoiceId: z.string().min(1).max(100) }).strict() }).strict(),
-  z.object({ ...invoiceEventMetadata, eventType: z.literal('invoicing.credit_note.issue.requested'),
-    payload: z.object({ creditNoteId: z.string().min(1).max(100) }).strict() }).strict(),
-]);
-
-function isInvoicingEvent(body: unknown): boolean {
-  if (!body || typeof body !== 'object') return false;
-  const type = (body as Record<string, unknown>).eventType;
-  return typeof type === 'string' && type.startsWith('invoicing.');
 }

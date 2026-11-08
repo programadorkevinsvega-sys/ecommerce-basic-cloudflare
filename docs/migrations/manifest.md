@@ -260,6 +260,7 @@ En la D1 de producción `ecommerce-vega-production` (`bfb3ba3f-5e2a-4c33-9b93-0a
 | `invoicing__0002_tax_included.sql` | v2 | Local temporal | 2026-10-13 | trabajo actual | ✅ Aditiva; conserva documentos previos y marca IVA incluido |
 | `invoicing__0002_tax_included.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; facturas previas conservan `tax_included=0` |
 | `invoicing__0003_factus_electronic_invoices.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y campos de estado Factus confirmados en D1. |
+| `invoicing__0004_event_pipeline_reliability.sql` | v4 | Local (Workers/D1) | 2026-11-07 | trabajo actual | ✅ Migración aditiva para lease/token del relay y recibos persistentes de consumer; verificada por pruebas Workers locales. Staging y producción pendientes; no aplicar sin backup y autorización operativa. |
 
 ---
 

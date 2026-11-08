@@ -6,6 +6,7 @@ import { AdminOrderTrackingPage, AdminOrderTrackingRecord, OrderShippingDetails,
 import { LocalDeliveryLabelPage } from '../../../modules/orders/domain/ports/LocalDeliveryLabel.js';
 import { LocalCodCollectionCandidate } from '../../../modules/orders/domain/ports/LocalCodCollectionCandidate.js';
 import { AdminOrderListPage, AdminOrderListQuery } from '../../../modules/orders/domain/ports/AdminOrderListPage.js';
+import { AdminOrderSummaryItem } from '../../../modules/orders/domain/ports/AdminOrderSummaryItem.js';
 
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
@@ -14,6 +15,7 @@ export interface OrdersGateway {
   getOrder(orderId: string): Promise<Order | null>;
   listOrders(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;
   listAdminOrders(query: AdminOrderListQuery): Promise<AdminOrderListPage>;
+  listAdminOrderSummary(limit: number): Promise<AdminOrderSummaryItem[]>;
   updateOrderStatus(cmd: UpdateOrderStatusCommand): Promise<Order>;
   hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>;
   getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;

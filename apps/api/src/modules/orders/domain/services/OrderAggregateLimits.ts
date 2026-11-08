@@ -1,0 +1,3 @@
+export const MAX_ORDER_LINES = 50;
+export const MAX_ORDER_BATCH_STATEMENTS = 100;
+export const MAX_ORDER_AGGREGATE_BYTES = 256 * 1024;

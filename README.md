@@ -477,7 +477,7 @@ Contrato común: `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producer
 | `invoicing.credit_note.issued.v1` | invoicing | notifications, realtime, audit |
 | `shipping.zone.changed.v1` | shipping | — |
 
-Consumidores idempotentes, `message.ack()` solo tras persistir, `retry({ delaySeconds })` en fallos recuperables y DLQ configurada.
+**Estado real del runtime al 2026-11-07:** solo los dos eventos de invoicing `*.issue.requested` v1 tienen relay y consumer operativos. Sus contratos y handlers están en `apps/api/src/platform/messaging`; desconocidos/versiones no registradas se reintentan y no se ACKean. La idempotencia usa recibos D1 y reconciliación por referencia de Factus; no es una garantía exactly-once. Las otras tablas outbox y consumidores de la tabla anterior son pendientes, no se deben tratar como flujos activos. Relay de settings/wishlist deshabilitado y emisión nueva de eventos wishlist detenida. El inventario verificable y gates operativos pendientes están en [`AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md`](./docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md). Staging, DLQ real, replay, dashboard y alertas no están certificados.
 
 ---
 

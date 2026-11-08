@@ -70,6 +70,7 @@ describe('media and banner input validation', () => {
     });
 
     expect(result.isOk()).toBe(true);
+    expect(put).toHaveBeenCalledOnce();
     expect(head).toHaveBeenCalledOnce();
     expect(saved).toHaveLength(1);
     expect(saved[0]).toMatchObject({ width: 1, height: 1 });

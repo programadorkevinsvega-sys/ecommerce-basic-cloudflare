@@ -31,7 +31,29 @@ export function registerAdminOrderRoutes(
     });
     if (!params.success) return c.json({ error: 'Filtros o paginación inválidos' }, 400);
     const result = await orders.listAdminOrders({ ...params.data, query: params.data.query?.trim() || undefined });
-    return c.json({ success: true, ...result, orders: result.items.map((order) => order.toJSON()) });
+    const { items, ...page } = result;
+    return c.json({ success: true, ...page, orders: items });
+  });
+
+  app.get('/api/v1/admin/orders/summary', async (c) => {
+    const token = extractAdminToken(c);
+    if (!token) return c.json({ error: 'No autorizado' }, 401);
+    const session = await identity.validateSession(token);
+    if (session?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
+    if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
+    const summary = await orders.listAdminOrderSummary(100);
+    return c.json({ success: true, orders: summary });
+  });
+
+  app.get('/api/v1/admin/orders/:orderId', async (c) => {
+    const token = extractAdminToken(c);
+    if (!token) return c.json({ error: 'No autorizado' }, 401);
+    const session = await identity.validateSession(token);
+    if (session?.actorType !== 'admin') return c.json({ error: 'No autorizado' }, 401);
+    if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:read')) return c.json({ error: 'Permiso insuficiente' }, 403);
+    const order = await orders.getOrder(c.req.param('orderId'));
+    if (!order) return c.json({ error: 'Pedido no encontrado' }, 404);
+    return c.json({ success: true, order: order.toJSON() });
   });
 
   app.patch('/api/v1/admin/orders/:orderId/status', async (c) => {
@@ -58,7 +80,7 @@ export function registerAdminOrderRoutes(
 }
 
 const adminOrderListQuery = z.object({
-  page: z.coerce.number().int().min(1).max(1_000_000),
+  page: z.coerce.number().int().min(1).max(1_000),
   pageSize: z.coerce.number().int().min(1).max(50),
   status: z.enum(['placed', 'confirmed', 'prepared', 'shipped', 'delivered', 'cancelled']).optional(),
   paymentStatus: z.enum(['pending', 'approved', 'failed', 'collected']).optional(),

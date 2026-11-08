@@ -3,6 +3,7 @@ import { MediaGateway } from '../../gateways/media/MediaGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { bodyLimit } from 'hono/body-limit';
+import { JsonLogger } from '../../../platform/JsonLogger.js';
 
 type MediaVariables = {
   Variables: {
@@ -15,13 +16,22 @@ type MediaVariables = {
 export class MediaController {
   public static createRoutes(mediaGateway: MediaGateway, identityGateway: IdentityGateway): Hono<MediaVariables> {
     const router = new Hono<MediaVariables>();
+    const logger = new JsonLogger('media');
 
     // SEC-R2-01 & SEC-R2-06: Servir medios a través del Worker con X-Content-Type-Options: nosniff
     router.get('/:id', async (c) => {
       const assetId = c.req.param('id');
+      const cacheKey = new Request(new URL(`/media/${encodeURIComponent(assetId)}`, c.req.url));
+      try {
+        const cached = await caches.default.match(cacheKey);
+        if (cached) return cached;
+      } catch (error) {
+        logger.warn('No fue posible consultar el caché edge de media', { assetId, errorName: error instanceof Error ? error.name : 'UnknownError' });
+      }
+
       try {
         const media = await mediaGateway.getMedia(assetId);
-        return new Response(media.stream, {
+        const response = new Response(media.stream, {
           status: 200,
           headers: {
             'Content-Type': media.mimeType,
@@ -30,6 +40,12 @@ export class MediaController {
             'Cache-Control': 'public, max-age=31536000, immutable',
           },
         });
+        try {
+          await caches.default.put(cacheKey, response.clone());
+        } catch (error) {
+          logger.warn('No fue posible guardar media pública en el caché edge', { assetId, errorName: error instanceof Error ? error.name : 'UnknownError' });
+        }
+        return response;
       } catch {
         return c.json({ error: 'Recurso no encontrado' }, 404);
       }
@@ -70,7 +86,14 @@ export class MediaController {
             uploadedByAdminId: adminId,
           });
 
-          return c.json({ data: result }, 201);
+          return c.json({ data: {
+            id: result.id,
+            originalFileName: result.originalFileName,
+            mimeType: result.mimeType,
+            fileSizeBytes: result.fileSizeBytes,
+            altText: result.altText,
+            publicUrl: result.publicUrl,
+          } }, 201);
         } catch {
           return c.json({ error: 'No fue posible procesar la imagen' }, 400);
         }
