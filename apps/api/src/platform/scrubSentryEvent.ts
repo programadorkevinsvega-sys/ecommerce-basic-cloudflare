@@ -4,12 +4,13 @@ type TraceContext = NonNullable<NonNullable<ErrorEvent['contexts']>['trace']>;
 type SafeTraceContext = Pick<TraceContext, 'trace_id' | 'span_id'> &
   Partial<Pick<TraceContext, 'parent_span_id' | 'op' | 'status'>>;
 
-const SAFE_TAGS = new Set(['area', 'failure_reason', 'dependency', 'trace_id', 'request_id']);
+const SAFE_TAGS = new Set(['area', 'failure_reason', 'dependency', 'fallback_dependency', 'error_type', 'trace_id', 'request_id']);
 const SAFE_TRACE_OPERATIONS = new Set(['http.server', 'http.client', 'db.query', 'queue.process', 'function']);
 const REDACTED_MESSAGE = 'Worker exception (details redacted)';
 const SAFE_FAILURE_SUMMARIES: Record<string, string> = {
   rate_limit_binding_missing: 'Rate-limit protection is not configured',
   rate_limit_binding_error: 'Rate-limit provider request failed',
+  rate_limit_binding_fallback: 'Rate-limit binding fallback used',
   media_storage_verification_failed: 'Media storage verification failed',
   media_metadata_registration_failed: 'Media metadata could not be registered',
   media_upload_failed: 'Media upload failed',
@@ -46,10 +47,14 @@ function sentryFailureSummary(tags: Record<string, unknown> | undefined): string
   const reason = tags?.failure_reason;
   if (typeof reason !== 'string' || !SAFE_FAILURE_SUMMARIES[reason]) return undefined;
   const dependency = tags?.dependency;
-  const dependencyLabel = typeof dependency === 'string' && /^[A-Z_]{1,40}$/.test(dependency)
-    ? ` (${dependency})`
-    : '';
-  return `${SAFE_FAILURE_SUMMARIES[reason]}${dependencyLabel}`;
+  const details: string[] = [];
+  if (typeof dependency === 'string' && /^[A-Z_]{1,40}$/.test(dependency)) details.push(dependency);
+  const fallbackDependency = tags?.fallback_dependency;
+  if (typeof fallbackDependency === 'string' && /^[A-Z_]{1,40}$/.test(fallbackDependency)) details.push(fallbackDependency);
+  const errorType = tags?.error_type;
+  if (typeof errorType === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(errorType)) details.push(errorType);
+  const detailLabel = details.length ? ` (${details.join('; ')})` : '';
+  return `${SAFE_FAILURE_SUMMARIES[reason]}${detailLabel}`;
 }
 
 function sanitizeTraceContext(context: TraceContext | undefined): SafeTraceContext | undefined {
@@ -74,6 +79,8 @@ function isHexId(value: string, length: number): boolean {
 function isSafeTagValue(key: string, value: unknown): boolean {
   if (typeof value !== 'string') return false;
   if (key === 'trace_id') return isHexId(value, 32);
+  if (key === 'error_type') return /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value);
+  if (key === 'dependency' || key === 'fallback_dependency') return /^[A-Z_]{1,40}$/.test(value);
   if (key === 'request_id') {
     return /^[a-f\d]{16}-[a-z]{3}$/i.test(value) ||
       /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(value);

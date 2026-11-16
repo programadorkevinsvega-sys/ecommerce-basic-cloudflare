@@ -27,6 +27,7 @@ describe('Sentry event scrubbing', () => {
       tags: {
         area: 'admin_auth',
         failure_reason: 'db_failure',
+        error_type: 'private@example.test',
         trace_id: 'private@example.test',
         request_id: 'private@example.test',
         private: 'value',
@@ -71,19 +72,42 @@ describe('Sentry event scrubbing', () => {
         area: 'rate_limit',
         failure_reason: 'rate_limit_binding_error',
         dependency: 'API_IP_WRITE_LIMITER',
+        error_type: 'TypeError',
       },
       exception: { values: [{ type: 'Error', value: 'private@example.test' }] },
     };
 
     const scrubbed = scrubSentryEvent(event);
 
-    expect(scrubbed.message).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER)');
-    expect(scrubbed.exception?.values?.[0]?.value).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER)');
+    expect(scrubbed.message).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER; TypeError)');
+    expect(scrubbed.exception?.values?.[0]?.value).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER; TypeError)');
     expect(scrubbed.tags).toEqual({
       area: 'rate_limit',
       failure_reason: 'rate_limit_binding_error',
       dependency: 'API_IP_WRITE_LIMITER',
+      error_type: 'TypeError',
     });
     expect(JSON.stringify(scrubbed)).not.toContain('private@example.test');
+  });
+
+  it('reports the safe secondary limiter fallback in Sentry', () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      event_id: 'event-3',
+      message: 'private error',
+      tags: {
+        area: 'rate_limit',
+        failure_reason: 'rate_limit_binding_fallback',
+        dependency: 'API_IP_WRITE_LIMITER',
+        fallback_dependency: 'API_WRITE_LIMITER',
+        error_type: 'Error',
+      },
+      exception: { values: [{ type: 'Error', value: 'private error' }] },
+    };
+
+    const scrubbed = scrubSentryEvent(event);
+
+    expect(scrubbed.message).toBe('Rate-limit binding fallback used (API_IP_WRITE_LIMITER; API_WRITE_LIMITER; Error)');
+    expect(JSON.stringify(scrubbed)).not.toContain('private error');
   });
 });

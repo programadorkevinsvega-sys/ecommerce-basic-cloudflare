@@ -6,6 +6,8 @@ import { extractSessionToken } from '../security/extractSessionToken.js';
 import { JsonLogger } from '../../platform/JsonLogger.js';
 import { captureSentryException } from '../../platform/captureSentryException.js';
 
+const reportedFallbacks = new Set<string>();
+
 export function createRateLimitMiddleware(identityGateway?: IdentityGateway): MiddlewareHandler<{ Bindings: Env }> {
   return async (c, next) => {
     const path = c.req.path;
@@ -14,10 +16,11 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
       const isSearch = path === '/api/v1/search' || path.startsWith('/api/v1/search/');
       const isPublicRead = path === '/api/v1/shipping/locations' || path === '/api/v1/cart' || path.startsWith('/api/v1/cart/');
       if (!isSearch && !isPublicRead) return next();
-      const binding = isSearch ? c.env.PUBLIC_SEARCH_LIMITER : c.env.PUBLIC_READ_LIMITER;
       const scope = isSearch ? 'public_search' : 'public_read';
       const bindingName = isSearch ? 'PUBLIC_SEARCH_LIMITER' : 'PUBLIC_READ_LIMITER';
-      const limited = await applyLimit(c, binding, bindingName, `${scope}:${c.req.header('cf-connecting-ip') || 'unknown'}`, scope);
+      const configuredBinding = isSearch ? c.env.PUBLIC_SEARCH_LIMITER : c.env.PUBLIC_READ_LIMITER;
+      const selected = resolveRateLimitBinding(c, configuredBinding, bindingName, scope);
+      const limited = await applyLimit(c, selected.binding, selected.bindingName, `${scope}:${c.req.header('cf-connecting-ip') || 'unknown'}`, scope);
       return limited || next();
     }
     if (['HEAD', 'OPTIONS'].includes(c.req.method)) return next();
@@ -27,11 +30,14 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
     const scope = isAuth ? 'auth' : isCheckout ? 'checkout' : 'api_write';
     const binding = isAuth ? c.env.AUTH_LIMITER : isCheckout ? c.env.CHECKOUT_LIMITER : c.env.API_IP_WRITE_LIMITER;
     const bindingName = isAuth ? 'AUTH_LIMITER' : isCheckout ? 'CHECKOUT_LIMITER' : 'API_IP_WRITE_LIMITER';
+    const selected = isAuth || isCheckout
+      ? { binding, bindingName }
+      : resolveRateLimitBinding(c, binding, bindingName, scope);
     const ip = c.req.header('cf-connecting-ip') || 'unknown';
     const key = isAuth || isCheckout
       ? ip
       : `ip:${ip}:${c.req.method}:${getRateLimitRouteScope(path)}`;
-    const limited = await applyLimit(c, binding, bindingName, key, scope);
+    const limited = await applyLimit(c, selected.binding, selected.bindingName, key, scope);
     if (limited) return limited;
 
     if (identityGateway && scope === 'api_write') {
@@ -59,6 +65,36 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
     }
     return next();
   };
+}
+
+function resolveRateLimitBinding(
+  c: Context<{ Bindings: Env }>,
+  binding: Env['AUTH_LIMITER'] | undefined,
+  bindingName: string,
+  scope: string,
+): { binding: Env['AUTH_LIMITER'] | undefined; bindingName: string } {
+  if (binding) return { binding, bindingName };
+  const fallback = c.env?.API_WRITE_LIMITER;
+  if (!fallback) return { binding, bindingName };
+  if (!reportedFallbacks.has(bindingName)) {
+    reportedFallbacks.add(bindingName);
+    const traceContext = c.get('traceContext');
+    new JsonLogger('rate-limit', traceContext).warn('Rate limit fallback binding selected', {
+      failure_reason: 'rate_limit_binding_fallback',
+      binding_name: bindingName,
+      fallback_binding_name: 'API_WRITE_LIMITER',
+      scope,
+    });
+    captureSentryException(new Error('Rate-limit binding fallback selected'), {
+      area: 'rate_limit',
+      reason: 'rate_limit_binding_fallback',
+      dependency: bindingName,
+      fallbackDependency: 'API_WRITE_LIMITER',
+      traceId: traceContext?.traceId,
+      requestId: traceContext?.requestId,
+    });
+  }
+  return { binding: fallback, bindingName: 'API_WRITE_LIMITER' };
 }
 
 async function applyLimit(

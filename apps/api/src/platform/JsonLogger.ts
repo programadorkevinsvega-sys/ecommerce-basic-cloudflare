@@ -1,4 +1,5 @@
 import { TraceContext } from './TraceContext.js';
+import { getSafeErrorType } from './getSafeErrorType.js';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -52,7 +53,7 @@ export class JsonLogger {
     let errorObj: { name: string; message: string; stack?: string } | undefined;
     if (err instanceof Error) {
       errorObj = {
-        name: err.name,
+        name: getSafeErrorType(err),
         message: 'Operation failed',
       };
     } else if (err) {

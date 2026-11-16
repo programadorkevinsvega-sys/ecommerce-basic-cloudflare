@@ -2,9 +2,9 @@ export interface Env {
   AUTH_LIMITER: RateLimit;
   CHECKOUT_LIMITER: RateLimit;
   API_WRITE_LIMITER: RateLimit;
-  API_IP_WRITE_LIMITER: RateLimit;
-  PUBLIC_SEARCH_LIMITER: RateLimit;
-  PUBLIC_READ_LIMITER: RateLimit;
+  API_IP_WRITE_LIMITER?: RateLimit;
+  PUBLIC_SEARCH_LIMITER?: RateLimit;
+  PUBLIC_READ_LIMITER?: RateLimit;
   DB: D1Database;
   MEDIA_BUCKET: R2Bucket;
   IMAGES: ImagesBinding;

@@ -188,6 +188,8 @@ Complementa el contrato de arquitectura (§0, §3, §6.1, §10, §20).
 - **SEC-LOG-03** Los errores al cliente son genéricos; el detalle va solo a logs internos.
 - **SEC-LOG-04** Alertas sobre: rachas de login fallido, rechazos de pago anómalos, firmas de webhook inválidas, DLQ con mensajes y picos de 5xx.
 
+Los logs internos y eventos de Sentry pueden conservar categorías de fallo, dependencias y tipos de excepción validados para diagnóstico. No deben incluir mensajes libres de excepciones, payloads, PII ni secretos; la respuesta pública conserva un código de error y una referencia de seguimiento. Si falta un limitador secundario de escrituras o lecturas, se reutiliza `API_WRITE_LIMITER` con claves independientes; autenticación y checkout mantienen sus límites dedicados y fallan cerrados si faltan.
+
 ## 18. Dependencias y cadena de suministro (DEP)
 
 - **SEC-DEP-01** Mínimo de dependencias; versiones fijadas con lockfile.

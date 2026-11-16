@@ -83,4 +83,39 @@ describe('request rate limiting', () => {
     expect(actorLimit).toHaveBeenCalledWith({ key: 'actor:customer-1:PATCH:/api/v1/orders' });
     expect(ipLimit).toHaveBeenCalledWith({ key: 'ip:192.0.2.1:POST:/api/v1/public' });
   });
+
+  it('uses the available write limiter when secondary write and public bindings are absent', async () => {
+    const limit = vi.fn().mockResolvedValue({ success: true });
+    const app = new Hono<{ Bindings: Env }>();
+    app.use('*', createRateLimitMiddleware());
+    app.post('/media/upload', (c) => c.text('uploaded'));
+    app.get('/api/v1/search/suggestions', (c) => c.text('searched'));
+    app.get('/api/v1/cart', (c) => c.text('cart'));
+    const env = { API_WRITE_LIMITER: { limit } } as unknown as Env;
+
+    const upload = await app.request('/media/upload', { method: 'POST' }, env);
+    const search = await app.request('/api/v1/search/suggestions', {}, env);
+    const cart = await app.request('/api/v1/cart', {}, env);
+
+    expect([upload.status, search.status, cart.status]).toEqual([200, 200, 200]);
+    expect(limit.mock.calls.map(([input]) => input)).toEqual([
+      { key: 'ip:unknown:POST:/media/upload' },
+      { key: 'public_search:unknown' },
+      { key: 'public_read:unknown' },
+    ]);
+  });
+
+  it('keeps authentication fail-closed when its dedicated limiter is absent', async () => {
+    const fallbackLimit = vi.fn().mockResolvedValue({ success: true });
+    const app = new Hono<{ Bindings: Env }>();
+    app.use('*', createRateLimitMiddleware());
+    app.post('/api/v1/auth/login', (c) => c.text('logged in'));
+
+    const response = await app.request('/api/v1/auth/login', { method: 'POST' }, {
+      API_WRITE_LIMITER: { limit: fallbackLimit },
+    } as unknown as Env);
+
+    expect(response.status).toBe(503);
+    expect(fallbackLimit).not.toHaveBeenCalled();
+  });
 });
