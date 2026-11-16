@@ -1,5 +1,12 @@
+import { renderProductMediaUploadScript } from './renderProductMediaUploadScript.js';
+
 export function renderProductFormsScript(): string {
   return `
+    function productRequestError(response, data, fallback) {
+      const message = data?.error || fallback;
+      const traceId = response.headers.get('x-trace-id') || data?.traceId;
+      return message + (traceId ? ' (referencia: ' + traceId + ')' : '');
+    }
     function readOptionalInteger(id) { const value = document.getElementById(id).value.trim(); return value ? Number(value) : null; }
     window.currentProductMediaIds = [];
     window.originalCatalogStockQuantity = null;
@@ -132,19 +139,19 @@ export function renderProductFormsScript(): string {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
           msg.textContent = editId ? '✅ Producto actualizado con éxito' : '✅ Producto creado con éxito';
           msg.style.background = '#065f46';
           msg.style.display = 'block';
           setTimeout(() => window.location.reload(), 1000);
         } else {
-          msg.textContent = '❌ ' + (data.error || 'Error al guardar');
+          msg.textContent = '❌ ' + productRequestError(res, data, 'Error al guardar');
           msg.style.background = '#7f1d1d';
           msg.style.display = 'block';
         }
       } catch {
-        msg.textContent = '❌ Error de conexión';
+        msg.textContent = '❌ No se pudo conectar para guardar el producto. Revisa tu conexión e inténtalo de nuevo.';
         msg.style.display = 'block';
       }
     });
@@ -153,45 +160,9 @@ export function renderProductFormsScript(): string {
       const wrap = document.getElementById('pLocalZonesWrapper');
       if (wrap) wrap.style.display = scope === 'local' ? 'block' : 'none';
     }
-    async function handleProductImageSelected(input) {
-      if (!input.files || input.files.length === 0) return;
-      if (!window.currentProductMediaIds) window.currentProductMediaIds = [];
-      const files = Array.from(input.files);
-      const remainingSlots = 5 - window.currentProductMediaIds.length;
-      if (remainingSlots <= 0) {
-        alert('Ya has alcanzado el máximo de 5 imágenes permitidas para este producto.');
-        input.value = '';
-        return;
-      }
-      const filesToUpload = files.slice(0, remainingSlots);
-      const statusSpan = document.getElementById('pImageUploadStatus');
-      if (statusSpan) {
-        statusSpan.textContent = '⏳ Subiendo ' + filesToUpload.length + ' imagen(es) a R2...';
-        statusSpan.style.color = '#56675b';
-      }
-      for (const file of filesToUpload) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('altText', document.getElementById('pName')?.value || file.name.replace(/\\.[^/.]+$/, ''));
-        formData.append('isPrivate', 'false');
-        try {
-          const headers = window.adminHeaders ? window.adminHeaders(false) : {};
-          const res = await fetch('/media/upload', { method: 'POST', headers, body: formData });
-          const json = await res.json();
-          if (res.ok && json.data?.id) {
-            window.currentProductMediaIds.push(json.data.id);
-            updateProductMediaGrid();
-          }
-        } catch {}
-      }
-      input.value = '';
-      if (statusSpan) {
-        statusSpan.textContent = '✅ Imágenes listas (' + window.currentProductMediaIds.length + '/5)';
-        statusSpan.style.color = '#18764b';
-      }
-    }
+    ${renderProductMediaUploadScript()}
     window.updateProductMediaGrid = updateProductMediaGrid; window.removeProductMedia = removeProductMedia; window.onProductScopeChange = onProductScopeChange; window.handleProductImageSelected = handleProductImageSelected; window.updateRecommendedProductPrice = updateRecommendedProductPrice;
-    document.getElementById('pMediaFileInput')?.addEventListener('change', (event) => handleProductImageSelected(event.currentTarget)); document.getElementById('pScope')?.addEventListener('change', onProductScopeChange); document.getElementById('pTargetType')?.addEventListener('change', updateProductPricingTargetFields);
+    document.getElementById('pScope')?.addEventListener('change', onProductScopeChange); document.getElementById('pTargetType')?.addEventListener('change', updateProductPricingTargetFields);
     document.getElementById('pMediaGrid')?.addEventListener('click', (event) => {
       const button = event.target.closest('[data-product-media-remove]');
       if (button) removeProductMedia(Number(button.dataset.productMediaRemove));

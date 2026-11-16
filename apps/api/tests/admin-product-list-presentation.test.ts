@@ -20,6 +20,8 @@ describe('admin product compact list', () => {
   it('loads the full product only for editing and keeps the rendered script valid', () => {
     const script = renderAdminDashboardScript();
     expect(() => new Function(script)).not.toThrow();
+    expect(script).toContain('showAdminRequestError');
+    expect(script).toContain('Referencia de seguimiento');
     expect(script).toContain('/api/v1/admin/products/');
     expect(script).toContain('No se pudo cargar el producto.');
   });

@@ -61,4 +61,29 @@ describe('Sentry event scrubbing', () => {
     expect(scrubbed.exception?.values?.[0]?.stacktrace?.frames?.[0]?.vars).toBeUndefined();
     expect(JSON.stringify(scrubbed)).not.toContain('private');
   });
+
+  it('keeps actionable infrastructure context without forwarding arbitrary exception text', () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      event_id: 'event-2',
+      message: 'A request failed for private@example.test',
+      tags: {
+        area: 'rate_limit',
+        failure_reason: 'rate_limit_binding_error',
+        dependency: 'API_IP_WRITE_LIMITER',
+      },
+      exception: { values: [{ type: 'Error', value: 'private@example.test' }] },
+    };
+
+    const scrubbed = scrubSentryEvent(event);
+
+    expect(scrubbed.message).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER)');
+    expect(scrubbed.exception?.values?.[0]?.value).toBe('Rate-limit provider request failed (API_IP_WRITE_LIMITER)');
+    expect(scrubbed.tags).toEqual({
+      area: 'rate_limit',
+      failure_reason: 'rate_limit_binding_error',
+      dependency: 'API_IP_WRITE_LIMITER',
+    });
+    expect(JSON.stringify(scrubbed)).not.toContain('private@example.test');
+  });
 });

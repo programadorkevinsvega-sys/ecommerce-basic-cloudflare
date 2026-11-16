@@ -1,4 +1,5 @@
 import { CreditNote } from '../../../../domain/entities/CreditNote.js';
+import { CreditNoteAmountExceedsBalanceError } from '../../../../domain/errors/CreditNoteAmountExceedsBalanceError.js';
 
 export class D1CreditNoteRepository {
   constructor(private readonly db: D1Database) {}
@@ -14,16 +15,29 @@ export class D1CreditNoteRepository {
   public async createForElectronicIssue(note: CreditNote, traceId: string): Promise<void> {
     const payload = JSON.stringify({ creditNoteId: note.id });
     const eventId = crypto.randomUUID();
-    await this.db.batch([
+    const results = await this.db.batch([
       this.db.prepare(`INSERT INTO invoicing_credit_notes
         (id, credit_note_number, invoice_id, reason, amount_in_cents, issued_by, created_at, correction_concept_code, electronic_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`).bind(note.id, note.creditNoteNumber, note.invoiceId,
-        note.reason, note.amountInCents, note.issuedBy, note.createdAt, note.correctionConceptCode),
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
+        WHERE EXISTS (
+          SELECT 1 FROM invoicing_invoices invoice
+          WHERE invoice.id = ?
+            AND invoice.electronic_status = 'accepted'
+            AND invoice.electronic_number IS NOT NULL
+            AND COALESCE((
+              SELECT SUM(amount_in_cents) FROM invoicing_credit_notes
+              WHERE invoice_id = invoice.id
+                AND electronic_status IN ('pending', 'accepted')
+            ), 0) <= invoice.total_cents - ?
+        )`).bind(note.id, note.creditNoteNumber, note.invoiceId, note.reason, note.amountInCents,
+        note.issuedBy, note.createdAt, note.correctionConceptCode, note.invoiceId, note.amountInCents),
       this.db.prepare(`INSERT INTO invoicing_outbox_events
         (id, event_type, payload_json, created_at, event_id, event_version, payload, trace_id, status, attempts)
-        VALUES (?, 'invoicing.credit_note.issue.requested', ?, ?, ?, 1, ?, ?, 'pending', 0)`)
-        .bind(eventId, payload, note.createdAt, eventId, payload, traceId.slice(0, 100)),
+        SELECT ?, 'invoicing.credit_note.issue.requested', ?, ?, ?, 1, ?, ?, 'pending', 0
+        WHERE EXISTS (SELECT 1 FROM invoicing_credit_notes WHERE id = ?)`)
+        .bind(eventId, payload, note.createdAt, eventId, payload, traceId.slice(0, 100), note.id),
     ]);
+    if (results[0]?.meta.changes !== 1) throw new CreditNoteAmountExceedsBalanceError();
   }
 
   public async updateElectronic(note: CreditNote): Promise<void> {

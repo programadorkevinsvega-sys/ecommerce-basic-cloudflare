@@ -3,6 +3,8 @@ import { Env } from '../../platform/Env.js';
 import { getRateLimitRouteScope } from '../security/getRateLimitRouteScope.js';
 import { IdentityGateway } from '../gateways/identity/IdentityGateway.js';
 import { extractSessionToken } from '../security/extractSessionToken.js';
+import { JsonLogger } from '../../platform/JsonLogger.js';
+import { captureSentryException } from '../../platform/captureSentryException.js';
 
 export function createRateLimitMiddleware(identityGateway?: IdentityGateway): MiddlewareHandler<{ Bindings: Env }> {
   return async (c, next) => {
@@ -14,7 +16,8 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
       if (!isSearch && !isPublicRead) return next();
       const binding = isSearch ? c.env.PUBLIC_SEARCH_LIMITER : c.env.PUBLIC_READ_LIMITER;
       const scope = isSearch ? 'public_search' : 'public_read';
-      const limited = await applyLimit(c, binding, `${scope}:${c.req.header('cf-connecting-ip') || 'unknown'}`, scope);
+      const bindingName = isSearch ? 'PUBLIC_SEARCH_LIMITER' : 'PUBLIC_READ_LIMITER';
+      const limited = await applyLimit(c, binding, bindingName, `${scope}:${c.req.header('cf-connecting-ip') || 'unknown'}`, scope);
       return limited || next();
     }
     if (['HEAD', 'OPTIONS'].includes(c.req.method)) return next();
@@ -23,11 +26,12 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
     const isCheckout = c.req.path === '/api/v1/orders' || c.req.path === '/api/v1/orders/tracking' || c.req.path === '/api/v1/payments/wompi/init';
     const scope = isAuth ? 'auth' : isCheckout ? 'checkout' : 'api_write';
     const binding = isAuth ? c.env.AUTH_LIMITER : isCheckout ? c.env.CHECKOUT_LIMITER : c.env.API_IP_WRITE_LIMITER;
+    const bindingName = isAuth ? 'AUTH_LIMITER' : isCheckout ? 'CHECKOUT_LIMITER' : 'API_IP_WRITE_LIMITER';
     const ip = c.req.header('cf-connecting-ip') || 'unknown';
     const key = isAuth || isCheckout
       ? ip
       : `ip:${ip}:${c.req.method}:${getRateLimitRouteScope(path)}`;
-    const limited = await applyLimit(c, binding, key, scope);
+    const limited = await applyLimit(c, binding, bindingName, key, scope);
     if (limited) return limited;
 
     if (identityGateway && scope === 'api_write') {
@@ -46,6 +50,7 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
         const actorLimit = await applyLimit(
           c,
           c.env?.API_WRITE_LIMITER,
+          'API_WRITE_LIMITER',
           `actor:${actorId}:${c.req.method}:${getRateLimitRouteScope(path)}`,
           'api_actor_write',
         );
@@ -59,19 +64,42 @@ export function createRateLimitMiddleware(identityGateway?: IdentityGateway): Mi
 async function applyLimit(
   c: Context<{ Bindings: Env }>,
   binding: Env['AUTH_LIMITER'] | undefined,
+  bindingName: string,
   key: string,
   scope = 'public_read',
 ): Promise<Response | null> {
-  const traceId = (c.get('traceContext') as { traceId?: string } | undefined)?.traceId || 'unknown';
+  const traceContext = c.get('traceContext');
+  const traceId = traceContext?.traceId || 'unknown';
   if (!binding) {
-    console.error(JSON.stringify({ event: 'security.rate_limit_binding_missing', scope, trace_id: traceId }));
-    return c.json({ error: 'Servicio temporalmente no disponible' }, 503);
+    const error = new Error('Rate-limit binding is not configured');
+    new JsonLogger('rate-limit', traceContext).error('Rate limit dependency unavailable', error, {
+      failure_reason: 'rate_limit_binding_missing', binding_name: bindingName, scope,
+    });
+    captureSentryException(error, {
+      area: 'rate_limit', reason: 'rate_limit_binding_missing', dependency: bindingName,
+      traceId: traceContext?.traceId, requestId: traceContext?.requestId,
+    });
+    return c.json({
+      error: 'No se pudo validar el límite de solicitudes; la operación no se procesó. Intenta de nuevo y comparte el código de seguimiento si persiste.',
+      errorCode: 'RATE_LIMIT_UNAVAILABLE',
+      traceId,
+    }, 503);
   }
   let outcome;
   try { outcome = await binding.limit({ key }); }
   catch (error) {
-    console.error(JSON.stringify({ event: 'security.rate_limit_binding_error', scope, trace_id: traceId, error_name: error instanceof Error ? error.name : 'UnknownError' }));
-    return c.json({ error: 'Servicio temporalmente no disponible' }, 503);
+    new JsonLogger('rate-limit', traceContext).error('Rate limit dependency unavailable', error, {
+      failure_reason: 'rate_limit_binding_error', binding_name: bindingName, scope,
+    });
+    captureSentryException(error, {
+      area: 'rate_limit', reason: 'rate_limit_binding_error', dependency: bindingName,
+      traceId: traceContext?.traceId, requestId: traceContext?.requestId,
+    });
+    return c.json({
+      error: 'No se pudo validar el límite de solicitudes; la operación no se procesó. Intenta de nuevo y comparte el código de seguimiento si persiste.',
+      errorCode: 'RATE_LIMIT_UNAVAILABLE',
+      traceId,
+    }, 503);
   }
   if (!outcome.success) return c.json({ error: 'Demasiadas solicitudes; inténtalo más tarde' }, 429, { 'Retry-After': '60' });
   return null;

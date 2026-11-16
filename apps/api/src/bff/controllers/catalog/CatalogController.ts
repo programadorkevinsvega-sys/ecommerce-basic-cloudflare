@@ -14,6 +14,7 @@ import {
   createCategorySchema,
   createAttributeSchema,
 } from './catalogSchemas.js';
+import { reportCatalogProductUpdateFailure } from './reportCatalogProductUpdateFailure.js';
 
 export class CatalogController {
   public static createRoutes(catalogGateway: CatalogGateway, identityGateway: IdentityGateway, settingsGateway: SettingsGateway, auditGateway: AuditGateway, shippingGateway: ShippingGateway, inventoryGateway: InventoryGateway): Hono {
@@ -195,12 +196,10 @@ export class CatalogController {
             transactionShippingCents,
           });
           return c.json({ data: product });
-        } catch {
-          // Si Inventory ya aceptó el stock, no lo revertimos: pueden haber ocurrido reservas concurrentes.
-          if (inventoryStockUpdated) {
-            return c.json({ error: 'El inventario operativo se actualizó, pero no se pudo guardar el producto en el catálogo. Reintenta guardar el producto; verifica primero el stock en Inventario.' }, 503);
-          }
-          return c.json({ error: 'No fue posible actualizar el producto' }, 400);
+        } catch (error) {
+          const failure = reportCatalogProductUpdateFailure(error, inventoryStockUpdated, c.get('traceContext'));
+          const { status, ...body } = failure;
+          return c.json(body, status);
         }
       }
     );

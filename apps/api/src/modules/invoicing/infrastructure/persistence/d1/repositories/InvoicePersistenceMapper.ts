@@ -27,10 +27,24 @@ export function invoiceFilters(filters?: { customerId?: string; query?: string; 
   if (filters?.electronicOnly) clauses.push('electronic_eligible = 1');
   if (filters?.electronicStatus) { clauses.push('electronic_status = ?'); values.push(filters.electronicStatus); }
   if (filters?.query) {
-    const query = `%${filters.query.replace(/[\\%_]/g, '\\$&')}%`;
-    clauses.push("(invoice_number LIKE ? ESCAPE '\\' OR order_id LIKE ? ESCAPE '\\' OR customer_name LIKE ? ESCAPE '\\' OR customer_email LIKE ? ESCAPE '\\' OR CAST(ROUND(total_cents / 100.0) AS TEXT) LIKE ?)");
-    const digits = filters.query.replace(/\D/g, '');
-    values.push(query, query, query, query, digits ? `%${digits}%` : '');
+    const query = `${filters.query.replace(/[\\%_]/g, '\\$&')}%`;
+    const searchClauses = [
+      'id = ?',
+      'invoice_number = ?',
+      'order_id = ?',
+      "customer_name LIKE ? ESCAPE '\\'",
+      "customer_email LIKE ? ESCAPE '\\'",
+    ];
+    const searchValues: unknown[] = [filters.query, filters.query, filters.query, query, query];
+    if (/^[\d.,\s$]+$/.test(filters.query)) {
+      const pesos = Number(filters.query.replace(/\D/g, ''));
+      if (Number.isSafeInteger(pesos) && pesos <= Math.floor(Number.MAX_SAFE_INTEGER / 100)) {
+        searchClauses.push('total_cents = ?');
+        searchValues.push(pesos * 100);
+      }
+    }
+    clauses.push(`(${searchClauses.join(' OR ')})`);
+    values.push(...searchValues);
   }
   return { sql: clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '', values };
 }
