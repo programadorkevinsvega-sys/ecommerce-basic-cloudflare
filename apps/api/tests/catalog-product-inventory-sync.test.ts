@@ -86,6 +86,26 @@ describe('catalog and inventory stock synchronization', () => {
     expect(catalog.updateProduct).not.toHaveBeenCalled();
   });
 
+  it('logs a failed product save with a stable diagnostic code and returns its trace reference', async () => {
+    const { app, catalog } = makeCatalogController();
+    catalog.updateProduct.mockRejectedValueOnce(new Error('database connection detail'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const response = await app.request('/admin/products/product-1', {
+      method: 'PUT', headers, body: JSON.stringify({ name: 'Updated product' }),
+    }, writeRateLimitEnv);
+    const body = await response.json() as { error: string; errorCode: string; traceId: string };
+    const logOutput = log.mock.calls.map(([entry]) => String(entry)).join('\n');
+
+    expect(response.status).toBe(503);
+    expect(body.errorCode).toBe('PRODUCT_UPDATE_FAILED');
+    expect(body.traceId).toBe('unknown');
+    expect(body.error).not.toContain('database connection detail');
+    expect(logOutput).toContain('"failure_reason":"product_update_failed"');
+    expect(logOutput).not.toContain('database connection detail');
+    log.mockRestore();
+  });
+
   it('initializes Inventory when a new product is created', async () => {
     const { app, catalog, inventory } = makeCatalogController();
     const response = await app.request('/admin/products', {

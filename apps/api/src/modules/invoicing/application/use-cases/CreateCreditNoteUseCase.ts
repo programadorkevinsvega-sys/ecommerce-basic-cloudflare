@@ -1,5 +1,6 @@
 import { CreditNote } from '../../domain/entities/CreditNote.js';
 import { IInvoiceRepository } from '../../domain/ports/IInvoiceRepository.js';
+import { CreditNoteAmountExceedsBalanceError } from '../../domain/errors/CreditNoteAmountExceedsBalanceError.js';
 
 export interface CreateCreditNoteCommand {
   invoiceId: string;
@@ -10,8 +11,10 @@ export interface CreateCreditNoteCommand {
   traceId?: string;
 }
 
+type CreditNoteRepository = Pick<IInvoiceRepository, 'findById' | 'createCreditNoteForElectronicIssue'>;
+
 export class CreateCreditNoteUseCase {
-  constructor(private readonly repo: IInvoiceRepository) {}
+  constructor(private readonly repo: CreditNoteRepository) {}
 
   public async execute(cmd: CreateCreditNoteCommand): Promise<CreditNote> {
     if (!['1', '2', '3', '4', '5', '6'].includes(cmd.correctionConceptCode)) {
@@ -22,8 +25,12 @@ export class CreateCreditNoteUseCase {
       throw new Error(`Factura con id '${cmd.invoiceId}' no encontrada`);
     }
 
+    if (invoice.electronicStatus !== 'accepted' || !invoice.electronicNumber) {
+      throw new Error('La factura electrónica debe estar aceptada por DIAN antes de emitir una nota crédito');
+    }
+
     if (cmd.amountInCents > invoice.totalCents) {
-      throw new Error(`El monto de la nota crédito no puede superar el total de la factura`);
+      throw new CreditNoteAmountExceedsBalanceError();
     }
 
     const id = `cn_${crypto.randomUUID()}`;
@@ -39,6 +46,7 @@ export class CreateCreditNoteUseCase {
       issuedBy: cmd.issuedBy,
       createdAt: now,
       correctionConceptCode: cmd.correctionConceptCode,
+      electronicStatus: 'pending',
     });
 
     await this.repo.createCreditNoteForElectronicIssue(creditNote, cmd.traceId || 'unknown');

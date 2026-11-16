@@ -13,6 +13,11 @@ export function renderProductLandingEditorScript(): string {
         msg.textContent = text;
         msg.className = kind;
       }
+      function requestError(response, result, fallback) {
+        const message = result?.error || fallback;
+        const traceId = response.headers.get('x-trace-id') || result?.traceId;
+        return message + (traceId ? ' (referencia: ' + traceId + ')' : '');
+      }
       function encodeRows(values, first, second) {
         return (values || []).map((item) => item[first] + ' | ' + item[second]).join('\\n');
       }
@@ -43,14 +48,15 @@ export function renderProductLandingEditorScript(): string {
       }
       async function openEditor(productId) {
         const product = window.__catalogProducts?.[productId];
-        if (!modal || !form || !product) {
+        const productName = field('pl-product-name');
+        if (!modal || !form || !product || !productName) {
           alert('No se encontró el producto. Actualiza el listado y vuelve a intentarlo.');
           return;
         }
         activeProductId = productId;
         previousFocus = document.activeElement;
         field('plProductId').value = productId;
-        field('plProductName').textContent = product.name;
+        productName.textContent = product.name;
         field('plPreview').href = '/productos/' + encodeURIComponent(product.slug);
         fillConfig({ enabled: false, templateKey: 'standard', eyebrow: '', headline: '', subtitle: '',
           ctaLabel: 'Comprar ahora', seoTitle: '', seoDescription: '', benefits: [], faqs: [],
@@ -63,8 +69,8 @@ export function renderProductLandingEditorScript(): string {
           const response = await fetch('/api/v1/admin/products/' + encodeURIComponent(productId) + '/landing', {
             headers: window.adminHeaders(), cache: 'no-store',
           });
-          const result = await response.json();
-          if (!response.ok || !result.data) throw new Error(result.error || 'No se pudo cargar la configuración.');
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.data) throw new Error(requestError(response, result, 'No se pudo cargar la configuración.'));
           if (activeProductId !== productId) return;
           fillConfig(result.data);
           showMessage(result.data.enabled ? 'Landing personalizada activa.' : 'Este producto usa su ficha estándar.');
@@ -116,8 +122,8 @@ export function renderProductLandingEditorScript(): string {
           const response = await fetch('/api/v1/admin/products/' + encodeURIComponent(activeProductId) + '/landing', {
             method: 'PUT', headers: window.adminHeaders(true), body: JSON.stringify(payload),
           });
-          const result = await response.json();
-          if (!response.ok || !result.data) throw new Error(result.error || 'No se pudo guardar la landing.');
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.data) throw new Error(requestError(response, result, 'No se pudo guardar la landing.'));
           fillConfig(result.data);
           showMessage('Landing guardada correctamente.', 'is-success');
         } catch (error) {

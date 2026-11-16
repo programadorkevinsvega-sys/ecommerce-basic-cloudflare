@@ -100,13 +100,24 @@ export function renderAdminDashboardScript(): string {
       window.location.href = '/admin/login';
     });
 
+    async function showAdminRequestError(response, fallback) {
+      const data = await response.json().catch(() => ({}));
+      const message = data.error || fallback;
+      const traceId = response.headers.get('x-trace-id') || data.traceId;
+      alert(message + (traceId ? '\\nReferencia de seguimiento: ' + traceId : ''));
+    }
+
     async function setProductStatus(id, status) {
       if (!confirm('¿Deseas cambiar el estado del producto?')) return;
-      const res = await fetch('/api/v1/admin/products/' + id, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
-      });
-      if (res.ok) window.location.reload();
-      else alert('Error al actualizar estado');
+      try {
+        const res = await fetch('/api/v1/admin/products/' + id, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
+        });
+        if (res.ok) window.location.reload();
+        else await showAdminRequestError(res, 'No se pudo actualizar el estado del producto.');
+      } catch {
+        alert('No se pudo conectar para actualizar el estado. Revisa tu conexión e inténtalo de nuevo.');
+      }
     }
 
     async function deleteProduct(id) {

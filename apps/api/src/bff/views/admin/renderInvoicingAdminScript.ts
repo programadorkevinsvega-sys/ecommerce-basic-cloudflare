@@ -6,43 +6,88 @@ export function renderInvoicingAdminScript(): string {
     let _invoiceMeta = { total: 0, hasMore: false };
     let _invoiceSearchTimer;
     let _invoiceView = 'all';
+    let _invoiceRequestId = 0;
 
     function showAdminInvoicePage(view = 'all') {
       _invoiceView = view === 'electronic' ? 'electronic' : 'all';
       const title = document.getElementById('invoices-title');
       const description = document.getElementById('invoices-description');
-      if (title) title.textContent = _invoiceView === 'electronic' ? 'Facturación electrónica' : 'Facturación';
-      if (description) description.textContent = _invoiceView === 'electronic'
-        ? 'Consulta y filtra los documentos procesados por Factus y su estado ante DIAN.'
-        : 'Consulta documentos comerciales y su estado electrónico.';
+      const electronic = _invoiceView === 'electronic';
+      const listTitle = document.getElementById('invoices-list-title');
+      const listDescription = document.getElementById('invoices-list-description');
+      const statusFilter = document.getElementById('invoices-electronic-filter');
+      const statusHeading = document.getElementById('invoices-status-heading');
+      const pagination = document.getElementById('invoices-pagination');
+      if (title) title.textContent = electronic ? 'Facturación electrónica' : 'Facturación';
+      if (description) description.textContent = electronic
+        ? 'Seguimiento de facturas transmitidas a Factus para validación ante DIAN.'
+        : 'Consulta los comprobantes comerciales internos emitidos para tus ventas.';
+      if (listTitle) listTitle.textContent = electronic ? 'Facturas para validación electrónica' : 'Facturas comerciales emitidas';
+      if (listDescription) listDescription.textContent = electronic
+        ? 'Solo aparecen facturas marcadas para transmisión electrónica; aquí puedes filtrar por estado DIAN.'
+        : 'Comprobantes internos de ventas; esta lista no equivale por sí sola a facturación electrónica DIAN.';
+      if (statusFilter) statusFilter.hidden = !electronic;
+      if (statusHeading) statusHeading.textContent = electronic ? 'Estado ante DIAN' : 'Estado de factura';
+      if (pagination) pagination.setAttribute('aria-label', electronic ? 'Paginación de facturas electrónicas' : 'Paginación de facturas comerciales');
+      if (!electronic) {
+        const status = document.getElementById('invoices-electronic-status');
+        if (status) status.value = '';
+      }
     }
 
     async function loadAdminInvoices(page = _invoicePage) {
       const tbody = document.getElementById('invoices-table-body');
       if (!tbody) return;
+      const requestId = ++_invoiceRequestId;
+      const view = _invoiceView;
+      const electronic = view === 'electronic';
+      const status = electronic ? document.getElementById('invoices-electronic-status')?.value || '' : '';
+      const nav = document.getElementById('invoices-pagination');
+      tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty">Cargando facturas…</td></tr>';
+      if (nav) nav.innerHTML = '';
+      setInvoiceSearchStatus('Buscando facturas…');
       try {
         const params = new URLSearchParams({ page: String(page), pageSize: '25' });
         const query = document.getElementById('invoices-search')?.value.trim() || '';
         if (query) params.set('q', query);
-        if (_invoiceView === 'electronic') params.set('electronicOnly', '1');
-        const electronicStatus = document.getElementById('invoices-electronic-status')?.value || '';
-        if (electronicStatus) params.set('electronicStatus', electronicStatus);
+        if (electronic) params.set('electronicOnly', '1');
+        if (status) params.set('electronicStatus', status);
         const response = await fetch('/api/v1/admin/invoices?' + params, { headers: adminHeaders(), cache: 'no-store' });
         const data = await response.json();
         if (!response.ok || !data.success || !Array.isArray(data.invoices)) throw new Error(data.error || 'No se pudieron cargar las facturas');
+        if (requestId !== _invoiceRequestId) return;
         _adminInvoices = data.invoices;
         _invoicePage = data.page;
         _invoiceMeta = data;
-        tbody.innerHTML = _adminInvoices.map(renderInvoiceRow).join('') || '<tr><td colspan="7" class="invoices-empty">No hay facturas que coincidan con la búsqueda.</td></tr>';
+        const emptyMessage = electronic
+          ? 'No hay facturas para transmisión electrónica que coincidan con la búsqueda y el estado seleccionado.'
+          : 'No hay facturas comerciales que coincidan con la búsqueda.';
+        tbody.innerHTML = _adminInvoices.map(renderInvoiceRow).join('') || '<tr><td colspan="7" class="invoices-empty">' + emptyMessage + '</td></tr>';
+        setInvoiceSearchStatus(_invoiceMeta.total
+          ? 'Se encontraron ' + _invoiceMeta.total + ' facturas. Mostrando la página ' + _invoicePage + '.'
+          : 'No se encontraron facturas con esos criterios.');
         renderInvoicesPagination();
       } catch (error) {
+        if (requestId !== _invoiceRequestId) return;
         tbody.innerHTML = '<tr><td colspan="7" class="invoices-empty error">' + escapeHtml(error.message || 'Error al cargar facturas.') + '</td></tr>';
+        setInvoiceSearchStatus('No se pudo completar la consulta.');
       }
     }
 
     function filterAdminInvoices() {
       clearTimeout(_invoiceSearchTimer);
       _invoiceSearchTimer = setTimeout(() => loadAdminInvoices(1), 250);
+    }
+
+    function submitInvoiceSearch(event) {
+      event.preventDefault();
+      clearTimeout(_invoiceSearchTimer);
+      return loadAdminInvoices(1);
+    }
+
+    function setInvoiceSearchStatus(message) {
+      const status = document.getElementById('invoices-search-status');
+      if (status) status.textContent = message;
     }
 
     function renderInvoicesPagination() {
@@ -62,16 +107,20 @@ export function renderInvoicingAdminScript(): string {
     function renderInvoiceRow(invoice) {
       const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF</a>' +
         '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">Descargar</a>' +
-        (invoice.status === 'issued' ? '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>' : '');
+        (invoice.status === 'issued' && _invoiceView === 'electronic' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber
+          ? '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>'
+          : '');
+      const status = _invoiceView === 'electronic'
+        ? '<span class="invoice-status ' + (invoice.electronicStatus === 'accepted' ? 'issued' : 'other') + '">' + escapeHtml(electronicStatusLabel(invoice.electronicStatus)) + '</span>' +
+          (invoice.electronicNumber ? '<small class="invoice-electronic-status">' + escapeHtml(invoice.electronicNumber) + '</small>' : '') +
+          (invoice.cufe ? '<small class="invoice-electronic-status">CUFE: ' + escapeHtml(invoice.cufe) + '</small>' : '') +
+          (invoice.electronicErrors ? '<small class="invoice-electronic-status invoice-electronic-error">' + escapeHtml(Object.values(invoice.electronicErrors).join('; ')) + '</small>' : '')
+        : '<span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span>';
       return '<tr><td><strong class="invoice-number">' + escapeHtml(invoice.invoiceNumber) + '</strong></td>' +
         '<td><code>#' + escapeHtml(invoice.orderId.replace('ord-', '')) + '</code></td>' +
         '<td><div class="invoice-client"><strong>' + escapeHtml(invoice.customerName) + '</strong><small>' + escapeHtml(invoice.customerEmail) + '</small></div></td>' +
         '<td><strong class="invoice-total">$' + Math.round(Number(invoice.totalCents) / 100).toLocaleString('es-CO') + '</strong></td>' +
-        '<td><span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span>' +
-        '<small class="invoice-electronic-status">DIAN: ' + escapeHtml(electronicStatusLabel(invoice.electronicStatus)) +
-        (invoice.electronicNumber ? ' · ' + escapeHtml(invoice.electronicNumber) : '') + '</small>' +
-        (invoice.cufe ? '<small class="invoice-electronic-status">CUFE: ' + escapeHtml(invoice.cufe) + '</small>' : '') +
-        (invoice.electronicErrors ? '<small class="invoice-electronic-status invoice-electronic-error">' + escapeHtml(Object.values(invoice.electronicErrors).join('; ')) + '</small>' : '') + '</td>' +
+        '<td>' + status + '</td>' +
         '<td>' + escapeHtml(new Date(invoice.createdAt).toLocaleString('es-CO')) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
     }
 
@@ -120,6 +169,7 @@ export function renderInvoicingAdminScript(): string {
     window.openCreditNoteModal = openCreditNoteModal;
     window.closeCreditNoteModal = closeCreditNoteModal;
     window.submitCreditNote = submitCreditNote;
+    document.getElementById('invoices-search-form')?.addEventListener('submit', submitInvoiceSearch);
     document.getElementById('invoices-search')?.addEventListener('input', filterAdminInvoices);
     document.getElementById('invoices-electronic-status')?.addEventListener('change', () => loadAdminInvoices(1));
     document.addEventListener('click', (event) => {

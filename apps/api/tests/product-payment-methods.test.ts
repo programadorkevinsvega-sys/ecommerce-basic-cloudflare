@@ -48,7 +48,12 @@ describe('product payment method eligibility', () => {
 
   it('uses the separate COD policy as the allowed method and gives a clear admin control', () => {
     expect(renderProductFormCard()).not.toContain('id="pPayCod"');
-    expect(renderProductFormsScript()).toContain("document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : []");
+    const script = renderProductFormsScript();
+    expect(script).toContain("document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : []");
+    expect(script).toContain("response.headers.get('x-trace-id')");
+    expect(script).toContain('No se pudo cargar la imagen');
+    expect(script).not.toContain('catch {}');
+    expect(() => new Function(script)).not.toThrow();
   });
 
   it('allows COD only when every product and the shipping zone allow it', () => {

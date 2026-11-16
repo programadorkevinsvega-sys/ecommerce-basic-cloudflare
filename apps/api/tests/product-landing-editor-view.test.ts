@@ -7,6 +7,7 @@ describe('editor administrativo de landing de producto', () => {
   it('renderiza los campos configurables y las secciones permitidas', () => {
     const markup = renderProductLandingEditorCard();
     expect(markup).toContain('id="productLandingForm"');
+    expect(markup).toContain('id="pl-product-name"');
     expect(markup).toContain('id="plHeadline"');
     expect(markup).toContain('id="plSeoTitle"');
     expect(markup).toContain('value="conversion"');
@@ -21,6 +22,10 @@ describe('editor administrativo de landing de producto', () => {
     expect(script).toContain("method: 'PUT'");
     expect(script).toContain("'/landing'");
     expect(script).toContain('JSON.stringify(payload)');
+    expect(script).toContain("field('pl-product-name')");
+    expect(script).not.toContain("field('plProductName')");
+    expect(script).toContain("response.headers.get('x-trace-id')");
+    expect(() => new Function(script)).not.toThrow();
     expect(script).toContain('decodeRows');
     expect(script).toContain('seoDescription: field');
     expect(script).not.toContain('insertAdjacentHTML');

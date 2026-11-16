@@ -4,9 +4,18 @@ type TraceContext = NonNullable<NonNullable<ErrorEvent['contexts']>['trace']>;
 type SafeTraceContext = Pick<TraceContext, 'trace_id' | 'span_id'> &
   Partial<Pick<TraceContext, 'parent_span_id' | 'op' | 'status'>>;
 
-const SAFE_TAGS = new Set(['area', 'failure_reason', 'trace_id', 'request_id']);
+const SAFE_TAGS = new Set(['area', 'failure_reason', 'dependency', 'trace_id', 'request_id']);
 const SAFE_TRACE_OPERATIONS = new Set(['http.server', 'http.client', 'db.query', 'queue.process', 'function']);
 const REDACTED_MESSAGE = 'Worker exception (details redacted)';
+const SAFE_FAILURE_SUMMARIES: Record<string, string> = {
+  rate_limit_binding_missing: 'Rate-limit protection is not configured',
+  rate_limit_binding_error: 'Rate-limit provider request failed',
+  media_storage_verification_failed: 'Media storage verification failed',
+  media_metadata_registration_failed: 'Media metadata could not be registered',
+  media_upload_failed: 'Media upload failed',
+  product_update_failed: 'Catalog product update failed',
+  catalog_save_failed_after_inventory_update: 'Catalog save failed after inventory was updated',
+};
 
 export function scrubSentryEvent(event: ErrorEvent): ErrorEvent {
   const traceContext = event.contexts?.trace;
@@ -21,14 +30,26 @@ export function scrubSentryEvent(event: ErrorEvent): ErrorEvent {
   );
   const safeTraceContext = sanitizeTraceContext(traceContext);
   if (safeTraceContext) event.contexts = { trace: safeTraceContext };
-  event.message = event.message ? REDACTED_MESSAGE : event.message;
+  const summary = sentryFailureSummary(event.tags);
+  const safeMessage = summary || REDACTED_MESSAGE;
+  event.message = event.message ? safeMessage : event.message;
 
-  if (event.logentry) event.logentry = { message: REDACTED_MESSAGE };
+  if (event.logentry) event.logentry = { message: safeMessage };
   for (const exception of event.exception?.values || []) {
-    exception.value = REDACTED_MESSAGE;
+    exception.value = safeMessage;
     for (const frame of exception.stacktrace?.frames || []) delete frame.vars;
   }
   return event;
+}
+
+function sentryFailureSummary(tags: Record<string, unknown> | undefined): string | undefined {
+  const reason = tags?.failure_reason;
+  if (typeof reason !== 'string' || !SAFE_FAILURE_SUMMARIES[reason]) return undefined;
+  const dependency = tags?.dependency;
+  const dependencyLabel = typeof dependency === 'string' && /^[A-Z_]{1,40}$/.test(dependency)
+    ? ` (${dependency})`
+    : '';
+  return `${SAFE_FAILURE_SUMMARIES[reason]}${dependencyLabel}`;
 }
 
 function sanitizeTraceContext(context: TraceContext | undefined): SafeTraceContext | undefined {

@@ -214,7 +214,7 @@ La migración añadió `item_type` a `cms_menu_items` y creó la navegación ini
 - Si hace falta migrar objetos, hacerlo por etapas, idempotente y con plan de reintento.
 - No borrar objetos ni ejecutar limpiezas masivas como respuesta automática a un rollback.
 - Verificar consistencia entre metadatos D1 (`media_assets`) y objetos R2 antes de reanudar operaciones críticas (SEC-R2-08).
-- Los documentos de factura actuales son HTML/CSS de impresión en R2. Conservar objetos existentes y sus claves; el Worker anterior debe seguir pudiendo leerlos. No asumir que se genera una copia PDF versionada ni borrar/reemplazar documentos durante recuperación.
+- Los documentos de factura actuales son PDFs privados generados desde el snapshot inmutable y guardados en R2 con claves versionadas (`private/invoices/{invoiceNumber}-v2.pdf`). Conservar los objetos y sus claves durante rollback; no borrar ni reemplazar documentos como parte de una recuperación.
 
 ### Procesamiento seguro y recolección de medios
 

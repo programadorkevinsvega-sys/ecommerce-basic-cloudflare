@@ -66,6 +66,46 @@ describe('CSRF and request rate middleware', () => {
     expect(limit.mock.calls[1]?.[0]).toEqual({ key: '203.0.113.10' });
   });
 
+  it('returns a traceable 503 and logs the failed IP limiter without exposing exception text', async () => {
+    const app = new Hono<{ Bindings: Env }>();
+    app.use('*', createRateLimitMiddleware());
+    app.put('/api/v1/admin/products/:id', (c) => c.text('updated'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const env = {
+      API_IP_WRITE_LIMITER: { limit: vi.fn().mockRejectedValue(new Error('private runtime detail')) },
+    } as unknown as Env;
+
+    const response = await app.request('/api/v1/admin/products/product-1', { method: 'PUT' }, env);
+    const body = await response.json() as { error: string; errorCode: string; traceId: string };
+    const logOutput = log.mock.calls.map(([entry]) => String(entry)).join('\n');
+
+    expect(response.status).toBe(503);
+    expect(body.errorCode).toBe('RATE_LIMIT_UNAVAILABLE');
+    expect(body.traceId).toBe('unknown');
+    expect(body.error).toContain('No se pudo validar el límite');
+    expect(logOutput).toContain('"failure_reason":"rate_limit_binding_error"');
+    expect(logOutput).toContain('"binding_name":"API_IP_WRITE_LIMITER"');
+    expect(logOutput).not.toContain('private runtime detail');
+    log.mockRestore();
+  });
+
+  it('identifies an absent rate-limit binding in a safe traceable response', async () => {
+    const app = new Hono<{ Bindings: Env }>();
+    app.use('*', createRateLimitMiddleware());
+    app.post('/media/upload', (c) => c.text('uploaded'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const response = await app.request('/media/upload', { method: 'POST' }, {} as Env);
+    const body = await response.json() as { errorCode: string };
+    const logOutput = log.mock.calls.map(([entry]) => String(entry)).join('\n');
+
+    expect(response.status).toBe(503);
+    expect(body.errorCode).toBe('RATE_LIMIT_UNAVAILABLE');
+    expect(logOutput).toContain('"failure_reason":"rate_limit_binding_missing"');
+    expect(logOutput).toContain('"binding_name":"API_IP_WRITE_LIMITER"');
+    log.mockRestore();
+  });
+
   it('protects private store settings behind settings:read', async () => {
     const identity = { validateSession: vi.fn().mockResolvedValue({ actorId: 'admin', actorType: 'admin', mfaEnabled: true, permissions: ['settings:read'] }) } as unknown as IdentityGateway;
     const settings = { getSettings: vi.fn().mockResolvedValue({ id: 's', storeName: 'Shop', currency: 'COP', taxRatePercent: 19, supportEmail: 'support@example.test', companyNit: 'private-nit', requireCodVerification: false, updatedAt: 'now' }) } as unknown as SettingsGateway;

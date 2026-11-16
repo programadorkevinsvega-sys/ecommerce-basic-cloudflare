@@ -136,7 +136,7 @@ Las acciones administrativas dependen del contrato y del valor histórico de cad
 | Pasarela de pago | **Wompi** (adaptador de `IPaymentPort`) |
 | Email transaccional | **Resend** (adaptador de `IEmailPort`) |
 | Notificaciones de pagos | Historial en D1 y consulta HTTP autenticada incremental; el panel de pagos consulta periódicamente |
-| Documento de factura | HTML/CSS de impresión almacenado en R2 y servido con acceso autorizado; el Worker no genera un PDF binario (ADR-0013) |
+| Documento de factura | PDF binario generado con `pdf-lib`, almacenado en R2 y servido con acceso autorizado (ADR-0013) |
 
 > Wompi y Resend se integran por **HTTP desde el Worker** mediante puertos (`IPaymentPort`, `IEmailPort`) implementados en `infrastructure/` de `payments` y `notifications`. El dominio y la aplicación **no conocen** a ningún proveedor (D de SOLID, §1 y §2); cambiar de proveedor es cambiar un adaptador. Son servicios SaaS externos consumidos por HTTPS, no módulos no-serverless, por lo que la regla de consulta sobre Containers (§0) no se activa.
 
@@ -198,7 +198,7 @@ Cada carpeta `src/modules/<contexto>` es un "servicio en potencia" con dominio, 
 | `wishlist` | Lista de deseos privada por cliente autenticado; eventos de añadir/quitar versionados | `wishlist_items`, `wishlist_outbox_events` |
 | `payments` | Pagos con Wompi, webhooks, recaudos contra entrega y conciliación de liquidaciones | `payments_transactions`, `payments_webhook_events`, `payments_cod_collections`, `payments_settlement_costs`, `payments_settlement_corrections`, `payments_outbox_events` |
 | `shipping` | Entrega local del comercio, catálogo DANE, paquetes, integración MiPaquete, guías y tracking | `shipping_zones`, `shipping_zone_locations`, `shipping_divipola` y tablas `shipping_*` de transportadora/paquetes |
-| `invoicing` | Facturas inmutables, secuencias, notas crédito y documento HTML de impresión | `invoicing_invoices`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |
+| `invoicing` | Facturas inmutables, secuencias, notas crédito y documentos PDF | `invoicing_invoices`, `invoicing_sequences`, `invoicing_credit_notes`, `invoicing_outbox_events` |
 | `realtime` | Notificaciones persistidas y estado de lectura | `realtime_notifications` |
 | `promotions` | Reglas promocionales, cupones y canjes | `promotions_rules`, `promotions_coupons`, `promotions_redemptions`, `promotions_outbox_events` |
 | `storefront` | Banners y anuncios (ubicación y vigencia) | `storefront_banners`, `storefront_announcements`, `storefront_outbox_events` |
@@ -354,7 +354,7 @@ La confirmación financiera sigue dependiendo del webhook de Wompi verificado y 
 
 ### Facturación (`invoicing`)
 
-Las facturas internas son documentos inmutables emitidos por el módulo `invoicing`. La factura conserva un snapshot del pedido y del emisor disponible al momento de emisión; las correcciones se tramitan mediante nota crédito. El documento actual es HTML/CSS diseñado para impresión y se almacena de forma privada en R2. No se genera un archivo PDF binario desde el Worker y este documento interno no equivale a facturación electrónica DIAN.
+Las facturas internas son documentos inmutables emitidos por el módulo `invoicing`. La factura conserva un snapshot del pedido y del emisor disponible al momento de emisión; las correcciones se tramitan mediante nota crédito. El Worker genera un PDF binario desde ese snapshot y lo almacena de forma privada en R2. Este documento comercial no equivale a facturación electrónica DIAN.
 
 Para probar la integración Factus localmente con una factura ficticia, configura temporalmente las cuatro variables `FACTUS_PRODUCTION_*` del `.env` con credenciales **sandbox** y `FACTUS_API_URL=https://api-sandbox.factus.com.co`, luego ejecuta `pnpm --filter @ecommerce/api test:factus:sandbox`. El runner se niega a continuar si el host no es sandbox, consulta un rango activo y envía el snapshot mock al endpoint de validación; nunca envía correo. Esta prueba puede crear un documento de prueba en Factus sandbox, no debe usar credenciales de producción y no representa una factura real ni una certificación DIAN.
 
@@ -415,7 +415,7 @@ La tienda y API se publican en `https://vega.jnmtortas.com`, configurado como Cu
 | `/api/v1/cart/*`, `/api/v1/orders` | Invitado o cliente según operación | Carrito y creación de pedido. |
 | `/api/v1/admin/*` | Admin autenticado + permiso RBAC | Operaciones administrativas de módulos. |
 | `/api/v1/realtime/notifications*` | Sesión admin o cliente autenticada | Lectura incremental y marcado como leído. |
-| `/api/v1/invoices/:id/document` | Propietario/admin autorizado | Servir documento HTML con control de acceso. |
+| `/api/v1/invoices/:id/document` | Propietario/admin autorizado | Servir PDF con control de acceso. |
 | `/api/v1/webhooks/wompi` | Firma/checksum verificado | Eventos de transacciones de Wompi. |
 | `/health` | Público/operativo | Salud del Worker y bindings que revisa el controlador. |
 

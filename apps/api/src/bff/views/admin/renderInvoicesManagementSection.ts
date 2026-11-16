@@ -1,12 +1,19 @@
 export function renderInvoicesManagementSection(): string {
   return `<section class="invoices-screen" aria-labelledby="invoices-title">
-    <header class="invoices-heading"><div><h1 id="invoices-title">Facturación</h1><p id="invoices-description">Consulta documentos comerciales y su estado electrónico.</p></div></header>
+    <header class="invoices-heading"><div><h1 id="invoices-title">Facturación</h1><p id="invoices-description">Consulta los comprobantes comerciales internos emitidos para tus ventas.</p></div></header>
     <section class="card invoices-list-card" aria-labelledby="invoices-list-title">
-      <div class="invoices-section-heading"><div><h2 id="invoices-list-title">Facturas emitidas</h2><p>Numeración consecutiva y documentos almacenados de forma segura.</p></div></div>
-      <label class="invoice-search-label" for="invoices-search">Buscar por factura, pedido, cliente o total</label><input id="invoices-search" class="invoice-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" />
-      <label class="invoice-search-label" for="invoices-electronic-status">Estado de facturación electrónica</label><select id="invoices-electronic-status" class="invoice-search-input"><option value="">Todos</option><option value="pending">Pendiente</option><option value="accepted">Aceptada</option><option value="rejected">Rechazada</option><option value="not_configured">Sin configurar</option></select>
-      <div class="invoices-table-scroll"><table class="invoices-table"><thead><tr><th>Factura</th><th>Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
-        <tbody id="invoices-table-body"><tr><td colspan="7" class="invoices-empty">Cargando facturas…</td></tr></tbody></table></div>
+      <div class="invoices-section-heading"><div><h2 id="invoices-list-title">Facturas comerciales emitidas</h2><p id="invoices-list-description">Comprobantes internos de ventas; esta lista no equivale por sí sola a facturación electrónica DIAN.</p></div></div>
+      <form id="invoices-search-form" class="invoice-search-form" role="search">
+        <label id="invoices-search-label" class="invoice-search-label" for="invoices-search">Consultar por ID, número de factura, pedido, cliente o total</label>
+        <div class="invoice-search-controls"><input id="invoices-search" class="invoice-search-input" type="search" autocomplete="off" placeholder="ID exacto, FAC-000004, pedido o cliente" /><button id="invoices-search-submit" type="submit" class="btn-primary">Consultar</button></div>
+        <small class="invoice-search-help">La consulta se actualiza al escribir. ID, factura y pedido se buscan de forma exacta; cliente y correo, desde el inicio del texto.</small>
+        <p id="invoices-search-status" class="invoice-search-status" aria-live="polite"></p>
+      </form>
+      <div id="invoices-electronic-filter" hidden>
+        <label class="invoice-search-label" for="invoices-electronic-status">Estado ante DIAN</label><select id="invoices-electronic-status" class="invoice-search-input"><option value="">Todos</option><option value="pending">Pendiente</option><option value="accepted">Aceptada</option><option value="rejected">Rechazada</option><option value="not_configured">Sin configurar</option></select>
+      </div>
+      <div class="invoices-table-scroll"><table class="invoices-table"><thead><tr><th>Factura</th><th>Pedido</th><th>Cliente</th><th>Total</th><th id="invoices-status-heading">Estado de factura</th><th>Fecha</th><th>Acciones</th></tr></thead>
+        <tbody id="invoices-table-body"><tr><td colspan="7" class="invoices-empty">Cargando facturas comerciales…</td></tr></tbody></table></div>
       <nav id="invoices-pagination" class="admin-pagination" aria-label="Paginación de facturas"></nav>
     </section>
     <div id="credit-note-modal" class="invoice-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="credit-note-title">
