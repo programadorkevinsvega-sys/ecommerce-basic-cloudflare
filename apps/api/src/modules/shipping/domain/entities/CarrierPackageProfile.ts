@@ -9,12 +9,14 @@ export interface CarrierPackageProfile {
   outerHeightCm: number;
   tareWeightGrams: number;
   maxWeightGrams: number;
+  singleUnitProductIds: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export type CarrierPackageProfileInput = Omit<CarrierPackageProfile, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> & {
+export type CarrierPackageProfileInput = Omit<CarrierPackageProfile, 'id' | 'isActive' | 'createdAt' | 'updatedAt' | 'singleUnitProductIds'> & {
   id?: string;
+  singleUnitProductIds?: string[];
   isActive?: boolean;
 };

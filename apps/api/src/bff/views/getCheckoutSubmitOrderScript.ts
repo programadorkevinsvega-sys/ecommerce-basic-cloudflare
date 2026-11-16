@@ -75,9 +75,7 @@ export function getCheckoutSubmitOrderScript(): string {
           await fetch('/api/v1/cart/clear', { method: 'POST' });
           if (method === 'wompi' && form.dataset.requiresTurnstile === 'true') {
             pendingWompiOrderId = orderId;
-            form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-              'input:not([name="cf-turnstile-response"]), select, textarea',
-            )
+            form.querySelectorAll('input:not([name="cf-turnstile-response"]), select, textarea')
               .forEach(field => { field.disabled = true; });
             if (window.turnstile) window.turnstile.reset();
             btn.disabled = false;

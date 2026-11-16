@@ -9,7 +9,7 @@ interface ConfigRow {
   cash_on_delivery_payment_type: 101 | 102 | null; request_pickup: number | null;
   selection_criterion: 'price' | 'time' | 'score' | null; updated_at: string;
 }
-interface PackageRow { id: string; name: string; inner_width_cm: number; inner_length_cm: number; inner_height_cm: number; outer_width_cm: number; outer_length_cm: number; outer_height_cm: number; tare_weight_grams: number; max_weight_grams: number; is_active: number; created_at: string; updated_at: string; }
+interface PackageRow { id: string; name: string; inner_width_cm: number; inner_length_cm: number; inner_height_cm: number; outer_width_cm: number; outer_length_cm: number; outer_height_cm: number; tare_weight_grams: number; max_weight_grams: number; single_unit_product_ids_json: string; is_active: number; created_at: string; updated_at: string; }
 
 export class D1CarrierConfigRepository implements ICarrierConfigRepository {
   private readonly db: D1Database;
@@ -45,17 +45,19 @@ export class D1CarrierConfigRepository implements ICarrierConfigRepository {
 
   public async createProfile(profile: CarrierPackageProfile): Promise<void> {
     await this.db.prepare(`INSERT INTO shipping_carrier_package_profiles
-      (id,name,inner_width_cm,inner_length_cm,inner_height_cm,outer_width_cm,outer_length_cm,outer_height_cm,tare_weight_grams,max_weight_grams,is_active,created_at,updated_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(profile.id, profile.name, profile.innerWidthCm, profile.innerLengthCm,
+      (id,name,inner_width_cm,inner_length_cm,inner_height_cm,outer_width_cm,outer_length_cm,outer_height_cm,tare_weight_grams,max_weight_grams,single_unit_product_ids_json,is_active,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(profile.id, profile.name, profile.innerWidthCm, profile.innerLengthCm,
       profile.innerHeightCm, profile.outerWidthCm, profile.outerLengthCm, profile.outerHeightCm,
-      profile.tareWeightGrams, profile.maxWeightGrams, Number(profile.isActive), profile.createdAt, profile.updatedAt).run();
+      profile.tareWeightGrams, profile.maxWeightGrams, JSON.stringify(profile.singleUnitProductIds),
+      Number(profile.isActive), profile.createdAt, profile.updatedAt).run();
   }
 
   public async updateProfile(id: string, profile: CarrierPackageProfileInput, updatedAt: string): Promise<CarrierPackageProfile | null> {
     const result = await this.db.prepare(`UPDATE shipping_carrier_package_profiles SET name=?,inner_width_cm=?,inner_length_cm=?,inner_height_cm=?,
-      outer_width_cm=?,outer_length_cm=?,outer_height_cm=?,tare_weight_grams=?,max_weight_grams=?,updated_at=? WHERE id=?`).bind(
+      outer_width_cm=?,outer_length_cm=?,outer_height_cm=?,tare_weight_grams=?,max_weight_grams=?,single_unit_product_ids_json=?,updated_at=? WHERE id=?`).bind(
       profile.name.trim(), profile.innerWidthCm, profile.innerLengthCm, profile.innerHeightCm, profile.outerWidthCm,
-      profile.outerLengthCm, profile.outerHeightCm, profile.tareWeightGrams, profile.maxWeightGrams, updatedAt, id).run();
+      profile.outerLengthCm, profile.outerHeightCm, profile.tareWeightGrams, profile.maxWeightGrams,
+      JSON.stringify(profile.singleUnitProductIds ?? []), updatedAt, id).run();
     return result.meta.changes ? this.getProfile(id) : null;
   }
 
@@ -86,5 +88,14 @@ function mapProfile(row: PackageRow): CarrierPackageProfile {
   return { id: row.id, name: row.name, innerWidthCm: row.inner_width_cm, innerLengthCm: row.inner_length_cm,
     innerHeightCm: row.inner_height_cm, outerWidthCm: row.outer_width_cm, outerLengthCm: row.outer_length_cm,
     outerHeightCm: row.outer_height_cm, tareWeightGrams: row.tare_weight_grams, maxWeightGrams: row.max_weight_grams,
+    singleUnitProductIds: parseSingleUnitProductIds(row.single_unit_product_ids_json),
     isActive: Boolean(row.is_active), createdAt: row.created_at, updatedAt: row.updated_at };
+}
+
+function parseSingleUnitProductIds(value: string): string[] {
+  const parsed: unknown = JSON.parse(value);
+  if (!Array.isArray(parsed) || parsed.some((id) => typeof id !== 'string')) {
+    throw new Error('Stored carrier package product associations are invalid');
+  }
+  return parsed;
 }

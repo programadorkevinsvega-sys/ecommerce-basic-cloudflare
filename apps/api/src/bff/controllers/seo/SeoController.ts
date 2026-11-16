@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { CatalogGateway, CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
+import { ProductLandingGateway } from '../../gateways/catalog/ProductLandingGateway.js';
 import { SeoGateway } from '../../gateways/seo/SeoGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 
 export class SeoController {
-  public static createRoutes(seoGateway: SeoGateway, catalogGateway: CatalogGateway, identityGateway: IdentityGateway): Hono {
+  public static createRoutes(seoGateway: SeoGateway, catalogGateway: CatalogGateway, landingGateway: ProductLandingGateway, identityGateway: IdentityGateway): Hono {
     const router = new Hono();
 
     // robots.txt
@@ -82,7 +83,10 @@ export class SeoController {
     // sitemap-products.xml (Productos publicados e indexables)
     router.get('/sitemap-products.xml', async (c) => {
       const baseUrl = 'https://vega.jnmtortas.com';
-      const products = await catalogGateway.listProducts({ limit: 1000, status: 'published' });
+      const [products, landings] = await Promise.all([
+        catalogGateway.listProducts({ limit: 1000, status: 'published' }),
+        landingGateway.listIndexableProductLandings(),
+      ]);
       const indexableProducts = products.filter((p: CatalogProductDto) => !p.noindex);
 
       const xml = [
@@ -92,6 +96,7 @@ export class SeoController {
           const lastmod = (p.updatedAt || p.createdAt).split('T')[0];
           return `  <url>\n    <loc>${baseUrl}/productos/${p.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
         }),
+        ...landings.map((landing) => `  <url>\n    <loc>${baseUrl}/ofertas/${encodeURIComponent(landing.slug)}</loc>\n    <lastmod>${landing.updatedAt.split('T')[0]}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`),
         '</urlset>',
       ].join('\n');
 

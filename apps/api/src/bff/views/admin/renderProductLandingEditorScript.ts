@@ -45,6 +45,12 @@ export function renderProductLandingEditorScript(): string {
         field('plFaqs').value = encodeRows(config.faqs, 'question', 'answer');
         const selected = new Set(config.sections || []);
         document.querySelectorAll('[name="plSection"]').forEach((checkbox) => { checkbox.checked = selected.has(checkbox.value); });
+        const product = window.__catalogProducts?.[activeProductId];
+        const preview = field('plLandingPreview');
+        if (preview && product) {
+          preview.href = '/ofertas/' + encodeURIComponent(product.slug);
+          preview.hidden = config.enabled !== true;
+        }
       }
       async function openEditor(productId) {
         const product = window.__catalogProducts?.[productId];

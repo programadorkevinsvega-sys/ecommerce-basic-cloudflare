@@ -10,7 +10,7 @@ export function renderProductLandingEditorCard(): string {
         <form id="productLandingForm" class="landing-form">
           <input type="hidden" id="plProductId" />
           <div class="landing-form-grid">
-            <label class="landing-switch"><input id="plEnabled" type="checkbox" /><span><strong>Activar landing personalizada</strong><small>Si está desactivada, el producto conserva su ficha habitual.</small></span></label>
+            <label class="landing-switch"><input id="plEnabled" type="checkbox" /><span><strong>Activar landing independiente</strong><small>Se publica en /ofertas/slug. La ficha de producto permanece sin cambios.</small></span></label>
             <label>Plantilla visual
               <select id="plTemplateKey"><option value="standard">Estándar</option><option value="conversion">Conversión</option><option value="launch">Lanzamiento</option></select>
             </label>
@@ -19,7 +19,7 @@ export function renderProductLandingEditorCard(): string {
             <label class="landing-wide">Subtítulo <textarea id="plSubtitle" maxlength="400" rows="2" placeholder="Resume la propuesta de valor del producto."></textarea></label>
             <label>Texto del botón principal <input id="plCtaLabel" maxlength="40" value="Comprar ahora" required /></label>
           </div>
-          <div class="landing-editor-help"><strong>SEO de esta landing</strong><p>Si los dejas vacíos, se usan los metadatos SEO del producto.</p></div>
+          <div class="landing-editor-help"><strong>SEO de esta landing</strong><p>Si los dejas vacíos, se usan los metadatos del producto. Escribe contenido propio para diferenciarla de la ficha.</p></div>
           <div class="landing-form-grid"><label>Título SEO <input id="plSeoTitle" maxlength="100" placeholder="Título para buscadores" /></label><label>Descripción SEO <textarea id="plSeoDescription" maxlength="300" rows="2" placeholder="Descripción para buscadores"></textarea></label></div>
           <div class="landing-editor-help"><strong>Beneficios destacados</strong><p>Una línea por beneficio, con el formato <code>Título | Descripción</code>. Máximo 6 beneficios.</p></div>
           <textarea id="plBenefits" rows="5" placeholder="Rendimiento | Potencia para tus tareas&#10;Diseño cómodo | Ideal para usar a diario"></textarea>
@@ -33,7 +33,7 @@ export function renderProductLandingEditorCard(): string {
             ${renderSectionOption('faq', 'Preguntas frecuentes')}
             ${renderSectionOption('related', 'Productos relacionados')}
           </fieldset>
-          <div class="landing-form-footer"><span id="plMsg" role="status" aria-live="polite"></span><a id="plPreview" href="/productos" target="_blank" rel="noopener noreferrer">Ver producto ↗</a><button type="button" class="landing-secondary" data-close-product-landing>Cancelar</button><button type="submit" class="landing-primary" id="plSave">Guardar landing</button></div>
+          <div class="landing-form-footer"><span id="plMsg" role="status" aria-live="polite"></span><a id="plPreview" href="/productos" target="_blank" rel="noopener noreferrer">Ver ficha ↗</a><a id="plLandingPreview" href="/ofertas" target="_blank" rel="noopener noreferrer" hidden>Ver landing ↗</a><button type="button" class="landing-secondary" data-close-product-landing>Cancelar</button><button type="submit" class="landing-primary" id="plSave">Guardar landing</button></div>
         </form>
       </section>
     </div>`;

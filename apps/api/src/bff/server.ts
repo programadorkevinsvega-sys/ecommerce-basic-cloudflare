@@ -101,7 +101,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
   app.route('/', CmsController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.settingsGateway, cRoot.storefrontGateway));
   app.route('/', CmsMenuAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway));
   app.route('/', CmsBlogAdminController.createRoutes(cRoot.cmsGateway, cRoot.identityGateway, cRoot.seoGateway, cRoot.mediaGateway));
-  app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.identityGateway));
+  app.route('/', SeoController.createRoutes(cRoot.seoGateway, cRoot.catalogGateway, cRoot.productLandingGateway, cRoot.identityGateway));
 
   // Cart, Inventory, Orders, Payments, Realtime, Invoicing, Audit BFF APIs
   app.route('/', CartController.createRoutes(cRoot.cartGateway, cRoot.identityGateway, cRoot.catalogGateway));

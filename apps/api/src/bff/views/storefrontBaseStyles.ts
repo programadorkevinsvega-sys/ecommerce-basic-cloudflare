@@ -14,7 +14,7 @@ export const storefrontBaseStyles = String.raw`    :root {
       --radius-md: 18px;
       --radius-lg: 28px;
       --shadow-soft: 0 12px 35px rgba(23, 36, 29, .06);
-      --content-width: 1200px;
+      --content-width: 1280px;
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -136,7 +136,7 @@ export const storefrontBaseStyles = String.raw`    :root {
     .tag-cod { background: #e8f5d7; color: #345b20; }
     .tag-scope { background: #edf1eb; color: #4d5d50; }
     .detail-view {
-      width: 100%; max-width: 1040px; margin: 0 auto; padding: clamp(1.2rem, 4vw, 3rem);
+      width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(1.2rem, 4vw, 3rem);
       background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft);
     }
     .detail-title { margin: .4rem 0 .75rem; font-size: clamp(2rem, 4vw, 3.25rem); }

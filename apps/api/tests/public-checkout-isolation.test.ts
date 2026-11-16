@@ -43,9 +43,32 @@ describe('public checkout isolation and inline data', () => {
     expect(getProductsByIds).not.toHaveBeenCalled();
   });
 
+  it('blocks national checkout evaluation when MiPaquete is unavailable', async () => {
+    const getProductsByIds = vi.fn();
+    const app = OrdersController.createRoutes(
+      {} as never, {} as never,
+      { getZone: async () => ({ id: 'national', type: 'national', isActive: true }),
+        getCarrierAvailability: async () => false } as never,
+      { getProductsByIds } as never, {} as never, {} as never, {} as never, {} as never, {} as never,
+    );
+    const response = await app.request('/api/v1/orders/checkout/evaluate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ destinationZoneId: 'national', items: [{ productId: 'phone', quantity: 1 }] }),
+    });
+
+    expect(response.status).toBe(503);
+    expect(getProductsByIds).not.toHaveBeenCalled();
+  });
+
   it('escapes HTML terminators in JSON embedded inside the checkout script', () => {
     const script = getCheckoutScript('[{"productName":"</script><script>alert(1)</script>"}]', 1, 19);
     expect(script).not.toContain('</script><script>alert');
     expect(script).toContain('\\u003c/script\\u003e');
+  });
+
+  it('renders syntactically valid checkout JavaScript', () => {
+    const markup = getCheckoutScript('[]', 0, 0);
+    const javascript = markup.replace(/^\s*<script>/, '').replace(/<\/script>\s*$/, '');
+    expect(() => new Function(javascript)).not.toThrow();
   });
 });

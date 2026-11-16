@@ -9,6 +9,10 @@ export class InProcessProductLandingGateway implements ProductLandingGateway {
     return config?.toPrimitives() ?? null;
   }
 
+  public listIndexableProductLandings(): Promise<Array<{ slug: string; updatedAt: string }>> {
+    return this.publicApi.listIndexableProductLandings();
+  }
+
   public async saveProductLandingConfig(input: SaveProductLandingConfigRequest) {
     return (await this.publicApi.saveProductLandingConfig(input)).toPrimitives();
   }

@@ -27,11 +27,23 @@ export function packOrderIntoConfiguredBox(
   const totalProductWeight = units.reduce((sum, item) => sum + item.weightGrams, 0);
   if (units.length === 1) {
     const unit = units[0] as PackedOrderItem;
+    const productBoxes = profiles.filter((box) => box.isActive &&
+      box.singleUnitProductIds.includes(unit.productId)).sort((a, b) => volume(a) - volume(b));
+    if (productBoxes.length) {
+      const box = productBoxes.find((candidate) =>
+        totalProductWeight + candidate.tareWeightGrams <= candidate.maxWeightGrams &&
+        fitsInside(unit, candidate));
+      if (!box) return null;
+      const weightGrams = totalProductWeight + box.tareWeightGrams;
+      return { profileId: box.id, widthCm: box.outerWidthCm, lengthCm: box.outerLengthCm,
+        heightCm: box.outerHeightCm, weightGrams, weightKg: Math.ceil(weightGrams / 1000) };
+    }
     return { profileId: null, widthCm: unit.widthCm, lengthCm: unit.lengthCm,
       heightCm: unit.heightCm, weightGrams: unit.weightGrams,
       weightKg: Math.ceil(unit.weightGrams / 1000) };
   }
-  const candidates = profiles.filter((box) => box.isActive && totalProductWeight + box.tareWeightGrams <= box.maxWeightGrams)
+  const candidates = profiles.filter((box) => box.isActive && box.singleUnitProductIds.length === 0 &&
+      totalProductWeight + box.tareWeightGrams <= box.maxWeightGrams)
     .sort((a, b) => volume(a) - volume(b));
   for (const box of candidates) {
     const spaces: Space[] = [{ width: box.innerWidthCm, length: box.innerLengthCm, height: box.innerHeightCm }];
@@ -42,6 +54,7 @@ export function packOrderIntoConfiguredBox(
       spaces.splice(placement.index, 1);
       spaces.push(...splitSpace(placement.space, placement.dimensions));
     }
+
     if (fits) {
       const weightGrams = totalProductWeight + box.tareWeightGrams;
       return { profileId: box.id, widthCm: box.outerWidthCm, lengthCm: box.outerLengthCm,
@@ -49,6 +62,11 @@ export function packOrderIntoConfiguredBox(
     }
   }
   return null;
+}
+
+function fitsInside(unit: PackedOrderItem, box: CarrierPackageProfile): boolean {
+  return orientations(unit).some((size) => size.width <= box.innerWidthCm &&
+    size.length <= box.innerLengthCm && size.height <= box.innerHeightCm);
 }
 
 function expandUnits(items: PackedOrderItem[]): PackedOrderItem[] {

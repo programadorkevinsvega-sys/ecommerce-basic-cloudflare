@@ -17,6 +17,7 @@ const ConfigInput = z.object({
     innerWidthCm: z.number().int().min(1).max(300), innerLengthCm: z.number().int().min(1).max(300), innerHeightCm: z.number().int().min(1).max(300),
     outerWidthCm: z.number().int().min(1).max(300), outerLengthCm: z.number().int().min(1).max(300), outerHeightCm: z.number().int().min(1).max(300),
     tareWeightGrams: z.number().int().min(0).max(100000), maxWeightGrams: z.number().int().min(1).max(1000000),
+    singleUnitProductIds: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
     isActive: z.boolean(), createdAt: z.string().optional() }).strict()).max(20).optional(),
   declaredValueMode: z.enum(['cost', 'sale_value']),
   cashOnDeliveryPaymentType: z.union([z.literal(101), z.literal(102)]),
@@ -38,7 +39,10 @@ const ProfileInput = z.object({ name: z.string().trim().min(1).max(100), innerWi
   innerLengthCm: z.number().int().min(1).max(300), innerHeightCm: z.number().int().min(1).max(300),
   outerWidthCm: z.number().int().min(1).max(300), outerLengthCm: z.number().int().min(1).max(300),
   outerHeightCm: z.number().int().min(1).max(300), tareWeightGrams: z.number().int().min(0).max(100000),
-  maxWeightGrams: z.number().int().min(1).max(1000000), isActive: z.boolean().optional() }).strict();
+  maxWeightGrams: z.number().int().min(1).max(1000000),
+  singleUnitProductIds: z.array(z.string().trim().min(1).max(100)).max(50)
+    .refine((ids) => new Set(ids).size === ids.length, 'No repitas productos').optional(),
+  isActive: z.boolean().optional() }).strict();
     app.put('/api/v1/admin/shipping/mipaquete/config',
       createAuthMiddleware(identity, 'admin', 'shipping:update'), async (c) => {
         const parsed = ConfigInput.safeParse(await c.req.json().catch(() => null));

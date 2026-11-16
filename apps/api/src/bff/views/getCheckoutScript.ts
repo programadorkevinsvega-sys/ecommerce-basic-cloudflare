@@ -1,5 +1,6 @@
 import { getCheckoutSubmitOrderScript } from './getCheckoutSubmitOrderScript.js';
 import { getCheckoutCarrierScript } from './getCheckoutCarrierScript.js';
+import { getCheckoutCarrierAvailabilityScript } from './getCheckoutCarrierAvailabilityScript.js';
 import { getCouponApplicationScript } from './renderCouponWidget.js';
 
 export function getCheckoutScript(
@@ -24,6 +25,7 @@ export function getCheckoutScript(
       let shippingChargeMode = 'included';
       let zonePolicyAllowsOrder = false;
       let carrierIntegrationEnabled = false;
+      let carrierAvailabilityLoaded = false;
       let freeShippingRule = null;
       const qualifiesForFreeShipping = () => Boolean(freeShippingRule);
       let selectedCarrierQuoteId = null;
@@ -32,10 +34,6 @@ export function getCheckoutScript(
       const usesCarrier = () => carrierIntegrationEnabled && selectedZone()?.dataset.type === 'national';
       const checkoutStatus = document.getElementById('policy-alert');
       const checkoutError = document.getElementById('checkout-error');
-      function updateSubmitAvailability() {
-        const hasVerifiedLocation = Boolean(document.getElementById('addr-dane-code').value);
-        document.getElementById('btn-submit-order').disabled = !zonePolicyAllowsOrder || !hasVerifiedLocation || (usesCarrier() && !selectedCarrierQuoteId);
-      }
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
       function updateCheckoutCta() {
         const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
@@ -73,6 +71,16 @@ export function getCheckoutScript(
           codRadio.disabled = true;
           setCheckoutStatus('Selecciona tu zona para consultar cobertura, costo y tiempo estimado de entrega.', 'idle');
           updateTotals();
+          return;
+        }
+        if (selectedZoneRequiresCarrier() && !carrierAvailabilityLoaded) {
+          setCheckoutStatus('Validando disponibilidad de MiPaquete…', 'idle');
+          updateSubmitAvailability();
+          return;
+        }
+        if (selectedZoneRequiresCarrier() && !carrierIntegrationEnabled) {
+          setCheckoutStatus('MiPaquete no está disponible ahora. Selecciona una zona local o intenta más tarde.', 'error');
+          updateSubmitAvailability();
           return;
         }
         shippingCostCents = carrierDelivery ? 0 : parseInt(opt.getAttribute('data-rate'), 10) || 0;
@@ -180,10 +188,7 @@ export function getCheckoutScript(
       });
       document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', () => { updateSubmitAvailability(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); });
       document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', () => { updateTotals(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); }));
-      fetch('/api/v1/shipping/carrier/availability').then(response => response.json()).then(result => {
-        carrierIntegrationEnabled = Boolean(result.enabled);
-        if (carrierIntegrationEnabled && document.getElementById('dest-zone').value) handleZoneChange();
-      }).catch(() => {});
+      ${getCheckoutCarrierAvailabilityScript()}
       // Inicializar totales al cargar
       updateTotals();
       ${getCouponApplicationScript(couponItems, subtotalCents)}

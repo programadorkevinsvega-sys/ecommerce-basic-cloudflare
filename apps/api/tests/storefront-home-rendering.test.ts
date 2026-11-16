@@ -97,6 +97,13 @@ describe('storefront presentation', () => {
     expect(html).toContain('aria-label="Buscar productos"');
     expect(html).toContain('Saltar al contenido');
     expect(html).toContain('VEGA');
+    expect(html).toContain('--content-width: 1280px');
+    expect(html).toContain('.detail-view {');
+    expect(html).toContain('max-width: 1180px');
+    expect(html).toContain('.checkout-header-inner { display: flex; width: min(100% - 2rem, var(--content-width))');
+    expect(html).toContain('.checkout-page { width: min(100% - 2rem, var(--content-width))');
+    expect(html).toContain('.blog-store,.blog-article{max-width:var(--content-width)');
+    expect(html).toContain('.blog-article{max-width:860px}');
     expect(html).toContain('prefers-reduced-motion');
     expect(html).toContain('max-width: 760px');
     expect(html).toContain('height: 380px; min-height: 380px; max-height: 380px');

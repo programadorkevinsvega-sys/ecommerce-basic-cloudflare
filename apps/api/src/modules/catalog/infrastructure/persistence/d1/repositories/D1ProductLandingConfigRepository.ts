@@ -32,6 +32,15 @@ export class D1ProductLandingConfigRepository implements IProductLandingConfigRe
     return row ? mapLandingRow(row) : null;
   }
 
+  public async listIndexable(): Promise<Array<{ slug: string; updatedAt: string }>> {
+    const { results } = await this.db.prepare(
+      'SELECT p.slug, MAX(p.updated_at, l.updated_at) AS updated_at ' +
+      'FROM catalog_product_landing_configs l INNER JOIN catalog_products p ON p.id = l.product_id ' +
+      'WHERE l.enabled = 1 AND p.status = ? AND p.noindex = 0 ORDER BY p.slug LIMIT 1000',
+    ).bind('published').all<{ slug: string; updated_at: string }>();
+    return results.map((row) => ({ slug: row.slug, updatedAt: row.updated_at }));
+  }
+
   public async save(config: ProductLandingConfig): Promise<void> {
     const value = config.toPrimitives();
     const content: ProductLandingContent = {

@@ -25,32 +25,29 @@ const landing: ProductLandingConfigDto = {
 };
 
 describe('SSR de landing de producto', () => {
-  it('escapa el contenido del hero y mantiene el CTA apuntando al carrito existente', () => {
+  it('escapa el contenido del hero y dirige el CTA a la ficha de compra del producto', () => {
     const hero = renderProductLandingHero({ ...landing, headline: '<script>alert(1)</script>' }, product);
     expect(hero).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(hero).not.toContain('<script>alert(1)</script>');
-    expect(hero).toContain('href="#detail-purchase"');
+    expect(hero).toContain('href="/productos/mouse-gamer#detail-purchase"');
     expect(hero).toContain('/media/media-1');
   });
 
   it('respeta la plantilla y las secciones de beneficios y FAQ', () => {
-    expect(renderProductLandingHero({ ...landing, templateKey: 'standard' }, product)).toBe('');
+    expect(renderProductLandingHero({ ...landing, templateKey: 'standard' }, product)).toContain('product-landing-hero--standard');
     expect(renderProductLandingBenefits({ ...landing, templateKey: 'standard' })).toContain('Beneficios destacados');
     expect(renderProductLandingBenefits(landing)).toBe('');
     expect(renderProductLandingFaq(landing)).toContain('¿Tiene garantía?');
     expect(renderProductLandingFaq({ ...landing, sections: ['benefits'] })).toBe('');
   });
 
-  it('mantiene el CTA de compra y permite ocultar secciones no seleccionadas', () => {
-    const html = renderProductDetail(product, undefined, undefined, {
-      introHtml: '<section class="test-hero"><h1>Landing</h1></section>',
-      sections: [],
-    });
+  it('mantiene la ficha de compra independiente de la configuración de landing', () => {
+    const html = renderProductDetail(product);
     expect(html).toContain('id="detail-purchase"');
     expect(html).toContain('id="btn-add-cart"');
-    expect(html).not.toContain('<h1>Mouse gamer</h1>');
-    expect(html).not.toContain('detail-specifications');
-    expect(html).not.toContain('detail-review-summary');
+    expect(html).toContain('<h1>Mouse gamer</h1>');
+    expect(html).toContain('detail-specifications');
+    expect(html).not.toContain('product-landing-hero');
   });
 
   it('conserva las especificaciones y reseñas en la ficha estándar por defecto', () => {
