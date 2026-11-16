@@ -38,6 +38,10 @@ export interface NewNumberingRange {
   resolutionNumber?: string;
 }
 
+export interface ElectronicInvoicePdf {
+  pdfBase64: string;
+}
+
 export interface IElectronicInvoicingPort {
   listNumberingRanges(filters?: NumberingRangeFilters): Promise<ElectronicNumberingRange[]>;
   getNumberingRange(id: string): Promise<ElectronicNumberingRange>;
@@ -49,6 +53,7 @@ export interface IElectronicInvoicingPort {
   restoreNumberingRange(id: string): Promise<void>;
   submitToTaxAuthority(invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult>;
   findByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null>;
+  downloadInvoicePdf(invoiceNumber: string): Promise<ElectronicInvoicePdf>;
   submitCreditNote(note: CreditNote, invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult>;
   findCreditNoteByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null>;
 }

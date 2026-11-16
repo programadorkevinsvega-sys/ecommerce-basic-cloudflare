@@ -20,6 +20,11 @@ export class MockElectronicInvoicingAdapter implements IElectronicInvoicingPort 
   }
 
   public async findByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null> { void referenceCode; return null; }
+  public async downloadInvoicePdf(invoiceNumber: string): Promise<{ pdfBase64: string }> {
+    void invoiceNumber;
+    throw new Error('FACTUS_NOT_CONFIGURED');
+  }
+
   public async submitCreditNote(note: CreditNote, invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {
     void note; void invoice;
     return { dianValidationStatus: 'not_configured', emailSent: false };

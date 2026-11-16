@@ -51,6 +51,10 @@ export class InProcessInvoicingGateway implements InvoicingGateway {
     return this.publicApi.getInvoiceDocument(invoiceId);
   }
 
+  public downloadElectronicInvoicePdf(invoiceNumber: string) {
+    return this.publicApi.downloadElectronicInvoicePdf(invoiceNumber);
+  }
+
   public async listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]> {
     return this.publicApi.listInvoices(filters);
   }

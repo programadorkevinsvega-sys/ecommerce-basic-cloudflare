@@ -6,6 +6,7 @@ import { mapCreditNoteItems } from './FactusCreditNoteMapper.js';
 import { resolveFactusApiUrl, resolveFactusEnvironment } from './resolveFactusApiUrl.js';
 import { FactusNumberingRangeManager } from './FactusNumberingRangeManager.js';
 import { paymentCode, pendingConflict, toResult } from './FactusSubmissionMapper.js';
+import { parseFactusInvoicePdf } from './parseFactusInvoicePdf.js';
 
 export interface FactusCredentials { clientId?: string; clientSecret?: string; username?: string; password?: string; }
 export interface FactusConfig {
@@ -62,6 +63,12 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     const entries = Array.isArray(result?.data) ? result.data : [];
     if (entries.length > 1) throw new Error('FACTUS_DUPLICATE_REFERENCE');
     return entries.length ? toResult(entries[0], referenceCode) : null;
+  }
+
+  public async downloadInvoicePdf(invoiceNumber: string) {
+    await this.ensureConfigured();
+    const response = await this.request(`/v2/bills/${encodeURIComponent(invoiceNumber)}/download-pdf`, { method: 'GET' });
+    return parseFactusInvoicePdf(response);
   }
 
   public async submitCreditNote(note: CreditNote, invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult> {

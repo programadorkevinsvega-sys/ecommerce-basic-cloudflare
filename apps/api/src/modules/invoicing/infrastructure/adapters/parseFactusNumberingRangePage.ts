@@ -17,7 +17,7 @@ const numberingRangeSchema = z.object({
 }).loose();
 
 const paginationSchema = z.object({
-  last_page: z.coerce.number().int().min(1).max(20),
+  last_page: z.coerce.number().int().min(0).max(20),
 }).loose();
 
 const pageSchema = z.object({
