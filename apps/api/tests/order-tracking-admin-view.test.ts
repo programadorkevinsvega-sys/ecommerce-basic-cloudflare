@@ -9,6 +9,12 @@ describe('order tracking admin interface', () => {
     expect(section).toContain('data-shipping-panel="tracking"');
     expect(section).toContain('tracking-edit-timeline');
     expect(section).toContain('tracking-edit-url');
+    expect(section).toContain('Estado del pedido');
+    expect(section).toContain('Guía y estado del envío');
+    expect(section).toContain('tracking-shipment-status');
+    expect(section).toContain('Guardar datos de guía');
+    expect(renderOrderTrackingAdminScript()).toContain('/api/v1/admin/shipping/mipaquete/orders/');
+    expect(renderOrderTrackingAdminScript()).toContain('Pendiente de confirmación');
     expect(renderOrderTrackingAdminCss()).toContain('width:min(980px,calc(100vw - 40px))');
     expect(renderOrderTrackingAdminCss()).toContain('background:#fff!important; color:#151a23!important');
     expect(() => new Function(renderOrderTrackingAdminScript())).not.toThrow();

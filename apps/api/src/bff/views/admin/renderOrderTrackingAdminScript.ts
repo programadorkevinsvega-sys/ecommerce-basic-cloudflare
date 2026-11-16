@@ -1,3 +1,5 @@
+import { renderOrderTrackingAdminShipmentScript } from './renderOrderTrackingAdminShipmentScript.js';
+
 export function renderOrderTrackingAdminScript(): string {
   return `
     let trackingAdminPage = 1;
@@ -38,8 +40,9 @@ export function renderOrderTrackingAdminScript(): string {
       } catch (error) { body.innerHTML = '<tr><td colspan="5" class="shipping-empty">' + escapeHtml(error.message || 'Error al cargar guías') + '</td></tr>'; }
     }
     async function markShipmentPrinted(id) { const response = await fetch('/api/v1/admin/shipping/mipaquete/' + encodeURIComponent(id) + '/printed', { method: 'POST', headers: adminHeaders(true) }); if (!response.ok) { alert('No se pudo registrar la impresión'); return; } await loadShipmentLabels(labelPage); }
-    async function printUnprintedGuideBatch() { const unprinted = labelItems.filter((item) => !item.printedAt && item.guideUrl); if (!unprinted.length) { alert('No hay guías pendientes de impresión en esta página.'); return; } unprinted.forEach((item) => window.open(item.guideUrl, '_blank', 'noopener')); if (confirm('¿Confirmas que imprimiste las ' + unprinted.length + ' guías abiertas?')) { for (const item of unprinted) await markShipmentPrinted(item.id); } }
+    async function printUnprintedGuideBatch() { const unprinted = labelItems.filter((item) => !item.printedAt && item.guideUrl); if (!unprinted.length) { alert('No hay guías pendientes de impresión en esta página.'); return; } unprinted.forEach((item) => window.open(item.guideUrl, '_blank', 'noopener')); if (confirm('¿Confirmas que imprimiste las ' + unprinted.length + ' guías abiertas?')) { for (const item of unprinted) await markShipmentPrinted(item.id); }     }
     const trackingStatusLabels = {placed:'Recibido',confirmed:'Confirmado',prepared:'Preparado',shipped:'Enviado',delivered:'Entregado',cancelled:'Cancelado'};
+    ${renderOrderTrackingAdminShipmentScript()}
     async function loadAdminOrderTracking(page = trackingAdminPage) {
       trackingAdminPage = page;
       const body = document.getElementById('order-tracking-admin-body');
@@ -86,9 +89,15 @@ export function renderOrderTrackingAdminScript(): string {
         return history;
       }, []);
       document.getElementById('tracking-edit-timeline').innerHTML = events.map((event) => '<li><strong>' + escapeHtml(trackingStatusLabels[event.status] || event.status) + '</strong><time>' + escapeHtml(new Date(event.createdAt).toLocaleString('es-CO')) + '</time></li>').join('') || '<li>Sin cambios de estado registrados.</li>';
-      document.getElementById('tracking-edit-message').textContent = '';
+      document.getElementById('tracking-order-message').textContent = '';
+      document.getElementById('tracking-shipment-message').textContent = '';
+      document.getElementById('tracking-shipment-status').textContent = 'Consultando…';
+      document.getElementById('tracking-shipment-provider-status').textContent = '';
+      const guideButton = document.querySelector('[data-tracking-action="create-guide"]');
+      guideButton.textContent = 'Generar guía MiPaquete';
       updateOrderTrackingStatusActionState();
       document.getElementById('order-tracking-edit-dialog').showModal();
+      await loadMiPaqueteShipment(item.orderId);
     }
     function closeOrderTrackingEditor() { document.getElementById('order-tracking-edit-dialog')?.close(); }
     function updateOrderTrackingStatusActionState() {
@@ -98,7 +107,7 @@ export function renderOrderTrackingAdminScript(): string {
     }
     async function saveOrderTrackingStatus() {
       const orderId = document.getElementById('tracking-edit-order-id').value;
-      const message = document.getElementById('tracking-edit-message');
+      const message = document.getElementById('tracking-order-message');
       if (document.getElementById('tracking-edit-status').value === trackingEditingStatus) {
         message.textContent = 'Selecciona un estado diferente para registrar el cambio.';
         return;
@@ -111,9 +120,9 @@ export function renderOrderTrackingAdminScript(): string {
     }
     async function createMiPaqueteGuide() {
       const orderId = document.getElementById('tracking-edit-order-id').value;
-      const message = document.getElementById('tracking-edit-message');
+      const message = document.getElementById('tracking-shipment-message');
       const button = document.querySelector('[data-tracking-action="create-guide"]');
-      button.disabled = true; message.textContent = 'Consultando configuración y creando o recuperando la guía…';
+      button.disabled = true; message.textContent = 'Consultando o recuperando la guía…';
       try {
         let response = await fetch('/api/v1/admin/orders/' + encodeURIComponent(orderId) + '/mipaquete', { method: 'POST', headers: adminHeaders(true) });
         let data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo generar la guía');
@@ -122,6 +131,7 @@ export function renderOrderTrackingAdminScript(): string {
           const synced = await response.json(); if (response.ok && synced.shipment) data.shipment = synced.shipment;
         }
         const shipment = data.shipment;
+        renderMiPaqueteShipment(shipment);
         document.getElementById('tracking-edit-carrier').value = shipment.carrierName || 'MiPaquete';
         document.getElementById('tracking-edit-number').value = shipment.guideNumber || '';
         document.getElementById('tracking-edit-url').value = shipment.guideUrl || '';
@@ -129,14 +139,17 @@ export function renderOrderTrackingAdminScript(): string {
           (shipment.guideUrl ? ' · <a href="' + escapeHtml(shipment.guideUrl) + '" target="_blank" rel="noopener">Abrir PDF</a>' : '') +
           (shipment.pickupCode ? ' · Recolección: ' + escapeHtml(shipment.pickupCode) : '');
         await loadAdminOrderTracking(trackingAdminPage);
-      } catch (error) { message.textContent = error.message || 'Error al generar guía'; }
+      } catch (error) {
+        message.textContent = error.message || 'Error al consultar la guía';
+        await loadMiPaqueteShipment(orderId);
+      }
       finally { button.disabled = false; }
     }
     document.getElementById('order-tracking-edit-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.currentTarget; const button = form.querySelector('[type="submit"]'); button.disabled = true;
       const orderId = document.getElementById('tracking-edit-order-id').value;
-      const message = document.getElementById('tracking-edit-message');
+      const message = document.getElementById('tracking-shipment-message');
       try {
         const response = await fetch('/api/v1/admin/orders/tracking/' + encodeURIComponent(orderId) + '/shipping', { method: 'PATCH', headers: adminHeaders(true), body: JSON.stringify({ shippingCarrier: document.getElementById('tracking-edit-carrier').value.trim() || null, shippingTrackingNumber: document.getElementById('tracking-edit-number').value.trim() || null, shippingTrackingUrl: document.getElementById('tracking-edit-url').value.trim() || null, estimatedDeliveryDate: document.getElementById('tracking-edit-date').value || null }) });
         const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo guardar');

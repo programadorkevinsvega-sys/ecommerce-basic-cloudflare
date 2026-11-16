@@ -152,5 +152,6 @@ export interface ShippingGateway {
   syncMiPaqueteShipment(id: string): Promise<CarrierShipmentDto | null>;
   syncPendingMiPaqueteShipments(): Promise<CarrierShipmentDto[]>;
   listCarrierShipments(input: { page: number; pageSize: number; unprinted?: boolean }): Promise<{ items: CarrierShipmentDto[]; total: number }>;
+  getCarrierShipmentForOrder(orderId: string): Promise<CarrierShipmentDto | null>;
   markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipmentDto | null>;
 }

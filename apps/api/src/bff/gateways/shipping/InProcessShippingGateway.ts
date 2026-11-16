@@ -177,6 +177,11 @@ export class InProcessShippingGateway implements ShippingGateway {
     return { ...result, items: result.items.map(mapShipment) };
   }
 
+  public async getCarrierShipmentForOrder(orderId: string): Promise<CarrierShipmentDto | null> {
+    const shipment = await this.publicApi.getCarrierShipmentForOrder(orderId);
+    return shipment ? mapShipment(shipment) : null;
+  }
+
   public async markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipmentDto | null> {
     const shipment = await this.publicApi.markCarrierShipmentPrinted(id, actorId);
     return shipment ? mapShipment(shipment) : null;
