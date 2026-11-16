@@ -24,7 +24,7 @@ export function renderInvoicingAdminScript(): string {
         : 'Consulta los comprobantes comerciales internos emitidos para tus ventas.';
       if (listTitle) listTitle.textContent = electronic ? 'Facturas para validación electrónica' : 'Facturas comerciales emitidas';
       if (listDescription) listDescription.textContent = electronic
-        ? 'Solo aparecen facturas marcadas para transmisión electrónica; aquí puedes filtrar por estado DIAN.'
+        ? 'Aquí se consulta y descarga el documento electrónico devuelto por Factus. El comprobante comercial está disponible en la sección Facturación.'
         : 'Comprobantes internos de ventas; esta lista no equivale por sí sola a facturación electrónica DIAN.';
       if (statusFilter) statusFilter.hidden = !electronic;
       if (statusHeading) statusHeading.textContent = electronic ? 'Estado ante DIAN' : 'Estado de factura';
@@ -105,17 +105,15 @@ export function renderInvoicingAdminScript(): string {
     }
 
     function renderInvoiceRow(invoice) {
-      const commercialView = _invoiceView === 'electronic' ? 'Ver comprobante comercial' : 'Ver PDF comercial';
-      const commercialDownload = _invoiceView === 'electronic' ? 'Descargar comprobante comercial' : 'Descargar PDF comercial';
-      const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">' + commercialView + '</a>' +
-        '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">' + commercialDownload + '</a>' +
-        (invoice.status === 'issued' && _invoiceView === 'electronic' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber
-          ? '<a class="invoice-action primary" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF electrónico DIAN</a>' +
-            '<a class="invoice-action" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document">Descargar PDF electrónico</a>'
-          : '') +
-        (invoice.status === 'issued' && _invoiceView === 'electronic' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber
-          ? '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>'
-          : '');
+      const electronicAccepted = invoice.status === 'issued' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber;
+      const actions = _invoiceView === 'electronic'
+        ? (electronicAccepted
+          ? '<a class="invoice-action primary" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF electrónico de Factus</a>' +
+            '<a class="invoice-action" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document">Descargar PDF electrónico de Factus</a>' +
+            '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>'
+          : '<span class="invoice-electronic-status">El PDF electrónico de Factus estará disponible cuando la factura sea aceptada.</span>')
+        : '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF comercial</a>' +
+          '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">Descargar PDF comercial</a>';
       const status = _invoiceView === 'electronic'
         ? '<span class="invoice-status ' + (invoice.electronicStatus === 'accepted' ? 'issued' : 'other') + '">' + escapeHtml(electronicStatusLabel(invoice.electronicStatus)) + '</span>' +
           (invoice.electronicNumber ? '<small class="invoice-electronic-status">' + escapeHtml(invoice.electronicNumber) + '</small>' : '') +
