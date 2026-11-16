@@ -77,6 +77,7 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 | `catalog__0015_product_guides.sql` | v15 | Producción (`ecommerce-vega-production`) | 2026-10-15 | `eae64b6` | ✅ Aplicada con runner remoto tras confirmar el ledger; se verificaron las tres columnas nuevas y 3 productos existentes intactos. |
 | `catalog__0016_electronic_invoice_flag.sql` | v16 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger, columna y default `0` confirmados. Los 3 productos existentes se conservaron en modalidad comercial. |
 | `catalog__0017_product_landing_configs.sql` | v17 | Local/CI | Incluida en la rama `feat/product-landing-config-foundation` | pendiente de CI | Migración aditiva para guardar la configuración editorial por producto. No aplicada ni verificada en producción; aplicar solo tras revisar el ledger remoto y el procedimiento de release. |
+| `catalog__0018_iphone_starter_catalog.sql` | v18 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con el runner remoto; ledger y 10 iPhone en borrador verificados. Sin inventario ni imágenes; precio técnico `0` requerido por el esquema y SEO presente. |
 | `catalog__0010_brand_image.sql` | v10 | Producción (`ecommerce-vega-production`) | 2026-10-14 | trabajo actual | ✅ Aplicada después de confirmar 43 entradas y columna ausente; ledger y `PRAGMA table_info` verificaron la columna nullable. Bookmark antes `00000280-00000319-00005104-84f1213e1c2180147cbcc968ea1511f3`, después `00000280-00000325-00005104-1be4680bac0b0e072f56d01855aeaa81`. |
 
 `catalog__0008_collections.sql` crea `catalog_collections` y `catalog_collection_products`. El estado inicial queda `inactive` para que una colección nueva no se publique por accidente. El rollback del Worker no requiere retirar las tablas: la versión anterior no las consulta. No ejecutar `DROP TABLE` como rollback, porque eliminaría las colecciones configuradas. Para aplicar en local: `pnpm db:migrate:local`; en producción, después de respaldo y revisión del ledger: `ALLOW_REMOTE_D1_MIGRATIONS=1 pnpm db:migrate:remote`. En esta ejecución se aplicó en producción y la comprobación posterior confirmó el ledger, las tablas y todas sus columnas. No se insertó contenido.
@@ -104,6 +105,8 @@ Aplicación en producción: bookmark previo `00000004-0000009a-00005105-3e07951d
 | `storefront__0003_banner_types_and_cta.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-12 | HEAD | ✅ Aplicada con éxito (expand-only: banner_type, button_text) |
 | `storefront__0003_banner_types_and_cta.sql` | v3 | Local (Miniflare) | 2026-10-12 | HEAD | ✅ Verificada y retrocompatible |
 | `storefront__0005_place_brand_and_collection_banners.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-15 | trabajo actual | ✅ Aplicada; los banners activos quedaron en sus páginas de marcas y colecciones |
+| `storefront__0006_clear_external_starter_banner_images.sql` | v6 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; URLs externas retiradas de banners iniciales inactivos. |
+| `storefront__0007_iphone_starter_content.sql` | v7 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; banners y anuncios iniciales intactos enfocados en iPhone, inactivos y sin imágenes. Personalizaciones conservadas. |
 
 ---
 
@@ -129,6 +132,7 @@ Aplicación en producción: bookmark previo `00000004-0000009a-00005105-3e07951d
 | `cms__0004_blog_welcome_article.sql` | v4 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `8620b98` | ✅ Aplicada con runner; ledger, artículo, autor, categoría y relación verificados; FK check vacío |
 | `cms__0004_blog_welcome_article.sql` | v4 | Local (SQLite/D1) | 2026-10-14 | `8620b98` | ✅ Upgrade legado; semilla repetida sin duplicados; 46 migraciones desde cero y segunda pasada |
 | `cms__0005_menu_management.sql` | v5 | Producción (`ecommerce-vega-production`) | 2026-10-14 | `9695ab8` | ✅ Aplicada con el runner; ledger, columna, enlaces previos y seguimiento bajo «Ayuda» verificados |
+| `cms__0006_iphone_blog_starter_article.sql` | v6 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; artículo y categoría iniciales actualizados solo si conservaban sus valores originales. |
 
 `cms__0005_menu_management.sql` agrega `item_type` con valor predeterminado `link`, conserva los enlaces existentes y crea la navegación inicial solo cuando faltan rutas o menús. Incluye el enlace de seguimiento dentro del grupo `Ayuda` del encabezado y del pie de página. Si se revierte el Worker, no retirar la columna ni el contenido; conservarlos para una siguiente versión.
 
@@ -154,6 +158,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `promotions__0003_correct_welcome_coupon_description.sql` | v3 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Corrige únicamente la descripción obsoleta de BIENVENIDO10 si coincide con el texto erróneo observado; no cambia reglas ni descuentos. Ledger verificado. |
 | `promotions__0005_atomic_coupon_redemptions.sql` | v5 | Local (Miniflare) | 2026-11-15 | trabajo actual | ✅ Aplicación desde D1 vacía e idempotencia verificadas; tabla e índice nuevos solo usan prefijo `promotions_*`. Conserva la tabla anterior para rollback. |
 | `promotions__0005_atomic_coupon_redemptions.sql` | v5 | Producción (`ecommerce-vega-production`) | Pendiente | — | No aplicada. Requiere revisión del ledger, respaldo y autorización de despliegue conforme a `ROLLBACK_RECOVERY.md`. |
+| `promotions__0006_remove_generic_starter_promotions.sql` | v6 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; solo se retiraron ejemplos inactivos, intactos y sin canjes. No se crearon descuentos para iPhone. |
 
 ---
 
@@ -166,6 +171,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `shipping__0009_remove_implicit_free_shipping_rule.sql` | v9 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15; ledger confirmado | trabajo actual | Elimina únicamente la regla inicial `shipping-free-default`; no borra reglas creadas por administradores. |
 | `shipping__0010_disable_legacy_free_shipping_policy.sql` | v10 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15; ledger y valor cero verificados | trabajo actual | Desactiva y pone en cero el registro singleton retirado, para que un rollback a un Worker antiguo no active una promoción preconfigurada. No crea una regla de envío gratis. |
 | `shipping__0011_enable_medellin_local_cod.sql` | v11 | Producción (`ecommerce-vega-production`); local pendiente de verificación | Aplicada en producción el 2026-10-15 UTC; ledger confirmado | trabajo actual | Habilita contra entrega en la zona local activa `zone-medellin`; no cambia las zonas nacionales ni otras zonas locales. Lectura posterior confirmó `is_active=1` y `allows_cash_on_delivery=1`; antes estaba en `0`. |
+| `shipping__0013_remove_generic_starter_shipping_rules.sql` | v13 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; solo se retiraron reglas de envío gratis iniciales inactivas e intactas. No se crearon tarifas ni beneficios para iPhone. |
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
@@ -388,7 +394,9 @@ Se añadieron y aplicaron cuatro migraciones compatibles hacia adelante:
 | `promotions__0004_promotion_management_starter_records.sql` | `promotions_*` | 3 reglas de descuento y 3 cupones. |
 | `shipping__0012_free_shipping_starter_rules.sql` | `shipping_*` | 3 reglas de envío gratis. |
 
-Las cuatro migraciones se aplicaron a `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) con el runner remoto. Verificación del ledger: 73 migraciones. Consultas confirmaron tres registros en cada grupo solicitado y cero variantes sin producto. Los productos base están en borrador y sin stock; banners, anuncios, descuentos, cupones y reglas de envío gratis están inactivos, por lo que estos datos no publican contenido ni conceden descuentos/envíos al cliente. Las URLs de las seis imágenes de banner respondieron HTTP 200 al aplicar la migración. Los campos opcionales `image_media_id` y `og_image_id` quedaron nulos porque todavía no hay archivos de marca/colección/producto cargados como activos de Media/R2; no se asignaron identificadores ficticios.
+Las migraciones históricas se aplicaron a `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`); no deben reescribirse. Las versiones correctivas v6/v7 de storefront, v18 de catálogo, v6 de promociones, v13 de shipping y v6 de CMS se aplicaron en producción el 2026-11-16 conforme a [ADR-0037](../adr/ADR-0037-migraciones-iniciales-iphone-produccion.md). El catálogo correctivo toma como referencia el catálogo oficial vigente de [Apple iPhone](https://www.apple.com/iphone/) y [Apple Store](https://www.apple.com/shop/buy-iphone); incluye iPhone Duo, iPhone 18 Pro/Pro Max, iPhone Air, iPhone 17/17 Pro/17 Pro Max/17e e iPhone 16 Pro/Pro Max. La verificación remota confirmó diez registros en borrador, sin imágenes ni inventario y sin precio comercial: `price_in_cents=0` es únicamente el valor técnico que exige el esquema actual. Los seis banners quedan enfocados en iPhone, inactivos y sin imagen hasta que se editen en el panel. Las ofertas, cupones y reglas de envío de ejemplo se retiraron únicamente al coincidir con los registros inactivos y sin uso/cambios. La cadena de 96 migraciones desde D1 vacía, su segunda ejecución y las 69 pruebas Worker pasan localmente.
+
+La migración histórica `storefront__0004_storefront_management_starter_records.sql` conserva su contenido original para respetar el ledger; `storefront__0006_clear_external_starter_banner_images.sql` elimina las URLs externas de los registros iniciales y v7 los convierte en contenido de iPhone. Los registros de producto, promociones, shipping y blog se corrigen por migraciones nuevas y acotadas a su prefijo, sin borrar datos personalizados.
 
 
 ## Módulo: `wishlist` (introducido en `feat/phase-12-wishlist`)
@@ -401,4 +409,8 @@ La migración crea únicamente `wishlist_items` y `wishlist_outbox_events`. El r
 
 ## Inicialización de D1 de producción (2026-11-16)
 
-Excepción puntual al ensayo previo en staging, autorizada por el propietario y documentada en [ADR-0036](../adr/ADR-0036-migracion-inicial-d1-produccion.md). El runner aplicó las 90 migraciones canónicas a la D1 vacía `ecommerce-vega-production` (`a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`). Ledger, esquema y semillas fueron verificados; bookmark anterior `00000001-00000000-00005125-e78d14cbdb4431fb5df8f868307c384e`, posterior `00000002-00000232-00005125-b22085c817c3befc793e1911ddc5365d`. No se desplegó el Worker: la versión activa aún usa el ID D1 anterior y `/health` responde HTTP 500.
+Excepción puntual al ensayo previo en staging, autorizada por el propietario y documentada en [ADR-0036](../adr/ADR-0036-migracion-inicial-d1-produccion.md). El runner aplicó las 90 migraciones canónicas a la D1 vacía `ecommerce-vega-production` (`a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`). Ledger, esquema y semillas fueron verificados; bookmark anterior `00000001-00000000-00005125-e78d14cbdb4431fb5df8f868307c384e`, posterior `00000002-00000232-00005125-b22085c817c3befc793e1911ddc5365d`. En ese momento no se desplegó el Worker y este aún usaba el ID D1 anterior.
+
+## Migraciones correctivas iPhone en producción (2026-11-16)
+
+Excepción puntual al ensayo previo en staging, autorizada por el propietario y documentada en [ADR-0037](../adr/ADR-0037-migraciones-iniciales-iphone-produccion.md). Antes de aplicar las seis migraciones, el bookmark Time Travel era `0000001a-0000000a-00005125-22fe8eab835ce52a8977996592dd3da1`; después, el ledger tenía 96 entradas y el bookmark era `0000001a-0000003c-00005125-90b408f14aa096dc16a111180eeba7a8`. Wrangler confirmó que no quedan migraciones pendientes y `/health` respondió HTTP 200. No se desplegó el Worker ni se validó el panel con una sesión admin.
