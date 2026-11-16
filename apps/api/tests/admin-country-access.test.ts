@@ -20,6 +20,20 @@ describe('admin country access policy', () => {
     expect((await request(app, '/api/v1/admin/auth/login', 'POST', 'CO', { email: 'other@example.test' })).status).toBe(401);
   });
 
+  it('logs country-policy rejection without logging the administrator email', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      await request(createApp({}), '/api/v1/admin/auth/login', 'POST', 'US', { email: 'admin@example.test' });
+
+      expect(output).toHaveBeenCalledOnce();
+      const log = String(output.mock.calls[0]?.[0]);
+      expect(log).toContain('"reason":"country_not_allowed"');
+      expect(log).not.toContain('admin@example.test');
+    } finally {
+      output.mockRestore();
+    }
+  });
+
   it('enforces the same policy for sessions on admin pages and APIs outside the admin prefix', async () => {
     const identity = {
       validateSession: vi.fn(async (token: string) => ({

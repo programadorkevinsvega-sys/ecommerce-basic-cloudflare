@@ -11,6 +11,7 @@ export interface Env {
   CACHE: KVNamespace;
   EVENTS_QUEUE: Queue;
   ANALYTICS?: AnalyticsEngineDataset;
+  SENTRY_DSN?: string;
   ENVIRONMENT?: string;
   ADMIN_EMAIL?: string;
   ADMIN_DEMO_EMAIL?: string;

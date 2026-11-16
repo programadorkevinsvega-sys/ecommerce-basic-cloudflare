@@ -7,8 +7,26 @@ import { notifyOrderStatusChanged } from './bff/controllers/orders/notifyOrderSt
 import { purgePublicHtmlCache } from './platform/PurgePublicHtmlCache.js';
 import { processQueueBatch } from './platform/messaging/QueueBatchProcessor.js';
 import { QueueEventTelemetry } from './platform/messaging/QueueEventTelemetry.js';
+import * as Sentry from '@sentry/cloudflare';
+import { scrubSentryEvent } from './platform/scrubSentryEvent.js';
+import { scrubSentrySpan } from './platform/scrubSentrySpan.js';
 
-export default {
+type WorkerHandler = Required<Pick<ExportedHandler<Env, unknown, unknown>, 'fetch' | 'queue' | 'scheduled'>>;
+
+export default Sentry.withSentry<Env, unknown, unknown, WorkerHandler>((env: Env) => ({
+  dsn: env.SENTRY_DSN,
+  environment: env.ENVIRONMENT,
+  tracesSampleRate: env.ENVIRONMENT === 'development' || env.ENVIRONMENT === 'test' ? 1 : 0.1,
+  dataCollection: {
+    userInfo: false,
+    cookies: false,
+    httpHeaders: false,
+    httpBodies: [],
+    urlQueryParams: false,
+  },
+  beforeSend: scrubSentryEvent,
+  beforeSendSpan: scrubSentrySpan,
+}), {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const compositionRoot = buildCompositionRoot(env);
 
@@ -67,7 +85,7 @@ export default {
     })());
 
   },
-};
+});
 
 async function reconcileCarrierShipments(root: AppCompositionRoot): Promise<void> {
   try {

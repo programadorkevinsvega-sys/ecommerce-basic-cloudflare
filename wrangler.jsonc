@@ -18,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "ecommerce-vega-production",
-      "database_id": "bfb3ba3f-5e2a-4c33-9b93-0a5d7c04b6ef",
+      "database_id": "a92eda84-2320-4bb1-99ed-c3c01f8c7c1b",
       "migrations_dir": "apps/api/migrations"
     }
   ],

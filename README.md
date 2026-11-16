@@ -567,11 +567,20 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
 | `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación SHA-256 del checksum Wompi (`properties` + `timestamp` + secreto), no HMAC. |
+| `SENTRY_DSN` | [Sentry](https://sentry.io) | DSN del proyecto Cloudflare Worker; se configura únicamente como Secret. |
 | `TOTP_ENCRYPTION_KEY` | Generación local con `openssl rand -base64 32` | Clave aleatoria de 32 bytes; genera una distinta por entorno y pégala directamente en el prompt de Wrangler. | Cifrado AES-256-GCM de secretos TOTP guardados en D1. No la guardes en el repositorio ni la pierdas: la pérdida impide descifrar los secretos MFA existentes. |
 
 Cuando existen ambos valores, el login del Worker los valida y los sincroniza con la única cuenta Superadmin activa de `identity`; así se conserva el `adminId`, el rol y el estado MFA, y la base solo conserva el hash PBKDF2 de la contraseña. Si la tabla de administradores está vacía, el primer login que presente correctamente ambos valores aprovisiona de forma atómica esa cuenta desde Cloudflare, sin página de registro; si ya hay cualquier administrador, no se permite ese aprovisionamiento. Si aún no existen ambos valores, se mantiene temporalmente el login D1 para evitar bloquear el acceso durante la configuración. El titular debe configurar ambos antes de usar las credenciales nuevas. Después de un reinicio de D1, el estado MFA anterior no se recupera: el Superadmin recién aprovisionado debe volver a enrolar MFA. El enrolamiento muestra un secreto/URI TOTP después de reautenticar la contraseña; el código se genera en la app autenticadora y **no se envía por email**.
 
 En producción, define `ADMIN_EMAIL` como variable de texto en **Workers & Pages > ecommerce-basic-cloudflare > Settings > Variables and Secrets**. El correo real no se guarda en Git. Añade `ADMIN_PASSWORD` como secret desde el mismo panel o con el comando interactivo de abajo. No compartas la contraseña por chat ni la incluyas en archivos versionados.
+
+Para habilitar reportes de errores, crea un proyecto Sentry para Cloudflare Workers y configura su DSN solo como Secret:
+
+```bash
+pnpm exec wrangler secret put SENTRY_DSN --config apps/api/wrangler.jsonc
+```
+
+La integración envía el 100% de las trazas en desarrollo/pruebas y el 10% en los demás entornos. Antes de transmitirlas, reduce los nombres de span a operaciones técnicas aprobadas y elimina atributos personalizados, rutas, enlaces y datos de solicitud. No envía identidad, IP, cookies, headers, cuerpos, query strings ni mensajes originales de excepción. Sin `SENTRY_DSN`, el Worker continúa funcionando y los eventos estructurados permanecen en Cloudflare Workers Logs. Los fallos esperados de autenticación no se envían a Sentry.
 
 #### Comandos para configurar los secretos en producción:
 ```bash

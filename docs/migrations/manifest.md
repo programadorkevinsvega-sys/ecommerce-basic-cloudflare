@@ -398,3 +398,7 @@ Las cuatro migraciones se aplicaron a `ecommerce-vega-production` (ID `372088f2-
 | `wishlist__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | Aplicada el 2026-10-22 mediante `ALLOW_REMOTE_D1_MIGRATIONS=1 bun run db:migrate:remote`; el runner informó `aplicada wishlist__0001_init.sql` y `esquema al día (77 migraciones conocidas)`. El propietario validó manualmente en frontend añadir, consultar y eliminar favoritos, además del recorrido de aceptación. |
 
 La migración crea únicamente `wishlist_items` y `wishlist_outbox_events`. El repositorio guarda y elimina cada favorito junto con un evento versionado dentro de un `D1Database.batch`. La salida compartida confirmó la aplicación del archivo en producción. La consulta posterior de existencia de tablas/ledger debe conservarse como evidencia operativa separada; la aceptación funcional se registró según la confirmación manual del propietario.
+
+## Inicialización de D1 de producción (2026-11-16)
+
+Excepción puntual al ensayo previo en staging, autorizada por el propietario y documentada en [ADR-0036](../adr/ADR-0036-migracion-inicial-d1-produccion.md). El runner aplicó las 90 migraciones canónicas a la D1 vacía `ecommerce-vega-production` (`a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`). Ledger, esquema y semillas fueron verificados; bookmark anterior `00000001-00000000-00005125-e78d14cbdb4431fb5df8f868307c384e`, posterior `00000002-00000232-00005125-b22085c817c3befc793e1911ddc5365d`. No se desplegó el Worker: la versión activa aún usa el ID D1 anterior y `/health` responde HTTP 500.

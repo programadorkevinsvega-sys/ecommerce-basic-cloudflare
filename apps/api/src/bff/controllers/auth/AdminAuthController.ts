@@ -5,6 +5,9 @@ import QRCode from 'qrcode-svg';
 import { Env } from '../../../platform/Env.js';
 import { verifyTurnstileToken } from '../../security/verifyTurnstileToken.js';
 import { extractSessionToken } from '../../security/extractSessionToken.js';
+import { JsonLogger } from '../../../platform/JsonLogger.js';
+import { captureSentryException } from '../../../platform/captureSentryException.js';
+import { classifyAdminLoginFailure } from '../../security/classifyAdminLoginFailure.js';
 
 const adminLoginSchema = z.object({
   email: z.string().email(),
@@ -18,18 +21,39 @@ export class AdminAuthController {
     const router = new Hono<{ Bindings: Env }>();
 
     router.post('/login', async (c) => {
+      const traceContext = c.get('traceContext');
+      const logger = new JsonLogger('admin-auth', traceContext);
       try {
-        const body = await c.req.json();
+        let body: unknown;
+        try {
+          body = await c.req.json();
+        } catch {
+          logger.warn('Admin login request rejected', { reason: 'invalid_json', status: 400 });
+          return c.json({ error: 'Solicitud inválida' }, 400);
+        }
         const parsed = adminLoginSchema.safeParse(body);
         if (!parsed.success) {
+          logger.warn('Admin login request rejected', { reason: 'invalid_request', status: 400 });
           return c.json({ error: 'Validación fallida' }, 400);
         }
 
         const verification = await verifyTurnstileToken(parsed.data.turnstileToken, c.env, c.req.url, c.req.header('cf-connecting-ip'));
-        if (verification === 'unavailable') return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
-        if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+        if (verification === 'unavailable') {
+          logger.error('Admin login dependency unavailable', undefined, { reason: 'turnstile_unavailable', status: 503 });
+          captureSentryException(new Error('Admin login Turnstile verification unavailable'), {
+            area: 'admin_auth',
+            reason: 'turnstile_unavailable',
+            traceId: traceContext?.traceId,
+            requestId: traceContext?.requestId,
+          });
+          return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
+        }
+        if (verification !== 'valid') {
+          logger.warn('Admin login request rejected', { reason: 'turnstile_rejected', status: 400 });
+          return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
+        }
 
-        const traceId = (c.get('traceContext') as { traceId?: string } | undefined)?.traceId;
+        const traceId = traceContext?.traceId;
         const ip = c.req.header('cf-connecting-ip');
         const userAgent = c.req.header('user-agent');
 
@@ -48,9 +72,27 @@ export class AdminAuthController {
           `__Host-admin-session=${session.rawToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=${new Date(session.expiresAt).toUTCString()}`
         );
 
+        logger.info('Admin login succeeded', { mfa_enabled: session.mfaEnabled });
         return c.json({ status: 'ok', mfaEnabled: session.mfaEnabled });
       } catch (err: unknown) {
-        return c.json({ error: 'Credenciales inválidas' }, 401);
+        const failure = classifyAdminLoginFailure(err);
+        if (failure.expectedAuthenticationFailure) {
+          logger.warn('Admin login rejected', { reason: failure.reason, status: 401 });
+          return c.json({ error: 'Credenciales inválidas' }, 401);
+        }
+
+        logger.error('Admin login service failed', err, {
+          reason: failure.reason,
+          error_name: err instanceof Error ? err.name : 'UnknownError',
+          status: 503,
+        });
+        captureSentryException(err, {
+          area: 'admin_auth',
+          reason: failure.reason,
+          traceId: traceContext?.traceId,
+          requestId: traceContext?.requestId,
+        });
+        return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
       }
     });
 

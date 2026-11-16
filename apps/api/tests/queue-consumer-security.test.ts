@@ -28,7 +28,7 @@ async function consume(item: ReturnType<typeof message>): Promise<void> {
   await worker.queue({
     queue: 'events',
     messages: [item],
-  } as any, {} as any, {} as any);
+  } as any, {} as any, { waitUntil: vi.fn() } as any);
 }
 
 describe('queue consumer security', () => {

@@ -4,14 +4,14 @@ Este documento concreta los nombres, bindings, bounded contexts y convenciones f
 
 ---
 
-## 1. Nombres de infraestructura (corte `apps/api/wrangler.jsonc`, 2026-10-15)
+## 1. Nombres de infraestructura (corte de configuración `apps/api/wrangler.jsonc`, 2026-11-16)
 
 Todos los recursos operan directamente en el entorno de producción configurado en `apps/api/wrangler.jsonc`:
 
 | Recurso | Nombre en Cloudflare | Binding en Worker |
 |---|---|---|
 | **Worker (BFF + módulos)** | `ecommerce-basic-cloudflare` | `src/index.ts` |
-| **D1 Única** | `ecommerce-vega-production` (ID `372088f2-d700-4155-9057-6595815a005e`) | `env.DB` |
+| **D1 Única** | `ecommerce-vega-production` (ID `a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`) | `env.DB` |
 | **R2 Bucket** | `ecommerce-vega-production` | `env.MEDIA_BUCKET` |
 | **Workers KV** | ID `a49472c551f04d438a1b7a082d7468d9` | `env.CACHE`; cursor temporal de mantenimiento de medios |
 | **Queues Principal** | `ecommerce-vega-events-production` | `env.EVENTS_QUEUE` |
@@ -23,7 +23,7 @@ Esta configuración referencia recursos de producción. No hay que leer estos no
 
 Workers Cache no es un binding ni un namespace KV. El HTML SSR actual usa nonce CSP por respuesta y `private, no-store`; las imágenes inmutables conservan su caché. El historial y evidencia del despliegue anterior con TTL de 30 segundos están en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md), y la decisión vigente está en [ADR-0033](./adr/ADR-0033-csp-nonce-y-cache-html.md).
 
-Staging tiene una configuración Wrangler separada en [`apps/api/wrangler.staging.jsonc`](../apps/api/wrangler.staging.jsonc) y un Worker dedicado `ecommerce-basic-cloudflare-staging`. Sus recursos D1/R2/KV/Queues y namespaces de rate limit deben ser exclusivos; los IDs placeholder bloquean el despliegue hasta provisionarlos. El config de producción `apps/api/wrangler.jsonc` y el Worker `ecommerce-basic-cloudflare` no se reutilizan. Procedimiento y secretos: [`CI_STAGING_SETUP.md`](./CI_STAGING_SETUP.md).
+Staging tiene una configuración Wrangler separada en [`apps/api/wrangler.staging.jsonc`](../apps/api/wrangler.staging.jsonc) y un Worker dedicado `ecommerce-basic-cloudflare-staging`. Sus recursos D1/R2/KV/Queues y namespaces de rate limit deben ser exclusivos. `pnpm staging:check` valida la configuración local, pero no confirma que los recursos existan ni que el Worker esté desplegado en la cuenta de staging. El config de producción `apps/api/wrangler.jsonc` y el Worker `ecommerce-basic-cloudflare` no se reutilizan. Procedimiento y secretos: [`CI_STAGING_SETUP.md`](./CI_STAGING_SETUP.md).
 
 ---
 
@@ -86,6 +86,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | `WOMPI_PRIVATE_KEY` | Wompi Colombia | Llave privada para reconciliación de pagos contra la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | Wompi Colombia | Secreto para calcular y verificar el hash SHA-256 de integridad de pagos. |
 | `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
+| `SENTRY_DSN` | Sentry | DSN del proyecto para reportar excepciones depuradas del Worker; opcional hasta configurarlo. |
 | `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; el host se configura como `MI_PAQUETE_API_URL`. |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile | Secreto enviado únicamente desde el Worker a `siteverify`; nunca se expone al navegador. |
 | `GUEST_CART_HMAC_SECRET` | Cloudflare Workers | Clave aleatoria de al menos 32 bytes UTF-8 para firmar capacidades de carrito invitado y generar fingerprints de límites; provisionar una distinta por entorno. |

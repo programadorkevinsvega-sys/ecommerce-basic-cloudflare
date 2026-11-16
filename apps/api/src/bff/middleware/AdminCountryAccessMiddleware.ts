@@ -1,7 +1,8 @@
-import { MiddlewareHandler } from 'hono';
+import { Context, MiddlewareHandler } from 'hono';
 import { Env } from '../../platform/Env.js';
 import { IdentityGateway } from '../gateways/identity/IdentityGateway.js';
 import { extractSessionToken } from '../security/extractSessionToken.js';
+import { JsonLogger } from '../../platform/JsonLogger.js';
 
 const ADMIN_LOGIN_PATH = '/api/v1/admin/auth/login';
 const ADMIN_LOGOUT_PATH = '/api/v1/admin/auth/logout';
@@ -17,9 +18,10 @@ export function createAdminCountryAccessMiddleware(
     if (c.req.path === ADMIN_LOGIN_PATH && c.req.method === 'POST') {
       const body = await c.req.raw.clone().json().catch(() => null) as { email?: unknown } | null;
       const email = typeof body?.email === 'string' ? body.email : '';
-      return isPermittedAdmin(email, getCountry(c.req.raw), env)
-        ? next()
-        : c.json({ error: 'Credenciales inválidas' }, 401);
+      const country = getCountry(c.req.raw);
+      if (isPermittedAdmin(email, country, env)) return next();
+      logCountryRejection(c, env, email, country);
+      return c.json({ error: 'Credenciales inválidas' }, 401);
     }
 
     if (c.req.path === ADMIN_LOGOUT_PATH) return next();
@@ -33,10 +35,33 @@ export function createAdminCountryAccessMiddleware(
     try { session = await identity.validateSession(token); } catch { return next(); }
     if (session.actorType !== 'admin') return next();
     if (!session.email || !isPermittedAdmin(session.email, getCountry(c.req.raw), env)) {
+      logCountryRejection(c, env, session.email || '', getCountry(c.req.raw));
       return c.json({ error: 'Acceso administrativo no permitido desde esta ubicación' }, 403);
     }
     return next();
   };
+}
+
+function logCountryRejection(
+  context: Context<{ Bindings: Env }>,
+  env: Env,
+  email: string,
+  country?: string,
+): void {
+  const normalizedEmail = email.trim().toLowerCase();
+  const primaryEmail = env.ADMIN_EMAIL?.trim().toLowerCase();
+  const demoEmail = env.ADMIN_DEMO_EMAIL?.trim().toLowerCase();
+  const reason = !primaryEmail && !demoEmail
+    ? 'admin_allowlist_not_configured'
+    : primaryEmail && normalizedEmail === primaryEmail
+      ? country ? 'country_not_allowed' : 'country_unavailable'
+      : 'admin_account_not_allowlisted';
+  const traceContext = context.get('traceContext');
+  new JsonLogger('admin-country-access', traceContext).warn('Admin access denied by country policy', {
+    reason,
+    country: country || 'unknown',
+    environment: env.ENVIRONMENT || 'unknown',
+  });
 }
 
 function isPermittedAdmin(email: string, country: string | undefined, env: Env): boolean {
