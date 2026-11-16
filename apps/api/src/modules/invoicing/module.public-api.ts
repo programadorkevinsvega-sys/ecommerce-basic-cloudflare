@@ -31,6 +31,10 @@ export class InvoicingPublicApi {
     return this.container.processElectronicInvoiceUseCase.execute(invoiceId);
   }
 
+  public sendElectronicInvoiceEmail(invoiceId: string) {
+    return this.container.processElectronicInvoiceUseCase.retryElectronicInvoiceEmail(invoiceId);
+  }
+
   public processElectronicCreditNote(creditNoteId: string): Promise<void> {
     return this.container.processElectronicInvoiceUseCase.executeCreditNote(creditNoteId);
   }
@@ -40,7 +44,10 @@ export class InvoicingPublicApi {
   public async reconcileElectronicInvoices(limit = 20): Promise<number> {
     const invoices = await this.container.repo.listPendingElectronic(limit);
     for (const invoice of invoices) await this.processElectronicInvoice(invoice.id);
-    return invoices.length;
+    if (!this.container.electronicAdapter.requiresExplicitInvoiceEmail()) return invoices.length;
+    const emailPending = await this.container.repo.listAcceptedEmailPending(limit);
+    for (const invoice of emailPending) await this.processElectronicInvoice(invoice.id);
+    return invoices.length + emailPending.length;
   }
 
   public async reconcileElectronicCreditNotes(limit = 20): Promise<number> {

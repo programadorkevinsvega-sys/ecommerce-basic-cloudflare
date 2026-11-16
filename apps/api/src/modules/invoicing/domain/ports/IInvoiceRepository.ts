@@ -7,6 +7,11 @@ export interface IInvoiceRepository {
   createForElectronicIssue(invoice: Invoice, traceId: string): Promise<void>;
   updateElectronicResult(invoice: Invoice): Promise<void>;
   listPendingElectronic(limit: number): Promise<Invoice[]>;
+  listAcceptedEmailPending(limit: number): Promise<Invoice[]>;
+  claimElectronicEmail(invoiceId: string, updatedAt: string): Promise<boolean>;
+  markElectronicEmailUncertain(invoiceId: string, updatedAt: string): Promise<void>;
+  completeElectronicEmail(invoiceId: string, updatedAt: string): Promise<void>;
+  resetElectronicEmailAttempt(invoiceId: string, updatedAt: string): Promise<boolean>;
   createCreditNoteForElectronicIssue(note: CreditNote, traceId: string): Promise<void>;
   updateElectronicCreditNote(note: CreditNote): Promise<void>;
   listPendingElectronicCreditNotes(limit: number): Promise<CreditNote[]>;

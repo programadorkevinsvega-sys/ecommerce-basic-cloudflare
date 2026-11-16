@@ -106,10 +106,16 @@ export function renderInvoicingAdminScript(): string {
 
     function renderInvoiceRow(invoice) {
       const electronicAccepted = invoice.status === 'issued' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber;
+      const emailDispatch = invoice.electronicErrors?.emailDispatch;
       const actions = _invoiceView === 'electronic'
         ? (electronicAccepted
           ? '<a class="invoice-action primary" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF electrónico de Factus</a>' +
             '<a class="invoice-action" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document">Descargar PDF electrónico de Factus</a>' +
+            (invoice.electronicEmailSent
+              ? '<small class="invoice-electronic-status">Envío solicitado a Factus</small>'
+              : emailDispatch === 'sending'
+                ? '<small class="invoice-electronic-status">Envío de correo en curso.</small>'
+                : '<button class="invoice-action" data-invoice-action="send-electronic-email" data-invoice-id="' + escapeHtml(String(invoice.id)) + '">Enviar factura por correo</button>') +
             '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>'
           : '<span class="invoice-electronic-status">El PDF electrónico de Factus estará disponible cuando la factura sea aceptada.</span>')
         : '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF comercial</a>' +
@@ -118,7 +124,7 @@ export function renderInvoicingAdminScript(): string {
         ? '<span class="invoice-status ' + (invoice.electronicStatus === 'accepted' ? 'issued' : 'other') + '">' + escapeHtml(electronicStatusLabel(invoice.electronicStatus)) + '</span>' +
           (invoice.electronicNumber ? '<small class="invoice-electronic-status">' + escapeHtml(invoice.electronicNumber) + '</small>' : '') +
           (invoice.cufe ? '<small class="invoice-electronic-status">CUFE: ' + escapeHtml(invoice.cufe) + '</small>' : '') +
-          (invoice.electronicErrors ? '<small class="invoice-electronic-status invoice-electronic-error">' + escapeHtml(Object.values(invoice.electronicErrors).join('; ')) + '</small>' : '')
+          (invoice.electronicErrors ? '<small class="invoice-electronic-status invoice-electronic-error">' + escapeHtml(electronicErrorSummary(invoice.electronicErrors)) + '</small>' : '')
         : '<span class="invoice-status ' + (invoice.status === 'issued' ? 'issued' : 'other') + '">' + escapeHtml(invoice.status) + '</span>';
       return '<tr><td><strong class="invoice-number">' + escapeHtml(invoice.invoiceNumber) + '</strong></td>' +
         '<td><code>#' + escapeHtml(invoice.orderId.replace('ord-', '')) + '</code></td>' +
@@ -130,6 +136,14 @@ export function renderInvoicingAdminScript(): string {
 
     function electronicStatusLabel(status) {
       return ({ accepted: 'Aceptada', pending: 'Pendiente de validación', rejected: 'Rechazada', not_configured: 'Proveedor sin configurar' })[status] || 'Sin estado';
+    }
+
+    function electronicErrorSummary(errors) {
+      return Object.entries(errors).map(([key, value]) => key !== 'emailDispatch'
+        ? value
+        : value === 'sending'
+          ? 'El envío de la factura está en curso.'
+          : 'El resultado del envío no está confirmado. Verifica Factus antes de reenviar.').join('; ');
     }
 
     function openCreditNoteModal(invoiceId, invoiceNumber, totalCents) {
@@ -167,6 +181,13 @@ export function renderInvoicingAdminScript(): string {
       }
     }
 
+    async function sendElectronicInvoiceEmail(invoiceId) {
+      if (!confirm('Confirma que verificaste en Factus que esta factura no fue enviada. Si ya se envió, continuar puede duplicar el correo.')) return;
+      const response = await fetch('/api/v1/admin/invoices/' + encodeURIComponent(invoiceId) + '/electronic-email', { method: 'POST', headers: { ...adminHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ confirmedNotSent: true }) });
+      const result = await response.json().catch(() => ({})); alert(response.ok ? result.message : (result.error || 'No se pudo confirmar el envío.'));
+      loadAdminInvoices();
+    }
+
     window.loadAdminInvoices = loadAdminInvoices;
     window.showAdminInvoicePage = showAdminInvoicePage;
     window.filterAdminInvoices = filterAdminInvoices;
@@ -181,6 +202,7 @@ export function renderInvoicingAdminScript(): string {
       if (!button) return;
       if (button.dataset.invoiceAction === 'close') closeCreditNoteModal();
       if (button.dataset.invoiceAction === 'submit-credit-note') submitCreditNote();
+      if (button.dataset.invoiceAction === 'send-electronic-email') sendElectronicInvoiceEmail(button.dataset.invoiceId);
       if (button.dataset.invoiceAction === 'credit-note') {
         openCreditNoteModal(button.dataset.invoiceId, button.dataset.invoiceNumber, Number(button.dataset.totalCents));
       }

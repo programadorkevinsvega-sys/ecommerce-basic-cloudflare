@@ -27,6 +27,10 @@ export class InProcessInvoicingGateway implements InvoicingGateway {
     return this.publicApi.processElectronicInvoice(invoiceId);
   }
 
+  public sendElectronicInvoiceEmail(invoiceId: string) {
+    return this.publicApi.sendElectronicInvoiceEmail(invoiceId);
+  }
+
   public processQueueEvent(event: InvoicingQueueEvent) {
     return this.publicApi.processQueueEvent(event);
   }

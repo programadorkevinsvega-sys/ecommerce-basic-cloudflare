@@ -305,6 +305,7 @@ El envío gratis se administra como reglas independientes de las tarifas del tra
 - [x] Admin `/admin` tab Facturación 🧾: listado de facturas, búsqueda, visualización/descarga de documento y emisión de notas crédito.
 - [x] Cliente `/cuenta`: portal con perfil, historial de pedidos, descarga segura de facturas y cierre de sesión con revocación server-side.
 - [x] Puerto `IElectronicInvoicingPort` y adaptador base implementados para conectar DIAN en el futuro sin modificar el dominio.
+- [ ] Verificar en sandbox el envío Factus posterior a aceptación DIAN y recepción en buzón; los intentos inciertos quedan bloqueados para reintento automático y requieren verificación/reenvío administrativo auditado.
 
 **Email y auditoría**
 - [x] `IEmailPort` + adaptador oficial **Resend** (`ResendEmailAdapter`) con soporte para secreto `RESEND_API_KEY` y remitente configurable `RESEND_FROM_EMAIL`.

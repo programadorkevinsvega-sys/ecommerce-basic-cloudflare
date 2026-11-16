@@ -8,6 +8,7 @@ import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { isAdminMfaPending } from '../../middleware/AuthMiddleware.js';
 import { ElectronicInvoiceDocumentController } from './ElectronicInvoiceDocumentController.js';
+import { ElectronicInvoiceEmailController } from './ElectronicInvoiceEmailController.js';
 
 export class InvoicingController {
   public static createRoutes(
@@ -17,6 +18,7 @@ export class InvoicingController {
   ): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     app.route('/', ElectronicInvoiceDocumentController.createRoutes(invoicingGateway, identityGateway));
+    app.route('/', ElectronicInvoiceEmailController.createRoutes(invoicingGateway, identityGateway, auditGateway));
 
     // GET /api/v1/invoices/:id/document — Descarga autenticada del PDF de la factura
     app.get('/api/v1/invoices/:id/document', async (c) => {

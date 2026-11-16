@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const apiDirectory = resolve(scriptDirectory, '..');
+const sendEmail = process.argv.includes('--send-email');
 
 const localEnvironment = parseEnv(readFileSync(resolve(apiDirectory, '../../.env'), 'utf8'));
 
@@ -26,6 +27,9 @@ const credentialNames = [
 if (credentialNames.some((name) => !localEnvironment[name])) {
   throw new Error('Factus integration test blocked: all four Factus OAuth credentials are required.');
 }
+if (sendEmail && !localEnvironment.FACTUS_SANDBOX_EMAIL_TO) {
+  throw new Error('Factus email test blocked: set FACTUS_SANDBOX_EMAIL_TO to a test mailbox in .env.');
+}
 
 const vitestPath = resolve(apiDirectory, 'node_modules/vitest/vitest.mjs');
 const result = spawnSync(process.execPath, [
@@ -40,6 +44,8 @@ const result = spawnSync(process.execPath, [
     ...process.env,
     ...Object.fromEntries(['FACTUS_API_URL', ...credentialNames].map((name) => [name, localEnvironment[name]])),
     FACTUS_SANDBOX_INTEGRATION_TEST: '1',
+    FACTUS_SANDBOX_EMAIL_TEST: sendEmail ? '1' : '0',
+    FACTUS_SANDBOX_EMAIL_TO: sendEmail ? localEnvironment.FACTUS_SANDBOX_EMAIL_TO : '',
   },
 });
 
