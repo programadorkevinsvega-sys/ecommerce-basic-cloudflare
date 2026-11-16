@@ -13,6 +13,8 @@ import { StoreSettingsResponse } from '../../gateways/settings/SettingsGateway.j
 import { renderAdminMfaSetupPage } from '../../views/admin/renderAdminMfaSetupPage.js';
 import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { createAdminCountryAccessMiddleware } from '../../middleware/AdminCountryAccessMiddleware.js';
+import { JsonLogger } from '../../../platform/JsonLogger.js';
+import { captureSentryException } from '../../../platform/captureSentryException.js';
 
 export class AdminUiController {
   public static createRoutes(
@@ -56,12 +58,26 @@ export class AdminUiController {
         return c.redirect('/admin/login');
       }
 
+      let session;
       try {
-        const session = await identityGateway.validateSession(token);
-        if (session.actorType !== 'admin') {
-          return c.redirect('/admin/login');
-        }
-        if (!session.mfaEnabled) return c.redirect('/admin/mfa-setup');
+        session = await identityGateway.validateSession(token);
+      } catch {
+        return c.redirect('/admin/login');
+      }
+      if (session.actorType !== 'admin') return c.redirect('/admin/login');
+      if (!session.mfaEnabled) return c.redirect('/admin/mfa-setup');
+
+      const traceContext = c.get('traceContext');
+      const logger = new JsonLogger('admin-dashboard', traceContext);
+      const load = <T>(resource: string, operation: Promise<T>) => operation.catch((error: unknown) => {
+        logger.error('Admin dashboard resource failed', error, {
+          reason: 'dashboard_resource_load_failed',
+          resource,
+        });
+        throw error;
+      });
+
+      try {
         const can = (permission: string) => hasPermission(session.permissions, permission);
 
         const [
@@ -86,26 +102,26 @@ export class AdminUiController {
           settings,
           marketingCollections,
         ] = await Promise.all([
-          can('catalog:read') ? catalogGateway.listAdminProducts({ limit: 25 }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listCategories({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listBrands({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listAttributes({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listSuppliers({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listProductVariants({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listCollections({limit:25,offset:0,includeInactive:true}) : Promise.resolve([]),
-          can('catalog:read') ? catalogGateway.listProductTags(true) : Promise.resolve([]),
-          can('cms:read') ? cmsGateway.listBlogPosts({page:1,pageSize:25,status:'published',publishedOnly:true}) : Promise.resolve({items:[],total:0}),
-          can('storefront:read') ? storefrontGateway.listAdminBanners(25, 0).then((result) => result.items) : Promise.resolve([]),
-          can('storefront:read') ? storefrontGateway.listAdminAnnouncements(25, 0).then((result) => result.items) : Promise.resolve([]),
-          can('cms:read') ? cmsGateway.listPages(25, 0) : Promise.resolve([]),
-          can('cms:read') ? cmsGateway.listPages(25, 0, 'published') : Promise.resolve([]),
-          can('promotions:read') ? promotionsGateway.listPromotionRules(false, 25, 0) : Promise.resolve([]),
-          can('promotions:read') ? promotionsGateway.listCoupons(false, 25, 0) : Promise.resolve([]),
-          can('shipping:read') ? shippingGateway.listZones(false, 25, 0, true) : Promise.resolve([]),
+          load('catalog.products', can('catalog:read') ? catalogGateway.listAdminProducts({ limit: 25 }) : Promise.resolve([])),
+          load('catalog.categories', can('catalog:read') ? catalogGateway.listCategories({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([])),
+          load('catalog.brands', can('catalog:read') ? catalogGateway.listBrands({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([])),
+          load('catalog.attributes', can('catalog:read') ? catalogGateway.listAttributes({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([])),
+          load('catalog.suppliers', can('catalog:read') ? catalogGateway.listSuppliers({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([])),
+          load('catalog.variants', can('catalog:read') ? catalogGateway.listProductVariants({ limit: 25, offset: 0, includeInactive: true }) : Promise.resolve([])),
+          load('catalog.collections', can('catalog:read') ? catalogGateway.listCollections({limit:25,offset:0,includeInactive:true}) : Promise.resolve([])),
+          load('catalog.tags', can('catalog:read') ? catalogGateway.listProductTags(true) : Promise.resolve([])),
+          load('cms.blog', can('cms:read') ? cmsGateway.listBlogPosts({page:1,pageSize:25,status:'published',publishedOnly:true}) : Promise.resolve({items:[],total:0})),
+          load('storefront.banners', can('storefront:read') ? storefrontGateway.listAdminBanners(25, 0).then((result) => result.items) : Promise.resolve([])),
+          load('storefront.announcements', can('storefront:read') ? storefrontGateway.listAdminAnnouncements(25, 0).then((result) => result.items) : Promise.resolve([])),
+          load('cms.pages', can('cms:read') ? cmsGateway.listPages(25, 0) : Promise.resolve([])),
+          load('cms.published_pages', can('cms:read') ? cmsGateway.listPages(25, 0, 'published') : Promise.resolve([])),
+          load('promotions.rules', can('promotions:read') ? promotionsGateway.listPromotionRules(false, 25, 0) : Promise.resolve([])),
+          load('promotions.coupons', can('promotions:read') ? promotionsGateway.listCoupons(false, 25, 0) : Promise.resolve([])),
+          load('shipping.zones', can('shipping:read') ? shippingGateway.listZones(false, 25, 0, true) : Promise.resolve([])),
           Promise.resolve([]),
-          can('shipping:read') ? shippingGateway.getCarrierConfig() : Promise.resolve(emptyCarrierConfig()),
-          can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings()),
-          can('catalog:read') ? catalogGateway.listCollections({limit:25,offset:0}) : Promise.resolve([]),
+          load('shipping.carrier_config', can('shipping:read') ? shippingGateway.getCarrierConfig() : Promise.resolve(emptyCarrierConfig())),
+          load('settings.store', can('settings:read') ? settingsGateway.getSettings() : Promise.resolve(emptySettings())),
+          load('catalog.marketing_collections', can('catalog:read') ? catalogGateway.listCollections({limit:25,offset:0}) : Promise.resolve([])),
         ]);
 
         const marketingDestinations = [
@@ -144,8 +160,19 @@ export class AdminUiController {
 
         c.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         return c.html(html);
-      } catch {
-        return c.redirect('/admin/login');
+      } catch (error) {
+        logger.error('Admin dashboard failed to load', error, {
+          reason: 'dashboard_load_failed',
+          status: 503,
+        });
+        captureSentryException(error, {
+          area: 'admin_dashboard',
+          reason: 'dashboard_load_failed',
+          traceId: traceContext?.traceId,
+          requestId: traceContext?.requestId,
+        });
+        c.header('Cache-Control', 'private, no-store');
+        return c.html('<main><h1>No se pudo cargar el panel</h1><p>Tu inicio de sesión fue aceptado, pero falló la carga de los datos. Inténtalo más tarde.</p><a href="/admin">Reintentar</a></main>', 503);
       }
     });
 

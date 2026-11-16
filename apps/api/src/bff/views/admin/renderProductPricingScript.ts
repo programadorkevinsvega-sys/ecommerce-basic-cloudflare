@@ -37,19 +37,20 @@ export function renderProductPricingScript(): string {
         high *= 2;
       }
       while (low < high) { const mid = Math.floor((low + high) / 2); if (meets(mid)) high = mid; else low = mid + 1; }
-      window.setCopInputValue('pPrice', Math.ceil(low / 100));
-      const tax = Math.round(low * taxRate / (100 + taxRate));
-      const grossFee = fee(low);
+      const roundedPrice = Math.ceil(low / 100) * 100;
+      window.setCopInputValue('pPrice', roundedPrice / 100);
+      const tax = Math.round(roundedPrice * taxRate / (100 + taxRate));
+      const grossFee = fee(roundedPrice);
       const netFeeCost = grossFee;
-      const netProfit = low - tax - cost - netFeeCost;
-      const netSales = low - tax;
+      const netProfit = roundedPrice - tax - cost - netFeeCost;
+      const netSales = roundedPrice - tax;
       const actualMargin = netSales > 0 ? (netProfit / netSales * 100).toFixed(2) : '0,00';
       const pesos = (cents) => '$' + Math.round(cents / 100).toLocaleString('es-CO');
       const targetSummary = targetType === 'profit'
         ? '<div><dt>Ganancia neta objetivo</dt><dd>' + pesos(targetProfitCents) + '</dd></div>'
         : '<div><dt>Margen objetivo</dt><dd>' + (marginBps / 100).toFixed(2).replace('.', ',') + '%</dd></div>';
       breakdown.innerHTML = '<dl class="price-breakdown">' +
-        '<div><dt>Precio bruto del producto (IVA incluido)</dt><dd>' + pesos(low) + '</dd></div>' +
+        '<div><dt>Precio bruto del producto (IVA incluido)</dt><dd>' + pesos(roundedPrice) + '</dd></div>' +
         '<div><dt>IVA incluido estimado</dt><dd>' + pesos(tax) + '</dd></div>' +
         '<div><dt>Costo del proveedor</dt><dd>' + pesos(cost) + '</dd></div>' +
         (includeWompi ? '<div><dt>Costo Wompi estimado para el comercio</dt><dd>' + pesos(netFeeCost) + '</dd></div>' : '') +

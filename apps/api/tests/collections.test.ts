@@ -34,11 +34,22 @@ describe('Colecciones', () => {
   it('rechaza slug inválido, producto no publicado y slug duplicado', async () => {
     const state = setup('draft');
     const input = { name: 'Verano', slug: 'verano', description: '', productIds: ['product-1'], status: 'active' as const };
-    await expect(state.useCase.save(input)).rejects.toThrow('solo puede incluir productos publicados');
+    await expect(state.useCase.save(input)).rejects.toThrow('colección activa solo puede incluir productos publicados');
     const published = setup();
     await published.useCase.save({ ...input, productIds: [] });
     await expect(published.useCase.save({ ...input, productIds: [] })).rejects.toThrow('La dirección ya está en uso');
     expect(() => new Collection({ id: 'x', ...input, slug: 'Verano !', createdAt: 'now', updatedAt: 'now' })).toThrow('minúsculas');
+  });
+
+  it('permite editar una colección inactiva con productos en borrador, pero no activarla', async () => {
+    const state = setup('draft');
+    const input = { name:'iPhone', slug:'iphone', description:'', productIds:['product-iphone-16-pro'], status:'inactive' as const };
+    const collection = await state.useCase.save(input);
+    expect(collection.toPrimitives().productIds).toEqual(['product-iphone-16-pro']);
+    const updated = await state.useCase.save({ ...input, description:'Modelos iPhone' }, collection.toPrimitives().id);
+    expect(updated.toPrimitives().description).toBe('Modelos iPhone');
+    await expect(state.useCase.save({ ...input, status:'active' }, updated.toPrimitives().id))
+      .rejects.toThrow('La colección activa solo puede incluir productos publicados');
   });
 
   it('renderiza tarjetas escapadas con rutas propias y controles paginados', () => {
@@ -82,6 +93,34 @@ describe('Colecciones', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ data:[{ id:'p1', name:'Gafas', sku:'SUN-1' }] });
     expect(catalog.listProducts).toHaveBeenCalledWith({ limit:26, offset:0, status:'published', searchQuery:'SUN 1' });
+  });
+
+  it('acepta IDs sembrados de catálogo y el comodín de Superadmin para colecciones', async () => {
+    const identity = { validateSession: vi.fn().mockResolvedValue({
+      actorId:'superadmin-1', actorType:'admin', permissions:['*'], mfaEnabled:true,
+    }) };
+    const collection = {
+      id:'collection-iphone-models', name:'iPhone', slug:'modelos-iphone', description:'',
+      imageMediaId:undefined, productIds:['product-iphone-16-pro'], status:'inactive',
+    };
+    const catalog = {
+      getProductById: vi.fn().mockResolvedValue({ id:'product-iphone-16-pro', name:'iPhone 16 Pro', sku:'IPH-16-PRO', status:'draft' }),
+      getCollectionById: vi.fn().mockResolvedValue(collection),
+      saveCollection: vi.fn().mockResolvedValue(collection),
+    };
+    const app = CollectionAdminController.createRoutes(catalog as never, identity as never, { record:vi.fn() } as never);
+    const headers = { Cookie:'__Host-admin-session=admin-session' };
+
+    const products = await app.request('/admin/collection-products?ids=product-iphone-16-pro', { headers });
+    expect(products.status).toBe(200);
+    expect(await products.json()).toMatchObject({ data:[{ id:'product-iphone-16-pro', name:'iPhone 16 Pro', sku:'IPH-16-PRO' }] });
+
+    const update = await app.request('/admin/collections/collection-iphone-models', {
+      method:'PUT', headers:{ ...headers, 'Content-Type':'application/json' },
+      body:JSON.stringify({ productIds:['product-iphone-16-pro'] }),
+    });
+    expect(update.status).toBe(200);
+    expect(catalog.saveCollection).toHaveBeenCalledOnce();
   });
 
   it('incluye solo las colecciones públicas en el sitemap de páginas', async () => {

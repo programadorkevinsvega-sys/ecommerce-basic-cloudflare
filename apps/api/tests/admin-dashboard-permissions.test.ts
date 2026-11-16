@@ -47,4 +47,31 @@ describe('admin dashboard permissions', () => {
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('/admin/mfa-setup');
   });
+
+  it('reports dashboard loading failures instead of redirecting a valid admin to login', async () => {
+    const identity = {
+      validateSession: vi.fn().mockResolvedValue({
+        actorId: 'admin-1', actorType: 'admin', permissions: ['catalog:read'], mfaEnabled: true,
+      }),
+    } as unknown as IdentityGateway;
+    const catalog = {
+      listAdminProducts: vi.fn().mockRejectedValue(new Error('D1 failure detail')),
+      listCategories: vi.fn().mockResolvedValue([]), listBrands: vi.fn().mockResolvedValue([]),
+      listAttributes: vi.fn().mockResolvedValue([]), listSuppliers: vi.fn().mockResolvedValue([]),
+      listProductVariants: vi.fn().mockResolvedValue([]), listCollections: vi.fn().mockResolvedValue([]),
+      listProductTags: vi.fn().mockResolvedValue([]),
+    } as unknown as CatalogGateway;
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const response = await AdminUiController.createRoutes(identity, catalog, {} as SettingsGateway, {} as StorefrontGateway, {} as CmsGateway, {} as PromotionsGateway, {} as ShippingGateway)
+      .request('/', { headers: { cookie: '__Host-admin-session=valid' } });
+    const body = await response.text();
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get('location')).toBeNull();
+    expect(body).toContain('Tu inicio de sesión fue aceptado');
+    expect(body).not.toContain('D1 failure detail');
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('"resource":"catalog.products"'));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('"reason":"dashboard_load_failed"'));
+    log.mockRestore();
+  });
 });

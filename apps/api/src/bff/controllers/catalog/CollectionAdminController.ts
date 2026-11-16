@@ -6,7 +6,8 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
 
-const inputSchema = z.object({ name:z.string().trim().min(1).max(120),slug:z.string().trim().min(1).max(140).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),description:z.string().max(2000),imageMediaId:z.string().uuid().nullable().optional(),productIds:z.array(z.string().uuid()).max(100),status:z.enum(['active','inactive']),seoTitle:z.string().max(70).optional(),seoDescription:z.string().max(160).optional() }).strict();
+const catalogIdSchema = z.string().min(1).max(100).regex(/^[A-Za-z0-9_-]+$/);
+const inputSchema = z.object({ name:z.string().trim().min(1).max(120),slug:z.string().trim().min(1).max(140).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),description:z.string().max(2000),imageMediaId:z.string().uuid().nullable().optional(),productIds:z.array(catalogIdSchema).max(100),status:z.enum(['active','inactive']),seoTitle:z.string().max(70).optional(),seoDescription:z.string().max(160).optional() }).strict();
 
 export class CollectionAdminController {
   public static createRoutes(catalog:CatalogGateway,identity:IdentityGateway,audit:AuditGateway):Hono {
@@ -15,7 +16,7 @@ export class CollectionAdminController {
       const ids=(c.req.query('ids')||'').split(',').filter(Boolean);
       const query=c.req.query('q')?.trim()||'';
       const page=Number(c.req.query('page')||1),pageSize=25;
-      if(ids.length>100||ids.some((id)=>!z.string().uuid().safeParse(id).success)||query.length>120)return c.json({error:'Búsqueda inválida'},400);
+      if(ids.length>100||ids.some((id)=>!catalogIdSchema.safeParse(id).success)||query.length>120)return c.json({error:'Búsqueda inválida'},400);
       if(!Number.isSafeInteger(page)||page<1||page>1_000_000)return c.json({error:'Página inválida'},400);
       try {
         const searchQuery=query.split(/[^\p{L}\p{N}]+/u).filter(Boolean).join(' ');
@@ -23,7 +24,7 @@ export class CollectionAdminController {
           ? await Promise.all(ids.map((id)=>catalog.getProductById(id).catch(()=>null)))
           : await catalog.listProducts({limit:pageSize+1,offset:(page-1)*pageSize,status:'published',searchQuery:searchQuery||undefined});
         const hasMore=!ids.length&&rows.length>pageSize;
-        const data=(ids.length?rows:rows.slice(0,pageSize)).filter((row):row is CatalogProductDto=>row !== null && row.status==='published').map(({id,name,sku})=>({id,name,sku}));
+        const data=(ids.length?rows:rows.slice(0,pageSize)).filter((row):row is CatalogProductDto=>row !== null && (ids.length>0 || row.status==='published')).map(({id,name,sku})=>({id,name,sku}));
         return c.json({data,page,pageSize,hasMore});
       } catch { return c.json({error:'No fue posible buscar productos'},400); }
     });
