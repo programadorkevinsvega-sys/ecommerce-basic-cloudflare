@@ -32,5 +32,6 @@ export type SaveProductLandingConfigRequest = Omit<ProductLandingConfigDto, 'cre
 
 export interface ProductLandingGateway {
   getProductLandingConfig(productId: string): Promise<ProductLandingConfigDto | null>;
+  listIndexableProductLandings(): Promise<Array<{ slug: string; updatedAt: string }>>;
   saveProductLandingConfig(input: SaveProductLandingConfigRequest): Promise<ProductLandingConfigDto>;
 }

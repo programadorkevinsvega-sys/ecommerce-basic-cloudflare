@@ -2,15 +2,15 @@ import { CatalogProductDto } from '../gateways/catalog/CatalogGateway.js';
 import { ProductLandingConfigDto } from '../gateways/catalog/ProductLandingGateway.js';
 
 export function renderProductLandingHero(config: ProductLandingConfigDto, product: CatalogProductDto): string {
-  if (!config.enabled || config.templateKey === 'standard') return '';
-  const theme = config.templateKey === 'launch' ? 'launch' : 'conversion';
+  if (!config.enabled) return '';
+  const theme = config.templateKey === 'launch' ? 'launch' : config.templateKey;
   const headline = config.headline.trim() || product.name;
   const subtitle = config.subtitle.trim() || product.description;
   const imageId = product.mediaIds[0];
   const image = imageId
     ? `<img src="/media/${escapeHtml(imageId)}" alt="${escapeHtml(product.name)}" fetchpriority="high" />`
     : '<div class="product-landing-hero-placeholder" aria-hidden="true">Producto destacado</div>';
-  const benefits = config.sections.includes('benefits') && config.benefits.length
+  const benefits = config.templateKey !== 'standard' && config.sections.includes('benefits') && config.benefits.length
     ? `<ul class="product-landing-benefits">${config.benefits.map((benefit) => `<li><strong>${escapeHtml(benefit.title)}</strong><span>${escapeHtml(benefit.description)}</span></li>`).join('')}</ul>`
     : '';
   return `
@@ -20,7 +20,7 @@ export function renderProductLandingHero(config: ProductLandingConfigDto, produc
         <h1 id="product-landing-headline">${escapeHtml(headline)}</h1>
         <p class="product-landing-subtitle">${escapeHtml(subtitle)}</p>
         ${benefits}
-        <a class="product-landing-cta" href="#detail-purchase">${escapeHtml(config.ctaLabel || 'Comprar ahora')} <span aria-hidden="true">↓</span></a>
+        <a class="product-landing-cta" href="/productos/${encodeURIComponent(product.slug)}#detail-purchase">${escapeHtml(config.ctaLabel || 'Comprar ahora')} <span aria-hidden="true">↗</span></a>
       </div>
       <div class="product-landing-hero-media">${image}</div>
     </section>`;

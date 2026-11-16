@@ -40,6 +40,9 @@ export class OrdersController {
       const zone = await shippingGateway.getZone(destinationZoneId);
       const isDestinationCovered = !!zone && zone.isActive;
       const nationalCarrierAvailable = zone?.type === 'national' && await shippingGateway.getCarrierAvailability();
+      if (zone?.type === 'national' && !nationalCarrierAvailable) {
+        return c.json({ error: 'MiPaquete no está disponible para cotizar este destino en este momento.' }, 503);
+      }
       const zoneAllowsCod = !!zone && (zone.type === 'national' ? nationalCarrierAvailable : zone.allowsCashOnDelivery);
 
       const products = await catalogGateway.getProductsByIds([...new Set(items.map((item) => item.productId))]);

@@ -91,6 +91,9 @@ export function registerOrderCreationRoute(
     if (!zone?.isActive) return c.json({ error: 'Zona de envío no disponible' }, 400);
     const shippingAddress = normalizeShippingAddress(body.shippingAddress);
     const carrierEnabled = zone.type === 'national' && await deps.shipping.getCarrierAvailability();
+    if (zone.type === 'national' && !carrierEnabled) {
+      return c.json({ error: 'MiPaquete no está disponible para cotizar este destino en este momento.' }, 503);
+    }
     const carrierQuoteId = typeof body.carrierQuoteId === 'string' && body.carrierQuoteId.length <= 100
       ? body.carrierQuoteId : null;
     if (carrierEnabled && !carrierQuoteId) return c.json({ error: 'Selecciona una tarifa de transportadora vigente.' }, 409);

@@ -46,7 +46,7 @@ export function renderCheckoutPage(
   const rows = cart.items.map((item) => renderCheckoutItem(item, productsMap.get(item.productId), priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)), discounts.get(item.productId))).join('');
   const zoneOptions = zones.map((zone) => {
     const carrierManaged = zone.type === 'national';
-    const label = carrierManaged ? `${zone.name} · Cotizar con MiPaquete` : `Entrega local · ${zone.name} · ${zone.priceInCents === 0 ? 'Gratis' : formatPrice(zone.priceInCents)}`;
+    const label = carrierManaged ? `${zone.name} · Alternativa con MiPaquete` : `Entrega local · ${zone.name} · ${zone.priceInCents === 0 ? 'Gratis' : formatPrice(zone.priceInCents)}`;
     return `<option value="${escapeHtml(zone.id)}" data-type="${zone.type}" data-rate="${zone.priceInCents}" data-cod="${zone.allowsCashOnDelivery}" data-min-days="${zone.minEstimatedDays}" data-max-days="${zone.maxEstimatedDays}" data-locations="${escapeHtml(JSON.stringify(zone.locations))}">${escapeHtml(label)}</option>`;
   }).join('');
   return `<section class="checkout-page" aria-labelledby="checkout-title">
@@ -83,7 +83,7 @@ function renderContactFields(): string {
 
 function renderAddressFields(zoneOptions: string): string {
   return `<fieldset class="checkout-card"><legend><span>2.</span> Dirección de entrega</legend><div class="checkout-fields">
-    <div class="checkout-field checkout-field-full"><label for="dest-zone">Zona de envío *</label><select id="dest-zone" required><option value="">Selecciona tu zona o municipio</option>${zoneOptions}</select><div id="carrier-quote-options" class="checkout-carrier-quotes" hidden aria-live="polite"></div></div>
+    <div class="checkout-field checkout-field-full"><label for="dest-zone">Zona de envío *</label><select id="dest-zone" required><option value="">Selecciona tu zona o municipio</option>${zoneOptions}</select><small>Si tu ciudad tiene entrega local, también puedes seleccionar la opción nacional para consultar MiPaquete.</small><div id="carrier-quote-options" class="checkout-carrier-quotes" hidden aria-live="polite"></div></div>
     <div class="checkout-field"><label for="addr-dept">Departamento *</label><input id="addr-dept" type="text" autocomplete="address-level1" readonly required></div>
     <div class="checkout-field"><label for="addr-city">Ciudad o municipio *</label><input id="addr-city" type="text" autocomplete="off" required placeholder="Escribe tu municipio, por ejemplo Medellín"><div id="addr-city-suggestions" class="checkout-location-suggestions" role="listbox" aria-label="Municipios disponibles" hidden></div><input id="addr-dane-code" type="hidden"><input id="addr-municipality" type="hidden"><small id="addr-city-help" role="status" aria-live="polite">Selecciona primero tu zona y luego el municipio sugerido para verificar la cobertura.</small></div>
     <div class="checkout-field checkout-field-full"><label for="addr-line">Dirección *</label><input id="addr-line" type="text" autocomplete="street-address" required placeholder="Calle, carrera, edificio, apartamento"></div>

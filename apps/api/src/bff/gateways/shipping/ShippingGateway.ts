@@ -46,7 +46,7 @@ export interface CarrierIntegrationConfigDto {
   cashOnDeliveryPaymentType: 101 | 102 | null;
   requestPickup: boolean | null;
   selectionCriterion: 'price' | 'time' | 'score' | null;
-  packageProfiles: Array<{ id: string; name: string; innerWidthCm: number; innerLengthCm: number; innerHeightCm: number; outerWidthCm: number; outerLengthCm: number; outerHeightCm: number; tareWeightGrams: number; maxWeightGrams: number; isActive: boolean; createdAt: string; updatedAt: string }>;
+  packageProfiles: Array<{ id: string; name: string; innerWidthCm: number; innerLengthCm: number; innerHeightCm: number; outerWidthCm: number; outerLengthCm: number; outerHeightCm: number; tareWeightGrams: number; maxWeightGrams: number; singleUnitProductIds: string[]; isActive: boolean; createdAt: string; updatedAt: string }>;
   updatedAt: string;
 }
 
@@ -57,7 +57,10 @@ export interface FreeShippingRuleDto {
 export interface FreeShippingRuleInputDto extends Omit<FreeShippingRuleDto, 'id' | 'createdAt' | 'updatedAt'> {}
 
 export type CarrierPackageProfileDto = CarrierIntegrationConfigDto['packageProfiles'][number];
-export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' | 'isActive' | 'createdAt' | 'updatedAt'> & { isActive?: boolean };
+export type CarrierPackageProfileInputDto = Omit<CarrierPackageProfileDto, 'id' | 'isActive' | 'createdAt' | 'updatedAt' | 'singleUnitProductIds'> & {
+  singleUnitProductIds?: string[];
+  isActive?: boolean;
+};
 
 export interface CarrierShippingQuoteDto {
   id: string; deliveryCompanyName: string; shippingCostCents: number; providerQuoteId?: string; deliveryCompanyId?: string;

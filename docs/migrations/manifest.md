@@ -175,6 +175,8 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `shipping__0011_enable_medellin_local_cod.sql` | v11 | Producción (`ecommerce-vega-production`); local pendiente de verificación | Aplicada en producción el 2026-10-15 UTC; ledger confirmado | trabajo actual | Habilita contra entrega en la zona local activa `zone-medellin`; no cambia las zonas nacionales ni otras zonas locales. Lectura posterior confirmó `is_active=1` y `allows_cash_on_delivery=1`; antes estaba en `0`. |
 | `shipping__0013_remove_generic_starter_shipping_rules.sql` | v13 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; solo se retiraron reglas de envío gratis iniciales inactivas e intactas. No se crearon tarifas ni beneficios para iPhone. |
 | `shipping__0014_iphone_free_shipping_template.sql` | v14 | Local/CI y producción (`ecommerce-vega-production`, D1 `a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`) | 2026-11-16 | trabajo actual | ✅ Runner remoto; ledger confirmado. Plantilla de envío gratis dirigida a iPhone e inactiva. Bookmark Time Travel previo registrado en `catalog__0019`. |
+| `shipping__0015_package_profile_single_unit_products.sql` | v15 | Pendiente (local/CI y producción) | No aplicada | No aplica | Añade asociaciones JSON de productos a perfiles de caja para pedidos de una sola unidad; valor inicial `[]`, sin modificar perfiles ni cotizaciones existentes. |
+| `shipping__0015_package_profile_single_unit_products.sql` | v15 | Pendiente (local/CI y producción) | No aplicada | No aplica | Añade asociaciones JSON de productos a perfiles de caja para pedidos de una sola unidad; valor inicial `[]`, sin modificar perfiles ni cotizaciones existentes. |
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
@@ -193,6 +195,10 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 `shipping__0009_remove_implicit_free_shipping_rule.sql` elimina esa fila de configuración inicial, no reglas creadas por administradores. La lista queda vacía y ningún pedido recibe envío gratis hasta que el comercio cree una regla en Admin → Marketing → Envío gratis.
 
 `shipping__0010_disable_legacy_free_shipping_policy.sql` actualiza solo la configuración singleton obsoleta a `enabled=0`, `threshold_cents=0`. Aplicada en producción; consulta posterior confirmó el ledger, regla nueva vacía y la fila legacy desactivada en cero. Esto evita que un rollback a un Worker anterior reactive el valor de negocio que se retira. La tabla sigue disponible y no participa en la versión actual.
+
+`shipping__0015_package_profile_single_unit_products.sql` agrega `single_unit_product_ids_json` a `shipping_carrier_package_profiles` con `DEFAULT '[]'`. Los perfiles existentes no quedan asociados automáticamente; asociar productos desde Admin después de aplicar la migración. La aplicación está pendiente y no se ha aplicado en D1 local ni remota.
+
+`shipping__0015_package_profile_single_unit_products.sql` agrega `single_unit_product_ids_json` a `shipping_carrier_package_profiles` con `DEFAULT '[]'`. Los perfiles existentes no quedan asociados automáticamente; asociar productos desde Admin después de aplicar la migración. La aplicación está pendiente y no se ha aplicado en D1 local ni remota.
 El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7b55e7a54ef` (100%). `/health` respondió HTTP 200 y `shipping_carrier_config.enabled` continúa en `0`. No se hicieron llamadas a MiPaquete ni se generaron guías.
 
 ---

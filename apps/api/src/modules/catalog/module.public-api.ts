@@ -171,6 +171,10 @@ export class CatalogPublicApi implements ICatalogPublicApi {
     return this.container.getProductLandingConfigUseCase.execute(productId);
   }
 
+  public listIndexableProductLandings(): Promise<Array<{ slug: string; updatedAt: string }>> {
+    return this.container.listIndexableProductLandingsUseCase.execute();
+  }
+
   public async saveProductLandingConfig(input: SaveProductLandingConfigInput): Promise<ProductLandingConfig> {
     const result = await this.container.saveProductLandingConfigUseCase.execute(input);
     if (result.isFail()) throw result.error;

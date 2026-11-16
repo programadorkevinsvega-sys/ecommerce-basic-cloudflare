@@ -15,6 +15,9 @@ describe('editor administrativo de landing de producto', () => {
     expect(markup).toContain('value="benefits"');
     expect(markup).toContain('value="reviews"');
     expect(markup).toContain('data-close-product-landing');
+    expect(markup).toContain('Activar landing independiente');
+    expect(markup).toContain('id="plLandingPreview"');
+    expect(renderProductLandingEditorScript()).toContain("'/ofertas/' + encodeURIComponent(product.slug)");
   });
 
   it('guarda mediante el endpoint administrativo existente y no inserta HTML dinámico', () => {

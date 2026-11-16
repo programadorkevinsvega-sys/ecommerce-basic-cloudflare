@@ -19,6 +19,7 @@ import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationH
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
 import { getPageMarketingContent } from './StorefrontPageMarketing.js';
 import { ProductDetailController } from './ProductDetailController.js';
+import { ProductLandingController } from './ProductLandingController.js';
 import { buildStorefrontCatalogPageHref, parseStorefrontCatalogFilters } from './StorefrontCatalogQuery.js';
 
 export class StorefrontController {
@@ -157,7 +158,8 @@ export class StorefrontController {
       return c.html(html);
     });
 
-    router.route('/', ProductDetailController.createRoutes(catalogGateway, productLandingGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
+    router.route('/', ProductDetailController.createRoutes(catalogGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
+    router.route('/', ProductLandingController.createRoutes(catalogGateway, productLandingGateway, identityGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
     router.route('/', CustomerAuthPagesController.createRoutes(cmsGateway, settingsGateway));
     router.get('/auth/login', async (c) => {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);

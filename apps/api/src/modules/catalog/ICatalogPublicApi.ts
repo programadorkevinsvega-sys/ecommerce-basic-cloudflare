@@ -62,6 +62,7 @@ export interface ICatalogPublicApi {
   saveProductTag(input: SaveProductTagInput): Promise<ProductTag>;
   deleteProductTag(id: string): Promise<void>;
   getProductLandingConfig(productId: string): Promise<ProductLandingConfig | null>;
+  listIndexableProductLandings(): Promise<Array<{ slug: string; updatedAt: string }>>;
   saveProductLandingConfig(input: SaveProductLandingConfigInput): Promise<ProductLandingConfig>;
   previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
   migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;

@@ -16,14 +16,20 @@ export class ManageCarrierPackageProfilesUseCase {
     const profiles = await this.repository.listProfiles();
     if (profiles.length >= 20) throw new Error('Puedes registrar hasta 20 tipos de empaque.');
     const now = new Date().toISOString();
-    const profile = { ...validate(input), id: crypto.randomUUID(), isActive: input.isActive ?? true, createdAt: now, updatedAt: now };
+    const validated = validate(input);
+    const profile = { ...validated, singleUnitProductIds: validated.singleUnitProductIds ?? [],
+      id: crypto.randomUUID(), isActive: input.isActive ?? true, createdAt: now, updatedAt: now };
     await this.repository.createProfile(profile);
     return profile;
   }
 
   public async update(id: string, input: CarrierPackageProfileInput): Promise<CarrierPackageProfile> {
     const current = await this.get(id);
-    const updated = await this.repository.updateProfile(id, { ...validate(input), id, isActive: current.isActive }, new Date().toISOString());
+    const validated = validate(input);
+    const updated = await this.repository.updateProfile(id, {
+      ...validated, singleUnitProductIds: validated.singleUnitProductIds ?? current.singleUnitProductIds,
+      id, isActive: current.isActive,
+    }, new Date().toISOString());
     if (!updated) throw new Error('Tipo de empaque no encontrado');
     return updated;
   }
@@ -42,13 +48,17 @@ export class ManageCarrierPackageProfilesUseCase {
 }
 
 function validate(input: CarrierPackageProfileInput): CarrierPackageProfileInput {
+  const singleUnitProductIds = (input.singleUnitProductIds ?? []).map((id) => id.trim());
   const dimensions = [input.innerWidthCm, input.innerLengthCm, input.innerHeightCm,
     input.outerWidthCm, input.outerLengthCm, input.outerHeightCm];
   if (!input.name.trim() || input.name.trim().length > 100 || dimensions.some((value) => !Number.isSafeInteger(value) || value < 1 || value > 300) ||
       input.innerWidthCm > input.outerWidthCm || input.innerLengthCm > input.outerLengthCm || input.innerHeightCm > input.outerHeightCm ||
       !Number.isSafeInteger(input.tareWeightGrams) || input.tareWeightGrams < 0 ||
-      !Number.isSafeInteger(input.maxWeightGrams) || input.maxWeightGrams <= input.tareWeightGrams || input.maxWeightGrams > 1_000_000) {
+      !Number.isSafeInteger(input.maxWeightGrams) || input.maxWeightGrams <= input.tareWeightGrams || input.maxWeightGrams > 1_000_000 ||
+      singleUnitProductIds.length > 50 ||
+      new Set(singleUnitProductIds).size !== singleUnitProductIds.length ||
+      singleUnitProductIds.some((id) => !id || id.length > 100)) {
     throw new Error('Revisa nombre, dimensiones internas/externas y pesos del empaque.');
   }
-  return { ...input, name: input.name.trim() };
+  return { ...input, name: input.name.trim(), singleUnitProductIds };
 }

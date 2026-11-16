@@ -33,6 +33,7 @@ import { ManageProductTagsUseCase } from './application/use-cases/ManageProductT
 import { D1ProductLandingConfigRepository } from './infrastructure/persistence/d1/repositories/D1ProductLandingConfigRepository.js';
 import { GetProductLandingConfigUseCase } from './application/use-cases/GetProductLandingConfigUseCase.js';
 import { SaveProductLandingConfigUseCase } from './application/use-cases/SaveProductLandingConfigUseCase.js';
+import { ListIndexableProductLandingsUseCase } from './application/use-cases/ListIndexableProductLandingsUseCase.js';
 
 export interface CatalogModuleContainer {
   createProductUseCase: CreateProductUseCase;
@@ -59,6 +60,7 @@ export interface CatalogModuleContainer {
   manageCollectionUseCase: ManageCollectionUseCase;
   manageProductTagsUseCase: ManageProductTagsUseCase;
   getProductLandingConfigUseCase: GetProductLandingConfigUseCase;
+  listIndexableProductLandingsUseCase: ListIndexableProductLandingsUseCase;
   saveProductLandingConfigUseCase: SaveProductLandingConfigUseCase;
 }
 
@@ -98,6 +100,7 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     manageCollectionUseCase: new ManageCollectionUseCase(collectionRepo, productRepo),
     manageProductTagsUseCase: new ManageProductTagsUseCase(productTagRepo),
     getProductLandingConfigUseCase: new GetProductLandingConfigUseCase(productLandingConfigRepo),
+    listIndexableProductLandingsUseCase: new ListIndexableProductLandingsUseCase(productLandingConfigRepo),
     saveProductLandingConfigUseCase: new SaveProductLandingConfigUseCase(productRepo, productLandingConfigRepo),
   };
 }

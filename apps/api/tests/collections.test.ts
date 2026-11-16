@@ -125,10 +125,21 @@ describe('Colecciones', () => {
 
   it('incluye solo las colecciones públicas en el sitemap de páginas', async () => {
     const catalog = { listCollections: vi.fn().mockResolvedValue([{ slug: 'verano-2026' }]) };
-    const app = SeoController.createRoutes({} as never, catalog as never, {} as never);
+    const app = SeoController.createRoutes({} as never, catalog as never, { listIndexableProductLandings: vi.fn().mockResolvedValue([]) } as never, {} as never);
     const response = await app.request('/sitemap-pages.xml');
     expect(response.status).toBe(200);
     expect(await response.text()).toContain('/colecciones/verano-2026');
     expect(catalog.listCollections).toHaveBeenCalledWith({ limit: 1000, offset: 0 });
+  });
+
+  it('incluye las landings indexables en el sitemap de productos', async () => {
+    const catalog = { listProducts: vi.fn().mockResolvedValue([{ slug: 'iphone-16-pro', noindex: false, updatedAt: '2026-01-02' }]) };
+    const landing = { listIndexableProductLandings: vi.fn().mockResolvedValue([{ slug: 'iphone-16-pro', updatedAt: '2026-01-03' }]) };
+    const app = SeoController.createRoutes({} as never, catalog as never, landing as never, {} as never);
+    const response = await app.request('/sitemap-products.xml');
+    const sitemap = await response.text();
+    expect(response.status).toBe(200);
+    expect(sitemap).toContain('/productos/iphone-16-pro');
+    expect(sitemap).toContain('/ofertas/iphone-16-pro');
   });
 });
