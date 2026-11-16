@@ -105,8 +105,14 @@ export function renderInvoicingAdminScript(): string {
     }
 
     function renderInvoiceRow(invoice) {
-      const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF</a>' +
-        '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">Descargar</a>' +
+      const commercialView = _invoiceView === 'electronic' ? 'Ver comprobante comercial' : 'Ver PDF comercial';
+      const commercialDownload = _invoiceView === 'electronic' ? 'Descargar comprobante comercial' : 'Descargar PDF comercial';
+      const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">' + commercialView + '</a>' +
+        '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">' + commercialDownload + '</a>' +
+        (invoice.status === 'issued' && _invoiceView === 'electronic' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber
+          ? '<a class="invoice-action primary" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF electrónico DIAN</a>' +
+            '<a class="invoice-action" href="/api/v1/admin/invoices/' + encodeURIComponent(invoice.id) + '/electronic-document">Descargar PDF electrónico</a>'
+          : '') +
         (invoice.status === 'issued' && _invoiceView === 'electronic' && invoice.electronicStatus === 'accepted' && invoice.electronicNumber
           ? '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>'
           : '');

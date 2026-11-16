@@ -57,6 +57,10 @@ export class InvoicingPublicApi {
     return this.container.getInvoiceDocumentUseCase.execute(invoiceId);
   }
 
+  public downloadElectronicInvoicePdf(invoiceNumber: string) {
+    return this.container.electronicAdapter.downloadInvoicePdf(invoiceNumber);
+  }
+
   public async listInvoices(filters?: { customerId?: string; query?: string; limit?: number; offset?: number; electronicOnly?: boolean; electronicStatus?: string }): Promise<Invoice[]> {
     return this.container.listInvoicesUseCase.execute(filters);
   }

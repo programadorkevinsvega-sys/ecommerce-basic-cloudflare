@@ -21,6 +21,7 @@ El módulo `invoicing` genera una representación comercial interna, pero no tra
 - Cada producto podrá indicar si requiere facturación electrónica. El catálogo guarda la opción y el pedido congela su valor en cada línea; los productos históricos y el valor omitido quedan en `false` para preservar su comprobante comercial normal.
 - El carrito no puede mezclar productos con y sin facturación electrónica. La restricción se aplica al agregar productos, al fusionar carritos y de nuevo en el cálculo autoritativo del checkout. La factura interna y su envío por Resend siguen siendo el flujo para pedidos cuyos productos tienen la opción desactivada; solo pedidos con todos los productos habilitados generan el evento Factus.
 - El admin dispondrá de una entrada Facturación electrónica con filtros de estado del proceso Factus/DIAN. Esta vista opera sobre el listado paginado de facturas, filtrado en D1.
+- En la vista electrónica, el PDF DIAN se descarga desde Factus en el servidor solo para facturas aceptadas; el comprobante comercial interno permanece disponible como una acción separada y claramente etiquetada. El navegador nunca recibe credenciales de Factus.
 
 ## Recuperación y operación
 

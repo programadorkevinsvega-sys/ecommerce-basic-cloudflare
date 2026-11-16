@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { FactusNumberingRangeManager } from '../src/modules/invoicing/infrastructure/adapters/FactusNumberingRangeManager.js';
 import { parseFactusNumberingRangePage } from '../src/modules/invoicing/infrastructure/adapters/parseFactusNumberingRangePage.js';
 
 const range = {
@@ -25,5 +26,27 @@ describe('parseFactusNumberingRangePage', () => {
     });
 
     expect(result.data).toEqual([range]);
+  });
+
+  it('accepts an empty document range page reported with zero pages', () => {
+    const result = parseFactusNumberingRangePage({
+      data: [], pagination: { current_page: 1, last_page: 0 },
+    });
+
+    expect(result.data).toEqual([]);
+    expect(result.pagination?.last_page).toBe(0);
+  });
+
+  it('keeps available invoice ranges when the other document type has no ranges', async () => {
+    const manager = new FactusNumberingRangeManager(async (path) => {
+      const document = new URLSearchParams(path.split('?')[1]).get('filter[document]');
+      return document === '21'
+        ? { data: { data: [range], pagination: { current_page: 1, last_page: 1 } } }
+        : { data: [], pagination: { current_page: 1, last_page: 0 } };
+    }, async () => {});
+
+    await expect(manager.list()).resolves.toMatchObject([
+      { id: '12', documentCode: '21', prefix: 'TEST' },
+    ]);
   });
 });
