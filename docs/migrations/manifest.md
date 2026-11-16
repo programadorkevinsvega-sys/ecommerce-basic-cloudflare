@@ -175,8 +175,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `shipping__0011_enable_medellin_local_cod.sql` | v11 | Producción (`ecommerce-vega-production`); local pendiente de verificación | Aplicada en producción el 2026-10-15 UTC; ledger confirmado | trabajo actual | Habilita contra entrega en la zona local activa `zone-medellin`; no cambia las zonas nacionales ni otras zonas locales. Lectura posterior confirmó `is_active=1` y `allows_cash_on_delivery=1`; antes estaba en `0`. |
 | `shipping__0013_remove_generic_starter_shipping_rules.sql` | v13 | Local/CI y producción (`ecommerce-vega-production`) | 2026-11-16 | trabajo actual | ✅ Aplicada con runner remoto; solo se retiraron reglas de envío gratis iniciales inactivas e intactas. No se crearon tarifas ni beneficios para iPhone. |
 | `shipping__0014_iphone_free_shipping_template.sql` | v14 | Local/CI y producción (`ecommerce-vega-production`, D1 `a92eda84-2320-4bb1-99ed-c3c01f8c7c1b`) | 2026-11-16 | trabajo actual | ✅ Runner remoto; ledger confirmado. Plantilla de envío gratis dirigida a iPhone e inactiva. Bookmark Time Travel previo registrado en `catalog__0019`. |
-| `shipping__0015_package_profile_single_unit_products.sql` | v15 | Pendiente (local/CI y producción) | No aplicada | No aplica | Añade asociaciones JSON de productos a perfiles de caja para pedidos de una sola unidad; valor inicial `[]`, sin modificar perfiles ni cotizaciones existentes. |
-| `shipping__0015_package_profile_single_unit_products.sql` | v15 | Pendiente (local/CI y producción) | No aplicada | No aplica | Añade asociaciones JSON de productos a perfiles de caja para pedidos de una sola unidad; valor inicial `[]`, sin modificar perfiles ni cotizaciones existentes. |
+| `shipping__0015_package_profile_single_unit_products.sql` | v15 | Local/CI y producción (`ecommerce-vega-production`) | Aplicada en producción el 2026-11-16 | `6bfa12a` | ✅ Runner remoto y ledger verificados; columna y cinco perfiles existentes consultados. Asociaciones inicializadas en `[]`; no se asignaron productos ni se llamaron servicios de MiPaquete. |
 
 | Archivo | Versión | Entorno | Fecha de Aplicación | Commit | Estado |
 |---|---|---|---|---|---|
@@ -196,9 +195,7 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 
 `shipping__0010_disable_legacy_free_shipping_policy.sql` actualiza solo la configuración singleton obsoleta a `enabled=0`, `threshold_cents=0`. Aplicada en producción; consulta posterior confirmó el ledger, regla nueva vacía y la fila legacy desactivada en cero. Esto evita que un rollback a un Worker anterior reactive el valor de negocio que se retira. La tabla sigue disponible y no participa en la versión actual.
 
-`shipping__0015_package_profile_single_unit_products.sql` agrega `single_unit_product_ids_json` a `shipping_carrier_package_profiles` con `DEFAULT '[]'`. Los perfiles existentes no quedan asociados automáticamente; asociar productos desde Admin después de aplicar la migración. La aplicación está pendiente y no se ha aplicado en D1 local ni remota.
-
-`shipping__0015_package_profile_single_unit_products.sql` agrega `single_unit_product_ids_json` a `shipping_carrier_package_profiles` con `DEFAULT '[]'`. Los perfiles existentes no quedan asociados automáticamente; asociar productos desde Admin después de aplicar la migración. La aplicación está pendiente y no se ha aplicado en D1 local ni remota.
+`shipping__0015_package_profile_single_unit_products.sql` agrega `single_unit_product_ids_json` a `shipping_carrier_package_profiles` con `DEFAULT '[]'`. Aplicada en producción el 2026-11-16; el ledger y la columna se verificaron. Los perfiles existentes se conservan, pero no quedan asociados automáticamente: selecciona los productos desde Admin para activar su uso en pedidos unitarios.
 El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7b55e7a54ef` (100%). `/health` respondió HTTP 200 y `shipping_carrier_config.enabled` continúa en `0`. No se hicieron llamadas a MiPaquete ni se generaron guías.
 
 ---
@@ -286,7 +283,7 @@ En la D1 de producción `ecommerce-vega-production` (`bfb3ba3f-5e2a-4c33-9b93-0a
 | `invoicing__0002_tax_included.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-13 | trabajo actual | ✅ Aplicada y verificada; facturas previas conservan `tax_included=0` |
 | `invoicing__0003_factus_electronic_invoices.sql` | v3 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y campos de estado Factus confirmados en D1. |
 | `invoicing__0004_event_pipeline_reliability.sql` | v4 | Local (Workers/D1) | 2026-11-07 | trabajo actual | ✅ Migración aditiva para lease/token del relay y recibos persistentes de consumer; verificada por pruebas Workers locales. Staging y producción pendientes; no aplicar sin backup y autorización operativa. |
-| `invoicing__0005_invoice_search_indexes.sql` | v5 | Local (Workers/D1) | 2026-11-16 | trabajo actual | Índices para búsqueda por prefijo de nombre/correo, total exacto y suma eficiente de notas crédito. Migración y planes de consulta verificados en pruebas Workers locales. Staging/producción pendientes; expansión aditiva, conservar índices al hacer rollback. |
+| `invoicing__0005_invoice_search_indexes.sql` | v5 | Local/CI y producción (`ecommerce-vega-production`) | Aplicada en producción el 2026-11-16 | `9dcbe39` | ✅ Runner remoto y ledger verificados; los índices de búsqueda por cliente/total y acumulado de notas crédito se confirmaron con `PRAGMA index_list`. Expansión aditiva; conservar índices al hacer rollback. |
 
 ---
 
