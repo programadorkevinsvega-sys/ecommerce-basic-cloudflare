@@ -85,7 +85,7 @@ function resolveRateLimitBinding(
       fallback_binding_name: 'API_WRITE_LIMITER',
       scope,
     });
-    captureSentryException(new Error('Rate-limit binding fallback selected'), {
+    captureRateLimitException(c, new Error('Rate-limit binding fallback selected'), {
       area: 'rate_limit',
       reason: 'rate_limit_binding_fallback',
       dependency: bindingName,
@@ -111,7 +111,7 @@ async function applyLimit(
     new JsonLogger('rate-limit', traceContext).error('Rate limit dependency unavailable', error, {
       failure_reason: 'rate_limit_binding_missing', binding_name: bindingName, scope,
     });
-    captureSentryException(error, {
+    captureRateLimitException(c, error, {
       area: 'rate_limit', reason: 'rate_limit_binding_missing', dependency: bindingName,
       traceId: traceContext?.traceId, requestId: traceContext?.requestId,
     });
@@ -127,7 +127,7 @@ async function applyLimit(
     new JsonLogger('rate-limit', traceContext).error('Rate limit dependency unavailable', error, {
       failure_reason: 'rate_limit_binding_error', binding_name: bindingName, scope,
     });
-    captureSentryException(error, {
+    captureRateLimitException(c, error, {
       area: 'rate_limit', reason: 'rate_limit_binding_error', dependency: bindingName,
       traceId: traceContext?.traceId, requestId: traceContext?.requestId,
     });
@@ -139,4 +139,20 @@ async function applyLimit(
   }
   if (!outcome.success) return c.json({ error: 'Demasiadas solicitudes; inténtalo más tarde' }, 429, { 'Retry-After': '60' });
   return null;
+}
+
+function captureRateLimitException(
+  c: Context<{ Bindings: Env }>,
+  error: unknown,
+  context: Parameters<typeof captureSentryException>[1],
+): void {
+  try {
+    captureSentryException(error, context);
+  } catch (captureError) {
+    new JsonLogger('rate-limit', c.get('traceContext')).error(
+      'Sentry could not capture rate limit diagnostic',
+      captureError,
+      { failure_reason: 'rate_limit_telemetry_failed', dependency: context.dependency },
+    );
+  }
 }
