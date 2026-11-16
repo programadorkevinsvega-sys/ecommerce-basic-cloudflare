@@ -50,4 +50,22 @@ describe('admin dashboard presentation', () => {
   it('renders valid collection picker and image-upload browser code', () => {
     expect(() => new Function(renderCollectionFormScript())).not.toThrow();
   });
+
+  it('renders syntactically valid inline scripts across the admin dashboard', () => {
+    const html = renderAdminDashboardPage(props);
+    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+      .filter((match) => {
+        const attributes = match[1];
+        return attributes !== undefined && !/\bsrc\s*=|\btype\s*=\s*["']application\/json["']/i.test(attributes);
+      });
+    scripts.forEach((match, index) => {
+      const source = match[2];
+      if (source === undefined) throw new Error(`Inline admin script ${index + 1} has no source.`);
+      try {
+        new Function(source);
+      } catch (error) {
+        throw new Error(`Inline admin script ${index + 1} is invalid (${source.length} chars): ${String(error)}; starts ${JSON.stringify(source.slice(0, 160))}`);
+      }
+    });
+  });
 });

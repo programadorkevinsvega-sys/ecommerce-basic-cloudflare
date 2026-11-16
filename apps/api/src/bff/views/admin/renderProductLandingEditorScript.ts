@@ -14,10 +14,10 @@ export function renderProductLandingEditorScript(): string {
         msg.className = kind;
       }
       function encodeRows(values, first, second) {
-        return (values || []).map((item) => item[first] + ' | ' + item[second]).join('\n');
+        return (values || []).map((item) => item[first] + ' | ' + item[second]).join('\\n');
       }
       function decodeRows(id, first, second, max) {
-        const lines = field(id).value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+        const lines = field(id).value.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean);
         if (lines.length > max) throw new Error('Admite máximo ' + max + ' filas en ' + (id === 'plBenefits' ? 'beneficios.' : 'preguntas frecuentes.'));
         return lines.map((line, index) => {
           const separator = line.indexOf('|');

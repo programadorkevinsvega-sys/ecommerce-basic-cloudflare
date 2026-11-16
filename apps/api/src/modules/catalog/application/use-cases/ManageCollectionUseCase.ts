@@ -31,9 +31,11 @@ export class ManageCollectionUseCase {
     const duplicate = await this.collections.findBySlug(input.slug);
     if (duplicate && duplicate.toPrimitives().id !== id) throw new Error('La dirección ya está en uso');
     const productIds = [...new Set(input.productIds)];
-    for (const productId of productIds) {
-      const product = await this.products.findById(productId);
-      if (!product || product.toPrimitives().status !== 'published') throw new Error('La colección solo puede incluir productos publicados');
+    if (input.status === 'active') {
+      for (const productId of productIds) {
+        const product = await this.products.findById(productId);
+        if (!product || product.toPrimitives().status !== 'published') throw new Error('La colección activa solo puede incluir productos publicados');
+      }
     }
     const current = id ? await this.collections.findById(id) : null;
     if (id && !current) throw new CollectionNotFoundError();

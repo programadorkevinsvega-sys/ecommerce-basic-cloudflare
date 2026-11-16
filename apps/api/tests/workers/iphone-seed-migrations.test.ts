@@ -65,6 +65,38 @@ describe('iPhone starter data migrations', () => {
     expect(categoryProducts.results).toHaveLength(10);
   });
 
+  it('seeds iPhone attributes and non-sellable variant placeholders', async () => {
+    const attributes = await env.DB.prepare(
+      `SELECT code,type,status FROM catalog_attributes WHERE id LIKE 'attribute-iphone-%' ORDER BY code`,
+    ).all<{ code: string; type: string; status: string }>();
+    expect(attributes.results).toHaveLength(3);
+    expect(attributes.results.map(({ code }) => code)).toEqual(['iphone_color', 'iphone_model', 'iphone_storage']);
+    expect(attributes.results.every(({ status }) => status === 'active')).toBe(true);
+
+    const variants = await env.DB.prepare(
+      `SELECT product_id,price_in_cents,stock_quantity,status FROM catalog_product_variants
+       WHERE id LIKE 'variant-iphone-%'`,
+    ).all<{ product_id: string; price_in_cents: number | null; stock_quantity: number; status: string }>();
+    expect(variants.results).toHaveLength(10);
+    expect(variants.results.every((variant) => variant.price_in_cents === null
+      && variant.stock_quantity === 0 && variant.status === 'inactive')).toBe(true);
+  });
+
+  it('seeds iPhone promotion, coupon and shipping templates inactive', async () => {
+    const promotion = await env.DB.prepare(
+      `SELECT target_type,target_id,is_active FROM promotions_rules WHERE id = 'promotion-iphone-template'`,
+    ).first<{ target_type: string; target_id: string; is_active: number }>();
+    const coupon = await env.DB.prepare(
+      `SELECT target_type,target_id,is_active FROM promotions_coupons WHERE id = 'coupon-iphone-template'`,
+    ).first<{ target_type: string; target_id: string; is_active: number }>();
+    const shipping = await env.DB.prepare(
+      `SELECT target_type,target_id,is_active FROM shipping_free_shipping_rules WHERE id = 'free-shipping-iphone-template'`,
+    ).first<{ target_type: string; target_id: string; is_active: number }>();
+    for (const offer of [promotion, coupon, shipping]) {
+      expect(offer).toMatchObject({ target_type: 'category', target_id: 'category-iphone', is_active: 0 });
+    }
+  });
+
   it('removes unchanged non-technology starter content without deleting active offers', async () => {
     const oldProducts = await env.DB.prepare(
       `SELECT id FROM catalog_products

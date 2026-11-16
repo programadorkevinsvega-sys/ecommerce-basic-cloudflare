@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderProductFormCard } from '../src/bff/views/admin/renderProductFormCard.js';
 import { renderProductPricingScript } from '../src/bff/views/admin/renderProductPricingScript.js';
+import { calculateRecommendedPrice } from '../src/modules/catalog/domain/services/CalculateRecommendedPrice.js';
 
 describe('desglose del precio recomendado en administración', () => {
   it('distingue el precio bruto, el IVA, el costo, la ganancia y el margen', () => {
@@ -69,5 +70,45 @@ describe('desglose del precio recomendado en administración', () => {
 
     expect(Number(target.value.replace(/\D/g, ''))).toBeGreaterThan(60_000);
     expect(element('pPriceBreakdown').innerHTML).toContain('Ganancia neta objetivo</dt><dd>$20.000</dd>');
+  });
+
+  it('desglosa sobre el precio redondeado igual que el cálculo del servidor', () => {
+    const elements = new Map<string, { value: string; checked?: boolean; required?: boolean; style?: { display: string }; textContent?: string; innerHTML?: string; addEventListener?: () => void }>();
+    const element = (id: string) => {
+      if (!elements.has(id)) elements.set(id, { value: '', style: { display: '' }, addEventListener: () => undefined });
+      return elements.get(id)!;
+    };
+    const supplierCostCents = 1_247_400;
+    const transactionShippingCents = 900_000;
+    element('pCost').value = '12.474';
+    element('pMargin').value = '20';
+    element('pPayWompi').checked = true;
+    element('productTaxRate').value = '19';
+    element('transactionShippingCents').value = String(transactionShippingCents);
+    const target = element('pPrice');
+    const windowStub = {
+      currentProductMediaIds: [],
+      setCopInputValue: (_id: string, value: string) => { target.value = value; },
+      copPesosToCents: () => supplierCostCents,
+    };
+    const documentStub = { getElementById: (id: string) => element(id) };
+    new Function('window', 'document', renderProductPricingScript())(windowStub, documentStub);
+    (windowStub as unknown as { updateRecommendedProductPrice: () => void }).updateRecommendedProductPrice();
+
+    const expected = calculateRecommendedPrice({
+      supplierCostCents,
+      targetMarginBasisPoints: 2000,
+      taxRateBasisPoints: 1900,
+      includeWompi: true,
+      transactionShippingCents,
+    });
+    const pesos = (cents: number) => '$' + Math.round(cents / 100).toLocaleString('es-CO');
+    const breakdown = element('pPriceBreakdown').innerHTML!;
+
+    expect(Number(target.value)).toBe(expected.priceInCents / 100);
+    expect(breakdown).toContain(`<dd>${pesos(expected.priceInCents)}</dd>`);
+    expect(breakdown).toContain(`<dd>${pesos(expected.estimatedTaxCents)}</dd>`);
+    expect(breakdown).toContain(`<dd>${pesos(expected.estimatedPaymentFeeCents)}</dd>`);
+    expect(breakdown).toContain(`<dd>${pesos(expected.estimatedNetProfitCents)}</dd>`);
   });
 });
