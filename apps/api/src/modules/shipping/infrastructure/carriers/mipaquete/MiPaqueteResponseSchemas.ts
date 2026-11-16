@@ -16,7 +16,7 @@ export const MiPaqueteQuoteSchema = z.array(z.object({
   collectionCommissionWithRate: CarrierAmount.nullable().optional(),
   collectionCommissionWithOutRate: CarrierAmount.nullable().optional(),
   shippingTime: CarrierAmount,
-}).passthrough()).max(50);
+}).loose()).max(50);
 
 export const MiPaqueteCreateSchema = z.object({
   code: z.union([z.string(), z.number()]).optional(),
@@ -25,8 +25,8 @@ export const MiPaqueteCreateSchema = z.object({
   guideNumber: z.union([z.string(), z.number()]).optional(),
   pdfGuide: z.array(HttpsUrl).max(5).optional(),
   pickupCode: z.union([z.string(), z.number()]).optional(),
-  tracking: z.array(z.object({ updateState: Text, date: z.string().optional() }).passthrough()).max(100).optional(),
-}).passthrough();
+  tracking: z.array(z.object({ updateState: Text, date: z.string().optional() }).loose()).max(100).optional(),
+}).loose();
 
 export const MiPaqueteSendingsSchema = z.object({
   totalItems: z.number().int().nonnegative().optional(),
@@ -39,10 +39,10 @@ export const MiPaqueteSendingsSchema = z.object({
     'Estado actual del envío': z.string().optional(),
     'Observaciones del envío': z.string().optional(),
     'Número de Recolección': z.union([z.string(), z.number()]).optional(),
-    tracking: z.array(z.object({ updateState: z.string(), date: z.string().optional() }).passthrough()).optional(),
+    tracking: z.array(z.object({ updateState: z.string(), date: z.string().optional() }).loose()).optional(),
     pdfGuide: z.array(HttpsUrl).optional(),
-  }).passthrough()).max(100),
-}).passthrough();
+  }).loose()).max(100),
+}).loose();
 
 export const MiPaqueteLocationsSchema = z.array(z.object({
   locationName: Text,

@@ -14,21 +14,21 @@ const numberingRangeSchema = z.object({
   is_expired: z.union([z.boolean(), z.number().int()]).optional(),
   is_active: z.union([z.boolean(), z.number().int()]).optional(),
   deleted_at: z.string().nullable().optional(),
-}).passthrough();
+}).loose();
 
 const paginationSchema = z.object({
   last_page: z.coerce.number().int().min(1).max(20),
-}).passthrough();
+}).loose();
 
 const pageSchema = z.object({
   data: z.array(numberingRangeSchema),
   pagination: paginationSchema.optional(),
-}).passthrough();
+}).loose();
 
 const responseSchema = z.object({
   data: z.union([z.array(numberingRangeSchema), pageSchema]),
   pagination: paginationSchema.optional(),
-}).passthrough();
+}).loose();
 
 export function parseFactusNumberingRangePage(input: unknown) {
   const parsed = responseSchema.safeParse(input);
@@ -38,7 +38,7 @@ export function parseFactusNumberingRangePage(input: unknown) {
 }
 
 export function parseFactusNumberingRange(input: unknown) {
-  const parsed = z.object({ data: numberingRangeSchema }).passthrough().safeParse(input);
+  const parsed = z.object({ data: numberingRangeSchema }).loose().safeParse(input);
   if (!parsed.success) throw new Error('FACTUS_NUMBERING_RANGE_INVALID_RESPONSE');
   return parsed.data.data;
 }
