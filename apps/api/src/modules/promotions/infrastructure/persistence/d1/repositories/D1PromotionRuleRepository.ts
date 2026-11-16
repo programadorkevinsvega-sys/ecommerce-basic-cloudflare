@@ -60,7 +60,7 @@ export class D1PromotionRuleRepository implements IPromotionRuleRepository {
   public async list(activeOnly = false, limit?: number, offset = 0): Promise<PromotionRule[]> {
     let query = 'SELECT * FROM promotions_rules';
     if (activeOnly) {
-      query += " WHERE is_active = 1 AND datetime('now') BETWEEN starts_at AND ends_at";
+      query += " WHERE is_active = 1 AND julianday('now') BETWEEN julianday(starts_at) AND julianday(ends_at)";
     }
     query += ' ORDER BY priority DESC, created_at DESC, id DESC';
     const statement = limit === undefined ? this.db.prepare(query) : this.db.prepare(query + ' LIMIT ? OFFSET ?').bind(limit, offset);
@@ -69,7 +69,7 @@ export class D1PromotionRuleRepository implements IPromotionRuleRepository {
   }
 
   public async count(activeOnly = false): Promise<number> {
-    const where = activeOnly ? " WHERE is_active = 1 AND datetime('now') BETWEEN starts_at AND ends_at" : '';
+    const where = activeOnly ? " WHERE is_active = 1 AND julianday('now') BETWEEN julianday(starts_at) AND julianday(ends_at)" : '';
     const row = await this.db.prepare(`SELECT COUNT(*) AS total FROM promotions_rules${where}`).first<{ total: number }>();
     return Number(row?.total || 0);
   }
