@@ -104,9 +104,55 @@ export class D1InvoiceRepository implements IInvoiceRepository {
         invoice.electronicErrors ? JSON.stringify(invoice.electronicErrors) : null, invoice.updatedAt, invoice.id).run();
   }
 
+  public async claimElectronicEmail(invoiceId: string, updatedAt: string): Promise<boolean> {
+    const result = await this.db.prepare(`UPDATE invoicing_invoices SET
+      electronic_errors_json = json_set(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch', 'sending'),
+      updated_at = ?
+      WHERE id = ? AND electronic_status = 'accepted' AND electronic_email_sent = 0
+      AND json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') IS NULL`)
+      .bind(updatedAt, invoiceId).run();
+    return Number(result.meta.changes) > 0;
+  }
+  public async markElectronicEmailUncertain(invoiceId: string, updatedAt: string): Promise<void> {
+    const result = await this.db.prepare(`UPDATE invoicing_invoices SET
+      electronic_errors_json = json_set(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch', 'uncertain'),
+      updated_at = ? WHERE id = ? AND electronic_email_sent = 0
+      AND json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') = 'sending'`)
+      .bind(updatedAt, invoiceId).run();
+    if (Number(result.meta.changes) !== 1) throw new Error('INVOICING_EMAIL_UNCERTAIN_MARK_FAILED');
+  }
+  public async completeElectronicEmail(invoiceId: string, updatedAt: string): Promise<void> {
+    const result = await this.db.prepare(`UPDATE invoicing_invoices SET electronic_email_sent = 1,
+      electronic_errors_json = json_remove(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch'),
+      updated_at = ? WHERE id = ? AND electronic_email_sent = 0
+      AND json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') = 'sending'`)
+      .bind(updatedAt, invoiceId).run();
+    if (Number(result.meta.changes) !== 1) throw new Error('INVOICING_EMAIL_COMPLETION_FAILED');
+  }
+  public async resetElectronicEmailAttempt(invoiceId: string, updatedAt: string): Promise<boolean> {
+    const staleBefore = new Date(Date.parse(updatedAt) - 5 * 60 * 1000).toISOString();
+    const result = await this.db.prepare(`UPDATE invoicing_invoices SET
+      electronic_errors_json = json_remove(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch'),
+      updated_at = ? WHERE id = ? AND electronic_status = 'accepted' AND electronic_email_sent = 0
+      AND (json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') = 'uncertain'
+        OR (json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') = 'sending'
+          AND updated_at <= ?))`)
+      .bind(updatedAt, invoiceId, staleBefore).run();
+    return Number(result.meta.changes) > 0;
+  }
+
   public async listPendingElectronic(limit: number): Promise<Invoice[]> {
     const { results } = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE electronic_eligible = 1
       AND electronic_status IN ('pending', 'not_configured') ORDER BY updated_at ASC LIMIT ?`)
+      .bind(Math.max(1, Math.min(limit, 50))).all<Record<string, unknown>>();
+    return (results || []).map(mapD1Invoice);
+  }
+
+  public async listAcceptedEmailPending(limit: number): Promise<Invoice[]> {
+    const { results } = await this.db.prepare(`SELECT * FROM invoicing_invoices WHERE electronic_eligible = 1
+      AND electronic_status = 'accepted' AND electronic_email_sent = 0
+      AND json_extract(COALESCE(electronic_errors_json, '{}'), '$.emailDispatch') IS NULL
+      ORDER BY updated_at ASC LIMIT ?`)
       .bind(Math.max(1, Math.min(limit, 50))).all<Record<string, unknown>>();
     return (results || []).map(mapD1Invoice);
   }

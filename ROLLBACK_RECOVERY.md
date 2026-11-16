@@ -256,6 +256,8 @@ La migración `invoicing__0004_event_pipeline_reliability.sql` es expand-only. L
 
 La garantía es at-least-once, no exactly-once. Si Queue acepta el mensaje y el estado outbox no se confirma, el relay puede reenviar el mismo `eventId`; la deduplicación del consumidor lo hace seguro para entregas completadas. Factus consulta por referencia estable antes de someter factura/nota, para reconciliar una respuesta ambigua. El efecto externo no forma una transacción con D1, por lo que toda recuperación debe confirmar el estado del documento en Factus antes de reprocesar un caso ambiguo. No hacer replay manual de una DLQ sin revisar `eventId`, estado del recibo y referencia Factus.
 
+En sandbox, el envío de factura al comprador se solicita a Factus únicamente tras la aceptación DIAN y se registra con una marca persistida antes del POST. Si la respuesta se pierde, el Worker no repite automáticamente el envío: verificar el historial de Factus antes de usar la acción administrativa de reenvío. La confirmación HTTP de Factus no demuestra llegada a la bandeja de entrada; verificar el buzón destinatario cuando se pruebe el sandbox.
+
 El inventario actual del resto de tablas outbox está en [`docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md`](./docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md). Los relays de settings y wishlist están deshabilitados; wishlist dejó de emitir eventos nuevos sin consumer. El conteo remoto de DLQ, dashboards, alertas y un ensayo real de replay todavía no se han verificado; el estado operativo de Queues/DLQ sigue **PENDIENTE**.
 
 ## Workers Cache y KV

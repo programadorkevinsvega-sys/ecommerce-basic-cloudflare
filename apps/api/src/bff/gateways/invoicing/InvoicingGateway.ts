@@ -21,6 +21,7 @@ export interface InvoicingGateway {
   restoreElectronicNumberingRange(id: string): Promise<void>;
   issueInvoice(cmd: IssueInvoiceCommand): Promise<Invoice>;
   processElectronicInvoice(invoiceId: string): Promise<void>;
+  sendElectronicInvoiceEmail(invoiceId: string): Promise<'sent' | 'uncertain' | 'busy' | 'already_sent'>;
   processQueueEvent(event: InvoicingQueueEvent): Promise<'processed' | 'duplicate' | 'busy'>;
   reconcileElectronicInvoices(limit?: number): Promise<number>;
   processElectronicCreditNote(creditNoteId: string): Promise<void>;

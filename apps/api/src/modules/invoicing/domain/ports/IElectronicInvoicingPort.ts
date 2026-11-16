@@ -53,6 +53,8 @@ export interface IElectronicInvoicingPort {
   restoreNumberingRange(id: string): Promise<void>;
   submitToTaxAuthority(invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult>;
   findByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null>;
+  requiresExplicitInvoiceEmail(): boolean;
+  sendInvoiceEmail(invoiceNumber: string, email: string): Promise<void>;
   downloadInvoicePdf(invoiceNumber: string): Promise<ElectronicInvoicePdf>;
   submitCreditNote(note: CreditNote, invoice: Invoice): Promise<ElectronicInvoiceSubmissionResult>;
   findCreditNoteByReference(referenceCode: string): Promise<ElectronicInvoiceSubmissionResult | null>;

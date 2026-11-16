@@ -1,5 +1,6 @@
 import { IInvoiceRepository } from '../../domain/ports/IInvoiceRepository.js';
 import { IElectronicInvoicingPort } from '../../domain/ports/IElectronicInvoicingPort.js';
+import { Invoice } from '../../domain/entities/Invoice.js';
 
 export class ProcessElectronicInvoiceUseCase {
   constructor(private readonly invoices: IInvoiceRepository, private readonly provider: IElectronicInvoicingPort) {}
@@ -7,7 +8,12 @@ export class ProcessElectronicInvoiceUseCase {
   public async execute(invoiceId: string): Promise<void> {
     const invoice = await this.invoices.findById(invoiceId);
     if (!invoice) throw new Error('INVOICING_INVOICE_NOT_FOUND');
-    if (invoice.electronicStatus === 'accepted' || invoice.electronicStatus === 'rejected') return;
+    if (invoice.electronicStatus === 'rejected' || invoice.electronicEmailSent) return;
+    if (invoice.electronicStatus === 'accepted') {
+      if (!this.provider.requiresExplicitInvoiceEmail()) return;
+      if (!invoice.electronicErrors?.emailDispatch) await this.dispatchInvoiceEmail(invoice);
+      return;
+    }
     const existing = await this.provider.findByReference(invoice.id);
     const result = existing || (invoice.electronicErrors?.factusState === 'pending_conflict'
       ? { dianValidationStatus: 'pending' as const, emailSent: false, errors: invoice.electronicErrors }
@@ -19,6 +25,25 @@ export class ProcessElectronicInvoiceUseCase {
     invoice.electronicErrors = result.errors || null;
     invoice.updatedAt = new Date().toISOString();
     await this.invoices.updateElectronicResult(invoice);
+    if (invoice.electronicStatus === 'accepted' && !invoice.electronicEmailSent &&
+      this.provider.requiresExplicitInvoiceEmail()) {
+      await this.dispatchInvoiceEmail(invoice);
+    }
+  }
+
+  public async retryElectronicInvoiceEmail(invoiceId: string): Promise<'sent' | 'uncertain' | 'busy' | 'already_sent'> {
+    const invoice = await this.invoices.findById(invoiceId);
+    if (!invoice) throw new Error('INVOICING_INVOICE_NOT_FOUND');
+    if (invoice.electronicStatus !== 'accepted' || !invoice.electronicNumber) {
+      throw new Error('INVOICING_ELECTRONIC_INVOICE_NOT_ACCEPTED');
+    }
+    if (invoice.electronicEmailSent) return 'already_sent';
+    if (invoice.electronicErrors?.emailDispatch) {
+      const reset = await this.invoices.resetElectronicEmailAttempt(invoice.id, new Date().toISOString());
+      if (!reset) return 'busy';
+      invoice.electronicErrors = withoutEmailDispatch(invoice.electronicErrors);
+    }
+    return this.dispatchInvoiceEmail(invoice);
   }
 
   public async executeCreditNote(noteId: string): Promise<void> {
@@ -49,4 +74,26 @@ export class ProcessElectronicInvoiceUseCase {
       await this.invoices.save(invoice);
     }
   }
+
+  private async dispatchInvoiceEmail(invoice: Invoice): Promise<'sent' | 'uncertain' | 'busy'> {
+    if (!invoice.electronicNumber || !invoice.customerEmail) throw new Error('INVOICING_EMAIL_DATA_MISSING');
+    const claimed = await this.invoices.claimElectronicEmail(invoice.id, new Date().toISOString());
+    if (!claimed) return 'busy';
+    try {
+      await this.provider.sendInvoiceEmail(invoice.electronicNumber, invoice.customerEmail);
+      await this.invoices.completeElectronicEmail(invoice.id, new Date().toISOString());
+      invoice.electronicEmailSent = true;
+      invoice.electronicErrors = withoutEmailDispatch(invoice.electronicErrors);
+      return 'sent';
+    } catch {
+      await this.invoices.markElectronicEmailUncertain(invoice.id, new Date().toISOString());
+      return 'uncertain';
+    }
+  }
+}
+
+function withoutEmailDispatch(errors: Record<string, string> | null): Record<string, string> | null {
+  if (!errors) return null;
+  const remaining = Object.fromEntries(Object.entries(errors).filter(([key]) => key !== 'emailDispatch'));
+  return Object.keys(remaining).length ? remaining : null;
 }

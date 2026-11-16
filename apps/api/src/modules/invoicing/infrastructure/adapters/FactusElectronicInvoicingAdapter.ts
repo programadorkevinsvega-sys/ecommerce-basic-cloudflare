@@ -65,6 +65,21 @@ export class FactusElectronicInvoicingAdapter implements IElectronicInvoicingPor
     return entries.length ? toResult(entries[0], referenceCode) : null;
   }
 
+  public async sendInvoiceEmail(invoiceNumber: string, email: string): Promise<void> {
+    await this.ensureConfigured();
+    if (!invoiceNumber || !email) throw new Error('FACTUS_EMAIL_INPUT_INVALID');
+    const response = await this.request(`/v2/bills/${encodeURIComponent(invoiceNumber)}/send-email`, {
+      method: 'POST', body: JSON.stringify({ email }),
+    });
+    if (response.httpStatus && response.httpStatus >= 400) {
+      throw new Error(`FACTUS_EMAIL_HTTP_${response.httpStatus}`);
+    }
+  }
+
+  public requiresExplicitInvoiceEmail(): boolean {
+    return this.mode() === 'sandbox';
+  }
+
   public async downloadInvoicePdf(invoiceNumber: string) {
     await this.ensureConfigured();
     const response = await this.request(`/v2/bills/${encodeURIComponent(invoiceNumber)}/download-pdf`, { method: 'GET' });

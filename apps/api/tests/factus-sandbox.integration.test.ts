@@ -61,5 +61,11 @@ describe.skipIf(!enabled)('Factus sandbox integration', () => {
 
     expect(result.dianValidationStatus, JSON.stringify(result.errors || {})).toBe('accepted');
     expect(result.emailSent).toBe(false);
+    if (process.env.FACTUS_SANDBOX_EMAIL_TEST === '1') {
+      const email = process.env.FACTUS_SANDBOX_EMAIL_TO;
+      if (!email || !result.providerInvoiceNumber) throw new Error('Sandbox email test requires a recipient and accepted invoice number.');
+      await adapter.sendInvoiceEmail(result.providerInvoiceNumber, email);
+      console.log(JSON.stringify({ event: 'factus.sandbox.email_request_accepted', invoice_number: result.providerInvoiceNumber }));
+    }
   }, 45_000);
 });
