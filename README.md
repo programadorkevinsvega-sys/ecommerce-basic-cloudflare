@@ -356,6 +356,8 @@ La confirmación financiera sigue dependiendo del webhook de Wompi verificado y 
 
 Las facturas internas son documentos inmutables emitidos por el módulo `invoicing`. La factura conserva un snapshot del pedido y del emisor disponible al momento de emisión; las correcciones se tramitan mediante nota crédito. El documento actual es HTML/CSS diseñado para impresión y se almacena de forma privada en R2. No se genera un archivo PDF binario desde el Worker y este documento interno no equivale a facturación electrónica DIAN.
 
+Para probar la integración Factus localmente con una factura ficticia, configura temporalmente las cuatro variables `FACTUS_PRODUCTION_*` del `.env` con credenciales **sandbox** y `FACTUS_API_URL=https://api-sandbox.factus.com.co`, luego ejecuta `pnpm --filter @ecommerce/api test:factus:sandbox`. El runner se niega a continuar si el host no es sandbox, consulta un rango activo y envía el snapshot mock al endpoint de validación; nunca envía correo. Esta prueba puede crear un documento de prueba en Factus sandbox, no debe usar credenciales de producción y no representa una factura real ni una certificación DIAN.
+
 El cliente puede consultar sus documentos autenticándose en su cuenta; el admin tiene la pantalla de Facturación. El BFF verifica autorización/propiedad al servir el documento. Los detalles de numeración y snapshot están en ADR-0012 y ADR-0013; no se deben asumir campos o automatismos que no estén en el esquema y los casos de uso actuales.
 
 ### Email con Resend (`notifications`)
