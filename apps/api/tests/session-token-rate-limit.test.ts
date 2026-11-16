@@ -5,6 +5,10 @@ import { extractSessionToken } from '../src/bff/security/extractSessionToken.js'
 import { Env } from '../src/platform/Env.js';
 import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js';
 
+vi.mock('../src/platform/captureSentryException.js', () => ({
+  captureSentryException: vi.fn(() => { throw new Error('Sentry unavailable'); }),
+}));
+
 describe('session token extraction', () => {
   it('matches exact cookie names and rejects bearer tokens in production', () => {
     const request = new Request('https://shop.example.test/', {
@@ -103,6 +107,23 @@ describe('request rate limiting', () => {
       { key: 'public_search:unknown' },
       { key: 'public_read:unknown' },
     ]);
+  });
+
+  it('keeps the fallback limiter working when Sentry capture fails', async () => {
+    const limit = vi.fn().mockResolvedValue({ success: true });
+    const app = new Hono<{ Bindings: Env }>();
+    app.use('*', createRateLimitMiddleware());
+    app.put('/api/v1/admin/products/:id', (c) => c.text('ok'));
+    const response = await app.request('/api/v1/admin/products/diagnostic-noop', {
+      method: 'PUT',
+      headers: { 'cf-connecting-ip': '2800:e2:2000:252:1a35:69e3:3c3f:dbcd' },
+    }, { API_WRITE_LIMITER: { limit } } as unknown as Env);
+
+    expect(response.status).toBe(200);
+    expect(limit).toHaveBeenCalledTimes(1);
+    expect(limit).toHaveBeenCalledWith({
+      key: 'ip:2800:e2:2000:252:1a35:69e3:3c3f:dbcd:PUT:/api/v1/admin/products',
+    });
   });
 
   it('keeps authentication fail-closed when its dedicated limiter is absent', async () => {
