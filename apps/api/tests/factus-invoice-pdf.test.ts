@@ -11,10 +11,33 @@ describe('Factus invoice PDF download', () => {
   it('distinguishes the DIAN PDF from the internal commercial document in admin', () => {
     const script = renderInvoicingAdminScript();
 
-    expect(script).toContain('Ver PDF electrónico DIAN');
-    expect(script).toContain('Descargar PDF electrónico');
-    expect(script).toContain('Ver comprobante comercial');
+    expect(script).toContain('Ver PDF electrónico de Factus');
+    expect(script).toContain('Descargar PDF electrónico de Factus');
+    expect(script).toContain('El comprobante comercial está disponible en la sección Facturación.');
     expect(script).toContain('/electronic-document?view=1');
+
+    const makeRenderer = new Function('window', 'document', 'escapeHtml',
+      `${script}; return { renderInvoiceRow, setView: (view) => { _invoiceView = view; } };`);
+    const renderer = makeRenderer({}, { getElementById: () => null, addEventListener: () => {} },
+      (value: string) => value.replaceAll('&', '&amp;')) as {
+        renderInvoiceRow: (invoice: Record<string, unknown>) => string;
+        setView: (view: string) => void;
+      };
+    const invoice = {
+      id: 'invoice-1', invoiceNumber: 'FAC-1', orderId: 'ord-1', customerName: 'Cliente',
+      customerEmail: 'client@example.test', totalCents: 10000, createdAt: '2026-11-16T00:00:00.000Z',
+      status: 'issued', electronicStatus: 'accepted', electronicNumber: 'SETP123',
+    };
+
+    renderer.setView('electronic');
+    const electronicRow = renderer.renderInvoiceRow(invoice);
+    expect(electronicRow).toContain('/api/v1/admin/invoices/invoice-1/electronic-document?view=1');
+    expect(electronicRow).not.toContain('/api/v1/invoices/invoice-1/document');
+
+    renderer.setView('all');
+    const commercialRow = renderer.renderInvoiceRow(invoice);
+    expect(commercialRow).toContain('/api/v1/invoices/invoice-1/document?view=1');
+    expect(commercialRow).not.toContain('/electronic-document');
   });
 
   it('parses Factus base64 payloads and rejects malformed content', () => {
