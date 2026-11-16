@@ -14,10 +14,23 @@ describe('JsonLogger privacy', () => {
     const entry = JSON.parse(String(output.mock.calls[0]?.[0])) as Record<string, any>;
 
     expect(entry.trace_id).toBe('trace-123');
+    expect(entry.error.name).toBe('Error');
     expect(JSON.stringify(entry)).not.toContain('maria@example.com');
     expect(JSON.stringify(entry)).not.toContain('Calle 1');
     expect(JSON.stringify(entry)).not.toContain('DB rejected');
     expect(entry.data.payment.status).toBe('declined');
+    output.mockRestore();
+  });
+
+  it('does not log attacker-controlled error names', () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const error = new Error('private');
+    error.name = 'private@example.com';
+    new JsonLogger('test').error('failed operation', error);
+
+    const entry = JSON.parse(String(output.mock.calls[0]?.[0])) as Record<string, any>;
+    expect(entry.error.name).toBe('UnknownError');
+    expect(JSON.stringify(entry)).not.toContain('private@example.com');
     output.mockRestore();
   });
 
