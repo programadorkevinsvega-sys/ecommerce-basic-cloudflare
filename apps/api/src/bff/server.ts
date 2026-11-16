@@ -59,6 +59,7 @@ import { getCustomerEmail, getStorefrontNavMenus } from './controllers/storefron
 import { PublicHtmlCacheMiddleware } from './middleware/PublicHtmlCacheMiddleware.js';
 import { PublicHtmlCacheInvalidationMiddleware } from './middleware/PublicHtmlCacheInvalidationMiddleware.js';
 import { bodyLimit } from 'hono/body-limit';
+import { createBffErrorHandler } from './middleware/createBffErrorHandler.js';
 
 export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
@@ -206,11 +207,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
       footerStoreProfile: nav.footerStoreProfile,
     }), 404);
   });
-  app.onError((err, c) => {
-    const traceContext = c.get('traceContext');
-    console.error(JSON.stringify({ event: 'bff.unhandled_error', trace_id: traceContext?.traceId, request_id: traceContext?.requestId, error_name: err instanceof Error ? err.name : 'UnknownError' }));
-    return c.json({ error: 'Error interno del servidor' }, 500);
-  });
+  app.onError(createBffErrorHandler());
 
   return app;
 }
