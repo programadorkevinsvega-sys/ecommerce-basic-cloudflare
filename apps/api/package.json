@@ -12,6 +12,7 @@
     "db:migrate:local": "node scripts/build-migrations.js && node scripts/apply-migrations.js --local",
     "db:migrate:remote": "node scripts/build-migrations.js && node scripts/apply-migrations.js --remote",
     "test": "vitest run",
+    "test:factus:sandbox": "node scripts/run-factus-sandbox-integration.mjs",
     "test:workers": "vitest run --config vitest.workers.config.ts",
     "db:test-wrangler-migrations": "node scripts/test-empty-d1-migrations.js",
     "test:isolation": "node scripts/check-table-isolation.js",

@@ -16,15 +16,25 @@ const numberingRangeSchema = z.object({
   deleted_at: z.string().nullable().optional(),
 }).passthrough();
 
-const responseSchema = z.object({
+const paginationSchema = z.object({
+  last_page: z.coerce.number().int().min(1).max(20),
+}).passthrough();
+
+const pageSchema = z.object({
   data: z.array(numberingRangeSchema),
-  pagination: z.object({ last_page: z.coerce.number().int().min(1).max(20) }).passthrough().optional(),
+  pagination: paginationSchema.optional(),
+}).passthrough();
+
+const responseSchema = z.object({
+  data: z.union([z.array(numberingRangeSchema), pageSchema]),
+  pagination: paginationSchema.optional(),
 }).passthrough();
 
 export function parseFactusNumberingRangePage(input: unknown) {
   const parsed = responseSchema.safeParse(input);
   if (!parsed.success) throw new Error('FACTUS_NUMBERING_RANGES_INVALID_RESPONSE');
-  return parsed.data;
+  if (!Array.isArray(parsed.data.data)) return parsed.data.data;
+  return { data: parsed.data.data, pagination: parsed.data.pagination };
 }
 
 export function parseFactusNumberingRange(input: unknown) {
