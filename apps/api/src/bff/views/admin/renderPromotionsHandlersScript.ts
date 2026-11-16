@@ -11,10 +11,37 @@ export function renderPromotionsHandlersScript(): string {
       nav.querySelector('span').textContent = result.total + ' registros · Página ' + result.page;
       nav.querySelector('[data-promo-page="previous"]').disabled = result.page <= 1;
       nav.querySelector('[data-promo-page="next"]').disabled = !result.hasMore;
-      nav.querySelector('[data-promo-page="previous"]').onclick = () => loadPromotionPage(kind, result.page - 1);
-      nav.querySelector('[data-promo-page="next"]').onclick = () => loadPromotionPage(kind, result.page + 1);
     }
     loadPromotionPage('rules').catch(() => {}); loadPromotionPage('coupons').catch(() => {});
+    document.addEventListener('change', (event) => {
+      const field = event.target;
+      if (field.matches('[data-promo-target-type="rules"]')) onPromoTargetTypeChange();
+      if (field.matches('[data-promo-target-type="coupons"]')) onCouponTargetTypeChange();
+      const select = field.closest('[data-promo-product-select]');
+      if (select) onProductSelectChanged(select.id, select.dataset.promoProductSelect);
+    });
+    document.addEventListener('input', (event) => { const field = event.target.closest('[data-promo-target-search]'); if (field) filterTargetSelect(field.id, field.dataset.promoTargetSearch); });
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-promotion-action], [data-promo-reset], [data-promo-page]');
+      if (!button || button.disabled) return;
+      const { promotionAction: action, promotionId: id, promotionActive: active } = button.dataset;
+      const actions = {
+        'view-rule': () => viewPromoRuleModal(button), 'edit-rule': () => editPromoRuleModal(button),
+        'set-rule-status': () => togglePromoRuleStatus(id, active === 'true'), 'delete-rule': () => deletePromoRule(id),
+        'view-coupon': () => viewCouponModal(button), 'edit-coupon': () => editCouponModal(button),
+        'set-coupon-status': () => toggleCouponStatus(id, active === 'true'), 'delete-coupon': () => deleteCoupon(id),
+        'open-free-shipping': window.openFreeShippingRuleModal, 'close-free-shipping': window.closeFreeShippingRuleModal,
+        'free-shipping-previous': () => window.loadFreeShippingRules(freeShippingPage - 1),
+        'free-shipping-next': () => window.loadFreeShippingRules(freeShippingPage + 1), 'close-details': closePromoModal
+      };
+      if (Object.hasOwn(actions, action)) return actions[action]();
+      if (button.dataset.promoReset === 'rules') return resetPromoRuleForm();
+      if (button.dataset.promoReset === 'coupons') return resetCouponForm();
+      if (button.hasAttribute('data-promo-page')) {
+        const kind = button.closest('#promotion-rules-pagination') ? 'rules' : 'coupons';
+        return loadPromotionPage(kind, promotionPages[kind] + (button.dataset.promoPage === 'previous' ? -1 : 1));
+      }
+    });
     function parseItemData(btn) {
       try {
         const enc = btn.getAttribute('data-item');
@@ -24,7 +51,6 @@ export function renderPromotionsHandlersScript(): string {
         return null;
       }
     }
-
     async function togglePromoRuleStatus(id, isActive) {
       if (!confirm('¿Deseas cambiar el estado de la promoción?')) return;
       const res = await fetch('/api/v1/admin/promotions/rules/' + id + '/toggle', {
@@ -35,14 +61,12 @@ export function renderPromotionsHandlersScript(): string {
       if (res.ok) window.location.reload();
       else alert('Error al actualizar estado');
     }
-
     async function deletePromoRule(id) {
       if (!confirm('¿Seguro que deseas eliminar esta promoción?')) return;
       const res = await fetch('/api/v1/admin/promotions/rules/' + id, { method: 'DELETE' });
       if (res.ok) window.location.reload();
       else alert('Error al eliminar regla');
     }
-
     async function toggleCouponStatus(id, isActive) {
       if (!confirm('¿Deseas cambiar el estado del cupón?')) return;
       const res = await fetch('/api/v1/admin/promotions/coupons/' + id + '/toggle', {
@@ -53,14 +77,12 @@ export function renderPromotionsHandlersScript(): string {
       if (res.ok) window.location.reload();
       else alert('Error al actualizar cupón');
     }
-
     async function deleteCoupon(id) {
       if (!confirm('¿Seguro que deseas eliminar este cupón?')) return;
       const res = await fetch('/api/v1/admin/promotions/coupons/' + id, { method: 'DELETE' });
       if (res.ok) window.location.reload();
       else alert('Error al eliminar cupón');
     }
-
     function viewPromoRuleModal(btn) {
       const data = parseItemData(btn);
       if (!data) return;
@@ -78,7 +100,6 @@ export function renderPromotionsHandlersScript(): string {
         '</div>';
       document.getElementById('promoDetailsModal').classList.add('active');
     }
-
     function editPromoRuleModal(btn) {
       const data = parseItemData(btn);
       if (!data) return;
@@ -105,7 +126,6 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('prCancelBtn').style.display = 'inline-block';
       window.openMarketingModal('promotion-rule');
     }
-
     function resetPromoRuleForm() {
       document.getElementById('prEditId').value = '';
       document.getElementById('newPromoRuleForm').reset();
@@ -115,7 +135,6 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('prSubmitBtn').textContent = 'Crear Regla de Promoción';
       document.getElementById('prCancelBtn').style.display = 'none';
     }
-
     function viewCouponModal(btn) {
       const data = parseItemData(btn);
       if (!data) return;
@@ -134,7 +153,6 @@ export function renderPromotionsHandlersScript(): string {
         '</div>';
       document.getElementById('promoDetailsModal').classList.add('active');
     }
-
     function editCouponModal(btn) {
       const data = parseItemData(btn);
       if (!data) return;
@@ -162,7 +180,6 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('cpCancelBtn').style.display = 'inline-block';
       window.openMarketingModal('discount-coupon');
     }
-
     function resetCouponForm() {
       document.getElementById('cpEditId').value = '';
       document.getElementById('newCouponForm').reset();
@@ -172,21 +189,10 @@ export function renderPromotionsHandlersScript(): string {
       document.getElementById('cpSubmitBtn').textContent = 'Crear Cupón';
       document.getElementById('cpCancelBtn').style.display = 'none';
     }
-
     function closePromoModal() {
       document.getElementById('promoDetailsModal').classList.remove('active');
     }
 
-    window.togglePromoRuleStatus = togglePromoRuleStatus;
-    window.deletePromoRule = deletePromoRule;
-    window.toggleCouponStatus = toggleCouponStatus;
-    window.deleteCoupon = deleteCoupon;
-    window.viewPromoRuleModal = viewPromoRuleModal;
-    window.editPromoRuleModal = editPromoRuleModal;
-    window.resetPromoRuleForm = resetPromoRuleForm;
-    window.viewCouponModal = viewCouponModal;
-    window.editCouponModal = editCouponModal;
-    window.resetCouponForm = resetCouponForm;
-    window.closePromoModal = closePromoModal;
+    window.togglePromoRuleStatus = togglePromoRuleStatus; window.deletePromoRule = deletePromoRule; window.toggleCouponStatus = toggleCouponStatus; window.deleteCoupon = deleteCoupon; window.viewPromoRuleModal = viewPromoRuleModal; window.editPromoRuleModal = editPromoRuleModal; window.resetPromoRuleForm = resetPromoRuleForm; window.viewCouponModal = viewCouponModal; window.editCouponModal = editCouponModal; window.resetCouponForm = resetCouponForm; window.closePromoModal = closePromoModal;
   `;
 }

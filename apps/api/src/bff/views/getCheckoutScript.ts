@@ -39,13 +39,12 @@ export function getCheckoutScript(
       function calcTax(sub) { return Math.round(sub * TAX_RATE); }
       function updateCheckoutCta() {
         const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
-        const transactionFeeCents = online ? 70000 : 0;
         const discountedSubtotal = Math.max(0, subtotalCents - couponDiscountCents);
-        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : calcTax(discountedSubtotal)) + shippingCostCents + transactionFeeCents;
+        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : calcTax(discountedSubtotal)) + shippingCostCents;
         const format = value => '$' + (value / 100).toLocaleString('es-CO');
         document.getElementById('checkout-cta-label').textContent = online ? 'Pagar ' + format(total) : 'Confirmar pedido';
         document.getElementById('checkout-submit-note').textContent = online
-          ? 'Incluye $700 por costo de transacción. Te llevaremos a Wompi para pagar.'
+          ? 'Te llevaremos a Wompi para pagar.'
           : 'Pagarás en efectivo cuando recibas tu pedido.';
       }
       function setCheckoutStatus(message, state) {
@@ -153,9 +152,7 @@ export function getCheckoutScript(
       function updateTotals() {
         const discountedSubtotal = Math.max(0, subtotalCents - couponDiscountCents);
         const taxCents = TAX_INCLUDED ? Math.round(discountedSubtotal * TAX_RATE / (1 + TAX_RATE)) : calcTax(discountedSubtotal);
-        const online = document.querySelector('input[name="payment-method"]:checked')?.value === 'wompi';
-        const transactionFeeCents = online ? 70000 : 0;
-        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : taxCents) + shippingCostCents + transactionFeeCents;
+        const total = discountedSubtotal + (TAX_INCLUDED ? 0 : taxCents) + shippingCostCents;
         const fmt = v => '$' + (v / 100).toLocaleString('es-CO');
         document.getElementById('txt-subtotal').innerText = fmt(subtotalCents);
         const couponRow = document.getElementById('checkout-coupon-row');
@@ -166,9 +163,6 @@ export function getCheckoutScript(
         const collectRow = document.getElementById('checkout-shipping-collection-row');
         if (collectRow) collectRow.style.display = shippingChargeMode === 'collect_at_delivery' && carrierFreightCents > 0 ? 'flex' : 'none';
         if (document.getElementById('txt-shipping-collection')) document.getElementById('txt-shipping-collection').innerText = fmt(carrierFreightCents);
-        const transactionFeeRow = document.getElementById('checkout-transaction-fee-row');
-        if (transactionFeeRow) transactionFeeRow.style.display = online ? 'flex' : 'none';
-        if (document.getElementById('txt-transaction-fee')) document.getElementById('txt-transaction-fee').innerText = fmt(transactionFeeCents);
         document.getElementById('txt-total').innerText    = fmt(total);
         updateCheckoutCta();
       }
@@ -177,6 +171,13 @@ export function getCheckoutScript(
         updateTotals();
       });
       ${getCheckoutSubmitOrderScript()}
+      document.getElementById('btn-submit-order').addEventListener('click', submitOrder);
+      document.getElementById('cust-tax-type').addEventListener('change', event => {
+        if (event.currentTarget.value === 'CC') document.getElementById('cust-organization').value = '2';
+      });
+      document.getElementById('cust-organization').addEventListener('change', event => {
+        if (event.currentTarget.value === '1') document.getElementById('cust-tax-type').value = 'NIT';
+      });
       document.getElementById('dest-zone').addEventListener('change', handleZoneChange); document.addEventListener('checkout-location-change', () => { updateSubmitAvailability(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); });
       document.querySelectorAll('input[name="payment-method"]').forEach(input => input.addEventListener('change', () => { updateTotals(); if (zonePolicyAllowsOrder && usesCarrier()) loadCarrierQuotes(); }));
       fetch('/api/v1/shipping/carrier/availability').then(response => response.json()).then(result => {

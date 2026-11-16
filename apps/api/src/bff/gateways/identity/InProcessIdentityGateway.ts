@@ -14,7 +14,7 @@ export class InProcessIdentityGateway implements IdentityGateway {
     this.publicApi = publicApi;
   }
 
-  public async registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ id: string; email: string; fullName: string }> {
+  public async registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ accepted: true }> {
     return this.publicApi.registerCustomer(input);
   }
 
@@ -34,6 +34,10 @@ export class InProcessIdentityGateway implements IdentityGateway {
 
   public async confirmAdminMfaEnrollment(adminId: string, code: string) {
     return this.publicApi.confirmAdminMfaEnrollment(adminId, code);
+  }
+
+  public reauthenticateAdmin(input: { adminId: string; password: string; totpCode: string }) {
+    return this.publicApi.reauthenticateAdmin(input);
   }
 
   public async validateSession(rawToken: string): Promise<AuthenticatedSession> {
@@ -62,5 +66,21 @@ export class InProcessIdentityGateway implements IdentityGateway {
 
   public revokeCustomerSession(sessionId: string, customerId: string) {
     return this.publicApi.revokeCustomerSession(sessionId, customerId);
+  }
+
+  public requestCustomerPasswordReset(email: string, publicOrigin: string): Promise<void> {
+    return this.publicApi.requestCustomerPasswordReset(email, publicOrigin);
+  }
+
+  public requestCustomerEmailVerification(customerId: string, publicOrigin: string): Promise<void> {
+    return this.publicApi.requestCustomerEmailVerification(customerId, publicOrigin);
+  }
+
+  public verifyCustomerEmail(token: string): Promise<void> {
+    return this.publicApi.verifyCustomerEmail(token);
+  }
+
+  public resetCustomerPassword(token: string, password: string): Promise<void> {
+    return this.publicApi.resetCustomerPassword(token, password);
   }
 }

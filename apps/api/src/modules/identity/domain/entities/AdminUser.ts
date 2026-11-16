@@ -59,21 +59,6 @@ export class AdminUser {
     return this.props.isActive;
   }
 
-  public isLocked(): boolean {
-    if (!this.props.lockedUntil) return false;
-    return new Date(this.props.lockedUntil).getTime() > Date.now();
-  }
-
-  public registerFailedAttempt(): void {
-    this.props.failedLoginAttempts += 1;
-    if (this.props.failedLoginAttempts >= 5) {
-      // Bloqueo temporal por 15 minutos
-      const lockDate = new Date(Date.now() + 15 * 60 * 1000);
-      this.props.lockedUntil = lockDate.toISOString();
-    }
-    this.props.updatedAt = new Date().toISOString();
-  }
-
   public resetFailedAttempts(): void {
     this.props.failedLoginAttempts = 0;
     this.props.lockedUntil = undefined;

@@ -7,11 +7,11 @@ import { renderAdminLoginPage } from '../src/bff/views/admin/renderAdminLoginPag
 import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 
 const gateway = {
-  registerCustomer: vi.fn(async () => ({ id: 'customer-1', email: 'person@example.com', fullName: 'Client Person' })),
+  registerCustomer: vi.fn(async () => ({ accepted: true as const })),
   loginCustomer: vi.fn(async () => ({ rawToken: 'customer-session', expiresAt: '2030-01-01T00:00:00.000Z' })),
   loginAdmin: vi.fn(async () => ({ rawToken: 'admin-session', expiresAt: '2030-01-01T00:00:00.000Z', mfaEnabled: true })),
 };
-const env = { TURNSTILE_SECRET_KEY: 'test-secret', TURNSTILE_HOSTNAMES: 'https://vega.jnmtortas.com' } as never;
+const env = { TURNSTILE_SECRET_KEY: 'test-secret', TURNSTILE_HOSTNAMES: 'https://vega.jnmtortas.com', PUBLIC_ORIGIN: 'https://vega.jnmtortas.com' } as never;
 
 afterEach(() => vi.unstubAllGlobals());
 beforeEach(() => { gateway.registerCustomer.mockClear(); gateway.loginCustomer.mockClear(); gateway.loginAdmin.mockClear(); });
@@ -41,8 +41,12 @@ describe('customer registration', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ success: true, hostname: 'vega.jnmtortas.com' }))));
     const app = CustomerAuthController.createRoutes(gateway as never);
     const response = await app.request('https://vega.jnmtortas.com/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'person@example.com', password: 'strong-password-123', fullName: 'Client Person', turnstileToken: 'valid-token' }) }, env);
-    expect(response.status).toBe(201);
-    expect(gateway.registerCustomer).toHaveBeenCalledWith({ email: 'person@example.com', password: 'strong-password-123', fullName: 'Client Person' });
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ message: 'Si el registro fue aceptado, recibirás instrucciones para verificar tu correo.' });
+    expect(gateway.registerCustomer).toHaveBeenCalledWith({
+      email: 'person@example.com', password: 'strong-password-123', fullName: 'Client Person',
+      publicOrigin: 'https://vega.jnmtortas.com',
+    });
   });
 
   it('rejects an unverified Turnstile token without creating the account', async () => {
@@ -53,13 +57,23 @@ describe('customer registration', () => {
     expect(gateway.registerCustomer).not.toHaveBeenCalled();
   });
 
-  it('returns a clear conflict when the customer email is already registered', async () => {
+  it('does not expose Zod validation details on registration', async () => {
+    const app = CustomerAuthController.createRoutes(gateway as never);
+    const response = await app.request('https://vega.jnmtortas.com/register', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email', password: 'strong-password-123', fullName: 'Client Person', turnstileToken: 'valid-token' }),
+    }, env);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Solicitud inválida' });
+  });
+
+  it('returns the same registration response for an existing email', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ success: true, hostname: 'vega.jnmtortas.com' }))));
-    gateway.registerCustomer.mockRejectedValueOnce(new Error('El correo electrónico ya se encuentra registrado'));
+    gateway.registerCustomer.mockResolvedValueOnce({ accepted: true });
     const app = CustomerAuthController.createRoutes(gateway as never);
     const response = await app.request('https://vega.jnmtortas.com/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'person@example.com', password: 'strong-password-123', fullName: 'Client Person', turnstileToken: 'valid-token' }) }, env);
-    expect(response.status).toBe(409);
-    expect(await response.json()).toEqual({ error: 'Ese correo ya tiene una cuenta. Inicia sesión para continuar.' });
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ message: 'Si el registro fue aceptado, recibirás instrucciones para verificar tu correo.' });
   });
 
   it('requires Turnstile before customer login', async () => {

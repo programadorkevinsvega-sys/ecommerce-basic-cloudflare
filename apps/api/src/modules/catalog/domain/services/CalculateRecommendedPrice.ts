@@ -39,8 +39,8 @@ export function calculateRecommendedPrice(input: RecommendedPriceInput): Recomme
   }
   const price = Math.ceil(low / 100) * 100;
   const taxCents = Math.round(price * tax / (10000 + tax));
-  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
-  const netProfit = price - taxCents - cost - fee + (input.includeWompi ? 70000 : 0);
+  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents) * 409 / 10000) + 70000) * 1.19) : 0;
+  const netProfit = price - taxCents - cost - fee;
   const netSales = price - taxCents;
   return {
     priceInCents: price,
@@ -61,9 +61,9 @@ function assertMarginIsReachable(input: RecommendedPriceInput): void {
 
 function meetsTarget(price: number, input: RecommendedPriceInput): boolean {
   const tax = Math.round(price * input.taxRateBasisPoints / (10000 + input.taxRateBasisPoints));
-  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents + 70000) * 409 / 10000) + 70000) * 1.19) : 0;
+  const fee = input.includeWompi ? Math.round((Math.ceil((price + input.transactionShippingCents) * 409 / 10000) + 70000) * 1.19) : 0;
   const netSales = price - tax;
-  const netProfit = netSales - input.supplierCostCents - fee + (input.includeWompi ? 70000 : 0);
+  const netProfit = netSales - input.supplierCostCents - fee;
   return input.pricingTargetType === 'profit'
     ? netProfit >= Number(input.targetProfitCents)
     : netProfit >= netSales * input.targetMarginBasisPoints / 10000;

@@ -29,15 +29,12 @@ export class ValidateCouponUseCase {
     try {
       const coupon = await this.couponRepo.findByCode(input.code);
       if (!coupon) {
-        return Result.ok({
-          valid: false,
-          code: input.code,
-          discountAppliedCents: 0,
-          newSubtotalCents: input.orderSubtotalCents,
-          reason: 'El código de cupón no existe',
-        });
+        return this.invalid(input.code, input.orderSubtotalCents);
       }
 
+      if (coupon.maxUsesPerCustomer !== undefined && !input.customerId) {
+        return this.invalid(input.code, input.orderSubtotalCents);
+      }
       let customerUsageCount = 0;
       if (input.customerId) {
         customerUsageCount = await this.couponRepo.getCustomerUsageCount(coupon.id, input.customerId);
@@ -45,13 +42,7 @@ export class ValidateCouponUseCase {
 
       const check = coupon.canBeUsed(input.orderSubtotalCents, customerUsageCount, input.items);
       if (!check.allowed) {
-        return Result.ok({
-          valid: false,
-          code: coupon.code,
-          discountAppliedCents: 0,
-          newSubtotalCents: input.orderSubtotalCents,
-          reason: check.reason,
-        });
+        return this.invalid(input.code, input.orderSubtotalCents);
       }
 
       const baseAmountForDiscount = check.eligibleAmountCents ?? input.orderSubtotalCents;
@@ -69,5 +60,15 @@ export class ValidateCouponUseCase {
     } catch (err) {
       return Result.fail(err instanceof Error ? err : new Error('Error al validar cupón'));
     }
+  }
+
+  private invalid(code: string, subtotalCents: number): Result<CouponValidationResult, Error> {
+    return Result.ok({
+      valid: false,
+      code,
+      discountAppliedCents: 0,
+      newSubtotalCents: subtotalCents,
+      reason: 'El cupón no es válido o no puede utilizarse',
+    });
   }
 }

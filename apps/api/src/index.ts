@@ -19,7 +19,10 @@ export default {
   async queue(batch: MessageBatch<unknown>, env: Env, _ctx: ExecutionContext): Promise<void> {
     const logger = new JsonLogger('queue-consumer');
     const root = buildCompositionRoot(env);
-    await processQueueBatch(batch, root.invoicingGateway, logger, new QueueEventTelemetry(env.ANALYTICS, logger));
+    await processQueueBatch(batch, {
+      invoicing: root.invoicingGateway,
+      notifications: root.notificationsGateway,
+    }, logger, new QueueEventTelemetry(env.ANALYTICS, logger));
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
@@ -41,6 +44,15 @@ export default {
           logger.info('Artículos del blog publicados por programación', { count: published.length, cacheInvalidated: true });
         }
       } catch (error) { logger.error('Falló la publicación programada del blog', error); }
+    })());
+
+    ctx.waitUntil((async () => {
+      try {
+        const published = await compositionRoot.identityOutboxRelayService.relayPendingEvents();
+        if (published) logger.info('Correos de identidad publicados', { published });
+      } catch (error) {
+        logger.error('Falló la publicación del outbox de identidad', error);
+      }
     })());
 
     ctx.waitUntil(reconcileCarrierShipments(compositionRoot));

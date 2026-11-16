@@ -12,6 +12,8 @@ import { IMediaAssetRepository } from '../src/modules/media/domain/ports/IMediaA
 import { MediaController } from '../src/bff/controllers/media/MediaController.js';
 import { getPageMarketingContent } from '../src/bff/controllers/storefront/StorefrontPageMarketing.js';
 
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
+
 describe('media and banner input validation', () => {
   const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));
 
@@ -29,8 +31,9 @@ describe('media and banner input validation', () => {
     expect(ImageValidator.validateMagicBytes(jpegHeader().slice(0, 8)).isValid).toBe(false);
   });
 
-  it('allows HTTPS image references and internal destinations but rejects active schemes and external redirects', () => {
-    expect(isSafeImageUrl('https://images.example.test/banner.webp')).toBe(true);
+  it('allows only same-origin image paths and internal destinations', () => {
+    expect(isSafeImageUrl('/media/123e4567-e89b-42d3-a456-426614174000')).toBe(true);
+    expect(isSafeImageUrl('https://images.example.test/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://127.0.0.1/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://2130706433/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://100.64.0.1/banner.webp')).toBe(false);
@@ -40,7 +43,7 @@ describe('media and banner input validation', () => {
     expect(isSafeImageUrl('https://[fc00::1]/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://[fe80::1]/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://[2001:db8::1]/banner.webp')).toBe(false);
-    expect(isSafeImageUrl('https://[2606:4700:4700::1111]/banner.webp')).toBe(true);
+    expect(isSafeImageUrl('https://[2606:4700:4700::1111]/banner.webp')).toBe(false);
     expect(isSafeImageUrl('https://images.example.test:8443/banner.webp')).toBe(false);
     expect(isSafeImageUrl('javascript:alert(1)')).toBe(false);
     expect(isSafeImageUrl('//attacker.test/image')).toBe(false);
@@ -98,7 +101,7 @@ describe('media and banner input validation', () => {
     } });
     const request = new Request('http://localhost/upload', { method: 'POST', headers: { cookie: '__Host-admin-session=test' }, body, duplex: 'half' } as RequestInit);
 
-    const response = await app.fetch(request);
+    const response = await app.fetch(request, writeRateLimitEnv);
     expect(response.status).toBe(413);
   });
 

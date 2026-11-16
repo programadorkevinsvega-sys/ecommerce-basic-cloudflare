@@ -6,6 +6,8 @@ import { GetMediaAssetUseCase } from '../src/modules/media/application/use-cases
 import { MediaAsset } from '../src/modules/media/domain/entities/MediaAsset.js';
 import { UploadMediaUseCase } from '../src/modules/media/application/use-cases/UploadMediaUseCase.js';
 
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
+
 describe('R2 media access safety', () => {
   it('requires an authenticated admin with MFA and media:create for uploads', async () => {
     const uploadMedia = vi.fn(async () => ({
@@ -34,7 +36,7 @@ describe('R2 media access safety', () => {
       method: 'POST',
       headers: { cookie: '__Host-admin-session=test-session' },
       body: form,
-    }));
+    }), writeRateLimitEnv);
     const body = await response.json() as { data: Record<string, unknown> };
 
     expect(response.status).toBe(201);
@@ -119,11 +121,12 @@ function createMediaGateway(
 
 function createIdentityGateway(session: AuthenticatedSession): IdentityGateway {
   return {
-    registerCustomer: async () => ({ id: '', email: '', fullName: '' }),
+    registerCustomer: async () => ({ accepted: true }),
     loginCustomer: async () => ({ rawToken: '', expiresAt: '' }),
     loginAdmin: async () => ({ rawToken: '', expiresAt: '', mfaEnabled: true }),
     beginAdminMfaEnrollment: async () => ({ secret: '', otpauthUri: '' }),
     confirmAdminMfaEnrollment: async () => undefined,
+    reauthenticateAdmin: async () => false,
     validateSession: async () => session,
     logout: async () => undefined,
     getCustomerProfile: async () => ({ id: '', email: '', fullName: '', isActive: true, createdAt: '' }),
@@ -131,5 +134,9 @@ function createIdentityGateway(session: AuthenticatedSession): IdentityGateway {
     changeCustomerPassword: async () => ({ rawToken: '', expiresAt: '' }),
     listCustomerSessions: async () => [],
     revokeCustomerSession: async () => true,
+    requestCustomerPasswordReset: async () => undefined,
+    requestCustomerEmailVerification: async () => undefined,
+    verifyCustomerEmail: async () => undefined,
+    resetCustomerPassword: async () => undefined,
   };
 }

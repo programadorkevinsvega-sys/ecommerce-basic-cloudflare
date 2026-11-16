@@ -12,6 +12,12 @@ export interface SessionProps {
   lastActiveAt: string;
 }
 
+const IDLE_TIMEOUT_MS: Record<ActorType, number> = {
+  admin: 30 * 60 * 1000,
+  customer: 7 * 24 * 60 * 60 * 1000,
+};
+const ACTIVITY_REFRESH_INTERVAL_MS = 60 * 1000;
+
 export class Session {
   private props: SessionProps;
 
@@ -47,12 +53,22 @@ export class Session {
   public get createdAt(): string { return this.props.createdAt; }
   public get lastActiveAt(): string { return this.props.lastActiveAt; }
 
-  public isExpired(): boolean {
-    return new Date(this.props.expiresAt).getTime() <= Date.now();
+  public isExpired(now = Date.now()): boolean {
+    const expiresAt = Date.parse(this.props.expiresAt);
+    const lastActiveAt = Date.parse(this.props.lastActiveAt);
+    return !Number.isFinite(expiresAt)
+      || !Number.isFinite(lastActiveAt)
+      || expiresAt <= now
+      || now - lastActiveAt > IDLE_TIMEOUT_MS[this.props.actorType];
   }
 
-  public touch(): void {
-    this.props.lastActiveAt = new Date().toISOString();
+  public shouldRefreshActivity(now = Date.now()): boolean {
+    const lastActiveAt = Date.parse(this.props.lastActiveAt);
+    return Number.isFinite(lastActiveAt) && now - lastActiveAt > ACTIVITY_REFRESH_INTERVAL_MS;
+  }
+
+  public touch(now = Date.now()): void {
+    this.props.lastActiveAt = new Date(now).toISOString();
   }
 
   public toSnapshot(): SessionProps {

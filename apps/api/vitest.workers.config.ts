@@ -13,7 +13,15 @@ const migrations = fs.readdirSync(migrationsPath).filter((name) => name.endsWith
 export default defineConfig({
   plugins: [cloudflareTest({
     main: 'src/index.ts', wrangler: { configPath: './wrangler.jsonc' },
-    miniflare: { bindings: { TEST_MIGRATIONS: migrations, WOMPI_EVENTS_SECRET: 'local-test-events-secret', WOMPI_PRIVATE_KEY: 'prv_test_local-only', WOMPI_ENVIRONMENT: 'sandbox' } },
+    miniflare: { bindings: {
+      TEST_MIGRATIONS: migrations,
+      TOTP_ENCRYPTION_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+      GUEST_CART_HMAC_SECRET: 'local-test-guest-cart-hmac-secret-32-bytes',
+      PUBLIC_ORIGIN: 'https://shop.test',
+      WOMPI_EVENTS_SECRET: 'local-test-events-secret',
+      WOMPI_PRIVATE_KEY: 'prv_test_local-only',
+      WOMPI_ENVIRONMENT: 'sandbox',
+    } },
   })],
   test: { include: ['tests/workers/**/*.test.ts'] },
 });

@@ -1,5 +1,7 @@
 import { MiddlewareHandler } from 'hono';
 import { IdentityGateway, AuthenticatedSession } from '../gateways/identity/IdentityGateway.js';
+import { Env } from '../../platform/Env.js';
+import { extractSessionToken } from '../security/extractSessionToken.js';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -13,28 +15,11 @@ export function createAuthMiddleware(
   gateway: IdentityGateway,
   requiredActorType: 'customer' | 'admin',
   requiredPermission?: string
-): MiddlewareHandler {
+): MiddlewareHandler<{ Bindings: Env }> {
   return async (c, next) => {
-    const cookieHeader = c.req.header('cookie') || '';
     const cookieName = requiredActorType === 'admin' ? '__Host-admin-session' : '__Host-session';
 
-    let token = '';
-    const cookies = cookieHeader.split(';').map((p) => p.trim());
-    for (const cookie of cookies) {
-      if (cookie.startsWith(`${cookieName}=`)) {
-        token = cookie.substring(cookieName.length + 1);
-        break;
-      }
-    }
-
-    // Alternativa: header Authorization Bearer para pruebas API
-    if (!token) {
-      const authHeader = c.req.header('authorization') || '';
-      if (authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7).trim();
-      }
-    }
-
+    let token = extractSessionToken(c.req.raw, cookieName, c.env?.ENVIRONMENT) || '';
     if (!token) {
       return c.json({ error: 'No autenticado: sesión requerida' }, 401);
     }
@@ -47,7 +32,7 @@ export function createAuthMiddleware(
       return c.json({ error: 'Acceso denegado: tipo de sesión incompatible' }, 403);
     }
 
-    if (requiredActorType === 'admin' && !session.mfaEnabled) {
+    if (isAdminMfaPending(session)) {
       return c.json({ error: 'MFA obligatorio: completa el enrolamiento antes de usar el panel' }, 403);
     }
 
@@ -67,4 +52,8 @@ export function createAuthMiddleware(
 
     return next();
   };
+}
+
+export function isAdminMfaPending(session: Pick<AuthenticatedSession, 'actorType' | 'mfaEnabled'>): boolean {
+  return session.actorType === 'admin' && session.mfaEnabled !== true;
 }

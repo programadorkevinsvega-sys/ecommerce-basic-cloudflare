@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { Env } from '../../../platform/Env.js';
 import { verifyTurnstileToken } from '../../security/verifyTurnstileToken.js';
+import { CustomerAuthFlowController } from './CustomerAuthFlowController.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().max(254),
   password: z.string().min(12).max(128),
   fullName: z.string().min(2).max(100),
   phone: z.string().max(20).optional(),
@@ -13,7 +15,7 @@ const registerSchema = z.object({
 }).strict();
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().max(254),
   password: z.string().min(1).max(128),
   turnstileToken: z.string().min(1).max(2048),
 }).strict();
@@ -27,21 +29,28 @@ export class CustomerAuthController {
         const body = await c.req.json();
         const parsed = registerSchema.safeParse(body);
         if (!parsed.success) {
-          return c.json({ error: 'Validación fallida', details: parsed.error.issues }, 400);
+          return c.json({ error: 'Solicitud inválida' }, 400);
         }
 
         const verification = await verifyTurnstileToken(parsed.data.turnstileToken, c.env, c.req.url, c.req.header('cf-connecting-ip'));
         if (verification === 'unavailable') return c.json({ error: 'Registro temporalmente no disponible' }, 503);
         if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
 
+        if (!c.env.PUBLIC_ORIGIN) return c.json({ error: 'Registro temporalmente no disponible' }, 503);
         const { turnstileToken: _turnstileToken, ...customerInput } = parsed.data;
-        const customer = await gateway.registerCustomer(customerInput);
-        return c.json({ data: customer }, 201);
+        await gateway.registerCustomer({ ...customerInput, publicOrigin: c.env.PUBLIC_ORIGIN });
+        return c.json({ message: 'Si el registro fue aceptado, recibirás instrucciones para verificar tu correo.' }, 202);
       } catch (error) {
-        if (error instanceof Error && error.message === 'El correo electrónico ya se encuentra registrado') {
-          return c.json({ error: 'Ese correo ya tiene una cuenta. Inicia sesión para continuar.' }, 409);
+        if (error instanceof Error && error.message === 'PASSWORD_POLICY_UNMET') {
+          return c.json({ error: 'La contraseña no cumple la política de seguridad.' }, 400);
         }
-        return c.json({ error: 'No fue posible completar el registro' }, 400);
+        if (error instanceof Error && error.message === 'PASSWORD_COMPROMISED') {
+          return c.json({ error: 'Elige una contraseña que no haya aparecido en filtraciones.' }, 400);
+        }
+        if (error instanceof Error && error.message === 'PASSWORD_BREACH_CHECK_UNAVAILABLE') {
+          return c.json({ error: 'No se pudo comprobar la seguridad de la contraseña. Inténtalo más tarde.' }, 503);
+        }
+        return c.json({ error: 'No fue posible completar el registro' }, 503);
       }
     });
 
@@ -57,7 +66,7 @@ export class CustomerAuthController {
         if (verification === 'unavailable') return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
         if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
 
-        const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for');
+        const ip = c.req.header('cf-connecting-ip');
         const userAgent = c.req.header('user-agent');
 
         const session = await gateway.loginCustomer({
@@ -80,9 +89,7 @@ export class CustomerAuthController {
     });
 
     router.post('/logout', async (c) => {
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-session=([^;]+)/);
-      const token = match ? match[1] : c.req.header('authorization')?.replace('Bearer ', '');
+      const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
 
       if (token) {
         await gateway.logout(token);
@@ -93,9 +100,7 @@ export class CustomerAuthController {
     });
 
     router.get('/me', async (c) => {
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-session=([^;]+)/);
-      const token = match ? match[1] : c.req.header('authorization')?.replace('Bearer ', '');
+      const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
 
       if (!token) {
         return c.json({ error: 'No autenticado: sesión requerida' }, 401);
@@ -114,6 +119,7 @@ export class CustomerAuthController {
       }
     });
 
+    router.route('/', CustomerAuthFlowController.createRoutes(gateway));
     return router;
   }
 }

@@ -52,7 +52,12 @@ export function renderMiPaqueteConfigScript(): string {
         packageWidthCm: null, packageLengthCm: null, packageHeightCm: null, packageWeightKg: null,
         declaredValueMode: document.getElementById('mp-declared').value, cashOnDeliveryPaymentType: Number(document.getElementById('mp-cod-payment').value),
         requestPickup: document.getElementById('mp-pickup').value === 'true', selectionCriterion: document.getElementById('mp-criterion').value };
-      try { await packageRequest('/api/v1/admin/shipping/mipaquete/config', { method: 'PUT', body: JSON.stringify(payload) }); message.textContent = 'Configuración guardada.'; await loadMiPaqueteConfigStatus(); }
+      try {
+        const headers = await window.adminCriticalHeaders(true);
+        if (!headers) return;
+        await packageRequest('/api/v1/admin/shipping/mipaquete/config', { method: 'PUT', headers, body: JSON.stringify(payload) });
+        message.textContent = 'Configuración guardada.'; await loadMiPaqueteConfigStatus();
+      }
       catch (error) { message.textContent = error.message || 'Error de conexión.'; }
     });
     async function loadMiPaqueteConfigStatus() {

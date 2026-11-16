@@ -12,12 +12,13 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { processOrderPaymentSuccess } from './processOrderPaymentSuccess.js';
 import { isFactusCustomerEmailEnabled } from './isFactusCustomerEmailEnabled.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 type PaymentRouteDependencies = { paymentsGateway: PaymentsGateway; ordersGateway: OrdersGateway; identityGateway: IdentityGateway; realtimeGateway: RealtimeGateway; inventoryGateway: InventoryGateway; invoicingGateway: InvoicingGateway; notificationsGateway: NotificationsGateway; auditGateway: AuditGateway; settingsGateway: SettingsGateway };
 
 export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: PaymentRouteDependencies): void {
   app.get('/api/v1/admin/payments/cod/local-deliveries', async (c) => {
-    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return c.json({ error: 'No autorizado' }, 401);
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -29,7 +30,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
   });
 
   app.post('/api/v1/admin/payments/cod/collect', async (c) => {
-    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return c.json({ error: 'No autorizado' }, 401);
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -48,7 +49,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
   });
 
   app.get('/api/v1/admin/payments', async (c) => {
-    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return c.json({ error: 'No autorizado' }, 401);
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -86,7 +87,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
   });
 
   app.post('/api/v1/admin/payments/:orderId/settlement', async (c) => {
-    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return c.json({ error: 'No autorizado' }, 401);
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -108,7 +109,7 @@ export function registerAdminPaymentRoutes(app: Hono<{ Bindings: Env }>, d: Paym
   });
 
   app.post('/api/v1/admin/payments/:orderId/settlement/corrections', async (c) => {
-    const token = getAdminToken(c.req.header('authorization'), c.req.header('cookie'));
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return c.json({ error: 'No autorizado' }, 401);
     const admin = await d.identityGateway.validateSession(token);
     if (admin?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -137,8 +138,3 @@ const paymentPages = z.object({
   settlementsPage: z.coerce.number().int().min(1).max(1_000_000),
   q: z.string().trim().max(120).optional(),
 }).strict();
-
-function getAdminToken(authorization?: string, cookies?: string): string | null {
-  if (authorization?.startsWith('Bearer ')) return authorization.slice(7).trim();
-  return cookies?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1] ?? null;
-}

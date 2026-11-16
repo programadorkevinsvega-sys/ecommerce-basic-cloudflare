@@ -14,6 +14,7 @@ import { UpdatePromotionRuleUseCase } from './application/use-cases/UpdatePromot
 import { EvaluateProductDiscountUseCase } from './application/use-cases/EvaluateProductDiscountUseCase.js';
 import { ValidateCouponUseCase } from './application/use-cases/ValidateCouponUseCase.js';
 import { EvaluateCartDiscountsUseCase } from './application/use-cases/EvaluateCartDiscountsUseCase.js';
+import { ManageCouponRedemptionUseCase } from './application/use-cases/ManageCouponRedemptionUseCase.js';
 
 export interface PromotionsModuleContainer {
   createPromotionRuleUseCase: CreatePromotionRuleUseCase;
@@ -29,6 +30,7 @@ export interface PromotionsModuleContainer {
   evaluateProductDiscountUseCase: EvaluateProductDiscountUseCase;
   evaluateCartDiscountsUseCase: EvaluateCartDiscountsUseCase;
   validateCouponUseCase: ValidateCouponUseCase;
+  manageCouponRedemptionUseCase: ManageCouponRedemptionUseCase;
 }
 
 export function createPromotionsModule(env: Env): PromotionsModuleContainer {
@@ -49,5 +51,6 @@ export function createPromotionsModule(env: Env): PromotionsModuleContainer {
     evaluateProductDiscountUseCase: new EvaluateProductDiscountUseCase(ruleRepo),
     evaluateCartDiscountsUseCase: new EvaluateCartDiscountsUseCase(ruleRepo),
     validateCouponUseCase: new ValidateCouponUseCase(couponRepo),
+    manageCouponRedemptionUseCase: new ManageCouponRedemptionUseCase(couponRepo),
   };
 }

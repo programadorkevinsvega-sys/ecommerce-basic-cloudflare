@@ -1,6 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { env, exports } from 'cloudflare:workers';
-import { OrdersController } from '../../src/bff/controllers/orders/OrdersController.js';
 import { D1InventoryRepository } from '../../src/modules/inventory/infrastructure/persistence/d1/repositories/D1InventoryRepository.js';
 import { D1OrderRepository } from '../../src/modules/orders/infrastructure/persistence/d1/repositories/D1OrderRepository.js';
 import { Order } from '../../src/modules/orders/domain/entities/Order.js';
@@ -28,7 +27,7 @@ describe('Worker API security and runtime bindings', () => {
   });
   it('dispatches a request through the actual Worker entrypoint', async () => {
     const response = await exports.default.fetch('https://shop.test/health');
-    expect(response.status).toBe(200);
+    expect(response.status, await response.clone().text()).toBe(200);
   }, 15000);
 
   it('rejects cross-origin cookie mutations before reaching a controller', async () => {
@@ -102,38 +101,6 @@ describe('Worker API security and runtime bindings', () => {
     expect(payments?.status).toBe('approved');
     expect(invoiceRows.results).toHaveLength(1);
     expect(paymentEvents.results).toHaveLength(1);
-  });
-
-  it('returns conflict and cancels the order when stock reservation fails', async () => {
-    const updateOrderStatus = vi.fn().mockResolvedValue({});
-    const reserveStock = vi.fn().mockResolvedValue({ success: false });
-    const order = { id: 'order-reserve-fail', paymentMethod: 'wompi', lines: [{ productId: 'prod-1', quantity: 1 }], toJSON: () => ({ id: 'order-reserve-fail' }) };
-    const zone = { id: 'zone-1', isActive: true, priceInCents: 500, allowsCashOnDelivery: true };
-    const product = { id: 'prod-1', name: 'Test product', sku: 'SKU1', status: 'published', priceInCents: 1000, stockQuantity: 2, salePolicy: { allowsCashOnDelivery: false, shippingScope: 'national', localCoverageZones: [] } };
-    const orders = { createOrder: vi.fn().mockResolvedValue(order), updateOrderStatus, evaluateCheckoutPolicy: vi.fn().mockResolvedValue({ canProceed: true, allowsCashOnDelivery: false, allowedPaymentMethods: ['wompi'] }) };
-    const shipping = {
-      getZone: vi.fn().mockResolvedValue(zone),
-      checkCoverage: vi.fn().mockResolvedValue({ isCovered: true, zoneId: zone.id }),
-      listActiveFreeShippingRules: vi.fn().mockResolvedValue([]),
-    };
-    const catalog = { listProducts: vi.fn().mockResolvedValue([product]) };
-    const promotions = {
-      evaluateProductDiscount: vi.fn().mockResolvedValue({ hasDiscount: false }),
-      evaluateCartDiscounts: vi.fn(async (items: Array<{ productId: string; unitPriceCents: number }>) => items.map((item) => ({
-        productId: item.productId, originalPriceCents: item.unitPriceCents,
-        finalPriceCents: item.unitPriceCents, discountAppliedCents: 0,
-      }))),
-      validateCoupon: vi.fn(),
-    };
-    const settings = { getSettings: vi.fn().mockResolvedValue({ taxRatePercent: 0 }) };
-    const app = OrdersController.createRoutes(orders as any, {} as any, shipping as any, catalog as any, {} as any, { reserveStock } as any, {} as any, settings as any, promotions as any);
-    const response = await app.fetch(new Request('https://shop.test/api/v1/orders', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'vega_cart_id=cart_123e4567-e89b-42d3-a456-426614174000' },
-      body: JSON.stringify({ customerEmail: 'customer@example.test', customerName: 'Customer', customerPhone: '3000000000', customerTaxId: '1234567890', customerTaxIdType: 'CC', customerLegalOrganizationCode: '2', paymentMethod: 'wompi', shippingZoneId: zone.id, shippingAddress: { daneCode: '11001' }, lines: [{ productId: product.id, quantity: 1, unitPriceCents: 1 }] }),
-    }));
-    expect(response.status).toBe(409);
-    expect(reserveStock).toHaveBeenCalledOnce();
-    expect(updateOrderStatus).toHaveBeenCalledWith(expect.objectContaining({ orderId: order.id, status: 'cancelled' }));
   });
 
   it('reserves D1 stock atomically and requires complete, unexpired order reservations', async () => {

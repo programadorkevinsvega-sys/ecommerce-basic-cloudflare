@@ -60,7 +60,7 @@ describe('order tracking authentication paths', () => {
   it('serves paginated admin tracking only to admins with order read permission', async () => {
     const orders = { listAdminOrderTracking: vi.fn().mockResolvedValue({ items: [], total: 0 }) };
     const app = routes({ validateSession: vi.fn().mockResolvedValue({ actorId: 'admin-1', actorType: 'admin', permissions: ['orders:read'] }) }, orders);
-    const response = await app.request('/api/v1/admin/orders/tracking?page=2&pageSize=10&q=buyer', { headers: { authorization: 'Bearer admin-token' } });
+    const response = await app.request('/api/v1/admin/orders/tracking?page=2&pageSize=10&q=buyer', { headers: { Cookie: '__Host-admin-session=admin-token' } });
     expect(response.status).toBe(200);
     expect(orders.listAdminOrderTracking).toHaveBeenCalledWith({ page: 2, pageSize: 10, query: 'buyer', status: undefined });
   });
@@ -68,7 +68,7 @@ describe('order tracking authentication paths', () => {
   it('denies tracking management to signed-in customers', async () => {
     const orders = { listAdminOrderTracking: vi.fn() };
     const app = routes({ validateSession: vi.fn().mockResolvedValue({ actorId: 'customer-1', actorType: 'customer', permissions: [] }) }, orders);
-    const response = await app.request('/api/v1/admin/orders/tracking', { headers: { authorization: 'Bearer customer-token' } });
+    const response = await app.request('/api/v1/admin/orders/tracking', { headers: { Cookie: '__Host-admin-session=customer-token' } });
     expect(response.status).toBe(401);
     expect(orders.listAdminOrderTracking).not.toHaveBeenCalled();
   });

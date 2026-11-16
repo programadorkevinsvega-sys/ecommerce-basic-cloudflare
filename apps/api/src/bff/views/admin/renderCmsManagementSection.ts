@@ -3,9 +3,8 @@ import { CmsPageDto } from '../../gateways/cms/CmsGateway.js';
 export function renderCmsManagementSection(pages: CmsPageDto[]): string {
   const pageRows = pages.map((p) => {
     const isPub = p.status === 'published';
-    const toggleAction = isPub
-      ? `<button class="btn-action btn-action-hide" onclick="toggleCmsPageStatus('${p.id}', 'draft')">Ocultar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="toggleCmsPageStatus('${p.id}', 'published')">Publicar</button>`;
+    const nextStatus = isPub ? 'draft' : 'published';
+    const toggleAction = `<button class="btn-action ${isPub ? 'btn-action-hide' : 'btn-action-publish'}" data-cms-action="status" data-cms-id="${escapeHtml(p.id)}" data-cms-status="${nextStatus}">${isPub ? 'Ocultar' : 'Publicar'}</button>`;
 
     // Extraer contenido HTML o texto del primer bloque
     let bodyContent = '';
@@ -26,10 +25,10 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
         <td>${escapeHtml(p.updatedAt.substring(0, 10))}</td>
         <td class="cms-page-actions">
           <div class="cms-actions-group">
-          <a class="btn-action btn-action-view" href="/p/${escapeHtml(p.slug)}" target="_blank">Ver</a>
-          <button class="btn-action" onclick="editCmsPage('${p.id}', '${escapeJs(p.title)}', '${escapeJs(p.slug)}', '${p.status}', '${escapeJs(p.seoTitle || '')}', '${escapeJs(p.seoDescription || '')}', '${escapeJs(bodyContent)}')">Editar</button>
+          <a class="btn-action btn-action-view" href="/p/${escapeHtml(p.slug)}" target="_blank" rel="noopener noreferrer">Ver</a>
+          <button class="btn-action" data-cms-action="edit" data-cms-id="${escapeHtml(p.id)}" data-cms-title="${escapeHtml(p.title)}" data-cms-slug="${escapeHtml(p.slug)}" data-cms-status="${escapeHtml(p.status)}" data-cms-seo-title="${escapeHtml(p.seoTitle || '')}" data-cms-seo-description="${escapeHtml(p.seoDescription || '')}" data-cms-body="${escapeHtml(bodyContent)}">Editar</button>
           ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteCmsPage('${p.id}')">Eliminar</button>
+          <button class="btn-action btn-action-delete" data-cms-action="delete" data-cms-id="${escapeHtml(p.id)}">Eliminar</button>
           </div>
         </td>
       </tr>
@@ -40,20 +39,20 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
     <section class="cms-screen">
       <header class="cms-heading"><div><span class="cms-eyebrow">MARKETING</span><h1>Páginas CMS</h1><p>
         Crea y gestiona páginas como Términos y Condiciones, Políticas de Privacidad, Preguntas Frecuentes, etc.
-      </p></div><button type="button" class="cms-primary" onclick="startCmsPage()">+ Nueva página</button></header>
+      </p></div><button type="button" class="cms-primary" data-cms-control="start">+ Nueva página</button></header>
       <section class="cms-template-card">
         <label style="font-weight:700; margin-bottom:0.5rem; display:block;">📋 Cargar Plantilla Legal para Colombia:</label>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button type="button" class="btn-action" onclick="loadCmsTemplate('terminos')" style="background:#334155; color:#fff;">Términos y Condiciones</button>
-          <button type="button" class="btn-action" onclick="loadCmsTemplate('privacidad')" style="background:#334155; color:#fff;">Política Tratamiento Datos (Ley 1581)</button>
-          <button type="button" class="btn-action" onclick="loadCmsTemplate('devoluciones')" style="background:#334155; color:#fff;">Devoluciones y Retracto</button>
-          <button type="button" class="btn-action" onclick="loadCmsTemplate('pqrs')" style="background:#334155; color:#fff;">Atención PQRS</button>
+          <button type="button" class="btn-action" data-cms-template="terminos" style="background:#334155; color:#fff;">Términos y Condiciones</button>
+          <button type="button" class="btn-action" data-cms-template="privacidad" style="background:#334155; color:#fff;">Política Tratamiento Datos (Ley 1581)</button>
+          <button type="button" class="btn-action" data-cms-template="devoluciones" style="background:#334155; color:#fff;">Devoluciones y Retracto</button>
+          <button type="button" class="btn-action" data-cms-template="pqrs" style="background:#334155; color:#fff;">Atención PQRS</button>
         </div>
       </section>
       <section class="cms-list-card"><div class="cms-list-heading"><div><h2>Páginas</h2><p>${pages.length} páginas registradas</p></div></div>
       <div class="cms-table-scroll"><form id="newCmsPageForm" class="cms-editor-form" hidden>
         <input type="hidden" id="cmsEditId" value="" />
-        <header class="cms-editor-heading"><div><h2 id="cms-editor-heading">Nueva página</h2><p>Configura el contenido, estado y metadatos SEO.</p></div><button type="button" class="cms-secondary" onclick="resetCmsForm()">Cerrar</button></header>
+        <header class="cms-editor-heading"><div><h2 id="cms-editor-heading">Nueva página</h2><p>Configura el contenido, estado y metadatos SEO.</p></div><button type="button" class="cms-secondary" data-cms-control="reset">Cerrar</button></header>
         <div class="form-grid">
           <div><label>Título de la Página</label><input type="text" id="cmsTitle" required placeholder="Ej. Políticas de Devolución" /></div>
           <div><label>Slug URL (/p/...)</label><input type="text" id="cmsSlug" required placeholder="politicas-de-devolucion" /></div>
@@ -75,7 +74,7 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           <!-- Barra de Herramientas Estilo Word -->
           <div style="display:flex; gap:0.4rem; padding:0.6rem; background:#1e293b; border:1px solid #334155; border-bottom:none; border-radius:8px 8px 0 0; flex-wrap:wrap; align-items:center;">
             <!-- Jerarquía de Encabezados -->
-            <select onchange="cmsFormatBlock(this.value); this.selectedIndex=0;" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
+            <select data-cms-control="format-block" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
               <option value="">Formato…</option>
               <option value="h1">Título 1 (H1)</option>
               <option value="h2">Título 2 (H2)</option>
@@ -84,7 +83,7 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
               <option value="blockquote">Cita destacada</option>
             </select>
             <!-- Tamaño de Letra -->
-            <select onchange="cmsFontSize(this.value); this.selectedIndex=0;" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
+            <select data-cms-control="font-size" style="width:auto; padding:0.3rem 0.6rem; font-size:0.8rem; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px;">
               <option value="">Tamaño…</option>
               <option value="2">Pequeña (13px)</option>
               <option value="3">Normal (16px)</option>
@@ -94,33 +93,33 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
             </select>
             <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
             <!-- Estilos de Texto -->
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('bold')" title="Negrita (Ctrl+B)"><strong>B</strong></button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('italic')" title="Cursiva (Ctrl+I)"><em>I</em></button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('underline')" title="Subrayado (Ctrl+U)"><span style="text-decoration:underline;">U</span></button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; min-width:32px;" onclick="cmsFormat('strikeThrough')" title="Tachado"><span style="text-decoration:line-through;">S</span></button>
+            <button type="button" class="btn-action" data-cms-command="bold" style="padding:0.3rem 0.6rem; min-width:32px;" title="Negrita (Ctrl+B)"><strong>B</strong></button>
+            <button type="button" class="btn-action" data-cms-command="italic" style="padding:0.3rem 0.6rem; min-width:32px;" title="Cursiva (Ctrl+I)"><em>I</em></button>
+            <button type="button" class="btn-action" data-cms-command="underline" style="padding:0.3rem 0.6rem; min-width:32px;" title="Subrayado (Ctrl+U)"><span style="text-decoration:underline;">U</span></button>
+            <button type="button" class="btn-action" data-cms-command="strikeThrough" style="padding:0.3rem 0.6rem; min-width:32px;" title="Tachado"><span style="text-decoration:line-through;">S</span></button>
             <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
             <!-- Alineación de Párrafo -->
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyLeft')" title="Alinear a la izquierda">⬅️ Izq</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyCenter')" title="Centrar">🎯 Centrar</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyRight')" title="Alinear a la derecha">➡️ Der</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('justifyFull')" title="Justificar">↔️ Justificar</button>
+            <button type="button" class="btn-action" data-cms-command="justifyLeft" style="padding:0.3rem 0.6rem;" title="Alinear a la izquierda">⬅️ Izq</button>
+            <button type="button" class="btn-action" data-cms-command="justifyCenter" style="padding:0.3rem 0.6rem;" title="Centrar">🎯 Centrar</button>
+            <button type="button" class="btn-action" data-cms-command="justifyRight" style="padding:0.3rem 0.6rem;" title="Alinear a la derecha">➡️ Der</button>
+            <button type="button" class="btn-action" data-cms-command="justifyFull" style="padding:0.3rem 0.6rem;" title="Justificar">↔️ Justificar</button>
             <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
             <!-- Listas -->
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertUnorderedList')" title="Viñetas">• Lista</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertOrderedList')" title="Numeración">1. Lista</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsFormat('insertHorizontalRule')" title="Línea horizontal">➖ Línea</button>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem;" onclick="cmsCreateLink()" title="Insertar enlace">🔗 Enlace</button>
+            <button type="button" class="btn-action" data-cms-command="insertUnorderedList" style="padding:0.3rem 0.6rem;" title="Viñetas">• Lista</button>
+            <button type="button" class="btn-action" data-cms-command="insertOrderedList" style="padding:0.3rem 0.6rem;" title="Numeración">1. Lista</button>
+            <button type="button" class="btn-action" data-cms-command="insertHorizontalRule" style="padding:0.3rem 0.6rem;" title="Línea horizontal">➖ Línea</button>
+            <button type="button" class="btn-action" data-cms-control="create-link" style="padding:0.3rem 0.6rem;" title="Insertar enlace">🔗 Enlace</button>
             <span style="width:1px; height:20px; background:#475569; margin:0 0.2rem;"></span>
             <!-- Color de Letra y Resaltado -->
             <label style="display:inline-flex; align-items:center; gap:0.25rem; margin:0; font-size:0.75rem; cursor:pointer;" title="Color del texto">
               🎨 Color:
-              <input type="color" onchange="cmsFontColor(this.value)" value="#0f172a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
+              <input type="color" data-cms-control="font-color" value="#0f172a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
             </label>
             <label style="display:inline-flex; align-items:center; gap:0.25rem; margin:0; font-size:0.75rem; cursor:pointer;" title="Resaltador">
               🖍️ Resaltar:
-              <input type="color" onchange="cmsHighlightColor(this.value)" value="#fef08a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
+              <input type="color" data-cms-control="highlight-color" value="#fef08a" style="width:26px; height:26px; padding:0; border:none; cursor:pointer; background:transparent;" />
             </label>
-            <button type="button" class="btn-action" style="padding:0.3rem 0.6rem; background:#475569; color:#fff;" onclick="cmsFormat('removeFormat')" title="Limpiar formato">🧹 Limpiar</button>
+            <button type="button" class="btn-action" data-cms-command="removeFormat" style="padding:0.3rem 0.6rem; background:#475569; color:#fff;" title="Limpiar formato">🧹 Limpiar</button>
           </div>
           <!-- Hoja de Documento estilo Word (fondo claro, legible, profesional) -->
           <div style="background:#0f172a; padding:1.25rem; border:1px solid #334155; border-radius:0 0 8px 8px;">
@@ -128,7 +127,7 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           </div>
           <textarea id="cmsBody" style="display:none;"></textarea>
         </div>
-        <footer class="cms-form-actions"><button type="button" class="cms-secondary" id="cmsCancelBtn" onclick="resetCmsForm()">Cancelar</button><button type="submit" class="btn-primary" id="cmsSubmitBtn">Publicar Página CMS</button></footer>
+        <footer class="cms-form-actions"><button type="button" class="cms-secondary" id="cmsCancelBtn" data-cms-control="reset">Cancelar</button><button type="submit" class="btn-primary" id="cmsSubmitBtn">Publicar Página CMS</button></footer>
         <div id="cmsMsg" class="msg"></div>
       </form>
       <table class="cms-table">
@@ -142,8 +141,8 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
           <h3 style="margin-top:0; color:#f87171;">⚠️ Confirmar Eliminación</h3>
           <p id="cmsDeleteModalText" style="color:#cbd5e1; font-size:0.95rem; margin-bottom:1.5rem;">¿Estás seguro de que deseas eliminar esta página? Esta acción no se puede deshacer.</p>
           <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
-            <button type="button" class="btn-action" onclick="closeCmsDeleteModal()" style="background:#475569; color:#fff;">Cancelar</button>
-            <button type="button" class="btn-action btn-action-delete" id="cmsConfirmDeleteBtn" onclick="confirmCmsDelete()">Eliminar Definitivamente</button>
+            <button type="button" class="btn-action" data-cms-control="close-delete" style="background:#475569; color:#fff;">Cancelar</button>
+            <button type="button" class="btn-action btn-action-delete" id="cmsConfirmDeleteBtn" data-cms-control="confirm-delete">Eliminar Definitivamente</button>
           </div>
         </div>
       </div>
@@ -153,8 +152,4 @@ export function renderCmsManagementSection(pages: CmsPageDto[]): string {
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-function escapeJs(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
 }

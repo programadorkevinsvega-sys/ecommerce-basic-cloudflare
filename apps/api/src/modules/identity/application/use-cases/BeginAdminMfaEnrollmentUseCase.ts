@@ -13,12 +13,13 @@ export class BeginAdminMfaEnrollmentUseCase {
 
   public async execute(adminId: string, password: string): Promise<Result<{ secret: string; otpauthUri: string }, Error>> {
     const admin = await this.admins.findById(adminId);
-    if (!admin || !admin.isActive || !await this.hasValidPassword(admin, password)) {
+    if (!admin || !admin.isActive || admin.mfaEnabled || !await this.hasValidPassword(admin, password)) {
       return Result.fail(new Error('Reautenticación fallida'));
     }
     const secret = TotpService.generateSecret();
-    admin.stageMfaSecret(secret);
-    await this.admins.save(admin);
+    if (!await this.admins.stageMfaEnrollment(adminId, secret)) {
+      return Result.fail(new Error('No hay un enrolamiento MFA pendiente'));
+    }
     const accountEmail = this.configuredCredentials?.email?.trim() || admin.email;
     const label = encodeURIComponent(`Vega Store:${accountEmail}`);
     const issuer = encodeURIComponent('Vega Store');

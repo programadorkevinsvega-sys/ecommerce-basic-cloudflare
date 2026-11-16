@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { calculateOrderPricing } from '../src/bff/controllers/orders/calculateOrderPricing.js';
 
 const product = { id: 'p1', name: 'Producto vigente', sku: 'SKU1', priceInCents: 12000, stockQuantity: 4, status: 'published', salePolicy: { allowsCashOnDelivery: true, shippingScope: 'national', localCoverageZones: [] } };
 function gateways(overrides: Record<string, unknown> = {}) {
   return {
-    catalog: { listProducts: async () => [product] },
+    catalog: { getProductsByIds: async (ids: string[]) => ids.includes(product.id) ? [product] : [] },
     promotions: {
       evaluateProductDiscount: async () => ({ hasDiscount: false, finalPriceCents: 0 }),
       evaluateCartDiscounts: async (items: Array<{ productId: string; unitPriceCents: number }>) => items.map((item) => ({
@@ -25,25 +25,40 @@ describe('calculateOrderPricing', () => {
       [{ productId: 'p1', quantity: 2, unitPriceCents: 1, totalCents: 2 }], 0 as never, null, 500);
     expect(result.lines[0]?.unitPriceCents).toBe(12000);
     expect(result.subtotalCents).toBe(24000);
-    expect(result.totalCents).toBe(99060);
-    expect(result.transactionFeeCents).toBe(70000);
+    expect(result.totalCents).toBe(29060);
+    expect(result.transactionFeeCents).toBe(0);
+  });
+
+  it('carga por ID productos que no aparecen en la primera página del catálogo', async () => {
+    const laterProduct = { ...product, id: 'product-after-first-100', priceInCents: 48000 };
+    const getProductsByIds = vi.fn(async (ids: string[]) => ids.includes(laterProduct.id) ? [laterProduct] : []);
+    const g = gateways({
+      catalog: {
+        listProducts: async () => Array.from({ length: 100 }, (_, index) => ({ ...product, id: `page-${index}` })),
+        getProductsByIds,
+      },
+    });
+    const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
+      [{ productId: laterProduct.id, quantity: 1 }], null, null, 0);
+    expect(getProductsByIds).toHaveBeenCalledWith([laterProduct.id]);
+    expect(result.lines[0]?.unitPriceCents).toBe(48000);
   });
 
   it('rechaza productos no publicados, cantidades inválidas y stock insuficiente', async () => {
-    const g = gateways({ catalog: { listProducts: async () => [{ ...product, status: 'draft' }] } });
+    const g = gateways({ catalog: { getProductsByIds: async () => [{ ...product, status: 'draft' }] } });
     await expect(calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never, [{ productId: 'p1', quantity: 1 }], null, null, 0)).rejects.toThrow('Producto o cantidad inválida');
     const published = gateways();
     await expect(calculateOrderPricing(published.catalog as never, published.promotions as never, published.settings as never, [{ productId: 'p1', quantity: 0 }], null, null, 0)).rejects.toThrow('Producto o cantidad inválida');
     await expect(calculateOrderPricing(published.catalog as never, published.promotions as never, published.settings as never, [{ productId: 'p1', quantity: 5 }], null, null, 0)).rejects.toThrow('Inventario insuficiente');
   });
 
-  it('mantiene IVA dentro del precio nuevo, cuenta envío aparte y aplica tarifa Wompi una vez por pedido', async () => {
+  it('mantiene IVA dentro del precio nuevo y excluye cargos de procesamiento del total al cliente', async () => {
     const modern = { ...product, priceInCents: 11900, pricingVersion: 2, allowedPaymentMethods: ['wompi'], salePolicy: { ...product.salePolicy, allowsCashOnDelivery: false } };
-    const g = gateways({ catalog: { listProducts: async () => [modern] } });
+    const g = gateways({ catalog: { getProductsByIds: async () => [modern] } });
     const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 2 }], null, null, 900, 'wompi');
-    expect(result.totalCents).toBe(94700);
-    expect(result.transactionFeeCents).toBe(70000);
+    expect(result.totalCents).toBe(24700);
+    expect(result.transactionFeeCents).toBe(0);
     expect(result.taxCents).toBe(3800);
     expect(result.estimatedPaymentFeeCents).toBeGreaterThan(700);
     expect(result.pricingVersion).toBe(2);
@@ -51,20 +66,20 @@ describe('calculateOrderPricing', () => {
       [{ productId: 'p1', quantity: 1 }], null, null, 0, 'cash_on_delivery')).rejects.toThrow('no está habilitado');
   });
 
-  it('cobra una sola tarifa fija de $700 por Wompi y ninguna por contra entrega', async () => {
+  it('no agrega cargos de procesamiento a Wompi ni a contra entrega', async () => {
     const g = gateways();
     const online = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 1 }], null, null, 500, 'wompi');
     const cod = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 1 }], null, null, 500, 'cash_on_delivery');
-    expect(online.transactionFeeCents).toBe(70000);
-    expect(online.totalCents - cod.totalCents).toBe(70000);
+    expect(online.transactionFeeCents).toBe(0);
+    expect(online.totalCents - cod.totalCents).toBe(0);
     expect(cod.transactionFeeCents).toBe(0);
   });
 
   it('permite crear un pedido COD-only sin seleccionar Wompi ni sumar sus cargos', async () => {
     const codOnly = { ...product, allowedPaymentMethods: ['cash_on_delivery'] };
-    const g = gateways({ catalog: { listProducts: async () => [codOnly] } });
+    const g = gateways({ catalog: { getProductsByIds: async () => [codOnly] } });
     const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 1 }], null, null, 500, 'cash_on_delivery');
     expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);
@@ -75,7 +90,7 @@ describe('calculateOrderPricing', () => {
 
   it('conserva COD si el registro anterior dejó vacía la lista de métodos al apagar Wompi', async () => {
     const legacyCodOnly = { ...product, allowedPaymentMethods: [], salePolicy: { ...product.salePolicy, allowsCashOnDelivery: true } };
-    const g = gateways({ catalog: { listProducts: async () => [legacyCodOnly] } });
+    const g = gateways({ catalog: { getProductsByIds: async () => [legacyCodOnly] } });
     const result = await calculateOrderPricing(g.catalog as never, g.promotions as never, g.settings as never,
       [{ productId: 'p1', quantity: 1 }], null, null, 0, 'cash_on_delivery');
     expect(result.allowedPaymentMethods).toEqual(['cash_on_delivery']);

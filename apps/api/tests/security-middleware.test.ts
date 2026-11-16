@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Hono } from 'hono';
 import { CsrfProtectionMiddleware } from '../src/bff/middleware/CsrfProtectionMiddleware.js';
-import { RateLimitMiddleware } from '../src/bff/middleware/RateLimitMiddleware.js';
+import { createRateLimitMiddleware } from '../src/bff/middleware/RateLimitMiddleware.js';
 import { Env } from '../src/platform/Env.js';
 import { SettingsController } from '../src/bff/controllers/settings/SettingsController.js';
 import { SettingsGateway } from '../src/bff/gateways/settings/SettingsGateway.js';
@@ -9,17 +9,26 @@ import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js
 import { SecurityHeadersMiddleware } from '../src/bff/middleware/SecurityHeadersMiddleware.js';
 
 describe('CSRF and request rate middleware', () => {
-  it('allows the Cloudflare Turnstile widget while keeping a restrictive CSP', async () => {
+  it('adds a per-response nonce and blocks inline scripts and external images', async () => {
     const app = new Hono();
     app.use('*', SecurityHeadersMiddleware);
-    app.get('/auth/register', (c) => c.text('register'));
+    app.get('/auth/register', (c) => c.html('<script>window.ready=true</script><img src="/media/image">'));
     const response = await app.request('/auth/register');
+    const response2 = await app.request('/auth/register');
     const policy = response.headers.get('Content-Security-Policy') || '';
-    expect(policy).toContain('script-src');
+    const nonce = policy.match(/'nonce-([^']+)'/)?.[1];
+    expect(nonce).toBeTruthy();
+    expect(await response.text()).toContain(`<script nonce="${nonce}">`);
+    expect(policy).toContain("script-src-attr 'none'");
+    expect(policy).not.toContain("script-src 'self' 'unsafe-inline'");
     expect(policy).toContain('https://challenges.cloudflare.com');
     expect(policy).toContain('https://static.cloudflareinsights.com');
     expect(policy).toContain('frame-src https://challenges.cloudflare.com');
     expect(policy).toContain("frame-ancestors 'none'");
+    expect(policy).toContain("img-src 'self' data:");
+    expect(policy).not.toContain('img-src https:');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(response2.headers.get('Content-Security-Policy')).not.toContain(`'nonce-${nonce}'`);
   });
 
   it('rejects cross-origin cookie writes and permits same-origin writes', async () => {
@@ -44,7 +53,7 @@ describe('CSRF and request rate middleware', () => {
   it('shares an IP bucket across routes within the selected limiter class', async () => {
     const limit = vi.fn().mockResolvedValue({ success: true });
     const app = new Hono<{ Bindings: Env }>();
-    app.use('*', RateLimitMiddleware);
+    app.use('*', createRateLimitMiddleware());
     app.post('/api/v1/auth/login', (c) => c.text('ok'));
     app.post('/api/v1/auth/register', (c) => c.text('ok'));
     const env = { AUTH_LIMITER: { limit }, CHECKOUT_LIMITER: { limit: vi.fn() }, API_WRITE_LIMITER: { limit: vi.fn() } } as unknown as Env;

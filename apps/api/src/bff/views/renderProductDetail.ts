@@ -23,7 +23,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
   const gallery = `<section class="detail-gallery" aria-label="Imágenes y especificaciones del producto">
     <div class="detail-main-image">
       <span class="detail-condition">${condition}</span>
-      ${primaryImage ? `<img id="main-product-img" src="/media/${escapeHtml(primaryImage)}" alt="${escapeHtml(product.name)}" fetchpriority="high" onerror="this.hidden=true;this.nextElementSibling.hidden=false" /><span class="detail-image-empty" hidden>Imagen no disponible</span>` : '<span class="detail-image-empty">Imagen no disponible</span>'}
+      ${primaryImage ? `<img id="main-product-img" src="/media/${escapeHtml(primaryImage)}" alt="${escapeHtml(product.name)}" fetchpriority="high" /><span class="detail-image-empty" hidden>Imagen no disponible</span>` : '<span class="detail-image-empty">Imagen no disponible</span>'}
     </div>
     ${images.length > 1 ? `<div class="detail-thumbnails" role="group" aria-label="Galería de imágenes">${images.map((id, index) => `<button type="button" class="detail-thumb ${index === 0 ? 'is-active' : ''}" data-image-src="/media/${escapeHtml(id)}" aria-label="Ver imagen ${index + 1}" aria-pressed="${index === 0}"><img src="/media/${escapeHtml(id)}" alt="" loading="lazy" /></button>`).join('')}</div>` : ''}
     ${showSpecifications && specifications.length ? `<details class="detail-specifications" open><summary><span>Especificaciones técnicas</span><span class="detail-chevron" aria-hidden="true">⌄</span></summary><dl>${specifications.map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(String(value))}</dd></div>`).join('')}</dl></details>` : ''}
@@ -50,6 +50,15 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
     ${renderProductShippingWidget(product)}
   </div></article>
   <script>
+    const mainProductImage = document.getElementById('main-product-img');
+    mainProductImage?.addEventListener('error', () => {
+      mainProductImage.hidden = true;
+      const placeholder = document.querySelector('.detail-main-image .detail-image-empty');
+      if (placeholder) placeholder.hidden = false;
+    }, { once: true });
+    document.querySelectorAll('.detail-thumbnails img').forEach(image => image.addEventListener('error', () => {
+      image.closest('button')?.remove();
+    }, { once: true }));
     const detailPriceCents = ${salePrice};
     const detailProductId = ${productId};
     const quantity = document.getElementById('buy-qty');
@@ -77,7 +86,7 @@ export function renderProductDetail(product: CatalogProductDto, discount?: Produ
       if (!quantity || !message) return;
       addButton.disabled = true; addButton.setAttribute('aria-busy', 'true');
       try {
-        const response = await fetch('/api/v1/cart/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: detailProductId, quantity: Number(quantity.value), unitPriceCents: detailPriceCents }) });
+        const response = await fetch('/api/v1/cart/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: detailProductId, quantity: Number(quantity.value) }) });
         const result = await response.json();
         message.hidden = false; message.textContent = response.ok ? 'Producto agregado al carrito.' : result.error || 'No se pudo agregar al carrito.';
         if (response.ok) message.insertAdjacentHTML('beforeend', ' <a href="/carrito">Ver carrito</a>');

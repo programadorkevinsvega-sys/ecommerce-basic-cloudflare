@@ -1,4 +1,10 @@
 export const renderProductCardActionsScript = String.raw`<script>
+  document.querySelectorAll('.product-card-v2 .product-media img').forEach(image => image.addEventListener('error', () => {
+    const placeholder = document.createElement('span');
+    placeholder.className = 'product-media-placeholder';
+    placeholder.textContent = 'Imagen no disponible';
+    image.replaceWith(placeholder);
+  }, { once: true }));
   document.querySelectorAll('[data-add-to-cart]').forEach(button => button.addEventListener('click', async () => {
     const original = button.innerHTML;
     button.disabled = true;
@@ -6,7 +12,7 @@ export const renderProductCardActionsScript = String.raw`<script>
     try {
       const response = await fetch('/api/v1/cart/items', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: button.dataset.productId, quantity: 1, unitPriceCents: Number(button.dataset.priceCents) })
+        body: JSON.stringify({ productId: button.dataset.productId, quantity: 1 })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'No se pudo agregar al carrito.');

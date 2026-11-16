@@ -3,6 +3,7 @@ export interface CustomerAccountViewProps {
     id: string;
     email: string;
     fullName?: string;
+    emailVerified: boolean;
   };
   orders: any[];
   invoices: any[];
@@ -56,6 +57,7 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
   <div class="container">
     <span class="eyebrow">VEGA STORE · CUENTA</span>
     <h1>Hola, ${escapeHtml(customer.fullName || 'cliente')}</h1>
+    ${customer.emailVerified ? '' : '<div class="card" id="email-verification-card"><h2>Verifica tu correo</h2><p>Verifica tu correo para poder finalizar compras con tu cuenta.</p><button class="btn btn-primary" id="resend-verification" type="button">Reenviar enlace de verificación</button><p id="verification-status" role="status" aria-live="polite"></p></div>'}
 
     <div class="card">
       <h2>👤 Mis Datos</h2>
@@ -119,6 +121,21 @@ export function renderCustomerAccountPage(props: CustomerAccountViewProps): stri
     </div>
   </div>
   <script>
+    document.getElementById('resend-verification')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      const status = document.getElementById('verification-status');
+      button.disabled = true;
+      status.textContent = 'Enviando…';
+      try {
+        const response = await fetch('/api/v1/auth/email-verification/resend', { method: 'POST', credentials: 'same-origin' });
+        const result = await response.json();
+        status.textContent = result.message || result.error || 'No fue posible enviar el enlace.';
+      } catch {
+        status.textContent = 'No fue posible conectar con la tienda.';
+      } finally {
+        button.disabled = false;
+      }
+    });
     document.getElementById('customer-logout')?.addEventListener('click', async (event) => {
       const button = event.currentTarget;
       button.disabled = true;

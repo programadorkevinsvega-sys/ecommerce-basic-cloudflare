@@ -27,7 +27,7 @@ export function renderAuditAdminScript(): string {
             <td><span class="audit-action">\${escapeHtml(l.action)}</span></td>
             <td><code>\${escapeHtml(l.entityType)}:\${escapeHtml(l.entityId)}</code></td>
             <td class="audit-changes">
-              \${l.changes ? \`<div class="audit-changes-preview">\${escapeHtml(JSON.stringify(l.changes))}</div><button class="audit-detail-button" type="button" onclick="showAuditDetails(\${index})">Ver detalle</button>\` : '--'}
+              \${l.changes ? \`<div class="audit-changes-preview">\${escapeHtml(JSON.stringify(l.changes))}</div><button class="audit-detail-button" type="button" data-audit-action="details" data-audit-index="\${index}">Ver detalle</button>\` : '--'}
             </td>
           </tr>
         \`).join('');
@@ -62,5 +62,11 @@ export function renderAuditAdminScript(): string {
     window.loadAdminAudit = loadAdminAudit;
     window.changeAuditPage = changeAuditPage;
     window.showAuditDetails = showAuditDetails;
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-audit-action]');
+      if (!button) return;
+      if (button.dataset.auditAction === 'page') changeAuditPage(Number(button.dataset.pageDelta));
+      if (button.dataset.auditAction === 'details') showAuditDetails(Number(button.dataset.auditIndex));
+    });
   `;
 }

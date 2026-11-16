@@ -29,7 +29,7 @@ describe('seguridad de perfil y sesiones', () => {
     expect(saved).toEqual(['owner-a']);
   });
 
-  it('cambia contraseña solo tras reautenticación y crea una sesión nueva', async () => {
+  it('rechaza claves filtradas y rota sesión solo tras reautenticación y comprobación limpia', async () => {
     const hash = await PasswordHasher.hash('CurrentPassword123');
     const token = SessionTokenGenerator.generateRawToken();
     const oldSession = Session.create({ id: 'session-old', tokenHash: await SessionTokenGenerator.hashToken(token),
@@ -44,9 +44,22 @@ describe('seguridad de perfil y sesiones', () => {
     const sessions = { findByTokenHash: async () => oldSession, save: async () => undefined,
       deleteByTokenHash: async () => undefined, deleteAllForActor: async () => undefined,
       listForActor: async () => [oldSession], deleteOwnedSession: async () => false };
-    const result = await new ChangeCustomerPasswordUseCase(customers, sessions).execute({
+    let compromised = true;
+    const checker = { isCompromised: async () => {
+      const current = compromised;
+      compromised = false;
+      return current;
+    } };
+    const useCase = new ChangeCustomerPasswordUseCase(customers, sessions, checker);
+    const input = {
       customerId: 'owner-a', currentPassword: 'CurrentPassword123', newPassword: 'NewPassword456!', currentSessionToken: token,
-    });
+    };
+    const rejected = await useCase.execute(input);
+    expect(rejected.isFail()).toBe(true);
+    expect(rejected.error.message).toBe('PASSWORD_COMPROMISED');
+    expect(replacement).toBeUndefined();
+
+    const result = await useCase.execute(input);
     expect(result.isOk()).toBe(true);
     expect(replacement?.actorId).toBe('owner-a');
     expect(replacement?.tokenHash).not.toBe(oldSession.tokenHash);

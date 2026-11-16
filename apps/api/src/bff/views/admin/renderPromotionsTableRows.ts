@@ -19,8 +19,8 @@ export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], product
     }
 
     const toggleAction = isAct
-      ? `<button class="btn-action btn-action-hide" onclick="togglePromoRuleStatus('${r.id}', false)">Desactivar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="togglePromoRuleStatus('${r.id}', true)">Activar</button>`;
+      ? `<button class="btn-action btn-action-hide" data-promotion-action="set-rule-status" data-promotion-id="${escapeHtml(r.id)}" data-promotion-active="false">Desactivar</button>`
+      : `<button class="btn-action btn-action-publish" data-promotion-action="set-rule-status" data-promotion-id="${escapeHtml(r.id)}" data-promotion-active="true">Activar</button>`;
 
     const encData = encodeURIComponent(JSON.stringify(r));
 
@@ -36,10 +36,10 @@ export function renderPromotionRulesTableRows(rules: PromotionRuleDto[], product
           ${isAct ? '<span class="badge badge-published">Activa</span>' : '<span class="badge badge-draft">Inactiva</span>'}
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          <button class="btn-action btn-action-view" data-item="${encData}" onclick="viewPromoRuleModal(this)">Ver</button>
-          <button class="btn-action btn-action-edit" data-item="${encData}" onclick="editPromoRuleModal(this)">Editar</button>
+          <button class="btn-action btn-action-view" data-item="${encData}" data-promotion-action="view-rule">Ver</button>
+          <button class="btn-action btn-action-edit" data-item="${encData}" data-promotion-action="edit-rule">Editar</button>
           ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deletePromoRule('${r.id}')">Eliminar</button>
+          <button class="btn-action btn-action-delete" data-promotion-action="delete-rule" data-promotion-id="${escapeHtml(r.id)}">Eliminar</button>
         </td>
       </tr>
     `;
@@ -65,8 +65,8 @@ export function renderCouponsTableRows(coupons: CouponDto[], productMap: Map<str
     }
 
     const toggleAction = isAct
-      ? `<button class="btn-action btn-action-hide" onclick="toggleCouponStatus('${c.id}', false)">Desactivar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="toggleCouponStatus('${c.id}', true)">Activar</button>`;
+      ? `<button class="btn-action btn-action-hide" data-promotion-action="set-coupon-status" data-promotion-id="${escapeHtml(c.id)}" data-promotion-active="false">Desactivar</button>`
+      : `<button class="btn-action btn-action-publish" data-promotion-action="set-coupon-status" data-promotion-id="${escapeHtml(c.id)}" data-promotion-active="true">Activar</button>`;
 
     const usesLabel = c.maxUsesGlobal ? `${c.currentUsesCount} / ${c.maxUsesGlobal}` : `${c.currentUsesCount} (ilimitado)`;
     const encData = encodeURIComponent(JSON.stringify(c));
@@ -84,10 +84,10 @@ export function renderCouponsTableRows(coupons: CouponDto[], productMap: Map<str
           ${isAct ? '<span class="badge badge-published">Activo</span>' : '<span class="badge badge-draft">Inactivo</span>'}
         </td>
         <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
-          <button class="btn-action btn-action-view" data-item="${encData}" onclick="viewCouponModal(this)">Ver</button>
-          <button class="btn-action btn-action-edit" data-item="${encData}" onclick="editCouponModal(this)">Editar</button>
+          <button class="btn-action btn-action-view" data-item="${encData}" data-promotion-action="view-coupon">Ver</button>
+          <button class="btn-action btn-action-edit" data-item="${encData}" data-promotion-action="edit-coupon">Editar</button>
           ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteCoupon('${c.id}')">Eliminar</button>
+          <button class="btn-action btn-action-delete" data-promotion-action="delete-coupon" data-promotion-id="${escapeHtml(c.id)}">Eliminar</button>
         </td>
       </tr>
     `;

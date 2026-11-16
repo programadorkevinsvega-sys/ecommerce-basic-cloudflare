@@ -39,6 +39,8 @@ describe('catalog read query optimization', () => {
     expect(products.find((product) => product.id === id)).toMatchObject({
       categoryIds: ['category-read'], mediaIds: ['media-read'], salePolicy: { localCoverageZones: ['zone-read'] },
     });
+    const requestedProduct = await repository.findByIds([id]);
+    expect(requestedProduct).toMatchObject([{ id, name: `BatchRead${id}` }]);
     const adminItems = await repository.listAdmin(25, 0, 'draft', `BatchRead${id}`);
     expect(adminItems.find((item) => item.id === id)).toMatchObject({
       name: `BatchRead${id}`, imageMediaId: 'media-read', allowsCashOnDelivery: true,

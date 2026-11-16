@@ -8,6 +8,13 @@ import { LocalCodCollectionCandidate } from '../../../modules/orders/domain/port
 import { AdminOrderListPage, AdminOrderListQuery } from '../../../modules/orders/domain/ports/AdminOrderListPage.js';
 import { AdminOrderSummaryItem } from '../../../modules/orders/domain/ports/AdminOrderSummaryItem.js';
 
+export class OrderCreationRateLimitError extends Error {
+  public constructor() {
+    super('Order creation rate limit exceeded');
+    this.name = 'OrderCreationRateLimitError';
+  }
+}
+
 export interface OrdersGateway {
   evaluateCheckoutPolicy(input: CheckoutEvaluationInput): Promise<CheckoutEvaluationResult>;
   evaluateFreeShippingEligibility(input: { subtotalCents: number; discountCents: number; rules: FreeShippingRuleCandidate[]; items: FreeShippingItemCandidate[]; now?: string }): Promise<FreeShippingRuleCandidate | null>;

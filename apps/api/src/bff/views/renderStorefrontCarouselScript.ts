@@ -1,6 +1,10 @@
 export function renderStorefrontCarouselScript(carouselId: string): string {
   const id = JSON.stringify(carouselId);
   return `<script>(() => {
+    document.querySelectorAll('.campaign-image img').forEach(image => image.addEventListener('error', () => {
+      image.remove();
+      image.parentElement?.classList.add('campaign-image-empty');
+    }, { once: true }));
     const carousel = document.getElementById(${id});
     const controls = carousel?.parentElement?.querySelector('.campaign-carousel-controls');
     if (!carousel || !controls) return;

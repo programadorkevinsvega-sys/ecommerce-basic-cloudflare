@@ -8,7 +8,9 @@ export function renderCodCollectionAdminScript(): string {
       const amountInCents = window.copPesosToCents('cod-amount');
       const receipt = document.getElementById('cod-receipt').value.trim();
       if (!orderId || !amountInCents) return alert('Selecciona una entrega e indica el monto recibido.');
-      const response = await fetch('/api/v1/admin/payments/cod/collect', { method: 'POST', headers: adminHeaders(true),
+      const headers = await window.adminCriticalHeaders(true);
+      if (!headers) return;
+      const response = await fetch('/api/v1/admin/payments/cod/collect', { method: 'POST', headers,
         body: JSON.stringify({ orderId, amountInCents, receiptNumber: receipt }) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) return alert(result.error || 'No se pudo registrar el recaudo');

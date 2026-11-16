@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { Env } from '../../../platform/Env.js';
 import { InventoryGateway } from '../../gateways/inventory/InventoryGateway.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
@@ -24,13 +25,7 @@ export class InventoryController {
 
     // Admin Auth Middleware — acepta Bearer header O cookie __Host-admin-session
     const requireAdmin = (permission: 'inventory:read' | 'inventory:adjust') => async (c: any, next: () => Promise<void>) => {
-      const auth = c.req.header('Authorization');
-      let token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
-      if (!token) {
-        const cookieHeader = c.req.header('cookie') || '';
-        const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-        token = match ? match[1] : null;
-      }
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       try {
         const session = await identityGateway.validateSession(token);

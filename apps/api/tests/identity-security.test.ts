@@ -24,9 +24,19 @@ describe('Seguridad de Identidad y Criptografía (SEC-AUTH / SEC-SES / SEC-ISO)'
     expect(secret.length).toBeGreaterThan(16);
 
     // Verificación de código inválido
-    const invalid = await TotpService.verifyCode(secret, '000000');
+    const invalid = await TotpService.findMatchingCounter(secret, '000000');
     // Código arbitrario debe ser rechazado
-    expect(invalid).toBe(false);
+    expect(invalid).toBeNull();
+  });
+
+  it('returns the matched RFC 6238 counter for replay protection', async () => {
+    const secret = TotpService.generateSecret();
+    const timestamp = Date.UTC(2026, 0, 1, 0, 0, 0);
+    const counter = Math.floor(timestamp / 30_000);
+    const code = await TotpService.generateCurrentCode(secret, timestamp);
+
+    expect(await TotpService.findMatchingCounter(secret, code, 1, timestamp)).toBe(counter);
+    expect(await TotpService.findMatchingCounter(secret, '12x456', 1, timestamp)).toBeNull();
   });
 
   it('SEC-SES-01: SessionTokenGenerator genera token de 32 bytes y su hash SHA-256 es irreversible', async () => {

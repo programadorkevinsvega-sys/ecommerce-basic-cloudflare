@@ -13,10 +13,10 @@ export function renderAdminSummarySection(props: AdminSummaryProps): string {
   const expiringBanners = props.banners.filter((banner) => isBannerLive(banner) && banner.endsAt && Date.parse(banner.endsAt) < Date.now() + 3 * 86400000).length;
   return `<section id="tab-summary" class="tab-content admin-summary active" aria-labelledby="summary-title">
     <header class="summary-heading"><div class="summary-title-group"><h1 id="summary-title">Resumen</h1><span class="summary-sample-label">Datos operativos</span><p id="summary-date-caption">Pedidos disponibles · últimos 30 días</p></div>
-      <div class="summary-toolbar">      <label class="summary-search"><span class="sr-only">Buscar pedido, cliente o ciudad</span><input id="summary-search" type="search" placeholder="Buscar pedido, cliente o ciudad" oninput="filterAdminSummary()" /></label>
-        <label class="summary-range-label"><span class="sr-only">Rango del resumen</span><select id="summary-range" onchange="filterAdminSummary()"><option value="30">Últimos 30 días</option><option value="7">Últimos 7 días</option><option value="90">Últimos 90 días</option></select></label>
-        <button class="summary-icon-button" type="button" aria-label="Notificaciones" onclick="switchTab('orders'); loadAdminOrders()"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="notification-bell-badge" class="notification-badge" style="display:none">0</span></button>
-        <button class="summary-export-button" type="button" onclick="exportAdminSummary()">Exportar informe</button>
+      <div class="summary-toolbar">      <label class="summary-search"><span class="sr-only">Buscar pedido, cliente o ciudad</span><input id="summary-search" type="search" placeholder="Buscar pedido, cliente o ciudad" /></label>
+        <label class="summary-range-label"><span class="sr-only">Rango del resumen</span><select id="summary-range"><option value="30">Últimos 30 días</option><option value="7">Últimos 7 días</option><option value="90">Últimos 90 días</option></select></label>
+        <button class="summary-icon-button" type="button" data-admin-summary-action="orders" aria-label="Notificaciones"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="notification-bell-badge" class="notification-badge" style="display:none">0</span></button>
+        <button class="summary-export-button" type="button" data-admin-summary-action="export">Exportar informe</button>
       </div>
     </header>
     <section class="summary-metrics" aria-label="Indicadores de ventas">
@@ -34,7 +34,7 @@ export function renderAdminSummarySection(props: AdminSummaryProps): string {
     </div>
     <div class="summary-bottom-grid">
       <section class="summary-panel summary-orders" aria-labelledby="summary-orders-title">
-        <div class="summary-panel-heading"><div><h2 id="summary-orders-title">Pedidos recientes</h2><p>Pedidos disponibles para tu cuenta · máximo 100</p></div><button type="button" class="summary-link-button" onclick="switchTab('orders'); loadAdminOrders()">Ver todos <span aria-hidden="true">→</span></button></div>
+        <div class="summary-panel-heading"><div><h2 id="summary-orders-title">Pedidos recientes</h2><p>Pedidos disponibles para tu cuenta · máximo 100</p></div><button type="button" class="summary-link-button" data-admin-summary-action="orders">Ver todos <span aria-hidden="true">→</span></button></div>
         <div class="summary-table-scroll"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Ciudad</th><th>Medio de pago</th><th>Total</th><th>Estado</th></tr></thead>
           <tbody id="summary-orders-body"><tr><td colspan="6" class="summary-empty">Cargando pedidos autorizados…</td></tr></tbody></table></div>
       </section>

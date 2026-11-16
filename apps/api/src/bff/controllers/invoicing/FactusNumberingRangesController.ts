@@ -4,6 +4,8 @@ import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { Env } from '../../../platform/Env.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 const rangeId = z.string().regex(/^\d{1,20}$/);
 const createSchema = z.object({ documentCode: z.enum(['21', '22']), prefix: z.string().trim().regex(/^[A-Z0-9]{1,4}$/i),
@@ -11,8 +13,8 @@ const createSchema = z.object({ documentCode: z.enum(['21', '22']), prefix: z.st
 const currentSchema = z.object({ current: z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER) }).strict();
 
 export class FactusNumberingRangesController {
-  public static createRoutes(invoicing: InvoicingGateway, identity: IdentityGateway, audit: AuditGateway, settings: SettingsGateway): Hono {
-    const app = new Hono();
+  public static createRoutes(invoicing: InvoicingGateway, identity: IdentityGateway, audit: AuditGateway, settings: SettingsGateway): Hono<{ Bindings: Env }> {
+    const app = new Hono<{ Bindings: Env }>();
     app.get('/api/v1/admin/factus/numbering-ranges/associated', async (c) => {
       const admin = await authorize(c, identity, 'settings:read');
       if (!admin.ok) return c.json({ error: admin.error }, admin.status);
@@ -56,7 +58,7 @@ export class FactusNumberingRangesController {
   }
 }
 
-function registerMutations(app: Hono, invoicing: InvoicingGateway, identity: IdentityGateway, audit: AuditGateway, settings: SettingsGateway): void {
+function registerMutations(app: Hono<{ Bindings: Env }>, invoicing: InvoicingGateway, identity: IdentityGateway, audit: AuditGateway, settings: SettingsGateway): void {
   app.patch('/api/v1/admin/factus/numbering-ranges/:id/status', async (c) => {
     const admin = await authorize(c, identity, 'settings:edit');
     if (!admin.ok) return c.json({ error: admin.error }, admin.status);
@@ -113,10 +115,8 @@ function isSelected(settings: Awaited<ReturnType<SettingsGateway['getSettings']>
   return settings.factusNumberingRangeId === id || settings.factusCreditNoteNumberingRangeId === id;
 }
 
-async function authorize(c: Context, identity: IdentityGateway, permission: string) {
-  const auth = c.req.header('authorization');
-  const cookie = c.req.header('cookie')?.split(';').map((part: string) => part.trim()).find((part: string) => part.startsWith('__Host-admin-session='));
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : cookie?.slice(cookie.indexOf('=') + 1);
+async function authorize(c: Context<{ Bindings: Env }>, identity: IdentityGateway, permission: string) {
+  const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
   if (!token) return { ok: false as const, error: 'No autorizado', status: 401 as const };
   try {
     const admin = await identity.validateSession(token);

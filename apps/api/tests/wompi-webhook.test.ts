@@ -37,7 +37,7 @@ describe('Wompi webhook signature and reconciliation', () => {
     const body = await signedEvent();
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: payment }), { status: 200 }));
     const payments = { processWompiWebhook: vi.fn().mockResolvedValue({ success: true, ignored: true }) };
-    const app = PaymentsController.createRoutes(payments as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any);
+    const app = PaymentsController.createRoutes(payments as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any, {} as any, { releaseCouponRedemption: vi.fn() } as any);
     const response = await app.fetch(new Request('https://shop.test/api/v1/webhooks/wompi', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), {
       WOMPI_EVENTS_SECRET: secret, WOMPI_PRIVATE_KEY: 'prv_test_key', WOMPI_ENVIRONMENT: 'sandbox',
     } as any);

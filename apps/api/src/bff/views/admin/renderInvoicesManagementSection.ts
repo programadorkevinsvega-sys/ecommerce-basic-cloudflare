@@ -3,19 +3,19 @@ export function renderInvoicesManagementSection(): string {
     <header class="invoices-heading"><div><h1 id="invoices-title">Facturación</h1><p id="invoices-description">Consulta documentos comerciales y su estado electrónico.</p></div></header>
     <section class="card invoices-list-card" aria-labelledby="invoices-list-title">
       <div class="invoices-section-heading"><div><h2 id="invoices-list-title">Facturas emitidas</h2><p>Numeración consecutiva y documentos almacenados de forma segura.</p></div></div>
-      <label class="invoice-search-label" for="invoices-search">Buscar por factura, pedido, cliente o total</label><input id="invoices-search" class="invoice-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" oninput="filterAdminInvoices()" />
-      <label class="invoice-search-label" for="invoices-electronic-status">Estado de facturación electrónica</label><select id="invoices-electronic-status" class="invoice-search-input" onchange="loadAdminInvoices(1)"><option value="">Todos</option><option value="pending">Pendiente</option><option value="accepted">Aceptada</option><option value="rejected">Rechazada</option><option value="not_configured">Sin configurar</option></select>
+      <label class="invoice-search-label" for="invoices-search">Buscar por factura, pedido, cliente o total</label><input id="invoices-search" class="invoice-search-input" type="search" placeholder="Ej. FAC-000004, correo, pedido o 120.265" />
+      <label class="invoice-search-label" for="invoices-electronic-status">Estado de facturación electrónica</label><select id="invoices-electronic-status" class="invoice-search-input"><option value="">Todos</option><option value="pending">Pendiente</option><option value="accepted">Aceptada</option><option value="rejected">Rechazada</option><option value="not_configured">Sin configurar</option></select>
       <div class="invoices-table-scroll"><table class="invoices-table"><thead><tr><th>Factura</th><th>Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
         <tbody id="invoices-table-body"><tr><td colspan="7" class="invoices-empty">Cargando facturas…</td></tr></tbody></table></div>
       <nav id="invoices-pagination" class="admin-pagination" aria-label="Paginación de facturas"></nav>
     </section>
     <div id="credit-note-modal" class="invoice-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="credit-note-title">
-      <button class="invoice-modal-backdrop" type="button" aria-label="Cerrar nota crédito" onclick="closeCreditNoteModal()"></button>
-      <section class="invoice-modal-dialog"><header><div><h2 id="credit-note-title">Emitir nota crédito</h2><p id="cn-modal-invoice-num">Factura: #---</p></div><button type="button" class="invoice-modal-close" aria-label="Cerrar" onclick="closeCreditNoteModal()">×</button></header>
+      <button class="invoice-modal-backdrop" type="button" data-invoice-action="close" aria-label="Cerrar nota crédito"></button>
+      <section class="invoice-modal-dialog"><header><div><h2 id="credit-note-title">Emitir nota crédito</h2><p id="cn-modal-invoice-num">Factura: #---</p></div><button type="button" class="invoice-modal-close" data-invoice-action="close" aria-label="Cerrar">×</button></header>
         <div class="invoice-modal-field"><label for="cn-concept">Concepto DIAN</label><select id="cn-concept"><option value="1">Devolución parcial de bienes o no aceptación parcial del servicio</option><option value="2">Anulación de factura electrónica</option><option value="3">Rebaja o descuento parcial o total</option><option value="4">Ajuste de precio</option><option value="5">Descuento comercial por pronto pago</option><option value="6">Descuento comercial por volumen</option></select></div>
         <div class="invoice-modal-field"><label for="cn-reason">Detalle del motivo</label><input type="text" id="cn-reason" maxlength="500" placeholder="Describe la causa de la nota crédito" /></div>
         <div class="invoice-modal-field"><label for="cn-amount">Monto de la nota (COP)</label><input type="text" id="cn-amount" data-cop-input inputmode="numeric" autocomplete="off" placeholder="1.728.550" /></div>
-        <footer><button type="button" class="invoice-secondary-button" onclick="closeCreditNoteModal()">Cancelar</button><button type="button" class="btn-primary" onclick="submitCreditNote()">Emitir nota crédito</button></footer>
+        <footer><button type="button" class="invoice-secondary-button" data-invoice-action="close">Cancelar</button><button type="button" class="btn-primary" data-invoice-action="submit-credit-note">Emitir nota crédito</button></footer>
       </section>
     </div>
   </section>`;

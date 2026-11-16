@@ -105,7 +105,7 @@ export class Banner {
     if (props.altText && props.altText.length > 500) throw new Error('El texto alternativo es demasiado largo');
     if (props.placement && !isValidPlacement(props.placement)) throw new Error('Ubicación del banner inválida');
     if (props.bannerType && !['informative', 'promotional'].includes(props.bannerType)) throw new Error('Tipo de banner inválido');
-    if (props.imageUrl && !isSafeImageUrl(props.imageUrl)) throw new Error('La imagen debe usar una ruta interna o una URL HTTPS segura');
+    if (props.imageUrl && !isSafeImageUrl(props.imageUrl)) throw new Error('La imagen debe usar una ruta del mismo origen');
     if (props.linkUrl && !isSafeStoreLink(props.linkUrl)) throw new Error('Los enlaces promocionales deben apuntar a una ruta de la tienda');
     if (props.sortOrder !== undefined && (!Number.isSafeInteger(props.sortOrder) || props.sortOrder < 0 || props.sortOrder > 100000)) throw new Error('Orden del banner inválido');
     if (props.startsAt && props.endsAt && Date.parse(props.startsAt) > Date.parse(props.endsAt)) throw new Error('La fecha inicial debe preceder a la final');

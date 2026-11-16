@@ -26,7 +26,8 @@ export class D1OrderTrackingRepository implements IOrderTrackingRepository {
     const row = await this.db.prepare(
       `SELECT id, status, payment_status, created_at, min_estimated_days, max_estimated_days,
        shipping_carrier, shipping_tracking_number, shipping_tracking_url, estimated_delivery_date
-       FROM orders_orders WHERE id = ? AND guest_tracking_token_hash = ?`
+       FROM orders_orders WHERE id = ? AND guest_tracking_token_hash = ?
+       AND datetime(guest_tracking_token_expires_at) > datetime('now')`
     ).bind(orderId, tokenHash).first<TrackingRow>();
     return row ? this.loadRecord(row) : null;
   }
@@ -53,8 +54,8 @@ export class D1OrderTrackingRepository implements IOrderTrackingRepository {
   public async listForAdmin(input: { page: number; pageSize: number; query?: string; status?: string }): Promise<AdminOrderTrackingPage> {
     const query = input.query?.trim() || '';
     const status = input.status && ['placed', 'confirmed', 'prepared', 'shipped', 'delivered', 'cancelled'].includes(input.status) ? input.status : '';
-    const filter = `%${query}%`;
-    const where = `${query ? '(id LIKE ? OR customer_name LIKE ? OR customer_email LIKE ?)' : '1=1'} AND ${status ? 'status = ?' : '1=1'}`;
+    const filter = `%${query.replace(/[\\%_]/g, '\\$&')}%`;
+    const where = `${query ? '(id LIKE ? ESCAPE char(92) OR customer_name LIKE ? ESCAPE char(92) OR customer_email LIKE ? ESCAPE char(92))' : '1=1'} AND ${status ? 'status = ?' : '1=1'}`;
     const params = [...(query ? [filter, filter, filter] : []), ...(status ? [status] : [])];
     const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM orders_orders WHERE ${where}`).bind(...params).first<{ total: number }>();
     const { results } = await this.db.prepare(

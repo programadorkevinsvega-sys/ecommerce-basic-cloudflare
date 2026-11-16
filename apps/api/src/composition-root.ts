@@ -3,6 +3,7 @@ import { InProcessSettingsGateway } from './bff/gateways/settings/InProcessSetti
 import { createSettingsModule } from './modules/settings/module.config.js';
 import { SettingsPublicApi } from './modules/settings/module.public-api.js';
 import { InProcessIdentityGateway } from './bff/gateways/identity/InProcessIdentityGateway.js';
+import { InProcessAdminLoginLockoutAlert } from './bff/gateways/identity/InProcessAdminLoginLockoutAlert.js';
 import { createIdentityModule } from './modules/identity/module.config.js';
 import { IdentityPublicApi } from './modules/identity/module.public-api.js';
 import { InProcessMediaGateway } from './bff/gateways/media/InProcessMediaGateway.js';
@@ -66,30 +67,40 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
   const auditContainer = new AuditModuleContainer({ db: env.DB });
   const auditGateway = new InProcessAuditGateway(new AuditPublicApi(auditContainer));
 
+  const notificationsContainer = new NotificationsModuleContainer({
+    db: env.DB,
+    resendApiKey: env.RESEND_API_KEY,
+    fromEmail: env.RESEND_FROM_EMAIL,
+  });
+  const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
+
   const settingsContainer = createSettingsModule(env);
   const settingsGateway = new InProcessSettingsGateway(new SettingsPublicApi(settingsContainer));
 
   const identityContainer = createIdentityModule(env, {
-    recordCredentialSync: async (adminId, stage) => {
-      await auditGateway.record({
-        actorId: adminId,
-        actorType: 'admin',
-        action: 'identity.admin_configured_credentials.synchronized',
-        entityType: 'identity_admin',
-        entityId: adminId,
-        changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash'] },
-      });
+    credentialAudit: {
+      recordCredentialSync: async (adminId, stage) => {
+        await auditGateway.record({
+          actorId: adminId,
+          actorType: 'admin',
+          action: 'identity.admin_configured_credentials.synchronized',
+          entityType: 'identity_admin',
+          entityId: adminId,
+          changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash'] },
+        });
+      },
+      recordConfiguredAdminProvision: async (adminId, stage) => {
+        await auditGateway.record({
+          actorId: adminId,
+          actorType: 'admin',
+          action: 'identity.admin_configured_credentials.provisioned',
+          entityType: 'identity_admin',
+          entityId: adminId,
+          changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash', 'role_id'] },
+        });
+      },
     },
-    recordConfiguredAdminProvision: async (adminId, stage) => {
-      await auditGateway.record({
-        actorId: adminId,
-        actorType: 'admin',
-        action: 'identity.admin_configured_credentials.provisioned',
-        entityType: 'identity_admin',
-        entityId: adminId,
-        changes: { stage, source: 'cloudflare_environment', fields: ['email', 'password_hash', 'role_id'] },
-      });
-    },
+    adminLoginLockoutAlert: new InProcessAdminLoginLockoutAlert(notificationsGateway),
   });
   const identityGateway = new InProcessIdentityGateway(new IdentityPublicApi(identityContainer));
 
@@ -147,14 +158,8 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
         username: env.FACTUS_PRODUCTION_USERNAME, password: env.FACTUS_PRODUCTION_PASSWORD } } });
   const invoicingGateway = new InProcessInvoicingGateway(new InvoicingPublicApi(invoicingContainer));
 
-  const notificationsContainer = new NotificationsModuleContainer({
-    db: env.DB,
-    resendApiKey: env.RESEND_API_KEY,
-    fromEmail: env.RESEND_FROM_EMAIL,
-  });
-  const notificationsGateway = new InProcessNotificationsGateway(new NotificationsPublicApi(notificationsContainer));
-
   const outboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE, env.ANALYTICS);
+  const identityOutboxRelayService = new OutboxRelayService(env.DB, env.EVENTS_QUEUE, env.ANALYTICS, 'identity');
 
   return {
     settingsGateway,
@@ -178,6 +183,7 @@ export function buildCompositionRoot(env: Env): AppCompositionRoot {
     notificationsGateway,
     auditGateway,
     outboxRelayService,
+    identityOutboxRelayService,
     mediaOrphanCollector: mediaContainer.collectOrphanedMediaUseCase,
   };
 }

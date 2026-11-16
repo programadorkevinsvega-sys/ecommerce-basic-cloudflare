@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderBaseLayout } from '../src/bff/views/renderBaseLayout.js';
 import { renderCartPage } from '../src/bff/views/renderCartPage.js';
+import { renderCheckoutPage } from '../src/bff/views/renderCheckoutPage.js';
 import type { CartDto } from '../src/bff/gateways/cart/CartGateway.js';
 import type { CatalogProductDto } from '../src/bff/gateways/catalog/CatalogGateway.js';
 
@@ -50,5 +51,20 @@ describe('cart page presentation', () => {
     expect(html).toContain('.cart-layout');
     expect(html).toContain('max-width: 650px');
     expect(html).toContain('aria-labelledby="cart-summary-title"');
+  });
+});
+
+describe('checkout Turnstile presentation', () => {
+  it('renders Turnstile for guest checkout and omits it for authenticated checkout', () => {
+    const guestHtml = renderCheckoutPage({ ...cart, items: [], totalQuantity: 0 }, new Map(), [], 19,
+      undefined, new Map(), true, 'public-site-key');
+    const customerHtml = renderCheckoutPage({ ...cart, items: [], totalQuantity: 0 }, new Map(), [], 19,
+      undefined, new Map(), false, 'public-site-key');
+
+    expect(guestHtml).toContain('data-requires-turnstile="true"');
+    expect(guestHtml).toContain('data-sitekey="public-site-key"');
+    expect(guestHtml).toContain('challenges.cloudflare.com/turnstile/v0/api.js');
+    expect(customerHtml).toContain('data-requires-turnstile="false"');
+    expect(customerHtml).not.toContain('class="cf-turnstile"');
   });
 });

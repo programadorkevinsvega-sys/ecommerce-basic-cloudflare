@@ -31,6 +31,12 @@ Registro de control de migraciones aplicadas por módulo y entorno. Todo cambio 
 |---|---|---|---|---|---|
 | `identity__0001_init.sql` | v1 | Producción (`ecommerce-vega-production`) | 2026-10-11 | 52eace0 | ✅ Aplicada con éxito |
 | `identity__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | 52eace0 | ✅ Compilada y verificada |
+| `identity__0002_admin_login_ip_lockout.sql` | v2 | Local (Miniflare) | 2026-11-15 | trabajo actual | ✅ Añade intentos y bloqueos temporales por hash de IP y administrador; alertas reclamadas atómicamente. |
+| `identity__0002_admin_login_ip_lockout.sql` | v2 | Producción (`ecommerce-vega-production`) | Pendiente | — | No aplicada. Aplicar tras revisar ledger y respaldo, antes de desplegar el Worker; conservar tabla al hacer rollback. |
+| `identity__0003_admin_totp_replay_protection.sql` | v3 | Local temporal (Miniflare) | 2026-11-15 | trabajo actual | ✅ Aditiva; aplicación y anti-replay/bloqueo verificados en tres pruebas de integración D1. |
+| `identity__0003_admin_totp_replay_protection.sql` | v3 | Producción (`ecommerce-vega-production`) | Pendiente | — | No aplicada. Requiere respaldo y verificación del ledger antes de desplegar código dependiente; conservar columnas al hacer rollback. |
+| `identity__0004_customer_auth_flows.sql` | v4 | Local (Miniflare) | 2026-11-15 | trabajo actual | ✅ Migración en base vacía, tokens de un solo uso, reset con cierre de sesiones y outbox/redacción verificados en pruebas D1. |
+| `identity__0004_customer_auth_flows.sql` | v4 | Producción (`ecommerce-vega-production`) | Pendiente | — | No aplicada. Aplicar tras respaldo/ledger y antes del Worker que lee tokens, contadores y leases; conservar tablas y columnas al revertir. |
 
 ---
 
@@ -146,6 +152,8 @@ En producción se confirmó antes de aplicar v4: ledger con 45 migraciones, cero
 | `promotions__0001_init.sql` | v1 | Local (Miniflare) | 2026-10-11 | HEAD | ✅ Compilada y verificada |
 | `promotions__0002_coupon_targets.sql` | v2 | Producción (`ecommerce-vega-production`) | 2026-10-11 | HEAD | ✅ Aplicada con éxito |
 | `promotions__0003_correct_welcome_coupon_description.sql` | v3 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Corrige únicamente la descripción obsoleta de BIENVENIDO10 si coincide con el texto erróneo observado; no cambia reglas ni descuentos. Ledger verificado. |
+| `promotions__0005_atomic_coupon_redemptions.sql` | v5 | Local (Miniflare) | 2026-11-15 | trabajo actual | ✅ Aplicación desde D1 vacía e idempotencia verificadas; tabla e índice nuevos solo usan prefijo `promotions_*`. Conserva la tabla anterior para rollback. |
+| `promotions__0005_atomic_coupon_redemptions.sql` | v5 | Producción (`ecommerce-vega-production`) | Pendiente | — | No aplicada. Requiere revisión del ledger, respaldo y autorización de despliegue conforme a `ROLLBACK_RECOVERY.md`. |
 
 ---
 
@@ -216,6 +224,8 @@ El Worker se desplegó desde `aebac6f` como versión `bf1c7641-ecc6-4e1c-a33a-a7
 | `orders__0009_shipping_discount.sql` | v9 | D1 local y producción (`ecommerce-vega-production`) | Aplicada el 2026-10-15 por runner | `d60e05b` | Expand-only: agrega `shipping_discount_cents NOT NULL DEFAULT 0`; pedidos anteriores conservan su valor y total. Ledger y columna verificados en producción. |
 | `orders__0011_customer_fiscal_identity.sql` | v11 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger y columnas fiscales confirmadas en D1. |
 | `orders__0012_electronic_invoice_line_snapshot.sql` | v12 | Producción (`ecommerce-vega-production`) | 2026-10-24 | trabajo actual | ✅ Aplicada; ledger, columna y default `0` confirmados. Las 3 líneas históricas se conservaron en modalidad comercial. |
+| `orders__0013_guest_checkout_protection.sql` | v13 | D1 temporal / Workers | 2026-11-15 | trabajo actual | ✅ Aplicación desde D1 vacía e idempotencia verificadas; pruebas de límites concurrentes aprobadas. Producción: no aplicada. |
+| `orders__0014_guest_tracking_expiration.sql` | v14 | D1 temporal / Workers | 2026-11-15 | trabajo actual | ✅ Migración desde D1 vacía e idempotencia verificadas; backfill de tokens antiguos y bloqueo de tokens vencidos verificados en Workers. Producción no aplicada. |
 
 ### Modalidad fiscal por producto y línea de pedido (`catalog__0016`, `orders__0012`)
 

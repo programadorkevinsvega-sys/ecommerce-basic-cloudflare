@@ -13,9 +13,9 @@ export function renderShippingLocationRows(locations: DivipolaLocationDto[], zon
       : '<span class="shipping-badge neutral">Sin entrega local</span>';
     const editableZone = activeLocalZones[0] || localZones[0];
     const encodedZones = escapeHtml(encodeURIComponent(JSON.stringify(localZones)));
-    const view = `<button class="shipping-action" type="button" data-code="${escapeHtml(location.daneCode)}" data-name="${escapeHtml(location.municipality)}" data-department="${escapeHtml(location.department)}" data-type="${escapeHtml(location.type)}" data-zones="${encodedZones}" onclick="viewShippingLocation(this)">Ver</button>`;
+    const view = `<button class="shipping-action" type="button" data-shipping-action="view-location" data-code="${escapeHtml(location.daneCode)}" data-name="${escapeHtml(location.municipality)}" data-department="${escapeHtml(location.department)}" data-type="${escapeHtml(location.type)}" data-zones="${encodedZones}">Ver</button>`;
     const actions = editableZone
-      ? `<button class="shipping-action primary" type="button" data-item="${encodeHtmlData(editableZone)}" onclick="editShippingZoneModal(this)">Editar</button><button class="shipping-action danger" type="button" data-item="${encodeHtmlData(editableZone)}" data-code="${escapeHtml(location.daneCode)}" onclick="removeShippingLocationFromZone(this)">Eliminar</button>`
+      ? `<button class="shipping-action primary" type="button" data-shipping-action="edit-zone" data-item="${encodeHtmlData(editableZone)}">Editar</button><button class="shipping-action danger" type="button" data-shipping-action="remove-location" data-item="${encodeHtmlData(editableZone)}" data-code="${escapeHtml(location.daneCode)}">Eliminar</button>`
       : '';
     const search = `${location.municipality} ${location.department} ${location.daneCode}`.toLowerCase();
     return `<tr data-shipping-search="${escapeHtml(search)}"><td><strong>${escapeHtml(location.municipality)}</strong></td><td>${escapeHtml(location.department)}</td><td><code>${escapeHtml(location.daneCode)}</code></td><td>${coverage}</td><td><div class="shipping-row-actions">${view}${actions}</div></td></tr>`;

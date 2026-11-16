@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { Env } from '../../../platform/Env.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 export class AuditController {
   public static createRoutes(
@@ -11,11 +12,7 @@ export class AuditController {
     const app = new Hono<{ Bindings: Env }>();
 
     const getAdminToken = (c: any): string | null => {
-      const auth = c.req.header('Authorization');
-      if (auth?.startsWith('Bearer ')) return auth.slice(7);
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-      return match ? match[1] : null;
+      return extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     };
 
     // GET /api/v1/admin/audit — Lista de eventos de auditoría

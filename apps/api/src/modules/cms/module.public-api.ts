@@ -7,8 +7,10 @@ import { SaveBlogPostInput } from './application/use-cases/SaveBlogPostUseCase.j
 import { BlogPost, BlogPostStatus } from './domain/entities/BlogPost.js';
 import { BlogAuthor, BlogCategory, BlogTaxonomyInput } from './domain/entities/BlogAuthor.js';
 import { SaveMenuInput } from './application/use-cases/SaveMenuUseCase.js';
+import { sanitizeHtml } from './domain/sanitizeHtml.js';
 
 export interface ICmsPublicApi {
+  sanitizeRichText(input: string): string;
   createPage(input: CreatePageInput): Promise<Page>;
   updatePageContent(input: UpdatePageContentInput): Promise<Page>;
   getPageBySlug(slug: string): Promise<Page>;
@@ -40,6 +42,10 @@ export class CmsPublicApi implements ICmsPublicApi {
 
   public constructor(container: CmsModuleContainer) {
     this.container = container;
+  }
+
+  public sanitizeRichText(input: string): string {
+    return sanitizeHtml(input);
   }
 
   public async createPage(input: CreatePageInput): Promise<Page> {

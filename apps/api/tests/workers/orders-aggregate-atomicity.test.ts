@@ -70,7 +70,9 @@ afterAll(async () => {
 describe('orders aggregate D1 atomicity', () => {
   it('creates through the application use case with history and outbox in the same aggregate write', async () => {
     const repository = new D1OrderRepository(env.DB);
+    const requestedOrderId = `ord-${crypto.randomUUID()}`;
     const order = await new CreateOrderUseCase(repository).execute({
+      orderId: requestedOrderId,
       customerId: 'customer-atomic-test', guestCartIdHash: null,
       customerEmail: 'customer@example.test', customerName: 'Cliente de prueba', customerPhone: '3000000000',
       shippingAddress: { department: 'Cundinamarca', municipality: 'Bogotá', daneCode: '11001', addressLine: 'Calle 1' },
@@ -79,6 +81,12 @@ describe('orders aggregate D1 atomicity', () => {
       lines: [{ productId: 'product-test', productName: 'Producto', productSku: 'SKU', quantity: 1, unitPriceCents: 1000 }],
     });
     orderIds.push(order.id);
+    expect(order.id).toBe(requestedOrderId);
+    expect(Date.parse(order.guestTrackingTokenExpiresAt || '') - Date.parse(order.createdAt))
+      .toBe(90 * 24 * 60 * 60 * 1000);
+    const storedExpiry = await env.DB.prepare('SELECT guest_tracking_token_expires_at FROM orders_orders WHERE id = ?')
+      .bind(order.id).first<{ guest_tracking_token_expires_at: string }>();
+    expect(storedExpiry?.guest_tracking_token_expires_at).toBe(order.guestTrackingTokenExpiresAt);
     expect(await rowCount('orders_orders', 'id', order.id)).toBe(1);
     expect(await rowCount('orders_lines', 'order_id', order.id)).toBe(1);
     expect(await rowCount('orders_history', 'order_id', order.id)).toBe(1);

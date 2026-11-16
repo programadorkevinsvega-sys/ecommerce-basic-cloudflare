@@ -5,6 +5,12 @@ export function renderFactusSettingsScript(): string {
       const notice = (id, text, ok = false) => { const el = get(id); el.textContent = text; el.style.background = ok ? '#065f46' : '#334155'; el.style.display = 'block'; };
       const headers = (json = false) => window.adminHeaders ? window.adminHeaders(json) : (json ? { 'Content-Type': 'application/json' } : {});
       const request = async (url, init = {}) => {
+        const method = String(init.method || 'GET').toUpperCase();
+        if (url.startsWith('/api/v1/admin/factus/numbering-ranges') && method !== 'GET') {
+          const criticalHeaders = await window.adminCriticalHeaders(Boolean(init.body));
+          if (!criticalHeaders) throw new Error('Acción cancelada: se requiere reautenticación.');
+          init = { ...init, headers: { ...init.headers, ...criticalHeaders } };
+        }
         const response = await fetch(url, { ...init, headers: { ...headers(Boolean(init.body)), ...init.headers }, cache: 'no-store' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'No se pudo completar la operación con Factus');
@@ -19,7 +25,9 @@ export function renderFactusSettingsScript(): string {
         const button = event.currentTarget; button.disabled = true;
         notice('factusSettingsMessage', 'Guardando configuración de Factus…');
         try {
-          await request('/api/v1/settings', { method: 'PATCH', body: JSON.stringify({
+          const criticalHeaders = await window.adminCriticalHeaders(true);
+          if (!criticalHeaders) return;
+          await request('/api/v1/settings', { method: 'PATCH', headers: criticalHeaders, body: JSON.stringify({
             factusNumberingRangeId: get('factusInvoiceRange').value.trim(), factusCreditNoteNumberingRangeId: get('factusCreditRange').value.trim() }) });
           notice('factusSettingsMessage', 'Configuración Factus guardada.', true);
         } catch (error) { notice('factusSettingsMessage', error.message); }

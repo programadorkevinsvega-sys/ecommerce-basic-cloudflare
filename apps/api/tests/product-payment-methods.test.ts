@@ -39,6 +39,13 @@ describe('product payment method eligibility', () => {
     expect(html).toContain('No disponible para todos los productos de este pedido.');
   });
 
+  it('does not add the merchant processing estimate to the Wompi checkout total', () => {
+    const wompiProduct: CatalogProductDto = { ...product, allowedPaymentMethods: ['wompi'] };
+    const html = renderCheckoutPage(cart, new Map([[product.id, wompiProduct]]), []);
+    expect(html).not.toContain('70000');
+    expect(html).not.toContain('checkout-transaction-fee-row');
+  });
+
   it('uses the separate COD policy as the allowed method and gives a clear admin control', () => {
     expect(renderProductFormCard()).not.toContain('id="pPayCod"');
     expect(renderProductFormsScript()).toContain("document.getElementById('pCod').value === 'true' ? ['cash_on_delivery'] : []");

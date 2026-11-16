@@ -4,6 +4,7 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import QRCode from 'qrcode-svg';
 import { Env } from '../../../platform/Env.js';
 import { verifyTurnstileToken } from '../../security/verifyTurnstileToken.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 const adminLoginSchema = z.object({
   email: z.string().email(),
@@ -28,7 +29,8 @@ export class AdminAuthController {
         if (verification === 'unavailable') return c.json({ error: 'Inicio de sesión temporalmente no disponible' }, 503);
         if (verification !== 'valid') return c.json({ error: 'No fue posible verificar la solicitud. Inténtalo de nuevo.' }, 400);
 
-        const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for');
+        const traceId = (c.get('traceContext') as { traceId?: string } | undefined)?.traceId;
+        const ip = c.req.header('cf-connecting-ip');
         const userAgent = c.req.header('user-agent');
 
         const session = await gateway.loginAdmin({
@@ -37,6 +39,7 @@ export class AdminAuthController {
           totpCode: parsed.data.totpCode,
           ipAddress: ip,
           userAgent,
+          traceId,
         });
 
         // Cookie de administrador conforme a SEC-SES-02
@@ -52,7 +55,7 @@ export class AdminAuthController {
     });
 
     router.post('/mfa/enrollment', async (c) => {
-      const actor = await getPendingAdmin(c.req.raw, gateway);
+      const actor = await getPendingAdmin(c.req.raw, gateway, c.env?.ENVIRONMENT);
       if (!actor) return c.json({ error: 'Se requiere una sesión administrativa pendiente de MFA' }, 401);
       const body = await c.req.json().catch(() => null);
       const parsed = z.object({ password: z.string().min(1).max(128) }).strict().safeParse(body);
@@ -76,7 +79,7 @@ export class AdminAuthController {
     });
 
     router.post('/mfa/confirm', async (c) => {
-      const actor = await getPendingAdmin(c.req.raw, gateway);
+      const actor = await getPendingAdmin(c.req.raw, gateway, c.env?.ENVIRONMENT);
       if (!actor) return c.json({ error: 'Se requiere una sesión administrativa pendiente de MFA' }, 401);
       const body = await c.req.json().catch(() => null);
       const parsed = z.object({ code: z.string().regex(/^\d{6}$/) }).strict().safeParse(body);
@@ -90,9 +93,7 @@ export class AdminAuthController {
     });
 
     router.post('/logout', async (c) => {
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-      const token = match ? match[1] : c.req.header('authorization')?.replace('Bearer ', '');
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
 
       if (token) {
         await gateway.logout(token);
@@ -106,9 +107,8 @@ export class AdminAuthController {
   }
 }
 
-async function getPendingAdmin(request: Request, gateway: IdentityGateway) {
-  const token = request.headers.get('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1]
-    || request.headers.get('authorization')?.replace(/^Bearer\s+/, '');
+async function getPendingAdmin(request: Request, gateway: IdentityGateway, environment?: string) {
+  const token = extractSessionToken(request, '__Host-admin-session', environment);
   if (!token) return null;
   try {
     const actor = await gateway.validateSession(token);

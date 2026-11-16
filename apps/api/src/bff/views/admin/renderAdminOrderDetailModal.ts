@@ -11,7 +11,7 @@ export function renderAdminOrderDetailModal(): string {
             </h3>
             <div id="modal-order-date" style="font-size:0.8rem; color:var(--muted, #94a3b8); margin-top:0.3rem;">--</div>
           </div>
-          <button onclick="closeOrderDetailModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted, #94a3b8); line-height:1;">&times;</button>
+          <button type="button" data-order-modal-action="close" aria-label="Cerrar detalle" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted, #94a3b8); line-height:1;">&times;</button>
         </div>
 
         <!-- Badges de estado -->
@@ -120,9 +120,9 @@ export function renderAdminOrderDetailModal(): string {
               <option value="delivered">Entregado</option>
               <option value="cancelled">Cancelado</option>
             </select>
-            <button onclick="applyModalStatusChange()" class="btn-primary" style="padding:0.35rem 0.75rem; font-size:0.85rem;">Guardar</button>
+            <button type="button" data-order-modal-action="save-status" class="btn-primary" style="padding:0.35rem 0.75rem; font-size:0.85rem;">Guardar</button>
           </div>
-          <button onclick="closeOrderDetailModal()" style="padding:0.4rem 1rem; background:transparent; border:1px solid var(--border, #334155); border-radius:5px; color:inherit; cursor:pointer; font-size:0.85rem;">Cerrar</button>
+          <button type="button" data-order-modal-action="close" style="padding:0.4rem 1rem; background:transparent; border:1px solid var(--border, #334155); border-radius:5px; color:inherit; cursor:pointer; font-size:0.85rem;">Cerrar</button>
         </div>
 
       </div>

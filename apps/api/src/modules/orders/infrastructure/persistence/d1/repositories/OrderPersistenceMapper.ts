@@ -11,7 +11,7 @@ export interface OrderRow {
   shipping_fulfillment_method?: 'merchant_local' | 'carrier' | 'legacy';
   subtotal_cents: number; discount_cents: number; coupon_code: string | null; total_cents: number;
   tax_cents: number; pricing_version: number; estimated_payment_fee_cents: number;
-  transaction_fee_cents: number; guest_tracking_token_hash?: string | null;
+  transaction_fee_cents: number; guest_tracking_token_hash?: string | null; guest_tracking_token_expires_at?: string | null;
   min_estimated_days?: number | null; max_estimated_days?: number | null;
   payment_method: string; status: string; payment_status: string; created_at: string; updated_at: string;
 }
@@ -42,7 +42,8 @@ export function hydrateD1Order(row: OrderRow, lines: OrderLine[]): Order {
     subtotalCents: row.subtotal_cents, discountCents: row.discount_cents, couponCode: row.coupon_code,
     totalCents: row.total_cents, taxCents: row.tax_cents ?? 0, pricingVersion: row.pricing_version ?? 1,
     estimatedPaymentFeeCents: row.estimated_payment_fee_cents ?? 0, transactionFeeCents: row.transaction_fee_cents ?? 0,
-    guestTrackingTokenHash: row.guest_tracking_token_hash ?? null, minEstimatedDays: row.min_estimated_days ?? null,
+    guestTrackingTokenHash: row.guest_tracking_token_hash ?? null,
+    guestTrackingTokenExpiresAt: row.guest_tracking_token_expires_at ?? null, minEstimatedDays: row.min_estimated_days ?? null,
     maxEstimatedDays: row.max_estimated_days ?? null,
     paymentMethod: row.payment_method as 'wompi' | 'cash_on_delivery', status: row.status as OrderStatus,
     paymentStatus: row.payment_status as OrderPaymentStatus, lines, createdAt: row.created_at, updatedAt: row.updated_at,

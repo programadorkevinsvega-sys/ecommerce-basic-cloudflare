@@ -1,6 +1,7 @@
 import { Order } from '../../../../domain/entities/Order.js';
 import { OrderLine } from '../../../../domain/entities/OrderLine.js';
-import { IOrderRepository, OrderHistoryRecord, OrderOutboxEvent } from '../../../../domain/ports/IOrderRepository.js';
+import { IOrderRepository, OrderCreationProtection, OrderHistoryRecord, OrderOutboxEvent } from '../../../../domain/ports/IOrderRepository.js';
+import { GuestOrderCreationLimitExceeded } from '../../../../domain/errors/GuestOrderCreationLimitExceeded.js';
 import { hydrateD1Order, OrderLineRow, OrderRow } from './OrderPersistenceMapper.js';
 import { buildD1OrderAggregateStatements } from './D1OrderAggregateStatements.js';
 
@@ -23,8 +24,14 @@ export class D1OrderRepository implements IOrderRepository {
     await this.db.batch(buildD1OrderAggregateStatements(this.db, order));
   }
 
-  public async saveAggregate(order: Order, history: OrderHistoryRecord, event: OrderOutboxEvent): Promise<void> {
-    await this.db.batch(buildD1OrderAggregateStatements(this.db, order, { history, event }));
+  public async saveAggregate(
+    order: Order,
+    history: OrderHistoryRecord,
+    event: OrderOutboxEvent,
+    protection?: OrderCreationProtection,
+  ): Promise<void> {
+    const results = await this.db.batch(buildD1OrderAggregateStatements(this.db, order, { history, event, protection }));
+    if (protection && results[2]?.meta.changes !== 1) throw new GuestOrderCreationLimitExceeded();
   }
 
   public async list(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]> {

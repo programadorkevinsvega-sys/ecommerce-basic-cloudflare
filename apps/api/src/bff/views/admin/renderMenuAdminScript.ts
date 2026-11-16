@@ -45,10 +45,10 @@ export function renderMenuAdminScript(): string {
       const target = item.target === '_blank' ? '_blank' : '_self';
       const children = item.children || [];
       const actions = '<div class="menu-row-actions">' +
-        (index ? '<button type="button" aria-label="Subir" onclick="moveAdminMenuItem(\\''+id+'\\',-1)">↑</button>' : '') +
-        (index < total-1 ? '<button type="button" aria-label="Bajar" onclick="moveAdminMenuItem(\\''+id+'\\',1)">↓</button>' : '') +
-        (isGroup && depth < 2 ? '<button type="button" onclick="addAdminMenuChild(\\''+id+'\\',\\'link\\')">+ Enlace</button><button type="button" onclick="addAdminMenuChild(\\''+id+'\\',\\'group\\')">+ Grupo</button>' : '') +
-        '<button type="button" class="menu-remove" onclick="removeAdminMenuItem(\\''+id+'\\')">Eliminar</button></div>';
+        (index ? '<button type="button" aria-label="Subir" data-menu-action="move" data-menu-id="'+id+'" data-menu-step="-1">↑</button>' : '') +
+        (index < total-1 ? '<button type="button" aria-label="Bajar" data-menu-action="move" data-menu-id="'+id+'" data-menu-step="1">↓</button>' : '') +
+        (isGroup && depth < 2 ? '<button type="button" data-menu-action="add-child" data-menu-id="'+id+'" data-menu-type="link">+ Enlace</button><button type="button" data-menu-action="add-child" data-menu-id="'+id+'" data-menu-type="group">+ Grupo</button>' : '') +
+        '<button type="button" class="menu-remove" data-menu-action="remove" data-menu-id="'+id+'">Eliminar</button></div>';
       const row = '<article class="menu-item-row" data-depth="'+depth+'" data-menu-id="'+id+'">' +
         '<label>Nombre<input data-menu-field="title" maxlength="80" value="'+title+'" required></label>' +
         '<label>Tipo<select data-menu-field="type"><option value="link" '+(!isGroup?'selected':'')+'>Enlace</option><option value="group" '+(isGroup?'selected':'')+'>Grupo</option></select></label>' +
@@ -56,6 +56,17 @@ export function renderMenuAdminScript(): string {
         '<label '+(isGroup?'hidden':'')+'>Abrir en<select data-menu-field="target" '+(isGroup?'disabled':'')+'><option value="_self" '+(target==='_self'?'selected':'')+'>Misma pestaña</option><option value="_blank" '+(target==='_blank'?'selected':'')+'>Nueva pestaña</option></select></label>' + actions + '</article>';
       return row + children.map((child,childIndex) => renderAdminMenuItem(child,depth+1,childIndex,children.length)).join('');
     }
+    document.addEventListener('click', event => {
+      const button = event.target instanceof Element ? event.target.closest('[data-menu-action]') : null;
+      if (!button) return;
+      const { menuAction, menuCode, menuType, menuId, menuStep } = button.dataset;
+      if (menuAction === 'save') saveAdminMenu();
+      if (menuAction === 'select') selectAdminMenu(menuCode, button);
+      if (menuAction === 'add-item') addAdminMenuItem(menuType);
+      if (menuAction === 'add-child') addAdminMenuChild(menuId, menuType);
+      if (menuAction === 'move') moveAdminMenuItem(menuId, Number(menuStep));
+      if (menuAction === 'remove') removeAdminMenuItem(menuId);
+    });
     document.getElementById('menu-items')?.addEventListener('input', event => updateAdminMenuField(event));
     document.getElementById('menu-items')?.addEventListener('change', event => {
       if (event.target.dataset.menuField === 'type') {

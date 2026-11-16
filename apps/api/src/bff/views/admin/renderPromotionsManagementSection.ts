@@ -41,7 +41,7 @@ export function renderPromotionsManagementSection(
           <div><label>Compra mínima (COP)</label><input type="text" id="prMinAmount" data-cop-input inputmode="numeric" value="0" placeholder="0" /><small>El descuento se aplica cuando el subtotal del carrito alcance este valor.</small></div>
           <div>
             <label>Alcance del Descuento</label>
-            <select id="prTargetType" onchange="onPromoTargetTypeChange()">
+            <select id="prTargetType" data-promo-target-type="rules">
               <option value="all">Todo el Catálogo</option>
               <option value="product">Producto Específico</option>
               <option value="category">Categoría</option>
@@ -49,8 +49,8 @@ export function renderPromotionsManagementSection(
           </div>
           <div id="prProductTargetWrapper" style="display:none;">
             <label>Producto Objetivo (Escribe para filtrar o selecciona)</label>
-            <input type="text" id="prProductSearch" placeholder="🔍 Escribe para buscar..." oninput="filterTargetSelect('prProductSearch', 'prTargetProductSelect')" style="margin-bottom:0.25rem;" />
-            <select id="prTargetProductSelect" onchange="onProductSelectChanged('prTargetProductSelect', 'prSelectedProductInfo')">
+            <input type="text" id="prProductSearch" placeholder="🔍 Escribe para buscar..." data-promo-target-search="prTargetProductSelect" style="margin-bottom:0.25rem;" />
+            <select id="prTargetProductSelect" data-promo-product-select="prSelectedProductInfo">
               <option value="">-- Selecciona un producto --</option>
               ${productOptions}
             </select>
@@ -66,7 +66,7 @@ export function renderPromotionsManagementSection(
         </div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <button type="submit" class="btn-primary" id="prSubmitBtn">Crear Regla de Promoción</button>
-          <button type="button" class="btn-action btn-action-hide" id="prCancelBtn" style="display:none;" onclick="resetPromoRuleForm()">Cancelar Edición</button>
+          <button type="button" class="btn-action btn-action-hide" id="prCancelBtn" style="display:none;" data-promo-reset="rules">Cancelar Edición</button>
         </div>
         <div id="prMsg" class="msg"></div>
       </form>
@@ -93,7 +93,7 @@ export function renderPromotionsManagementSection(
           <div><label>Valor del Descuento</label><input type="text" id="cpDiscountValue" data-cop-input data-cop-type-select="cpDiscountType" inputmode="decimal" required placeholder="10 (%) o 20.000 COP" /></div>
           <div>
             <label>Alcance del Cupón</label>
-            <select id="cpTargetType" onchange="onCouponTargetTypeChange()">
+            <select id="cpTargetType" data-promo-target-type="coupons">
               <option value="all">General (Todo el Catálogo)</option>
               <option value="product">Producto Específico</option>
               <option value="category">Categoría Específica</option>
@@ -101,8 +101,8 @@ export function renderPromotionsManagementSection(
           </div>
           <div id="cpProductTargetWrapper" style="display:none;">
             <label>Producto Objetivo (Escribe para filtrar o selecciona)</label>
-            <input type="text" id="cpProductSearch" placeholder="🔍 Escribe para buscar..." oninput="filterTargetSelect('cpProductSearch', 'cpTargetProductSelect')" style="margin-bottom:0.25rem;" />
-            <select id="cpTargetProductSelect" onchange="onProductSelectChanged('cpTargetProductSelect', 'cpSelectedProductInfo')">
+            <input type="text" id="cpProductSearch" placeholder="🔍 Escribe para buscar..." data-promo-target-search="cpTargetProductSelect" style="margin-bottom:0.25rem;" />
+            <select id="cpTargetProductSelect" data-promo-product-select="cpSelectedProductInfo">
               <option value="">-- Selecciona un producto --</option>
               ${productOptions}
             </select>
@@ -120,7 +120,7 @@ export function renderPromotionsManagementSection(
         </div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <button type="submit" class="btn-primary" id="cpSubmitBtn">Crear Cupón</button>
-          <button type="button" class="btn-action btn-action-hide" id="cpCancelBtn" style="display:none;" onclick="resetCouponForm()">Cancelar Edición</button>
+          <button type="button" class="btn-action btn-action-hide" id="cpCancelBtn" style="display:none;" data-promo-reset="coupons">Cancelar Edición</button>
         </div>
         <div id="cpMsg" class="msg"></div>
       </form>
@@ -132,10 +132,10 @@ export function renderPromotionsManagementSection(
     </div>
 
     <section class="card" data-marketing-page="free-shipping" hidden>
-      <div class="admin-section-heading"><div><h2>Reglas de envío gratis</h2><p>Asigna el beneficio a todo el catálogo, productos, categorías o colecciones.</p></div><button class="btn-primary" type="button" onclick="openFreeShippingRuleModal()">+ Crear regla</button></div>
+      <div class="admin-section-heading"><div><h2>Reglas de envío gratis</h2><p>Asigna el beneficio a todo el catálogo, productos, categorías o colecciones.</p></div><button class="btn-primary" type="button" data-promotion-action="open-free-shipping">+ Crear regla</button></div>
       <div class="table-responsive"><table data-server-pagination="true"><thead><tr><th>Regla</th><th>Alcance</th><th>Compra mínima</th><th>Vigencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="free-shipping-rules-body"><tr><td colspan="6">Cargando reglas…</td></tr></tbody></table></div>
-      <nav class="admin-pagination" aria-label="Paginación de reglas de envío gratis"><button class="admin-page-button" id="free-shipping-prev" type="button" onclick="loadFreeShippingRules(freeShippingPage-1)">Anterior</button><span id="free-shipping-page-label">Página 1</span><button class="admin-page-button" id="free-shipping-next" type="button" onclick="loadFreeShippingRules(freeShippingPage+1)">Siguiente</button></nav>
-      <dialog id="free-shipping-rule-modal" class="marketing-modal" aria-labelledby="free-shipping-form-title"><form id="free-shipping-rule-form"><header class="marketing-modal-heading"><h2 id="free-shipping-form-title">Crear regla de envío gratis</h2><button class="marketing-modal-close" type="button" onclick="closeFreeShippingRuleModal()">×</button></header><input type="hidden" id="fs-rule-id"><div class="form-grid">
+      <nav class="admin-pagination" aria-label="Paginación de reglas de envío gratis"><button class="admin-page-button" id="free-shipping-prev" type="button" data-promotion-action="free-shipping-previous">Anterior</button><span id="free-shipping-page-label">Página 1</span><button class="admin-page-button" id="free-shipping-next" type="button" data-promotion-action="free-shipping-next">Siguiente</button></nav>
+      <dialog id="free-shipping-rule-modal" class="marketing-modal" aria-labelledby="free-shipping-form-title"><form id="free-shipping-rule-form"><header class="marketing-modal-heading"><h2 id="free-shipping-form-title">Crear regla de envío gratis</h2><button class="marketing-modal-close" type="button" data-promotion-action="close-free-shipping">×</button></header><input type="hidden" id="fs-rule-id"><div class="form-grid">
         <div><label for="fs-rule-name">Nombre</label><input id="fs-rule-name" required maxlength="120"></div>
         <div><label for="fs-rule-target-type">Aplicar a</label><select id="fs-rule-target-type"><option value="all">Todo el catálogo</option><option value="product">Producto específico</option><option value="category">Categoría</option><option value="collection">Colección</option></select></div>
         <div id="fs-rule-target-wrap" hidden><label for="fs-rule-target-search">Buscar destino</label><input id="fs-rule-target-search" type="search" placeholder="Nombre o SKU"><select id="fs-rule-target" size="5" required></select><div class="admin-pagination"><button class="admin-page-button" id="fs-target-prev" type="button">Anterior</button><span id="fs-target-page">Página 1</span><button class="admin-page-button" id="fs-target-next" type="button">Siguiente</button></div></div>
@@ -144,13 +144,13 @@ export function renderPromotionsManagementSection(
         <div><label for="fs-rule-end">Válida hasta</label><input id="fs-rule-end" type="datetime-local" required></div>
         <div><label for="fs-rule-priority">Prioridad</label><input id="fs-rule-priority" type="number" min="0" max="10000" value="10"></div>
         <label><input id="fs-rule-active" type="checkbox" checked> Regla activa</label>
-      </div><footer class="marketing-modal-actions"><button class="btn-primary" type="submit">Guardar regla</button><button class="btn-secondary" type="button" onclick="closeFreeShippingRuleModal()">Cancelar</button><span id="fs-rule-message" role="status"></span></footer></form></dialog>
+      </div><footer class="marketing-modal-actions"><button class="btn-primary" type="submit">Guardar regla</button><button class="btn-secondary" type="button" data-promotion-action="close-free-shipping">Cancelar</button><span id="fs-rule-message" role="status"></span></footer></form></dialog>
     </section>
 
     <!-- Modales para Ver Detalle -->
     <div id="promoDetailsModal" class="modal-overlay">
       <div class="modal-content">
-        <button class="modal-close" onclick="closePromoModal()">&times;</button>
+        <button class="modal-close" type="button" data-promotion-action="close-details">&times;</button>
         <h2 id="modalPromoTitle" style="color:#38bdf8; margin-bottom:1rem;">Detalle de Promoción</h2>
         <div id="modalPromoBody" style="line-height:1.6; font-size:0.9rem; color:#cbd5e1;"></div>
       </div>

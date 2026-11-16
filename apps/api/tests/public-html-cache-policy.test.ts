@@ -3,14 +3,15 @@ import { Hono } from 'hono';
 import { PublicHtmlCacheMiddleware } from '../src/bff/middleware/PublicHtmlCacheMiddleware.js';
 
 describe('public HTML cache policy', () => {
-  it('marks anonymous public HTML cacheable with a short TTL and cookie variance', async () => {
+  it('prevents cached HTML from reusing a CSP nonce', async () => {
     const app = new Hono();
     app.use('*', PublicHtmlCacheMiddleware);
     app.get('/productos', (c) => c.html('<main>Catálogo</main>'));
 
     const response = await app.request('/productos?page=1');
-    expect(response.headers.get('Cache-Control')).toBe('public, max-age=0, s-maxage=30');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(response.headers.get('Vary')).toBe('Cookie');
+    expect(response.headers.get('Cache-Tag')).toBeNull();
   });
 
   it('keeps personalized, searched and transactional requests out of cache', async () => {

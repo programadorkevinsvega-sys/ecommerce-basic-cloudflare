@@ -22,7 +22,6 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
           list="divipolaDatalist"
           placeholder="Escribe tu ciudad (ej. Medellín, Bogotá, Cali)..."
           style="flex: 1; min-width: 220px; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; background: var(--card-bg, #1e293b); color: var(--text, #fff);"
-          oninput="onShippingLocationInputChanged()"
         />
         <datalist id="divipolaDatalist">
           <option value="11001" label="Bogotá, D.C. (Bogotá D.C.)">Bogotá, D.C.</option>
@@ -48,7 +47,10 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
         </datalist>
         <button
           type="button"
-          onclick="checkProductShippingCoverage('${escapeHtml(scope)}', '${escapeHtml(localZones)}', ${productCod ? 'true' : 'false'})"
+          id="check-product-shipping-coverage"
+          data-shipping-scope="${escapeHtml(scope)}"
+          data-local-zones="${escapeHtml(localZones)}"
+          data-allows-cod="${productCod}"
           style="padding: 0.6rem 1.2rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
         >
           Verificar
@@ -165,6 +167,11 @@ export function renderProductShippingWidget(product: CatalogProductDto): string 
           resultDiv.textContent = 'Error de conexión al consultar cobertura.';
         }
       }
+      document.getElementById('shipLocationInput').addEventListener('input', onShippingLocationInputChanged);
+      document.getElementById('check-product-shipping-coverage').addEventListener('click', event => {
+        const button = event.currentTarget;
+        checkProductShippingCoverage(button.dataset.shippingScope, button.dataset.localZones, button.dataset.allowsCod === 'true');
+      });
     </script>
   `;
 }

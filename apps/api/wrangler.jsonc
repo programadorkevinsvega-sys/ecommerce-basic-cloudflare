@@ -64,7 +64,10 @@
   "ratelimits": [
     { "name": "AUTH_LIMITER", "namespace_id": "9174301", "simple": { "limit": 20, "period": 60 } },
     { "name": "CHECKOUT_LIMITER", "namespace_id": "9174302", "simple": { "limit": 12, "period": 60 } },
-    { "name": "API_WRITE_LIMITER", "namespace_id": "9174303", "simple": { "limit": 90, "period": 60 } }
+    { "name": "API_WRITE_LIMITER", "namespace_id": "9174303", "simple": { "limit": 90, "period": 60 } },
+    { "name": "API_IP_WRITE_LIMITER", "namespace_id": "9174304", "simple": { "limit": 300, "period": 60 } },
+    { "name": "PUBLIC_SEARCH_LIMITER", "namespace_id": "9174305", "simple": { "limit": 60, "period": 60 } },
+    { "name": "PUBLIC_READ_LIMITER", "namespace_id": "9174306", "simple": { "limit": 120, "period": 60 } }
   ],
   "triggers": {
     "crons": ["*/5 * * * *"]
@@ -78,6 +81,7 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
+    "PUBLIC_ORIGIN": "https://vega.jnmtortas.com",
     "MI_PAQUETE_API_URL": "https://api-v2.mpr.mipaquete.com",
     "RESEND_FROM_EMAIL": "Vega Store <no-reply@jnmtortas.com>"
   }

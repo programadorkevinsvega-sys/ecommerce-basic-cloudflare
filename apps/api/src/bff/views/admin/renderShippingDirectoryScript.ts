@@ -17,8 +17,6 @@ export function renderShippingDirectoryScript(): string {
         pager.querySelector('span').textContent = result.total + ' zonas locales · Página ' + result.page;
         pager.querySelector('[data-zone-page="previous"]').disabled = result.page <= 1;
         pager.querySelector('[data-zone-page="next"]').disabled = !result.hasMore;
-        pager.querySelector('[data-zone-page="previous"]').onclick = () => loadShippingZones(result.page - 1);
-        pager.querySelector('[data-zone-page="next"]').onclick = () => loadShippingZones(result.page + 1);
       } catch (error) { body.innerHTML = '<tr><td colspan="6" class="shipping-empty">' + escapeHtml(error.message || 'Error cargando zonas.') + '</td></tr>'; }
     }
     async function loadShippingDirectory(page = 1) {
@@ -48,12 +46,38 @@ export function renderShippingDirectoryScript(): string {
       const coverage = active.length ? '<span class="shipping-badge active">Entrega local activa</span><small>' + escapeHtml(active.map((zone) => zone.name).join(', ')) + '</small>' : '<span class="shipping-badge inactive">Zona local inactiva</span><small>' + escapeHtml(local.map((zone) => zone.name).join(', ')) + '</small>';
       const zone = active[0] || local[0];
       const zoneData = encodeURIComponent(JSON.stringify(local));
-      const view = '<button class="shipping-action" type="button" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" data-zones="' + escapeHtml(zoneData) + '" onclick="viewShippingLocation(this)">Ver</button>';
-      const action = zone ? '<button class="shipping-action primary" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" onclick="editShippingZoneModal(this)">Editar</button><button class="shipping-action danger" type="button" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" data-code="' + escapeHtml(item.daneCode) + '" onclick="removeShippingLocationFromZone(this)">Eliminar</button>' : '';
+      const view = '<button class="shipping-action" type="button" data-shipping-action="view-location" data-code="' + escapeHtml(item.daneCode) + '" data-name="' + escapeHtml(item.municipality) + '" data-department="' + escapeHtml(item.department) + '" data-type="' + escapeHtml(item.type) + '" data-zones="' + escapeHtml(zoneData) + '">Ver</button>';
+      const action = zone ? '<button class="shipping-action primary" type="button" data-shipping-action="edit-zone" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '">Editar</button><button class="shipping-action danger" type="button" data-shipping-action="remove-location" data-item="' + encodeURIComponent(JSON.stringify(zone)) + '" data-code="' + escapeHtml(item.daneCode) + '">Eliminar</button>' : '';
       return '<tr><td><strong>' + escapeHtml(item.municipality) + '</strong></td><td>' + escapeHtml(item.department) + '</td><td><code>' + escapeHtml(item.daneCode) + '</code></td><td>' + coverage + '</td><td><div class="shipping-row-actions">' + view + action + '</div></td></tr>';
     }
     ${renderShippingLocationDetailsScript()}
     loadShippingZones();
+    const zonePager = document.getElementById('shipping-zones-pagination');
+    zonePager?.querySelector('[data-zone-page="previous"]')?.addEventListener('click', () => loadShippingZones(Math.max(1, shippingZonesPage - 1)));
+    zonePager?.querySelector('[data-zone-page="next"]')?.addEventListener('click', () => loadShippingZones(shippingZonesPage + 1));
+    document.addEventListener('input', (event) => {
+      const input = event.target.closest('[data-shipping-input]');
+      if (input?.dataset.shippingInput === 'directory') filterShippingDirectory();
+      if (input?.dataset.shippingInput === 'locations') filterShippingLocations();
+    });
+    document.addEventListener('change', (event) => {
+      if (event.target.matches('[data-shipping-change="zone-type"]')) window.onShippingTypeChange?.();
+    });
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-shipping-action]');
+      if (!button) return;
+      const action = button.dataset.shippingAction;
+      if (action === 'open-zone') window.openShippingZoneModal?.();
+      if (action === 'close-zone') window.closeShippingZoneModal?.();
+      if (action === 'reset-zone') window.resetShippingZoneForm?.();
+      if (action === 'close-details') window.closeShippingDetailsModal?.();
+      if (action === 'view-location') window.viewShippingLocation?.(button);
+      if (action === 'edit-zone') window.editShippingZoneModal?.(button);
+      if (action === 'remove-location') window.removeShippingLocationFromZone?.(button);
+      if (action === 'view-zone') window.viewShippingZoneModal?.(button);
+      if (action === 'toggle-zone') window.toggleShippingZoneStatus?.(button.dataset.zoneId, button.dataset.zoneActive === 'true');
+      if (action === 'delete-zone') window.deleteShippingZone?.(button.dataset.zoneId);
+    });
     function filterShippingDirectory() { clearTimeout(shippingDirectoryTimer); shippingDirectoryTimer = setTimeout(() => loadShippingDirectory(1), 250); }
     function filterShippingLocations() {
       const select = document.getElementById('shLocationsSelect');

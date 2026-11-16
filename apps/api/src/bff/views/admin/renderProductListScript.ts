@@ -60,8 +60,6 @@ export function renderProductListScript(): string {
         nav.innerHTML = '<button type="button" data-product-page="previous">Anterior</button><span>Página ' + result.page + '</span><button type="button" data-product-page="next">Siguiente</button>';
         nav.querySelector('[data-product-page="previous"]').disabled = result.page <= 1;
         nav.querySelector('[data-product-page="next"]').disabled = !result.hasMore;
-        nav.querySelector('[data-product-page="previous"]').onclick = () => filterProductList(result.page - 1);
-        nav.querySelector('[data-product-page="next"]').onclick = () => filterProductList(result.page + 1);
       } catch (error) {
         if (requestId === productRequest) body.innerHTML = '<tr><td colspan="7" class="products-empty">' + escapeHtml(error.message || 'Error al cargar productos.') + '</td></tr>';
       }
@@ -77,6 +75,24 @@ export function renderProductListScript(): string {
       });
       filterProductList(1);
     }));
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const pageButton = target.closest('#products-pagination [data-product-page]');
+      if (pageButton && !pageButton.disabled) {
+        filterProductList(pageButton.dataset.productPage === 'previous' ? productPage - 1 : productPage + 1);
+        return;
+      }
+      const action = target.closest('[data-product-action], [data-product-modal-close], [data-product-form-reset]');
+      if (!action) return;
+      if (action.hasAttribute('data-product-modal-close')) return closeProductModal();
+      if (action.hasAttribute('data-product-form-reset')) return resetProductForm();
+      const { productAction, productId, productStatus } = action.dataset;
+      if (productAction === 'create') startCreateProduct();
+      if (productAction === 'preview-price-migration') window.previewLegacyPriceMigration();
+      if (productAction === 'edit') window.editProduct(productId);
+      if (productAction === 'set-status') window.setProductStatus(productId, productStatus);
+      if (productAction === 'delete') window.deleteProduct(productId);
+    });
     filterProductList(1);
   </script>`;
 }

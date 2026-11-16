@@ -1,16 +1,16 @@
 import { JsonLogger } from '../JsonLogger.js';
-import { InvoicingGateway } from '../../bff/gateways/invoicing/InvoicingGateway.js';
+import { QueueGateways } from './QueueEventRegistry.js';
 import { QueueEventTelemetry } from './QueueEventTelemetry.js';
 import { resolveQueueEvent } from './QueueEventRegistry.js';
 
 export async function processQueueBatch(
   batch: MessageBatch<unknown>,
-  invoicing: InvoicingGateway,
+  gateways: QueueGateways,
   logger: JsonLogger,
   telemetry: QueueEventTelemetry,
 ): Promise<void> {
   for (const message of batch.messages) {
-    const resolution = resolveQueueEvent(message.body, invoicing);
+    const resolution = resolveQueueEvent(message.body, gateways);
     if (resolution.kind !== 'supported') {
       telemetry.record(resolution.kind === 'invalid' ? 'queue_event_invalid' : 'queue_event_unknown', resolution.eventType || 'unknown');
       logger.warn('Evento rechazado y enviado a retry para DLQ', {

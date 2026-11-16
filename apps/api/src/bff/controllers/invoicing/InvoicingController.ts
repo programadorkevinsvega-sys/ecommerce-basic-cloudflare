@@ -1,32 +1,37 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
+import { Env } from '../../../platform/Env.js';
 import { z } from 'zod';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { AuditGateway } from '../../gateways/audit/AuditGateway.js';
+import { isAdminMfaPending } from '../../middleware/AuthMiddleware.js';
 
 export class InvoicingController {
   public static createRoutes(
     invoicingGateway: InvoicingGateway,
     identityGateway: IdentityGateway,
     auditGateway: AuditGateway
-  ): Hono {
-    const app = new Hono();
+  ): Hono<{ Bindings: Env }> {
+    const app = new Hono<{ Bindings: Env }>();
 
     // GET /api/v1/invoices/:id/document — Descarga autenticada del PDF de la factura
     app.get('/api/v1/invoices/:id/document', async (c) => {
       const id = c.req.param('id');
+      const token = extractSessionToken(c.req.raw, ['__Host-admin-session', '__Host-session'], c.env?.ENVIRONMENT);
+      if (!token) return c.json({ error: 'Factura no encontrada' }, 404);
+      let session;
+      try {
+        session = await identityGateway.validateSession(token);
+      } catch { return c.json({ error: 'Factura no encontrada' }, 404); }
+      if (isAdminMfaPending(session)) return c.json({ error: 'MFA obligatorio: completa el enrolamiento antes de usar el panel' }, 403);
       const invoice = await invoicingGateway.getInvoice({ id });
       if (!invoice) return c.json({ error: 'Factura no encontrada' }, 404);
-      const token = getSessionToken(c.req.header('authorization'), c.req.header('cookie'));
-      if (!token) return c.json({ error: 'Factura no encontrada' }, 404);
-      try {
-        const session = await identityGateway.validateSession(token);
-        const allowed = session.actorType === 'admin'
-          ? hasPermission(session.permissions, 'invoices:read')
-          : session.actorType === 'customer' && invoice.customerId === session.actorId;
-        if (!allowed) return c.json({ error: 'Factura no encontrada' }, 404);
-      } catch { return c.json({ error: 'Factura no encontrada' }, 404); }
-
+      const allowed = session.actorType === 'admin'
+        ? hasPermission(session.permissions, 'invoices:read')
+        : session.actorType === 'customer' && invoice.customerId === session.actorId;
+      if (!allowed) return c.json({ error: 'Factura no encontrada' }, 404);
       if (!invoice.pdfR2Key) return c.json({ error: 'Documento no disponible' }, 404);
       const object = await invoicingGateway.getInvoiceDocument(invoice.id);
       if (!object) return c.json({ error: 'Archivo en almacenamiento no encontrado' }, 404);
@@ -44,7 +49,7 @@ export class InvoicingController {
 
     // GET /api/v1/admin/invoices — Lista de facturas para el panel de administración
     app.get('/api/v1/admin/invoices', async (c) => {
-      const token = getSessionToken(c.req.header('authorization'), c.req.header('cookie'), true);
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
@@ -61,20 +66,19 @@ export class InvoicingController {
     });
 
     // POST /api/v1/admin/invoices/:id/credit-notes — Emitir nota crédito
-    app.post('/api/v1/admin/invoices/:id/credit-notes', async (c) => {
-      const token = getSessionToken(c.req.header('authorization'), c.req.header('cookie'), true);
+    app.post('/api/v1/admin/invoices/:id/credit-notes', bodyLimit({ maxSize: 16 * 1024 }), async (c) => {
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
       if (!token) return c.json({ error: 'No autorizado' }, 401);
       const adminRes = await identityGateway.validateSession(token);
       if (adminRes?.actorType !== 'admin') return c.json({ error: 'Token inválido' }, 401);
       if (!hasPermission(adminRes.permissions, 'invoices:credit_note')) return c.json({ error: 'Permiso insuficiente' }, 403);
 
       const invoiceId = c.req.param('id');
-      const body = await c.req.json();
-      if (typeof body.reason !== 'string' || body.reason.trim().length === 0 || body.reason.length > 500 ||
-        !Number.isSafeInteger(body.amountInCents) || body.amountInCents <= 0 ||
-        !['1', '2', '3', '4', '5', '6'].includes(body.correctionConceptCode)) {
+      const parsed = creditNoteBodySchema.safeParse(await c.req.json().catch(() => null));
+      if (!parsed.success) {
         return c.json({ error: 'Motivo, concepto DIAN y monto válido son requeridos' }, 400);
       }
+      const body = parsed.data;
 
       try {
         const creditNote = await invoicingGateway.createCreditNote({
@@ -105,6 +109,12 @@ export class InvoicingController {
   }
 }
 
+const creditNoteBodySchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+  amountInCents: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  correctionConceptCode: z.enum(['1', '2', '3', '4', '5', '6']),
+}).strict();
+
 const invoicePageQuery = z.object({
   page: z.coerce.number().int().min(1).max(1_000_000),
   pageSize: z.coerce.number().int().min(1).max(50),
@@ -112,13 +122,6 @@ const invoicePageQuery = z.object({
   electronicOnly: z.boolean().default(false),
   electronicStatus: z.enum(['pending', 'accepted', 'rejected', 'not_configured']).optional(),
 }).strict();
-
-function getSessionToken(authorization?: string, cookieHeader?: string, adminOnly = false): string | null {
-  if (authorization?.startsWith('Bearer ')) return authorization.slice(7).trim();
-  const cookie = cookieHeader?.split(';').map((part) => part.trim()).find((part) =>
-    part.startsWith('__Host-admin-session=') || !adminOnly && part.startsWith('__Host-session='));
-  return cookie?.slice(cookie.indexOf('=') + 1) || null;
-}
 
 function hasPermission(permissions: string[], required: string): boolean {
   return permissions.some((permission) => permission === '*' || permission === required || permission.endsWith(':*') && required.startsWith(permission.slice(0, -1)));

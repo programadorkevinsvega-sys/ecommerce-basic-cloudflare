@@ -5,50 +5,50 @@ export function renderAdminSidebar(adminLabel: string): string {
     </a>
     <nav class="admin-nav" aria-label="Principal">
       <section class="admin-nav-group"><h2>Operación</h2><ul>
-        ${navItem('summary', 'Resumen', 'switchTab(\'summary\')', true)}
-        ${navItem('orders', 'Pedidos', "switchTab('orders'); loadAdminOrders();")}
-        ${navItem('inventory', 'Inventario', "switchTab('inventory'); loadAdminInventory();", false, 'inventory-alert-count', 'con stock bajo o agotados')}
-        ${navItem('shipping', 'Envíos y cobertura', "switchTab('shipping', this); showAdminShippingPage('zones')")}
-        ${navItem('shipping', 'Municipios DANE', "switchTab('shipping', this); showAdminShippingPage('locations')", false, undefined, undefined, true)}
-        ${navItem('shipping', 'Transportadoras', "switchTab('shipping', this); showAdminShippingPage('carriers')", false, undefined, undefined, true)}
-        ${navItem('shipping', 'Empaques', "switchTab('shipping', this); showAdminShippingPage('packages')", false, undefined, undefined, true)}
-        ${navItem('shipping', 'Seguimiento de pedidos', "switchTab('shipping', this); showAdminShippingPage('tracking')", false, undefined, undefined, true)}
-        ${navItem('shipping', 'Imprimir guías', "switchTab('shipping', this); showAdminShippingPage('print-labels')", false, undefined, undefined, true)}
+        ${navItem('summary', 'Resumen', 'summary', true)}
+        ${navItem('orders', 'Pedidos', 'orders')}
+        ${navItem('inventory', 'Inventario', 'inventory', false, 'inventory-alert-count', 'con stock bajo o agotados')}
+        ${navItem('shipping', 'Envíos y cobertura', 'shipping', false, undefined, undefined, false, 'zones')}
+        ${navItem('shipping', 'Municipios DANE', 'shipping', false, undefined, undefined, true, 'locations')}
+        ${navItem('shipping', 'Transportadoras', 'shipping', false, undefined, undefined, true, 'carriers')}
+        ${navItem('shipping', 'Empaques', 'shipping', false, undefined, undefined, true, 'packages')}
+        ${navItem('shipping', 'Seguimiento de pedidos', 'shipping', false, undefined, undefined, true, 'tracking')}
+        ${navItem('shipping', 'Imprimir guías', 'shipping', false, undefined, undefined, true, 'print-labels')}
       </ul></section>
       <section class="admin-nav-group"><h2>Pagos y facturas</h2><ul>
-        ${navItem('payments', 'Recaudos contra entrega', "switchTab('payments', this); showAdminPaymentPage('collections'); loadAdminPayments()", false, undefined, undefined, true)}
-        ${navItem('payments', 'Conciliar', "switchTab('payments', this); showAdminPaymentPage('conciliation'); loadAdminPayments()", false, undefined, undefined, true)}
-        ${navItem('payments', 'Transacciones recientes', "switchTab('payments', this); showAdminPaymentPage('transactions'); loadAdminPayments()", false, undefined, undefined, true)}
-        ${navItem('invoices', 'Facturación', "switchTab('invoices', this); showAdminInvoicePage('all'); loadAdminInvoices(1)", false, undefined, undefined, true)}
-        ${navItem('invoices', 'Facturación electrónica', "switchTab('invoices', this); showAdminInvoicePage('electronic'); loadAdminInvoices(1)", false, undefined, undefined, true)}
+        ${navItem('payments', 'Recaudos contra entrega', 'payments', false, undefined, undefined, true, 'collections')}
+        ${navItem('payments', 'Conciliar', 'payments', false, undefined, undefined, true, 'conciliation')}
+        ${navItem('payments', 'Transacciones recientes', 'payments', false, undefined, undefined, true, 'transactions')}
+        ${navItem('invoices', 'Facturación', 'invoices', false, undefined, undefined, true, 'all')}
+        ${navItem('invoices', 'Facturación electrónica', 'invoices', false, undefined, undefined, true, 'electronic')}
       </ul></section>
       <section class="admin-nav-group"><h2>Catálogo</h2><ul>
-        ${navItem('products', 'Productos', "switchTab('products')")}
-        ${navItem('taxonomies', 'Colecciones', "switchTab('taxonomies', this); showCatalogPage('collections', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Categorías', "switchTab('taxonomies', this); showCatalogPage('categories', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Marcas', "switchTab('taxonomies', this); showCatalogPage('brands', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Proveedores', "switchTab('taxonomies', this); showCatalogPage('providers', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Atributos', "switchTab('taxonomies', this); showCatalogPage('attributes', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Variantes', "switchTab('taxonomies', this); showCatalogPage('variants', this)", false, undefined, undefined, true)}
-        ${navItem('taxonomies', 'Etiquetas', "switchTab('taxonomies', this); showCatalogPage('tags', this)", false, undefined, undefined, true)}
-        ${navItem('reviews', 'Reseñas y valoraciones', "switchTab('reviews', this); loadAdminReviews(1)", false, undefined, undefined, true)}
+        ${navItem('products', 'Productos', 'products')}
+        ${navItem('taxonomies', 'Colecciones', 'catalog', false, undefined, undefined, true, 'collections')}
+        ${navItem('taxonomies', 'Categorías', 'catalog', false, undefined, undefined, true, 'categories')}
+        ${navItem('taxonomies', 'Marcas', 'catalog', false, undefined, undefined, true, 'brands')}
+        ${navItem('taxonomies', 'Proveedores', 'catalog', false, undefined, undefined, true, 'providers')}
+        ${navItem('taxonomies', 'Atributos', 'catalog', false, undefined, undefined, true, 'attributes')}
+        ${navItem('taxonomies', 'Variantes', 'catalog', false, undefined, undefined, true, 'variants')}
+        ${navItem('taxonomies', 'Etiquetas', 'catalog', false, undefined, undefined, true, 'tags')}
+        ${navItem('reviews', 'Reseñas y valoraciones', 'reviews', false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Marketing</h2><ul>
-        ${navItem('storefront', 'Banners Hero Promocionales', "switchTab('storefront', this); showMarketingPage('promo-banners')", false, undefined, undefined, true)}
-        ${navItem('storefront', 'Banners Hero Informativos', "switchTab('storefront', this); showMarketingPage('info-banners')", false, undefined, undefined, true)}
-        ${navItem('storefront', 'Anuncios & Barra Superior', "switchTab('storefront', this); showMarketingPage('announcements')", false, undefined, undefined, true)}
-        ${navItem('promotions', 'Regla de Promoción', "switchTab('promotions', this); showMarketingPage('promotion-rule')", false, undefined, undefined, true)}
-        ${navItem('promotions', 'Cupón de Descuento', "switchTab('promotions', this); showMarketingPage('discount-coupon')", false, undefined, undefined, true)}
-        ${navItem('promotions', 'Envío gratis', "switchTab('promotions', this); showMarketingPage('free-shipping')", false, undefined, undefined, true)}
+        ${navItem('storefront', 'Banners Hero Promocionales', 'marketing', false, undefined, undefined, true, 'promo-banners')}
+        ${navItem('storefront', 'Banners Hero Informativos', 'marketing', false, undefined, undefined, true, 'info-banners')}
+        ${navItem('storefront', 'Anuncios & Barra Superior', 'marketing', false, undefined, undefined, true, 'announcements')}
+        ${navItem('promotions', 'Regla de Promoción', 'marketing', false, undefined, undefined, true, 'promotion-rule')}
+        ${navItem('promotions', 'Cupón de Descuento', 'marketing', false, undefined, undefined, true, 'discount-coupon')}
+        ${navItem('promotions', 'Envío gratis', 'marketing', false, undefined, undefined, true, 'free-shipping')}
       </ul></section>
       <section class="admin-nav-group"><h2>CMS</h2><ul>
-        ${navItem('cms', 'Páginas CMS', "switchTab('cms')")}
-        ${navItem('menus', 'Menús', "switchTab('menus', this); loadAdminMenus()", false, undefined, undefined, true)}
-        ${navItem('blog', 'Blog', "switchTab('blog', this); blogInit()", false, undefined, undefined, true)}
+        ${navItem('cms', 'Páginas CMS', 'cms')}
+        ${navItem('menus', 'Menús', 'menus', false, undefined, undefined, true)}
+        ${navItem('blog', 'Blog', 'blog', false, undefined, undefined, true)}
       </ul></section>
       <section class="admin-nav-group"><h2>Sistema</h2><ul>
-        ${navItem('audit', 'Auditoría', "switchTab('audit'); loadAdminAudit();")}
-        ${navItem('settings', 'Configuración', "switchTab('settings')")}
+        ${navItem('audit', 'Auditoría', 'audit')}
+        ${navItem('settings', 'Configuración', 'settings')}
       </ul></section>
     </nav>
     <div class="admin-sidebar-user"><span class="admin-avatar" aria-hidden="true">${escapeHtml(initials(adminLabel))}</span>
@@ -58,9 +58,10 @@ export function renderAdminSidebar(adminLabel: string): string {
   </aside>`;
 }
 
-function navItem(id: string, label: string, action: string, current = false, countId?: string, countLabel?: string, nested = false): string {
+function navItem(id: string, label: string, action: string, current = false, countId?: string, countLabel?: string, nested = false, page?: string): string {
   const count = countId ? `<span class="admin-nav-count"><strong id="${countId}">—</strong><small>${escapeHtml(countLabel || '')}</small></span>` : '';
-  return `<li><button type="button" class="tab-btn admin-nav-link${current ? ' active' : ''}${nested ? ' admin-nav-link-nested' : ''}" data-tab="${id}" data-admin-nav="${escapeHtml(label)}" onclick="${action}"${current ? ' aria-current="page"' : ''}>${escapeHtml(label)}${count}</button></li>`;
+  const pageAttr = page ? ` data-admin-nav-page="${escapeHtml(page)}"` : '';
+  return `<li><button type="button" class="tab-btn admin-nav-link${current ? ' active' : ''}${nested ? ' admin-nav-link-nested' : ''}" data-tab="${id}" data-admin-nav="${escapeHtml(label)}" data-admin-nav-action="${action}"${pageAttr}${current ? ' aria-current="page"' : ''}>${escapeHtml(label)}${count}</button></li>`;
 }
 
 function initials(label: string): string {

@@ -43,8 +43,8 @@ export function renderOrdersAdminListScript(): string {
         '<button type="button" class="orders-secondary-button" data-orders-page="next">Siguiente</button>';
       nav.querySelector('[data-orders-page="previous"]').disabled = page <= 1;
       nav.querySelector('[data-orders-page="next"]').disabled = !meta.hasMore;
-      nav.querySelector('[data-orders-page="previous"]').onclick = () => loadAdminOrders(page - 1);
-      nav.querySelector('[data-orders-page="next"]').onclick = () => loadAdminOrders(page + 1);
+      nav.querySelector('[data-orders-page="previous"]').addEventListener('click', () => loadAdminOrders(page - 1));
+      nav.querySelector('[data-orders-page="next"]').addEventListener('click', () => loadAdminOrders(page + 1));
     }
 
     function renderAdminOrderRow(order) {
@@ -52,16 +52,16 @@ export function renderOrdersAdminListScript(): string {
       const state = orderStates[order.status] || [order.status || 'En proceso', '#eef0f4', '#3e4656'];
       const payment = paymentStates[order.paymentStatus] || [order.paymentStatus || 'Pendiente', '#eef0f4', '#3e4656'];
       const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-CO') : '—';
-      const orderId = escapeHtml(JSON.stringify(String(order.id)));
-      return '<tr><td><div class="orders-id-cell"><a href="#" onclick="openOrderDetailModal(' + orderId + '); return false">#' + escapeHtml(shortId) + '</a><small>' + escapeHtml(date) + '</small></div></td>' +
+      const orderId = escapeHtml(String(order.id));
+      return '<tr><td><div class="orders-id-cell"><a href="#" data-order-action="view" data-order-id="' + orderId + '">#' + escapeHtml(shortId) + '</a><small>' + escapeHtml(date) + '</small></div></td>' +
         '<td><div class="orders-client-cell"><strong>' + escapeHtml(order.customerName || 'Cliente') + '</strong><small>' + escapeHtml(order.customerPhone || '—') + '</small></div></td>' +
         '<td class="orders-align-right"><strong>' + orderMoney(order.totalCents) + '</strong></td>' +
         '<td>' + (order.paymentMethod === 'wompi' ? 'Wompi' : 'Contra entrega') + '</td>' +
         '<td><span class="orders-order-badge" style="background:' + state[1] + ';color:' + state[2] + '">' + escapeHtml(state[0]) + '</span></td>' +
         '<td><span class="orders-payment-badge" style="background:' + payment[1] + ';color:' + payment[2] + '">' + escapeHtml(payment[0]) + '</span></td>' +
-        '<td><div class="orders-action-cell"><button class="orders-secondary-button" type="button" onclick="openOrderDetailModal(' + orderId + ')">Ver detalle<span class="sr-only"> del pedido ' + escapeHtml(shortId) + '</span></button>' +
+        '<td><div class="orders-action-cell"><button class="orders-secondary-button" type="button" data-order-action="view" data-order-id="' + orderId + '">Ver detalle<span class="sr-only"> del pedido ' + escapeHtml(shortId) + '</span></button>' +
         '<label class="sr-only" for="orders-status-' + escapeHtml(shortId) + '">Cambiar estado del pedido ' + escapeHtml(shortId) + '</label>' +
-        '<select class="orders-status-select" id="orders-status-' + escapeHtml(shortId) + '" onchange="updateOrderStatus(' + orderId + ', this.value)">' + orderStatusOptions(order.status) + '</select></div></td></tr>';
+        '<select class="orders-status-select" id="orders-status-' + escapeHtml(shortId) + '" data-order-action="status" data-order-id="' + orderId + '">' + orderStatusOptions(order.status) + '</select></div></td></tr>';
     }
 
     function orderStatusOptions(current) {
@@ -107,6 +107,20 @@ export function renderOrdersAdminListScript(): string {
     document.getElementById('orders-search')?.addEventListener('input', () => { clearTimeout(orderSearchTimer); orderSearchTimer = setTimeout(() => loadAdminOrders(1), 250); });
     ['orders-method-filter', 'orders-payment-filter'].forEach(id => document.getElementById(id)?.addEventListener('change', () => loadAdminOrders(1)));
     document.getElementById('orders-export')?.addEventListener('click', exportFilteredAdminOrders);
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-order-action="view"], [data-order-modal-action]');
+      if (!button) return;
+      if (button.dataset.orderModalAction === 'close') window.closeOrderDetailModal?.();
+      if (button.dataset.orderModalAction === 'save-status') window.applyModalStatusChange?.();
+      if (button.dataset.orderAction === 'view') {
+        event.preventDefault();
+        window.openOrderDetailModal?.(button.dataset.orderId);
+      }
+    });
+    document.getElementById('orders-table-body')?.addEventListener('change', (event) => {
+      const select = event.target.closest('[data-order-action="status"]');
+      if (select) window.updateOrderStatus?.(select.dataset.orderId, select.value);
+    });
     document.getElementById('orders-reset-filters')?.addEventListener('click', () => {
       activeOrderStatus = 'all';
       document.getElementById('orders-search').value = '';

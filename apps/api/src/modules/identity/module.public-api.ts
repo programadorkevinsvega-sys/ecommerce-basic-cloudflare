@@ -19,8 +19,13 @@ export interface IIdentityPublicApi {
   changeCustomerPassword(input: ChangeCustomerPasswordInput): Promise<{ rawToken: string; expiresAt: string }>;
   listCustomerSessions(customerId: string, currentToken: string): Promise<CustomerSessionView[]>;
   revokeCustomerSession(sessionId: string, customerId: string): Promise<boolean>;
+  requestCustomerPasswordReset(email: string, publicOrigin: string): Promise<void>;
+  requestCustomerEmailVerification(customerId: string, publicOrigin: string): Promise<void>;
+  verifyCustomerEmail(token: string): Promise<void>;
+  resetCustomerPassword(token: string, password: string): Promise<void>;
   beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }>;
   confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void>;
+  reauthenticateAdmin(input: { adminId: string; password: string; totpCode: string }): Promise<boolean>;
 }
 
 export class IdentityPublicApi implements IIdentityPublicApi {
@@ -84,6 +89,24 @@ export class IdentityPublicApi implements IIdentityPublicApi {
     return this.container.revokeCustomerSessionUseCase.execute(sessionId, customerId);
   }
 
+  public requestCustomerPasswordReset(email: string, publicOrigin: string): Promise<void> {
+    return this.container.requestCustomerPasswordResetUseCase.execute(email, publicOrigin);
+  }
+
+  public requestCustomerEmailVerification(customerId: string, publicOrigin: string): Promise<void> {
+    return this.container.requestCustomerEmailVerificationUseCase.execute(customerId, publicOrigin);
+  }
+
+  public async verifyCustomerEmail(token: string): Promise<void> {
+    const result = await this.container.verifyCustomerEmailUseCase.execute(token);
+    if (result.isFail()) throw result.error;
+  }
+
+  public async resetCustomerPassword(token: string, password: string): Promise<void> {
+    const result = await this.container.resetCustomerPasswordUseCase.execute(token, password);
+    if (result.isFail()) throw result.error;
+  }
+
   public async beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }> {
     const res = await this.container.beginAdminMfaEnrollmentUseCase.execute(adminId, password);
     if (res.isFail()) throw res.error;
@@ -93,5 +116,11 @@ export class IdentityPublicApi implements IIdentityPublicApi {
   public async confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void> {
     const res = await this.container.confirmAdminMfaEnrollmentUseCase.execute(adminId, code);
     if (res.isFail()) throw res.error;
+  }
+
+  public async reauthenticateAdmin(input: { adminId: string; password: string; totpCode: string }): Promise<boolean> {
+    const res = await this.container.reauthenticateAdminUseCase.execute(input);
+    if (res.isFail()) throw res.error;
+    return res.value;
   }
 }

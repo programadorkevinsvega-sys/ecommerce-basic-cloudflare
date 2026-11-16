@@ -2,7 +2,7 @@
 
 ## Alcance de esta entrega
 
-El workflow de CI usa runtimes actuales de GitHub Actions y Gitleaks v3. El job de staging solo se ejecuta por `workflow_dispatch`, usa secretos de Actions exclusivos para staging, migra la D1 cuyo nombre está fijado a `ecommerce-vega-staging` y despliega el Worker `ecommerce-basic-cloudflare-staging`. No contiene un paso de despliegue a producción.
+El workflow de CI fija GitHub Actions por commit SHA y ejecuta `pnpm audit` sobre todas las dependencias después de instalar el lockfile. Dependabot revisa semanalmente las dependencias npm del workspace y las GitHub Actions; las actualizaciones mayores quedan separadas para revisión. El job de staging solo se ejecuta por `workflow_dispatch`, usa secretos de Actions exclusivos para staging, migra la D1 cuyo nombre está fijado a `ecommerce-vega-staging` y despliega el Worker `ecommerce-basic-cloudflare-staging`. No contiene un paso de despliegue a producción.
 
 La configuración de staging se deja con IDs deliberadamente sin completar. Hasta registrar los IDs reales, `pnpm staging:check` y el despliegue deben fallar. La protección de `main` requiere una configuración de administración del repositorio y no se activa desde un workflow.
 
@@ -54,15 +54,18 @@ pnpm exec wrangler secret put WOMPI_INTEGRITY_SECRET --config apps/api/wrangler.
 pnpm exec wrangler secret put WOMPI_EVENTS_SECRET --config apps/api/wrangler.staging.jsonc
 pnpm exec wrangler secret put RESEND_API_KEY --config apps/api/wrangler.staging.jsonc
 pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --config apps/api/wrangler.staging.jsonc
+pnpm exec wrangler secret put TOTP_ENCRYPTION_KEY --config apps/api/wrangler.staging.jsonc
 ```
 
-Usa credenciales Wompi test y la API key de Resend autorizada para pruebas. `WOMPI_ENVIRONMENT=sandbox` ya está fijado en el config. Configura `ADMIN_EMAIL` como variable con un correo de prueba y `WOMPI_PUBLIC_KEY` como variable de staging con prefijo `pub_test_` (el preflight rechaza una llave pública live). Configura también `TURNSTILE_SITE_KEY` y `TURNSTILE_HOSTNAMES` con los valores del entorno de staging. El hostname `workers.dev` se conoce tras el primer despliegue; actualízalo antes de probar registro/login. El secreto `ADMIN_PASSWORD`, la llave privada de Wompi y el resto de secretos deben ser creados exclusivamente para staging. El remitente por defecto es `onboarding@resend.dev`, sujeto a las restricciones de Resend.
+Genera `TOTP_ENCRYPTION_KEY` con `openssl rand -base64 32` y pégala directamente en el prompt de Wrangler. Usa una clave exclusiva de staging y aprovisiónala antes del Worker que cifra secretos MFA.
+
+Usa credenciales Wompi test y la API key de Resend autorizada para pruebas. `WOMPI_ENVIRONMENT=sandbox` ya está fijado en el config. Configura `ADMIN_EMAIL` como variable con un correo de prueba y `WOMPI_PUBLIC_KEY` como variable de staging con prefijo `pub_test_` (el preflight rechaza una llave pública live). Si necesitas probar la cuenta demo, configura `ADMIN_DEMO_EMAIL` con una cuenta admin activa en la D1 de staging; nunca reutilices la dirección demo de producción. Configura también `TURNSTILE_SITE_KEY` y `TURNSTILE_HOSTNAMES` con los valores del entorno de staging. El hostname `workers.dev` se conoce tras el primer despliegue; actualízalo antes de probar registro/login. El secreto `ADMIN_PASSWORD`, la llave privada de Wompi y el resto de secretos deben ser creados exclusivamente para staging. El remitente por defecto es `onboarding@resend.dev`, sujeto a las restricciones de Resend.
 
 MiPaquete y Factus quedan sin credenciales ni endpoints en staging hasta que exista una estrategia de sandbox aprobada. No apuntes esos adaptadores a servicios reales.
 
 ## 3. Ejecutar CI y desplegar staging
 
-1. Abre una PR desde la rama de trabajo hacia `main`. Revisa que completen ambos checks: `Lint, Arquitectura y Aislamiento de Tablas` y `Escaneo de Secretos (Gitleaks)`.
+1. Abre una PR desde la rama de trabajo hacia `main`. Revisa que completen ambos checks: `Lint, Arquitectura y Aislamiento de Tablas` (incluye `pnpm audit`) y `Escaneo de Secretos (Gitleaks)`.
 2. Para desplegar, entra a Actions → `Deploy Staging` → Run workflow, selecciona la rama que se desea probar.
 3. El workflow valida aislamiento, aplica las migraciones de forma idempotente a `ecommerce-vega-staging` y despliega únicamente el Worker de staging.
 4. Verifica `/health`, logs del Worker y smoke tests de storefront/admin. Ejecuta un checkout Wompi test y confirma el pago por webhook sandbox; verifica también contra entrega, notificaciones de prueba, Queue y DLQ.

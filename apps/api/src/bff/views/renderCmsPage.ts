@@ -2,7 +2,7 @@ import { CmsPageDto } from '../gateways/cms/CmsGateway.js';
 import { renderCmsBlocks } from './renderCmsBlocks.js';
 import { getInstitutionalPagePath } from '../cms/CmsInstitutionalPageRoutes.js';
 
-export function renderCmsPage(page: CmsPageDto): {
+export function renderCmsPage(page: CmsPageDto, sanitizeRichText: (input: string) => string): {
   title: string;
   description: string;
   canonicalUrl: string;
@@ -24,7 +24,7 @@ export function renderCmsPage(page: CmsPageDto): {
           <h1>${safeTitle}</h1>
           <p>Conoce más sobre nuestra tienda y nuestras condiciones de servicio.</p>
         </header>
-        <div class="cms-page-content">${renderCmsBlocks(page.blocks)}</div>
+        <div class="cms-page-content">${renderCmsBlocks(page.blocks, sanitizeRichText)}</div>
         <nav class="cms-page-back" aria-label="Navegación de la tienda"><a href="/">Volver a la tienda</a></nav>
       </article>`,
   };

@@ -25,9 +25,9 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
 
   return `
     <div id="product-modal" class="product-modal" hidden>
-      <button class="product-modal-backdrop" type="button" onclick="closeProductModal()" aria-label="Cerrar formulario"></button>
+      <button class="product-modal-backdrop" type="button" data-product-modal-close aria-label="Cerrar formulario"></button>
       <section class="product-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pFormTitle" tabindex="-1">
-        <header class="product-modal-heading"><div><h2 id="pFormTitle">Crear Nuevo Producto</h2><p>Completa la información del producto y sus opciones de venta.</p></div><button class="product-modal-close" type="button" onclick="closeProductModal()" aria-label="Cerrar">×</button></header>
+        <header class="product-modal-heading"><div><h2 id="pFormTitle">Crear Nuevo Producto</h2><p>Completa la información del producto y sus opciones de venta.</p></div><button class="product-modal-close" type="button" data-product-modal-close aria-label="Cerrar">×</button></header>
         <div class="product-modal-body"><div class="card">
       <form id="newProductForm">
         <input type="hidden" id="pEditId" value="" />
@@ -38,7 +38,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           <div><label>Slug / Handle</label><input type="text" id="pSlug" required placeholder="camiseta-negra" /></div>
           <div><label>SKU</label><input type="text" id="pSku" required placeholder="TSHIRT-001" /></div>
           <div><label>Costo del proveedor (COP)</label><input type="text" id="pCost" data-cop-input inputmode="numeric" autocomplete="off" required placeholder="1.200.000" /><small>Escribe pesos completos; los separadores aparecen automáticamente.</small></div>
-          <div><label>Objetivo de ganancia</label><select id="pTargetType" onchange="updateProductPricingTargetFields()"><option value="margin">Porcentaje sobre la venta</option><option value="profit">Valor fijo en pesos COP</option></select></div>
+          <div><label>Objetivo de ganancia</label><select id="pTargetType" data-product-pricing-target><option value="margin">Porcentaje sobre la venta</option><option value="profit">Valor fijo en pesos COP</option></select></div>
           <div id="pMarginWrap"><label>Margen objetivo sobre la venta neta (%)</label><input type="number" id="pMargin" min="0.01" max="99.99" step="0.01" value="20" required /><small>Porcentaje sobre venta sin IVA, no recargo sobre costo. Se calcula antes de descuentos o promociones.</small></div>
           <div id="pProfitWrap" style="display:none"><label>Ganancia neta objetivo (COP)</label><input type="text" id="pTargetProfit" data-cop-input inputmode="numeric" autocomplete="off" placeholder="20.000" /><small>Escribe pesos completos. El sistema calcula el precio para obtener esta ganancia estimada después del costo del proveedor, IVA y comisión Wompi.</small></div>
           <div class="form-field-full"><label>Precio bruto recomendado del producto (IVA incluido, COP)</label><input type="text" id="pPrice" data-cop-input inputmode="numeric" readonly required /><div id="pPriceBreakdown" aria-live="polite">El cálculo mostrará el precio bruto, el IVA, el costo del proveedor, la ganancia neta y el margen estimados.</div></div>
@@ -60,7 +60,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           </div>
           <div>
             <label>Alcance de Envío</label>
-            <select id="pScope" onchange="onProductScopeChange()">
+            <select id="pScope" data-product-scope>
               <option value="national">Nacional (Todo el país)</option>
               <option value="local">Local (Zonas exclusivas)</option>
             </select>
@@ -102,7 +102,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
           </div>
           <div id="pMediaGrid" style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem;"></div>
           <div>
-            <input type="file" id="pMediaFileInput" accept="image/png,image/jpeg,image/webp,image/avif" multiple style="margin-bottom:0.35rem;" onchange="handleProductImageSelected(this)" />
+            <input type="file" id="pMediaFileInput" accept="image/png,image/jpeg,image/webp,image/avif" multiple style="margin-bottom:0.35rem;" data-product-image-input />
             <input type="hidden" id="pMediaIdsJson" value="[]" />
             <div style="font-size:0.75rem; color:#94a3b8;">
               Puedes subir hasta 5 imágenes (la primera será la principal). Se guardan directamente en Cloudflare R2.
@@ -145,7 +145,7 @@ export function renderProductFormCard(shippingZones: ShippingZoneDto[] = [], tax
 
         <div style="margin-top: 1.5rem;">
           <button type="submit" class="btn-primary" id="pSubmitBtn">Guardar Producto</button>
-          <button type="button" class="btn-action" id="pCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetProductForm()">Cancelar Edición</button>
+          <button type="button" class="btn-action" id="pCancelBtn" style="display:none; padding:0.75rem 1rem;" data-product-form-reset>Cancelar Edición</button>
           <div id="pMsg" class="msg"></div>
         </div>
       </form>

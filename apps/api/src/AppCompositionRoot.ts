@@ -42,5 +42,6 @@ export interface AppCompositionRoot {
   notificationsGateway: NotificationsGateway;
   auditGateway: AuditGateway;
   outboxRelayService: OutboxRelayService;
+  identityOutboxRelayService: OutboxRelayService;
   mediaOrphanCollector: { execute(cursor?: string, now?: Date): Promise<{ deleted: number; cursor?: string }> };
 }

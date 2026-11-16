@@ -52,6 +52,7 @@ export interface BlogCategoryDto { id:string; name:string; slug:string; descript
 export interface BlogPageDto<T> { items:T[]; total:number; }
 
 export interface CmsGateway {
+  sanitizeRichText(input: string): string;
   createPage(input: {
     title: string;
     slug: string;

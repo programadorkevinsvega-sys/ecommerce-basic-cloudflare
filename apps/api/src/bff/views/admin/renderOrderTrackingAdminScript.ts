@@ -112,7 +112,7 @@ export function renderOrderTrackingAdminScript(): string {
     async function createMiPaqueteGuide() {
       const orderId = document.getElementById('tracking-edit-order-id').value;
       const message = document.getElementById('tracking-edit-message');
-      const button = document.querySelector('[onclick="createMiPaqueteGuide()"]');
+      const button = document.querySelector('[data-tracking-action="create-guide"]');
       button.disabled = true; message.textContent = 'Consultando configuración y creando o recuperando la guía…';
       try {
         let response = await fetch('/api/v1/admin/orders/' + encodeURIComponent(orderId) + '/mipaquete', { method: 'POST', headers: adminHeaders(true) });
@@ -152,6 +152,18 @@ export function renderOrderTrackingAdminScript(): string {
     document.getElementById('shipment-label-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadShipmentLabels(labelPage + 1));
     document.getElementById('local-label-pagination')?.querySelector('[data-page-direction="previous"]')?.addEventListener('click', () => loadLocalDeliveryLabels(Math.max(1, localLabelPage - 1)));
     document.getElementById('local-label-pagination')?.querySelector('[data-page-direction="next"]')?.addEventListener('click', () => loadLocalDeliveryLabels(localLabelPage + 1));
+    document.getElementById('tracking-edit-status')?.addEventListener('change', updateOrderTrackingStatusActionState);
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-tracking-action]');
+      if (!button) return;
+      const action = button.dataset.trackingAction;
+      if (action === 'search') loadAdminOrderTracking(1);
+      if (action === 'close') closeOrderTrackingEditor();
+      if (action === 'save-status') saveOrderTrackingStatus();
+      if (action === 'create-guide') createMiPaqueteGuide();
+      if (action === 'print-shipment-batch') printUnprintedGuideBatch();
+      if (action === 'print-local-batch') printLocalLabelBatch();
+    });
     window.loadAdminOrderTracking = loadAdminOrderTracking;
     window.openOrderTrackingEditor = openOrderTrackingEditor;
     window.closeOrderTrackingEditor = closeOrderTrackingEditor;

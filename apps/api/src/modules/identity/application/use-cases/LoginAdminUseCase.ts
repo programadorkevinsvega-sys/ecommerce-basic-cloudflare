@@ -8,6 +8,7 @@ import { AdminUser } from '../../domain/entities/AdminUser.js';
 import { ConfiguredSecretComparator } from '../../domain/services/ConfiguredSecretComparator.js';
 import { IConfiguredAdminCredentialAuditPort } from '../ports/IConfiguredAdminCredentialAuditPort.js';
 import { Result } from '../../../../shared-kernel/Result.js';
+import { AdminLoginThrottle } from '../services/AdminLoginThrottle.js';
 
 export interface LoginAdminInput {
   email: string;
@@ -15,6 +16,7 @@ export interface LoginAdminInput {
   totpCode?: string;
   ipAddress?: string;
   userAgent?: string;
+  traceId?: string;
 }
 
 export interface LoginAdminOutput {
@@ -33,31 +35,41 @@ export class LoginAdminUseCase {
   private readonly adminRepo: IAdminUserRepository;
   private readonly sessionRepo: ISessionRepository;
   private readonly configuredEmail?: string;
+  private readonly demoEmail?: string;
   private readonly configuredPassword?: string;
   private readonly credentialAudit?: IConfiguredAdminCredentialAuditPort;
+  private readonly loginThrottle: AdminLoginThrottle;
 
   public constructor(
     adminRepo: IAdminUserRepository,
     sessionRepo: ISessionRepository,
-    credentials?: { email?: string; password?: string },
+    loginThrottle: AdminLoginThrottle,
+    credentials?: { email?: string; password?: string; demoEmail?: string },
     credentialAudit?: IConfiguredAdminCredentialAuditPort,
   ) {
     this.adminRepo = adminRepo;
     this.sessionRepo = sessionRepo;
     this.configuredEmail = credentials?.email?.trim().toLowerCase() || undefined;
+    this.demoEmail = credentials?.demoEmail?.trim().toLowerCase() || undefined;
     this.configuredPassword = credentials?.password || undefined;
     this.credentialAudit = credentialAudit;
+    this.loginThrottle = loginThrottle;
   }
 
   public async execute(input: LoginAdminInput): Promise<Result<LoginAdminOutput, Error>> {
+    const isConfiguredAdmin = this.matchesConfiguredEmail(input.email);
+    const isDemoAdmin = this.matchesDemoEmail(input.email);
     const configuredCredentials = Boolean(this.configuredEmail && this.configuredPassword);
-    let admin = configuredCredentials
+    if ((configuredCredentials || this.demoEmail) && !isConfiguredAdmin && !isDemoAdmin) {
+      return Result.fail(new Error('Credenciales inválidas'));
+    }
+    let admin = configuredCredentials && isConfiguredAdmin
       ? await this.adminRepo.findSoleActiveSuperadmin()
-      : await this.adminRepo.findByEmail(input.email);
+      : await this.adminRepo.findByEmail(input.email.trim().toLowerCase());
 
     let provisioned = false;
     if (!admin && configuredCredentials && await this.adminRepo.countAdmins() === 0
-      && this.matchesConfiguredCredentials(input)) {
+      && isConfiguredAdmin && this.matchesConfiguredCredentials(input)) {
       if (!this.credentialAudit?.recordConfiguredAdminProvision) {
         return Result.fail(new Error('Auditoría de aprovisionamiento no configurada'));
       }
@@ -85,19 +97,22 @@ export class LoginAdminUseCase {
     }
 
     if (!admin || !admin.isActive) {
+      if (!configuredCredentials || isDemoAdmin) await PasswordHasher.verifyAgainstDummy(input.password);
       return Result.fail(new Error('Credenciales inválidas'));
     }
 
-    if (admin.isLocked()) {
-      return Result.fail(new Error('Cuenta bloqueada temporalmente por intentos fallidos'));
+    if (await this.loginThrottle.isBlocked(admin.id, input.ipAddress)) {
+      if (!configuredCredentials || isDemoAdmin) await PasswordHasher.verifyAgainstDummy(input.password);
+      return Result.fail(new Error('Credenciales inválidas'));
     }
 
-    const isPasswordValid = configuredCredentials
+    const isPasswordValid = configuredCredentials && isConfiguredAdmin
       ? this.matchesConfiguredCredentials(input)
       : await PasswordHasher.verify(input.password, admin.passwordHash);
     if (!isPasswordValid) {
-      admin.registerFailedAttempt();
-      await this.adminRepo.save(admin);
+      await this.loginThrottle.recordFailure(
+        admin, isConfiguredAdmin && this.configuredEmail ? this.configuredEmail : admin.email, input.ipAddress, input.traceId,
+      );
       return Result.fail(new Error('Credenciales inválidas'));
     }
 
@@ -109,24 +124,27 @@ export class LoginAdminUseCase {
       if (!input.totpCode) {
         return Result.fail(new Error('Código TOTP de segundo factor requerido'));
       }
-      const isMfaValid = await TotpService.verifyCode(admin.mfaSecret, input.totpCode);
+      const counter = await TotpService.findMatchingCounter(admin.mfaSecret, input.totpCode);
+      const isMfaValid = counter !== null && await this.adminRepo.consumeTotpCounter(admin.id, counter);
       if (!isMfaValid) {
-        admin.registerFailedAttempt();
-        await this.adminRepo.save(admin);
+        await this.loginThrottle.recordFailure(
+          admin, isConfiguredAdmin && this.configuredEmail ? this.configuredEmail : admin.email, input.ipAddress, input.traceId,
+        );
         return Result.fail(new Error('Código TOTP inválido o expirado'));
       }
     }
 
-    if (configuredCredentials && !provisioned) {
+    if (configuredCredentials && isConfiguredAdmin && !provisioned) {
       if (!this.credentialAudit) return Result.fail(new Error('Auditoría de credenciales no configurada'));
       await this.credentialAudit.recordCredentialSync(admin.id, 'before');
       const passwordHash = await PasswordHasher.hash(this.configuredPassword as string);
-      admin.synchronizeConfiguredCredentials(this.configuredEmail as string, passwordHash);
+      admin.synchronizeConfiguredCredentials(this.configuredEmail || admin.email, passwordHash);
     }
 
     admin.resetFailedAttempts();
     await this.adminRepo.save(admin);
-    if (configuredCredentials && !provisioned) {
+    await this.loginThrottle.clear(admin.id, input.ipAddress);
+    if (configuredCredentials && isConfiguredAdmin && !provisioned) {
       await this.credentialAudit?.recordCredentialSync(admin.id, 'after');
     }
 
@@ -166,7 +184,15 @@ export class LoginAdminUseCase {
 
   private matchesConfiguredCredentials(input: LoginAdminInput): boolean {
     return Boolean(this.configuredEmail && this.configuredPassword)
-      && input.email.trim().toLowerCase() === this.configuredEmail
+      && this.matchesConfiguredEmail(input.email)
       && ConfiguredSecretComparator.matches(input.password, this.configuredPassword as string);
+  }
+
+  private matchesConfiguredEmail(email: string): boolean {
+    return email.trim().toLowerCase() === this.configuredEmail;
+  }
+
+  private matchesDemoEmail(email: string): boolean {
+    return Boolean(this.demoEmail && email.trim().toLowerCase() === this.demoEmail);
   }
 }

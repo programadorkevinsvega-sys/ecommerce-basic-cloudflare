@@ -13,6 +13,7 @@ export interface CreateOrderLineInput {
 }
 
 export interface CreateOrderCommand {
+  orderId?: string;
   customerId?: string | null;
   guestCartIdHash?: string | null;
   customerEmail: string;
@@ -40,10 +41,17 @@ export interface CreateOrderCommand {
   minEstimatedDays?: number;
   maxEstimatedDays?: number;
   paymentMethod: 'wompi' | 'cash_on_delivery';
+  checkoutProtection?: {
+    ipFingerprint: string;
+    emailFingerprint: string;
+    cartFingerprint: string;
+    emailReservations: Array<{ recipientFingerprint: string; count: number }>;
+  };
   lines: CreateOrderLineInput[];
 }
 
 export class CreateOrderUseCase {
+  private static readonly GUEST_TRACKING_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
   private readonly repo: IOrderRepository;
 
   public constructor(repo: IOrderRepository) {
@@ -60,7 +68,22 @@ export class CreateOrderUseCase {
     if (cmd.customerId && cmd.guestCartIdHash || !cmd.customerId && !/^[a-f0-9]{64}$/.test(cmd.guestCartIdHash || '')) {
       throw new Error('El mecanismo de acceso del pedido no es válido');
     }
-    const orderId = `ord-${crypto.randomUUID()}`;
+    if (cmd.orderId && !/^ord-[0-9a-f-]{36}$/i.test(cmd.orderId)) {
+      throw new Error('El identificador del pedido no es válido');
+    }
+    if (!cmd.customerId && !cmd.checkoutProtection ||
+      cmd.checkoutProtection && (
+      !/^[a-f0-9]{64}$/i.test(cmd.checkoutProtection.ipFingerprint) ||
+      !/^[a-f0-9]{64}$/i.test(cmd.checkoutProtection.emailFingerprint) ||
+      !/^[a-f0-9]{64}$/i.test(cmd.checkoutProtection.cartFingerprint) ||
+      cmd.checkoutProtection.emailReservations.length === 0 ||
+      cmd.checkoutProtection.emailReservations.length > 2 ||
+      cmd.checkoutProtection.emailReservations.some((reservation) =>
+        !/^[a-f0-9]{64}$/i.test(reservation.recipientFingerprint) ||
+        !Number.isSafeInteger(reservation.count) || reservation.count < 1 || reservation.count > 3))) {
+      throw new Error('Las señales de protección del checkout no son válidas');
+    }
+    const orderId = cmd.orderId || `ord-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const lines = cmd.lines.map((l) => new OrderLine({
@@ -100,6 +123,7 @@ export class CreateOrderUseCase {
       estimatedPaymentFeeCents: cmd.estimatedPaymentFeeCents,
       transactionFeeCents: cmd.transactionFeeCents,
       guestTrackingTokenHash: cmd.guestTrackingTokenHash,
+      guestTrackingTokenExpiresAt: new Date(Date.parse(now) + CreateOrderUseCase.GUEST_TRACKING_TOKEN_TTL_MS).toISOString(),
       minEstimatedDays: cmd.minEstimatedDays,
       maxEstimatedDays: cmd.maxEstimatedDays,
       paymentMethod: cmd.paymentMethod,
@@ -121,7 +145,12 @@ export class CreateOrderUseCase {
         items: order.lines.map((line) => ({ productId: line.productId, quantity: line.quantity })),
         timestamp: now,
       },
-    });
+    }, cmd.checkoutProtection ? {
+      ipFingerprint: cmd.checkoutProtection.ipFingerprint,
+      emailFingerprint: cmd.checkoutProtection.emailFingerprint,
+      cartFingerprint: cmd.checkoutProtection.cartFingerprint,
+      emailReservations: cmd.checkoutProtection.emailReservations,
+    } : undefined);
 
     return order;
   }

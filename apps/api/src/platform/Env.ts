@@ -2,6 +2,9 @@ export interface Env {
   AUTH_LIMITER: RateLimit;
   CHECKOUT_LIMITER: RateLimit;
   API_WRITE_LIMITER: RateLimit;
+  API_IP_WRITE_LIMITER: RateLimit;
+  PUBLIC_SEARCH_LIMITER: RateLimit;
+  PUBLIC_READ_LIMITER: RateLimit;
   DB: D1Database;
   MEDIA_BUCKET: R2Bucket;
   IMAGES: ImagesBinding;
@@ -10,7 +13,9 @@ export interface Env {
   ANALYTICS?: AnalyticsEngineDataset;
   ENVIRONMENT?: string;
   ADMIN_EMAIL?: string;
+  ADMIN_DEMO_EMAIL?: string;
   ADMIN_PASSWORD?: string;
+  PUBLIC_ORIGIN?: string;
   WOMPI_PUBLIC_KEY?: string;
   WOMPI_PRIVATE_KEY?: string;
   WOMPI_ENVIRONMENT?: 'sandbox' | 'production';
@@ -29,4 +34,7 @@ export interface Env {
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_HOSTNAMES?: string;
+  GUEST_CART_HMAC_SECRET?: string;
+  /** Base64-encoded 32-byte key used only by the identity persistence adapter. */
+  TOTP_ENCRYPTION_KEY?: string;
 }

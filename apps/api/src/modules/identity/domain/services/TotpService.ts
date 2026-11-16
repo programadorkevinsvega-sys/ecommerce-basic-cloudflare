@@ -7,22 +7,30 @@ export class TotpService {
     return this.base32Encode(bytes);
   }
 
-  public static async verifyCode(secretBase32: string, token: string, window = 1): Promise<boolean> {
+  public static async findMatchingCounter(
+    secretBase32: string,
+    token: string,
+    window = 1,
+    timestamp = Date.now(),
+  ): Promise<number | null> {
     const cleanToken = token.trim();
     if (cleanToken.length !== this.DIGITS || !/^\d+$/.test(cleanToken)) {
-      return false;
+      return null;
     }
 
-    const currentCounter = Math.floor(Date.now() / 1000 / this.PERIOD_SECONDS);
+    const currentCounter = Math.floor(timestamp / 1000 / this.PERIOD_SECONDS);
+    let matchedCounter: number | null = null;
 
     for (let step = -window; step <= window; step++) {
-      const generated = await this.generateCodeForCounter(secretBase32, currentCounter + step);
+      const counter = currentCounter + step;
+      if (counter < 0) continue;
+      const generated = await this.generateCodeForCounter(secretBase32, counter);
       if (this.timingSafeEqualStr(cleanToken, generated)) {
-        return true;
+        matchedCounter = counter;
       }
     }
 
-    return false;
+    return matchedCounter;
   }
 
   public static async generateCurrentCode(secretBase32: string, timestamp = Date.now()): Promise<string> {

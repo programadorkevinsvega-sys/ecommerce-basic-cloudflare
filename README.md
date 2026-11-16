@@ -121,11 +121,11 @@ Las acciones administrativas dependen del contrato y del valor histórico de cad
 | API / BFF | **Hono** + `@hono/zod-openapi` en un único Worker |
 | Base de datos | **Cloudflare D1** (única, con prefijos por módulo) |
 | Archivos e imágenes | **Cloudflare R2** (keys `<modulo>/...`) + Cloudflare Images / Image Resizing para variantes |
-| Caché | Workers Cache global y por niveles para HTML SSR público anónimo (TTL 30 s); KV queda para el cursor de mantenimiento R2 |
+| Caché | HTML SSR con nonce CSP: `private, no-store`; medios inmutables en Workers Cache; KV queda para el cursor de mantenimiento R2 |
 | Eventos | **Cloudflare Queues** y consumidor/DLQ configurados; outbox por módulo según cada implementación |
 | Tareas programadas | Cron Trigger cada 5 minutos para los handlers registrados en el Worker |
 | Consistencia fuerte | Actualización condicional en D1; Durable Objects no están configurados |
-| Rate limiting y antiabuso | Bindings de rate limit para autenticación, checkout y escrituras; Turnstile se verifica en servidor para registro y logins de clientes/admin |
+| Rate limiting y antiabuso | Bindings de rate limit para autenticación, checkout y escrituras; Turnstile se verifica en servidor para registro, logins y checkout invitado |
 | Observabilidad | Logs y binding Analytics Engine configurado; la instrumentación de cada métrica debe verificarse por handler |
 | Storefront | Rutas HTML SSR integradas al Worker Hono (ver controladores `storefront` y vistas) |
 | Panel admin | Dashboard servido por el Worker en `/admin`, con secciones en una página y scripts del cliente; `apps/admin` es un paquete placeholder, no el frontend desplegado |
@@ -332,6 +332,7 @@ El módulo de crédito aún no existe; su alcance está pendiente en ADR-0009. L
 - El webhook **verifica la firma/checksum del evento**, es **idempotente** (`payments_webhook_events` guarda el `eventId`) y publica `payments.payment.confirmed.v1` por outbox; nunca se confía en la redirección del navegador para confirmar un pago.
 - Estados soportados: aprobado, rechazado, pendiente, anulado y error; una transacción pendiente se reconsulta por Cron.
 - Medios de pago (tarjeta, PSE, Nequi, etc.) según lo habilitado en la cuenta Wompi; el dominio solo conoce `PaymentMethod`.
+- El checkout no cobra al cliente cargos de procesamiento de Wompi. `estimatedPaymentFeeCents` es una estimación interna del costo del comercio; `transactionFeeCents` queda en cero en pedidos nuevos. Los snapshots e invoices históricos conservan los importes que se registraron originalmente.
 - Llaves (pública, privada, secreto de integridad, secreto de eventos) solo en **Cloudflare Secrets**; ambientes *sandbox* y producción separados.
 
 ### Pago contra entrega
@@ -380,10 +381,11 @@ El envío transaccional usa el puerto `IEmailPort` y el adaptador configurado pa
 | `/politica-de-envios`, `/devoluciones`, `/garantias` | Información de envíos y posventa editable desde CMS |
 | `/terminos-y-condiciones`, `/politica-de-privacidad`, `/politica-de-cookies`, `/tratamiento-de-datos` | Páginas legales editables desde CMS |
 | `/p/:slug` | Ruta histórica del CMS; se conserva por compatibilidad |
-| `/carrito`, `/checkout` | Compra |
+| `/carrito`, `/checkout` | Compra; el checkout de invitado exige Turnstile y una capacidad de carrito firmada; el checkout de cliente requiere correo verificado |
 | `/seguimiento-pedido` | Clientes con sesión consultan sus pedidos por propiedad; invitados usan número de pedido y clave enviada al correo; estados y datos logísticos administrables desde Envíos en el panel |
 | `/auth/login` | Inicio de sesión SSR; las operaciones de registro y autenticación se exponen por API |
-| `/auth/register` | Registro SSR de clientes protegido con Turnstile |
+| `/auth/register` | Registro SSR de clientes protegido con Turnstile; la respuesta no revela si el correo ya existía |
+| `/auth/verify-email`, `/auth/reset-password` | Confirmación de correo y solicitud/cambio de contraseña con enlaces de un solo uso |
 | `/admin/login` | Inicio de sesión administrativo con MFA y Turnstile |
 | `/cuenta` | Vista de cuenta protegida, con resumen de pedidos y facturas del cliente |
 | `/cuenta/perfil`, `/cuenta/seguridad` | Edición del perfil, cambio de contraseña y gestión de sesiones propias; logout desde `/cuenta` |
@@ -403,7 +405,7 @@ La tienda y API se publican en `https://vega.jnmtortas.com`, configurado como Cu
 
 | Ruta | Acceso | Uso |
 |---|---|---|
-| `/api/v1/auth/*` | Público + rate limit | Registro y autenticación de clientes. |
+| `/api/v1/auth/*` | Público + rate limit | Registro/login de clientes; solicitud de recuperación, confirmación de correo y reenvío autenticado de verificación. |
 | `/cuenta/perfil`, `/cuenta/seguridad` | Cliente autenticado | Editar nombre/teléfono, cambiar contraseña y listar/revocar sesiones propias. |
 | `PATCH /api/v1/customer/profile`, `POST /api/v1/customer/password`, `/api/v1/customer/sessions*` | Cliente autenticado + CSRF + límite de escritura | Reautenticación con contraseña actual; cambio de contraseña rota el token y cierra las otras sesiones. |
 | `/api/v1/customer/orders`, `/api/v1/customer/invoices` | Cliente autenticado | Consultar pedidos/facturas propios. |
@@ -423,12 +425,14 @@ Las rutas API son contratos implementados, no una promesa de CRUD uniforme. Cons
 
 El detalle normativo (IDs `SEC-*`, modelo de amenaza, checklist de PR y matriz de certificación) está en [`SECURITY_RULES.md`](./SECURITY_RULES.md). Resumen:
 
-- **Contraseñas:** PBKDF2 (Web Crypto) con sal por usuario y parámetros versionados; migrable a otro algoritmo sin romper sesiones.
+- **Contraseñas de clientes:** PBKDF2 (Web Crypto) con sal por usuario y parámetros versionados; registro, cambio y recuperación consultan Pwned Passwords de HIBP mediante k-anonimato (SHA-1 solo para consulta, prefijo de cinco caracteres, sin API key). Contraseñas filtradas se rechazan y, si HIBP no responde, esos flujos fallan cerrados con error temporal; no se almacena la respuesta del proveedor. `ADMIN_PASSWORD` se configura fuera de estos flujos y no se consulta automáticamente.
 - **Sesiones:** token opaco aleatorio (32 bytes) cuyo **hash SHA-256** se guarda en `identity_sessions`; cookies `__Host-session` (clientes) y `__Host-admin-session` (admin), `HttpOnly; Secure; SameSite=Lax; Path=/`, sin `Domain`. Expiración absoluta e inactividad (más estrictas para admin), rotación al login/cambio de contraseña y revocación en el servidor. El cliente puede cerrar sesiones propias; no se devuelve IP ni token en el listado.
 - **Cuenta del cliente:** `/cuenta` muestra pedidos/facturas y ofrece cerrar sesión con revocación server-side y expiración de cookie. `/cuenta/perfil` permite actualizar nombre y teléfono tras confirmar la contraseña actual. `/cuenta/seguridad` permite cambiar contraseña y revisar/revocar sesiones. El correo permanece de solo lectura hasta contar con confirmación de la nueva dirección.
 - **Administradores:** MFA (TOTP) obligatoria antes del lanzamiento, re-autenticación en acciones críticas, auditoría de toda mutación.
 - **RBAC:** permisos por recurso y acción (`products:write`, `promotions:publish`…), verificados en el BFF vía `IdentityGateway`; la autorización de negocio vive en el módulo.
-- **Protección:** rate limiting configurado; Turnstile en registro y logins de clientes/admin con verificación de token y hostname en servidor; CSP/cabeceras y firma del webhook Wompi. La certificación integral sigue pendiente según `SECURITY_RULES.md`.
+- **Protección:** rate limiting configurado; Turnstile en registro, logins de clientes/admin y checkout invitado con verificación de token y hostname en servidor; CSP/cabeceras y firma del webhook Wompi. La certificación integral sigue pendiente según `SECURITY_RULES.md`.
+- **Checkout invitado:** Turnstile verificado antes de crear pedidos; carrito emitido por el Worker mediante `__Host-cart` firmado con `GUEST_CART_HMAC_SECRET` y vigencia de 30 días; el Worker ya no emite ni utiliza el espejo `vega_cart_id`. Los tokens de seguimiento guest se guardan como hash y vencen 90 días después de crear el pedido. Hay límites atómicos de pedidos pendientes (3/IP, 2/correo y 2/carrito por 30 min) y de correos de pedido (3 por destinatario/hora). El secreto debe aprovisionarse separadamente en cada entorno. Las migraciones D1 correspondientes y el despliegue de producción siguen pendientes.
+- **Acciones administrativas críticas:** requieren reautenticación con la contraseña actual y un código TOTP vigente; se aplica a cambios de configuración, rangos Factus, configuración MiPaquete, notas crédito y recaudos COD. La clave y el código se envían solo en headers de la solicitud, no se guardan ni se incluyen en el cuerpo auditado.
 - **Datos:** secretos solo en Cloudflare Secrets, PII fuera de logs, subidas a R2 con validación de tipo/tamaño y URLs firmadas para operaciones privadas.
 - **Carga de imágenes:** 10 MiB máximo, 16.384 px por lado y 40 MP; formatos JPEG, PNG, WebP y AVIF. El Worker valida firmas, estructura disponible, dimensiones, CRC de chunks PNG y tamaño remoto con `R2.head()` antes de persistir D1. La decodificación completa de píxeles y la eliminación EXIF/GPS siguen pendientes.
 - **Admin:** opcionalmente detrás de **Cloudflare Access** como capa adicional.
@@ -450,11 +454,9 @@ El Worker renderiza HTML SSR. No existe un panel general de SEO para todas las e
 
 ## 9. Caché
 
-El Worker tiene habilitado **Workers Cache** en Wrangler para respuestas HTML SSR públicas y anónimas: inicio, catálogo paginado, detalle de producto, colecciones, marcas, blog, páginas institucionales y `/p/:slug`. El TTL compartido es de 30 segundos; el caché separa versiones del Worker por defecto. Todas esas respuestas llevan la etiqueta `storefront-public-html`.
+El HTML SSR no se almacena en Workers Cache: la CSP asigna un nonce distinto por respuesta y todas las páginas HTML usan `Cache-Control: private, no-store`, sin `Cache-Tag`. Esta política evita reutilizar nonces y aplica tanto al storefront como al panel. Los flujos de compra siguen validando precio, stock y condiciones desde sus fuentes autoritativas.
 
-La caché se omite para solicitudes con cookies o `Authorization`, búsquedas de texto, rutas no incluidas explícitamente, y páginas de cuenta, carrito, checkout, seguimiento, opiniones con elegibilidad, admin y APIs. `Vary: Cookie` separa la respuesta anónima de solicitudes con sesión. Solo se cachean respuestas 200 `text/html`; los demás casos llevan `private, no-store`. El HTML puede quedar hasta 30 segundos desactualizado; los precios, stock y permisos del checkout se vuelven a validar en sus flujos autoritativos.
-
-Después de mutaciones exitosas del catálogo, inventario, promociones, reseñas, contenido, configuración o pedidos, el BFF ejecuta `ctx.cache.purge()` para invalidar globalmente esa etiqueta antes de responder. La publicación programada del blog también la invalida. Si Cloudflare rechaza el purge, se registra un error estructurado y el TTL de 30 segundos limita el tiempo de datos desactualizados; el flujo de compra siempre vuelve a validar precio, stock y condiciones en sus fuentes autoritativas. Verifica `CF-Cache-Status: HIT|MISS|BYPASS` y `Age` en las herramientas de red o con `curl -I`. Las imágenes públicas servidas por `/media/:id` tienen `max-age=31536000, immutable`; al reemplazar una imagen, la entidad debe usar el nuevo ID de Media. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; por eso las métricas KV no representan esta caché HTML. No requiere migración de D1 ni cambio de binding. Ver [ADR-0030](./docs/adr/ADR-0030-invalidacion-workers-cache.md).
+Las imágenes públicas servidas por `/media/:id` conservan su caché inmutable (`max-age=31536000, immutable`); al reemplazar una imagen, la entidad debe usar el nuevo ID de Media. `CACHE` (Workers KV) sigue separado y se usa para el cursor temporal de limpieza de medios; sus métricas no representan el caché de respuestas HTML. El caché SSR de 30 segundos descrito en [ADR-0030](./docs/adr/ADR-0030-invalidacion-workers-cache.md) corresponde a la política anterior. La decisión vigente de nonce/no-store está en [ADR-0033](./docs/adr/ADR-0033-csp-nonce-y-cache-html.md). No declarar esta política desplegada en producción sin verificar el deployment activo.
 
 ---
 
@@ -475,6 +477,7 @@ Contrato común: `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producer
 | `payments.cod.collected.v1` | payments | orders, invoicing, realtime, audit |
 | `invoicing.invoice.issued.v1` | invoicing | notifications (email), realtime, audit |
 | `invoicing.credit_note.issued.v1` | invoicing | notifications, realtime, audit |
+| `identity.customer.email_verification.requested` / `identity.customer.password_reset.requested` | identity | notifications (email) |
 | `shipping.zone.changed.v1` | shipping | — |
 
 **Estado real del runtime al 2026-11-07:** solo los dos eventos de invoicing `*.issue.requested` v1 tienen relay y consumer operativos. Sus contratos y handlers están en `apps/api/src/platform/messaging`; desconocidos/versiones no registradas se reintentan y no se ACKean. La idempotencia usa recibos D1 y reconciliación por referencia de Factus; no es una garantía exactly-once. Las otras tablas outbox y consumidores de la tabla anterior son pendientes, no se deben tratar como flujos activos. Relay de settings/wishlist deshabilitado y emisión nueva de eventos wishlist detenida. El inventario verificable y gates operativos pendientes están en [`AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md`](./docs/AUDITORIA_TECNICA_D1_R2_EVENTOS_SEGURIDAD_2026-11-07.md). Staging, DLQ real, replay, dashboard y alertas no están certificados.
@@ -545,6 +548,7 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | Variable | Tipo | Valor / Ejemplo | Propósito |
 |---|---|---|---|
 | `ENVIRONMENT` | String | `production` | Valor versionado actualmente en Wrangler. |
+| `PUBLIC_ORIGIN` | String | `https://vega.jnmtortas.com` | Origen HTTPS sin ruta/query para enlaces de verificación y recuperación; staging/local deben configurar el suyo y el Worker falla cerrado si falta o es inválido. |
 | `ADMIN_EMAIL` | String | `admin@tudominio.com` | Correo de inicio de sesión del único Superadmin activo. No es un canal de entrega para TOTP. |
 | `RESEND_FROM_EMAIL` | String | Remitente configurado en `wrangler.jsonc` | Remitente del adaptador Resend; validar que el dominio esté verificado en el entorno. |
 | `WOMPI_PUBLIC_KEY` | String | Se configura por entorno | Llave pública que utiliza el checkout de Wompi. |
@@ -561,6 +565,7 @@ Estas variables no son sensibles y pueden definirse en el archivo `apps/api/wran
 | `WOMPI_PRIVATE_KEY` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prv_prod_...` o `prv_test_...`) | Reconciliación de transacciones en servidor y consultas directas a la API de Wompi. |
 | `WOMPI_INTEGRITY_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_integrity_...` o `test_integrity_...`) | Cálculo del hash SHA-256 de integridad para validar pagos. |
 | `WOMPI_EVENTS_SECRET` | [Wompi Colombia](https://wompi.co) | Panel Comercios Wompi > Desarrolladores (`prod_events_...` o `test_events_...`) | Validación SHA-256 del checksum Wompi (`properties` + `timestamp` + secreto), no HMAC. |
+| `TOTP_ENCRYPTION_KEY` | Generación local con `openssl rand -base64 32` | Clave aleatoria de 32 bytes; genera una distinta por entorno y pégala directamente en el prompt de Wrangler. | Cifrado AES-256-GCM de secretos TOTP guardados en D1. No la guardes en el repositorio ni la pierdas: la pérdida impide descifrar los secretos MFA existentes. |
 
 Cuando existen ambos valores, el login del Worker los valida y los sincroniza con la única cuenta Superadmin activa de `identity`; así se conserva el `adminId`, el rol y el estado MFA, y la base solo conserva el hash PBKDF2 de la contraseña. Si la tabla de administradores está vacía, el primer login que presente correctamente ambos valores aprovisiona de forma atómica esa cuenta desde Cloudflare, sin página de registro; si ya hay cualquier administrador, no se permite ese aprovisionamiento. Si aún no existen ambos valores, se mantiene temporalmente el login D1 para evitar bloquear el acceso durante la configuración. El titular debe configurar ambos antes de usar las credenciales nuevas. Después de un reinicio de D1, el estado MFA anterior no se recupera: el Superadmin recién aprovisionado debe volver a enrolar MFA. El enrolamiento muestra un secreto/URI TOTP después de reautenticar la contraseña; el código se genera en la app autenticadora y **no se envía por email**.
 
@@ -572,8 +577,11 @@ npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put WOMPI_PRIVATE_KEY
 npx wrangler secret put WOMPI_INTEGRITY_SECRET
 npx wrangler secret put WOMPI_EVENTS_SECRET
+pnpm exec wrangler secret put TOTP_ENCRYPTION_KEY --config apps/api/wrangler.jsonc
 pnpm exec wrangler secret put ADMIN_PASSWORD --config wrangler.jsonc
 ```
+
+Antes de desplegar código con cifrado TOTP, aprovisiona `TOTP_ENCRYPTION_KEY` en el Worker objetivo; sin ella, la persistencia de identidad falla al inicializarse y las rutas del Worker no quedan disponibles. Genera la clave con `openssl rand -base64 32` y proporciona la salida directamente al prompt interactivo de Wrangler; usa claves distintas en producción, staging y desarrollo local. Para Wrangler local, configura el valor en `apps/api/.dev.vars` (archivo ignorado por Git). Los secretos TOTP heredados en claro se re-cifran de forma gradual cuando el administrador inicia sesión o accede a su enrolamiento. No rotes ni reemplaces la clave sin descifrar y volver a cifrar todas las filas con un procedimiento compatible; conserva una copia protegida para recuperación.
 
 ---
 

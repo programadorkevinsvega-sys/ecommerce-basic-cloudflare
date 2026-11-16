@@ -9,6 +9,8 @@ import { notifyOrderStatusChanged } from './notifyOrderStatusChanged.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { createShipmentForEligibleOrder } from '../shipping/createShipmentForEligibleOrder.js';
+import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
+import { cancelOrderAndReleaseCouponRedemption } from './cancelOrderAndReleaseCouponRedemption.js';
 
 export function registerAdminOrderRoutes(
   app: Hono<{ Bindings: Env }>,
@@ -17,6 +19,7 @@ export function registerAdminOrderRoutes(
   notifications: NotificationsGateway,
   settings: SettingsGateway,
   shipping: ShippingGateway,
+  promotions: PromotionsGateway,
 ): void {
   app.get('/api/v1/admin/orders', async (c) => {
     const token = extractAdminToken(c);
@@ -64,9 +67,15 @@ export function registerAdminOrderRoutes(
     if (!session.permissions.some((p) => p === '*' || p === 'orders:*' || p === 'orders:edit')) return c.json({ error: 'Permiso insuficiente' }, 403);
     const body = await c.req.json();
     const previous = await orders.getOrder(c.req.param('orderId'));
-    const updated = await orders.updateOrderStatus({
-      orderId: c.req.param('orderId'), status: body.status, note: body.note, actor: session.actorId,
-    });
+    const updated = body.status === 'cancelled'
+      ? await cancelOrderAndReleaseCouponRedemption(orders, promotions, {
+        orderId: c.req.param('orderId'), note: body.note || 'Pedido cancelado por administración',
+        actor: session.actorId,
+      })
+      : await orders.updateOrderStatus({
+        orderId: c.req.param('orderId'), status: body.status, note: body.note, actor: session.actorId,
+      });
+    if (!updated) return c.json({ error: 'Pedido no encontrado' }, 404);
     if (previous?.paymentMethod === 'cash_on_delivery' && ['confirmed', 'prepared'].includes(updated.status) &&
         !['confirmed', 'prepared', 'shipped', 'delivered'].includes(previous.status)) {
       try { await createShipmentForEligibleOrder(updated.id, { orders, settings, shipping, notifications }); }
