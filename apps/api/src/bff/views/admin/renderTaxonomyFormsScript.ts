@@ -37,8 +37,6 @@ export function renderTaxonomyFormsScript(): string {
         pager.querySelector('span').textContent = result.total + ' registros · Página ' + result.page;
         pager.querySelector('[data-page-direction="previous"]').disabled = result.page <= 1;
         pager.querySelector('[data-page-direction="next"]').disabled = !result.hasMore;
-        pager.querySelector('[data-page-direction="previous"]').onclick = () => loadCatalogPage(key, result.page - 1);
-        pager.querySelector('[data-page-direction="next"]').onclick = () => loadCatalogPage(key, result.page + 1);
         const count = document.getElementById('taxonomy-count-' + key);
         if (count) count.textContent = result.total + ' registros · página ' + result.page + ' · ' + result.data.length + ' en esta página';
       } catch (error) {
@@ -46,6 +44,18 @@ export function renderTaxonomyFormsScript(): string {
       }
     }
     window.loadCatalogPage = loadCatalogPage;
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const open = target.closest('[data-taxonomy-modal-open]');
+      const close = target.closest('[data-taxonomy-modal-close]');
+      const pageButton = target.closest('[data-page-direction]');
+      if (open) window.openTaxonomyModal(open.dataset.taxonomyModalOpen);
+      if (close) window.closeTaxonomyModal(close.dataset.taxonomyModalClose);
+      if (pageButton) {
+        const key = pageButton.closest('[data-taxonomy-page]')?.dataset.taxonomyPage;
+        if (key) loadCatalogPage(key, taxonomyPages[key].page + (pageButton.dataset.pageDirection === 'previous' ? -1 : 1));
+      }
+    });
 
     let taxonomyFocus = null, taxonomyEditing = null;
     window.setVariantAttributeValues = (values = {}) => {

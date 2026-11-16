@@ -1,5 +1,14 @@
 import { Coupon } from '../entities/Coupon.js';
 
+export interface CouponRedemptionReservation {
+  orderId: string;
+  couponCode: string;
+  customerId: string | null;
+  orderSubtotalCents: number;
+  discountAppliedCents: number;
+  redeemedAt: string;
+}
+
 export interface ICouponRepository {
   findById(id: string): Promise<Coupon | null>;
   findByCode(code: string): Promise<Coupon | null>;
@@ -8,12 +17,6 @@ export interface ICouponRepository {
   count(activeOnly?: boolean): Promise<number>;
   delete(id: string): Promise<void>;
   getCustomerUsageCount(couponId: string, customerId: string): Promise<number>;
-  recordRedemption(redemption: {
-    id: string;
-    couponId: string;
-    orderId?: string;
-    customerId: string;
-    discountAppliedCents: number;
-    redeemedAt: string;
-  }): Promise<void>;
+  reserveRedemption(redemption: CouponRedemptionReservation): Promise<boolean>;
+  releaseRedemption(orderId: string): Promise<void>;
 }

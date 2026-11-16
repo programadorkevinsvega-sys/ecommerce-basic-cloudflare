@@ -30,8 +30,8 @@ export function renderAdminPaginationScript(): string {
       const next = footer.querySelector('[data-page="next"]');
       previous.disabled = state.page <= 1;
       next.disabled = state.page >= pageCount;
-      previous.onclick = () => { state.page--; window.paginateAdminTable(key, tbody, rows, renderRow, colspan, emptyMessage); document.querySelector('#admin-pagination-' + key + ' [data-page="' + (state.page <= 1 ? 'next' : 'previous') + '"]')?.focus(); };
-      next.onclick = () => { state.page++; window.paginateAdminTable(key, tbody, rows, renderRow, colspan, emptyMessage); document.querySelector('#admin-pagination-' + key + ' [data-page="' + (state.page >= pageCount ? 'previous' : 'next') + '"]')?.focus(); };
+      previous.addEventListener('click', () => { state.page--; window.paginateAdminTable(key, tbody, rows, renderRow, colspan, emptyMessage); document.querySelector('#admin-pagination-' + key + ' [data-page="' + (state.page <= 1 ? 'next' : 'previous') + '"]')?.focus(); });
+      next.addEventListener('click', () => { state.page++; window.paginateAdminTable(key, tbody, rows, renderRow, colspan, emptyMessage); document.querySelector('#admin-pagination-' + key + ' [data-page="' + (state.page >= pageCount ? 'previous' : 'next') + '"]')?.focus(); });
     };
     window.resetAdminTablePage = (key) => { if (adminTablePages[key]) adminTablePages[key].page = 1; };
     window.getStaticAdminTableRows = (tbody) => adminStaticRows.get(tbody) || [];

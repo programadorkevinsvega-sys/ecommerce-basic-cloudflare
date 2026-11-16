@@ -65,7 +65,7 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <div class="admin-shell">
     ${renderAdminSidebar(props.adminEmail)}
     <main id="admin-main" class="admin-main" tabindex="-1">
-      <header class="admin-topbar"><div><p>VEGA STORE · ADMINISTRACIÓN</p><h1>Panel de administración</h1></div><div class="admin-topbar-actions"><button id="admin-refresh" type="button" onclick="window.location.reload()" aria-label="Actualizar esta página">↻ Actualizar</button></div></header>
+      <header class="admin-topbar"><div><p>VEGA STORE · ADMINISTRACIÓN</p><h1>Panel de administración</h1></div><div class="admin-topbar-actions"><button id="admin-refresh" type="button" data-admin-action="refresh" aria-label="Actualizar esta página">↻ Actualizar</button></div></header>
       ${renderAdminSummarySection(props)}
       <div id="admin-legacy-tabs" class="admin-legacy-pane" hidden>
         ${renderAdminLegacyTabs(props)}
@@ -84,6 +84,16 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
     window.adminHeaders = function(isJson) {
       const h = {};
       if (isJson) h['Content-Type'] = 'application/json';
+      return h;
+    };
+    window.adminCriticalHeaders = async function(isJson) {
+      const password = prompt('Confirma tu contraseña para esta acción crítica.');
+      if (password === null || !password) return null;
+      const totpCode = prompt('Ingresa el código actual de tu aplicación de autenticación.');
+      if (totpCode === null || !/^\\d{6}$/.test(totpCode.trim())) return null;
+      const h = window.adminHeaders(isJson);
+      h['X-Admin-Reauth-Password'] = encodeURIComponent(password);
+      h['X-Admin-Reauth-Totp'] = totpCode.trim();
       return h;
     };
     function escapeHtml(s) {
@@ -123,6 +133,49 @@ export function renderAdminDashboardPage(props: AdminDashboardProps): string {
   <script>${renderOrderTrackingAdminScript()}</script>
   <script>${renderShippingHandlersScript()}</script>
   <script>${renderPhase8AdminScript()}</script>
+  <script>
+    document.getElementById('admin-refresh')?.addEventListener('click', () => window.location.reload());
+    document.querySelector('.admin-nav')?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-admin-nav-action]');
+      if (!button) return;
+      window.switchTab(button.dataset.tab, button);
+      const page = button.dataset.adminNavPage;
+      switch (button.dataset.adminNavAction) {
+        case 'orders': window.loadAdminOrders?.(); break;
+        case 'inventory': window.loadAdminInventory?.(); break;
+        case 'shipping': window.showAdminShippingPage?.(page); break;
+        case 'payments': window.showAdminPaymentPage?.(page); window.loadAdminPayments?.(); break;
+        case 'invoices': window.showAdminInvoicePage?.(page); window.loadAdminInvoices?.(1); break;
+        // The former calls showCatalogPage('collections', this) and showCatalogPage('categories', this) now use data attributes.
+        case 'catalog': window.showCatalogPage?.(page, button); break;
+        case 'reviews': window.loadAdminReviews?.(1); break;
+        case 'marketing': window.showMarketingPage?.(page); break;
+        case 'menus': window.loadAdminMenus?.(); break;
+        case 'blog': window.blogInit?.(); break;
+        case 'audit': window.loadAdminAudit?.(); break;
+      }
+    });
+    document.getElementById('summary-search')?.addEventListener('input', () => window.filterAdminSummary?.());
+    document.getElementById('summary-range')?.addEventListener('change', () => window.filterAdminSummary?.());
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-admin-summary-action], [data-review-action], [data-review-close]');
+      if (!button) return;
+      if (button.dataset.adminSummaryAction === 'orders') {
+        window.switchTab('orders');
+        window.loadAdminOrders?.();
+      } else if (button.dataset.adminSummaryAction === 'export') {
+        window.exportAdminSummary?.();
+      } else if (button.dataset.reviewAction === 'create') {
+        window.openReviewCreateDialog?.();
+      } else if (button.dataset.reviewAction === 'previous') {
+        window.changeAdminReviewsPage?.(-1);
+      } else if (button.dataset.reviewAction === 'next') {
+        window.changeAdminReviewsPage?.(1);
+      } else if (button.dataset.reviewClose) {
+        document.getElementById(button.dataset.reviewClose)?.close();
+      }
+    });
+  </script>
 </body>
 </html>`;
 }

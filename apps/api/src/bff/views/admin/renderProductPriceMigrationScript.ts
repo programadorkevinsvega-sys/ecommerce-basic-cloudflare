@@ -26,13 +26,13 @@ export function renderProductPriceMigrationScript(): string {
       table.appendChild(body); panel.appendChild(table);
       const apply = document.createElement('button');
       apply.type = 'button'; apply.className = 'btn-primary'; apply.textContent = 'Aplicar esta conversión';
-      apply.onclick = async () => {
+      apply.addEventListener('click', async () => {
         if (!confirm('¿Convertir ' + preview.legacyProductCount + ' precios? Se conservará cada precio previo y los pedidos/facturas existentes no cambiarán.')) return;
         const saved = await fetch('/api/v1/admin/products/pricing-migration/apply', { method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ expectedCount: preview.legacyProductCount, fingerprint: preview.fingerprint }) });
         const payload = await saved.json();
         if (!saved.ok) { alert(payload.error || 'No se pudo completar la conversión'); return; }
         alert(payload.migratedCount + ' productos convertidos'); window.location.reload();
-      };
+      });
       panel.appendChild(apply);
     }
     window.previewLegacyPriceMigration = previewLegacyPriceMigration;

@@ -17,7 +17,16 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 }
 
-export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, CatalogProductDto>, zones: ShippingZoneDto[], taxRatePercent = 19, footerStoreProfile?: StorefrontStoreProfile, discounts = new Map<string, ProductDiscountDto>()): string {
+export function renderCheckoutPage(
+  cart: CartDto,
+  productsMap: Map<string, CatalogProductDto>,
+  zones: ShippingZoneDto[],
+  taxRatePercent = 19,
+  footerStoreProfile?: StorefrontStoreProfile,
+  discounts = new Map<string, ProductDiscountDto>(),
+  requiresTurnstile = false,
+  turnstileSiteKey?: string,
+): string {
   const basePriceFor = (productId: string, storedPrice: number) => productsMap.get(productId)?.priceInCents ?? storedPrice;
   const priceFor = (productId: string, basePrice: number) => discounts.get(productId)?.finalPriceCents ?? basePrice;
   const subtotalCents = cart.items.reduce((total, item) => total + priceFor(item.productId, basePriceFor(item.productId, item.unitPriceCents)) * item.quantity, 0);
@@ -43,15 +52,22 @@ export function renderCheckoutPage(cart: CartDto, productsMap: Map<string, Catal
   return `<section class="checkout-page" aria-labelledby="checkout-title">
     <nav class="checkout-steps" aria-label="Progreso de la compra"><ol><li class="checkout-step checkout-step-done"><span class="checkout-step-number" aria-hidden="true">✓</span>Carrito<span class="checkout-sr-only"> (completado)</span></li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step checkout-step-current" aria-current="step"><span class="checkout-step-number" aria-hidden="true">2</span>Datos y pago</li><li class="checkout-step-line" aria-hidden="true"></li><li class="checkout-step"><span class="checkout-step-number" aria-hidden="true">3</span>Confirmación</li></ol></nav>
     <h1 class="checkout-title" id="checkout-title">Finalizar compra</h1><p class="checkout-draft-note">Tus datos se conservan temporalmente en esta pestaña durante 2 horas y se borran al crear el pedido.</p>
-    <div class="checkout-columns"><form id="checkout-form" class="checkout-form" novalidate><p class="checkout-required-note">Los campos marcados con * son obligatorios.</p>
+    <div class="checkout-columns"><form id="checkout-form" class="checkout-form" data-requires-turnstile="${requiresTurnstile}" novalidate><p class="checkout-required-note">Los campos marcados con * son obligatorios.</p>
       ${renderContactFields()}
       ${renderAddressFields(zoneOptions)}
       ${renderPaymentFields(productPaymentMethods.wompi, productPaymentMethods.cashOnDelivery)}
-      <div><button type="button" id="btn-submit-order" class="checkout-submit" onclick="submitOrder()" disabled><span id="checkout-cta-label">${initialPaymentMethod === 'wompi' ? `Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0) + 70000)}` : initialPaymentMethod === 'cash_on_delivery' ? 'Confirmar pedido' : 'Selecciona un método de pago'}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
+      ${requiresTurnstile ? renderCheckoutTurnstile(turnstileSiteKey) : ''}
+      <div><button type="button" id="btn-submit-order" class="checkout-submit" disabled><span id="checkout-cta-label">${initialPaymentMethod === 'wompi' ? `Pagar ${formatPrice(subtotalCents + (pricingVersion === 1 ? taxCents : 0))}` : initialPaymentMethod === 'cash_on_delivery' ? 'Confirmar pedido' : 'Selecciona un método de pago'}</span><span aria-hidden="true">→</span></button><p id="checkout-submit-note" class="checkout-submit-note" aria-live="polite">Selecciona una zona para validar cobertura y envío.</p><p id="checkout-error" class="checkout-error" role="alert" hidden></p><p class="checkout-terms">Tus datos se usan para gestionar y confirmar este pedido.</p></div>
     </form>
-    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion, initialPaymentMethod === 'wompi', renderCouponWidget())}
+    ${renderCheckoutSummary(rows, subtotalCents, taxCents, taxRatePercent, pricingVersion, renderCouponWidget())}
     </div><footer class="checkout-footer"><span><strong>${escapeHtml(footerStoreProfile?.storeName || 'Vega Store')}</strong> · © ${new Date().getFullYear()}${footerStoreProfile?.footerCopyrightText ? ` ${escapeHtml(footerStoreProfile.footerCopyrightText)}` : ''}</span>${renderCheckoutStoreDetails(footerStoreProfile)}${renderStoreSocialLinks(footerStoreProfile)}<span>Compra segura · Precios en COP</span></footer>
-  </section>${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion, couponItems)}${getCheckoutDraftScript()}`;
+  </section>${requiresTurnstile && turnstileSiteKey ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}${getCheckoutLocationScript()}${getCheckoutScript(itemsJson, subtotalCents, taxRatePercent, pricingVersion, couponItems)}${getCheckoutDraftScript()}`;
+}
+
+function renderCheckoutTurnstile(siteKey?: string): string {
+  return siteKey
+    ? `<div class="checkout-turnstile"><div class="cf-turnstile" data-sitekey="${escapeHtml(siteKey)}" data-theme="light"></div></div>`
+    : '<p class="checkout-error" role="alert">La verificación de seguridad no está configurada. Intenta más tarde.</p>';
 }
 
 function renderContactFields(): string {
@@ -59,8 +75,8 @@ function renderContactFields(): string {
     <div class="checkout-field"><label for="cust-name">Nombre completo *</label><input id="cust-name" type="text" autocomplete="name" required placeholder="Como aparece en tu documento"></div>
     <div class="checkout-field"><label for="cust-phone">Teléfono o WhatsApp *</label><input id="cust-phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="300 123 4567"><small>Lo usamos para coordinar la entrega.</small></div>
     <div class="checkout-field"><label for="cust-email">Correo electrónico *</label><input id="cust-email" type="email" autocomplete="email" required placeholder="nombre@correo.com"><small>Aquí recibirás la confirmación del pedido.</small></div>
-    <div class="checkout-field"><label for="cust-tax-type">Tipo de identificación *</label><select id="cust-tax-type" required onchange="if(this.value==='CC')document.getElementById('cust-organization').value='2'"><option value="CC">Cédula de ciudadanía</option><option value="NIT">NIT</option></select></div>
-    <div class="checkout-field"><label for="cust-organization">Tipo de persona *</label><select id="cust-organization" required onchange="if(this.value==='1')document.getElementById('cust-tax-type').value='NIT'"><option value="2">Persona natural</option><option value="1">Persona jurídica</option></select></div>
+    <div class="checkout-field"><label for="cust-tax-type">Tipo de identificación *</label><select id="cust-tax-type" required><option value="CC">Cédula de ciudadanía</option><option value="NIT">NIT</option></select></div>
+    <div class="checkout-field"><label for="cust-organization">Tipo de persona *</label><select id="cust-organization" required><option value="2">Persona natural</option><option value="1">Persona jurídica</option></select></div>
     <div class="checkout-field"><label for="cust-tax-id">Número de identificación *</label><input id="cust-tax-id" type="text" inputmode="numeric" autocomplete="off" required placeholder="Sin puntos ni espacios"></div>
   </div></fieldset>`;
 }
@@ -104,10 +120,10 @@ function renderCheckoutItem(item: CartDto['items'][number], product: CatalogProd
   return `<li class="checkout-item"><span class="checkout-item-image">${image}</span><span class="checkout-item-name">${escapeHtml(product?.name ?? 'Producto')}<small>Cantidad: ${item.quantity}</small>${promo}</span><span class="checkout-item-price">${oldPrice}${formatPrice(unitPriceCents * item.quantity)}</span></li>`;
 }
 
-function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number, showWompiFee: boolean, couponWidget: string): string {
+function renderCheckoutSummary(rows: string, subtotal: number, tax: number, taxRate: number, version: number, couponWidget: string): string {
   const taxRow = version === 2 ? '' : `<div class="checkout-total-row"><dt>IVA (${taxRate}%)</dt><dd id="txt-tax">${formatPrice(tax)}</dd></div>`;
   const initialTax = version === 2 ? 0 : tax;
   return `<aside class="checkout-summary" aria-labelledby="checkout-summary-title"><h2 id="checkout-summary-title">Resumen del pedido</h2>${couponWidget}<ul class="checkout-items">${rows}</ul><dl class="checkout-totals">
-    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div><div class="checkout-total-row checkout-coupon-row" id="checkout-coupon-row" hidden><dt>Descuento de cupón</dt><dd id="txt-coupon-discount">−${formatPrice(0)}</dd></div>${taxRow}<div class="checkout-total-row"><dt>Envío en el pedido</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-shipping-collection-row" style="display:none"><dt>Envío por pagar al recibir</dt><dd id="txt-shipping-collection">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-transaction-fee-row"${showWompiFee ? '' : ' style="display:none"'}><dt>Costo de transacción Wompi <small>Tarifa fija por procesar el pago en línea</small></dt><dd id="txt-transaction-fee">${formatPrice(showWompiFee ? 70000 : 0)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + initialTax + (showWompiFee ? 70000 : 0))}</dd></div>
+    <div class="checkout-total-row"><dt>Productos</dt><dd id="txt-subtotal">${formatPrice(subtotal)}</dd></div><div class="checkout-total-row checkout-coupon-row" id="checkout-coupon-row" hidden><dt>Descuento de cupón</dt><dd id="txt-coupon-discount">−${formatPrice(0)}</dd></div>${taxRow}<div class="checkout-total-row"><dt>Envío en el pedido</dt><dd id="txt-shipping">${formatPrice(0)}</dd></div><div class="checkout-total-row" id="checkout-shipping-collection-row" style="display:none"><dt>Envío por pagar al recibir</dt><dd id="txt-shipping-collection">${formatPrice(0)}</dd></div><div class="checkout-total-row checkout-total-final"><dt>Total</dt><dd id="txt-total">${formatPrice(subtotal + initialTax)}</dd></div>
   </dl><p class="checkout-tax-note">${version === 2 ? `IVA (${taxRate}%) incluido en el precio de los productos.` : 'Impuestos estimados según la configuración vigente.'}</p></aside>`;
 }

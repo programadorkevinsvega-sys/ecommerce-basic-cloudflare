@@ -11,13 +11,35 @@ export function renderStorefrontActionsScript(): string {
       const navId = kind === 'promo' ? 'promo-banners-pagination' : kind === 'info' ? 'info-banners-pagination' : 'announcements-pagination';
       document.getElementById(bodyId).innerHTML = result.rowsHtml;
       const nav = document.getElementById(navId);
+      nav.dataset.page = result.page;
       nav.querySelector('span').textContent = result.total + ' registros · Página ' + result.page + ' de ' + Math.max(1, Math.ceil(result.total / result.pageSize));
       nav.querySelector('[data-storefront-page="previous"]').disabled = result.page <= 1;
       nav.querySelector('[data-storefront-page="next"]').disabled = !result.hasMore;
-      nav.querySelector('[data-storefront-page="previous"]').onclick = () => loadStorefrontPage(kind, result.page - 1);
-      nav.querySelector('[data-storefront-page="next"]').onclick = () => loadStorefrontPage(kind, result.page + 1);
     }
     loadStorefrontPage('promo').catch(() => {}); loadStorefrontPage('info').catch(() => {}); loadStorefrontPage('announcements').catch(() => {});
+    document.querySelectorAll('[data-banner-form]').forEach(form => form.addEventListener('submit', event => window.handleBannerSubmit(event, form.dataset.bannerForm)));
+    document.addEventListener('change', event => {
+      const input = event.target;
+      if (input.matches('[data-banner-upload]')) window.handleBannerFileUpload(input, input.dataset.bannerUpload);
+      if (input.matches('[data-storefront-filter="placement"], [data-storefront-filter="active"]')) filterBanners(input.closest('.card'));
+    });
+    document.addEventListener('input', event => {
+      const input = event.target;
+      if (input.matches('[data-banner-image-input]')) {
+        const preview = document.getElementById(input.dataset.bannerImageInput + 'ImgPreview');
+        if (preview) { preview.src = input.value; preview.hidden = !input.value; if (preview.nextElementSibling) preview.nextElementSibling.hidden = Boolean(input.value); }
+      }
+      if (input.matches('[data-storefront-filter="query"]')) filterBanners(input.closest('.card'));
+    });
+    document.addEventListener('load', event => {
+      const image = event.target;
+      if (image.matches?.('[data-banner-preview]')) { image.hidden = false; if (image.nextElementSibling) image.nextElementSibling.hidden = true; }
+    }, true);
+    document.addEventListener('error', event => {
+      const image = event.target;
+      if (image.matches?.('[data-banner-preview]')) { image.hidden = true; if (image.nextElementSibling) image.nextElementSibling.hidden = false; }
+      if (image.matches?.('[data-storefront-row-image]')) image.style.display = 'none';
+    }, true);
     async function setBannerStatus(id, isActive) {
       const action = isActive ? 'publicar' : 'ocultar';
       if (!confirm('¿Deseas ' + action + ' este banner?')) return;
@@ -29,26 +51,21 @@ export function renderStorefrontActionsScript(): string {
       if (res.ok) window.location.reload();
       else alert('Error al actualizar banner');
     }
-
     async function deleteBanner(id) {
       if (!confirm('¿Deseas eliminar este banner?')) return;
       const res = await fetch('/api/v1/admin/storefront/banners/' + id, { method: 'DELETE' });
       if (res.ok) window.location.reload();
       else alert('Error al eliminar banner');
     }
-
     async function duplicateBanner(id) {
       const response = await fetch('/api/v1/admin/storefront/banners/' + id + '/duplicate', { method: 'POST' });
       if (response.ok) window.location.reload();
       else alert('No se pudo duplicar el banner');
     }
-
-    let bannerFilterTimer;
-    function filterBanners(card) {
+    let bannerFilterTimer; function filterBanners(card) {
       clearTimeout(bannerFilterTimer);
       bannerFilterTimer = setTimeout(() => loadStorefrontPage(card.dataset.marketingPage === 'info-banners' ? 'info' : 'promo', 1).catch(() => {}), 250);
     }
-
     function previewBanner(prefix, bannerType) {
       const title = document.getElementById(prefix + 'Title').value;
       const description = document.getElementById(prefix + 'Desc').value;
@@ -63,7 +80,6 @@ export function renderStorefrontActionsScript(): string {
       action.textContent = document.getElementById('pbBtnText')?.value || 'Explorar colección';
       if (!dialog.open) dialog.showModal();
     }
-
     function editBanner(id, title, link, alt, img, placement, desc, bannerType, btnText, startsAt, endsAt, sortOrder) {
       const isPromo = bannerType !== 'informative';
       if (isPromo) {
@@ -100,7 +116,6 @@ export function renderStorefrontActionsScript(): string {
         window.openMarketingModal('info-banners');
       }
     }
-
     function resetPromoBannerForm() {
       document.getElementById('pbEditId').value = '';
       document.getElementById('newPromoBannerForm').reset();
@@ -111,7 +126,6 @@ export function renderStorefrontActionsScript(): string {
       const pStatus = document.getElementById('pbUploadStatus');
       if (pStatus) pStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }
-
     function resetInfoBannerForm() {
       document.getElementById('ibEditId').value = '';
       document.getElementById('newInfoBannerForm').reset();
@@ -122,7 +136,6 @@ export function renderStorefrontActionsScript(): string {
       const iStatus = document.getElementById('ibUploadStatus');
       if (iStatus) iStatus.textContent = 'Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.';
     }
-
     async function setAnnouncementStatus(id, isActive) {
       const action = isActive ? 'publicar' : 'ocultar';
       if (!confirm('¿Deseas ' + action + ' este anuncio?')) return;
@@ -134,14 +147,39 @@ export function renderStorefrontActionsScript(): string {
       if (res.ok) window.location.reload();
       else alert('Error al actualizar anuncio');
     }
-
     async function deleteAnnouncement(id) {
       if (!confirm('¿Deseas eliminar este anuncio?')) return;
       const res = await fetch('/api/v1/admin/storefront/announcements/' + id, { method: 'DELETE' });
       if (res.ok) window.location.reload();
       else alert('Error al eliminar anuncio');
     }
-
+    document.addEventListener('click', event => {
+      const target = event.target instanceof Element ? event.target : null;
+      const pageButton = target?.closest('[data-storefront-page]');
+      if (pageButton && !pageButton.disabled) {
+        const nav = pageButton.closest('nav');
+        const kind = nav.id === 'promo-banners-pagination' ? 'promo' : nav.id === 'info-banners-pagination' ? 'info' : 'announcements';
+        loadStorefrontPage(kind, Number(nav.dataset.page || 1) + (pageButton.dataset.storefrontPage === 'next' ? 1 : -1));
+        return;
+      }
+      const control = target?.closest('[data-storefront-control]');
+      if (control) {
+        if (control.dataset.storefrontControl === 'preview') previewBanner(control.dataset.prefix, control.dataset.bannerType);
+        if (control.dataset.storefrontControl === 'reset-promo') resetPromoBannerForm();
+        if (control.dataset.storefrontControl === 'reset-info') resetInfoBannerForm();
+        if (control.dataset.storefrontControl === 'reset-announcement') resetAnnouncementForm();
+        return;
+      }
+      const button = target?.closest('[data-storefront-action]');
+      if (!button) return;
+      const { storefrontAction, id, title, link, alt, image, placement, description, type, buttonText, startsAt, endsAt, sortOrder, message, active } = button.dataset;
+      if (storefrontAction === 'edit-banner') editBanner(id, title, link, alt, image, placement, description, type, buttonText, startsAt, endsAt, sortOrder); if (storefrontAction === 'duplicate-banner') duplicateBanner(id);
+      if (storefrontAction === 'toggle-banner') setBannerStatus(id, active === 'true');
+      if (storefrontAction === 'delete-banner') deleteBanner(id);
+      if (storefrontAction === 'edit-announcement') editAnnouncement(id, message, link, placement);
+      if (storefrontAction === 'toggle-announcement') setAnnouncementStatus(id, active === 'true');
+      if (storefrontAction === 'delete-announcement') deleteAnnouncement(id);
+    });
     function editAnnouncement(id, message, link, placement) {
       document.getElementById('aEditId').value = id;
       document.getElementById('aMsgText').value = message;
@@ -151,24 +189,12 @@ export function renderStorefrontActionsScript(): string {
       document.getElementById('aCancelBtn').style.display = 'inline-block';
       window.openMarketingModal('announcements');
     }
-
     function resetAnnouncementForm() {
       document.getElementById('aEditId').value = '';
       document.getElementById('newAnnouncementForm').reset();
       document.getElementById('aSubmitBtn').textContent = 'Publicar Anuncio';
       document.getElementById('aCancelBtn').style.display = 'none';
     }
-
-    window.setBannerStatus = setBannerStatus;
-    window.duplicateBanner = duplicateBanner;
-    window.filterBanners = filterBanners;
-    window.deleteBanner = deleteBanner;
-    window.editBanner = editBanner;
-    window.resetPromoBannerForm = resetPromoBannerForm;
-    window.resetInfoBannerForm = resetInfoBannerForm;
-    window.setAnnouncementStatus = setAnnouncementStatus;
-    window.deleteAnnouncement = deleteAnnouncement;
-    window.editAnnouncement = editAnnouncement;
-    window.resetAnnouncementForm = resetAnnouncementForm;
+    window.setBannerStatus = setBannerStatus; window.duplicateBanner = duplicateBanner; window.filterBanners = filterBanners; window.deleteBanner = deleteBanner; window.editBanner = editBanner; window.resetPromoBannerForm = resetPromoBannerForm; window.resetInfoBannerForm = resetInfoBannerForm; window.setAnnouncementStatus = setAnnouncementStatus; window.deleteAnnouncement = deleteAnnouncement; window.editAnnouncement = editAnnouncement; window.resetAnnouncementForm = resetAnnouncementForm;
   `;
 }

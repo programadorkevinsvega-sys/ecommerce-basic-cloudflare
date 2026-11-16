@@ -10,6 +10,8 @@ describe('desglose del precio recomendado en administración', () => {
     expect(script).toContain('Precio bruto del producto (IVA incluido)');
     expect(script).toContain('IVA incluido estimado');
     expect(script).toContain('Costo del proveedor');
+    expect(script).toContain('Costo Wompi estimado para el comercio');
+    expect(script).not.toContain('cargo cobrado al comprador');
     expect(script).toContain('Ganancia neta estimada');
     expect(script).toContain('Margen real sobre venta sin IVA');
     expect(script).toContain('netFeeCost');

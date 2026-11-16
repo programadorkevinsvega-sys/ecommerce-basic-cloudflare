@@ -2,6 +2,7 @@ export class PasswordHasher {
   private static readonly ITERATIONS = 100_000;
   private static readonly SALT_BYTES = 16;
   private static readonly HASH_BYTES = 32;
+  private static readonly DUMMY_HASH = `pbkdf2_sha256$100000$${'0'.repeat(32)}$${'0'.repeat(64)}`;
 
   public static async hash(password: string): Promise<string> {
     const salt = crypto.getRandomValues(new Uint8Array(this.SALT_BYTES));
@@ -67,6 +68,10 @@ export class PasswordHasher {
 
     const derivedBytes = new Uint8Array(derivedBits);
     return this.timingSafeEqual(derivedBytes, originalHash);
+  }
+
+  public static verifyAgainstDummy(password: string): Promise<boolean> {
+    return this.verify(password, this.DUMMY_HASH);
   }
 
   private static toHex(bytes: Uint8Array): string {

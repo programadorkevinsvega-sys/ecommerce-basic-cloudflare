@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { Env } from '../../../platform/Env.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
@@ -10,6 +11,8 @@ import { renderAdminLoginPage } from '../../views/admin/renderAdminLoginPage.js'
 import { renderAdminDashboardPage } from '../../views/admin/renderAdminDashboardPage.js';
 import { StoreSettingsResponse } from '../../gateways/settings/SettingsGateway.js';
 import { renderAdminMfaSetupPage } from '../../views/admin/renderAdminMfaSetupPage.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
+import { createAdminCountryAccessMiddleware } from '../../middleware/AdminCountryAccessMiddleware.js';
 
 export class AdminUiController {
   public static createRoutes(
@@ -20,8 +23,9 @@ export class AdminUiController {
     cmsGateway: CmsGateway,
     promotionsGateway: PromotionsGateway,
     shippingGateway: ShippingGateway
-  ): Hono {
-    const router = new Hono();
+  ): Hono<{ Bindings: Env }> {
+    const router = new Hono<{ Bindings: Env }>();
+    router.use('*', createAdminCountryAccessMiddleware(identityGateway));
 
     // Pantalla de login de administración
     router.get('/login', (c) => {
@@ -31,7 +35,7 @@ export class AdminUiController {
     });
 
     router.get('/mfa-setup', async (c) => {
-      const token = c.req.header('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1];
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
       if (!token) return c.redirect('/admin/login');
       try {
         const session = await identityGateway.validateSession(token);
@@ -46,9 +50,7 @@ export class AdminUiController {
 
     // Panel de control principal protegido
     router.get('/', async (c) => {
-      const cookieHeader = c.req.header('cookie') || '';
-      const match = cookieHeader.match(/__Host-admin-session=([^;]+)/);
-      const token = match ? match[1] : undefined;
+      const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT) || undefined;
 
       if (!token) {
         return c.redirect('/admin/login');

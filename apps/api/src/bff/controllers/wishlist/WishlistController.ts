@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { z } from 'zod';
 import { Env } from '../../../platform/Env.js';
 import { WishlistGateway } from '../../gateways/wishlist/WishlistGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { CatalogGateway, CatalogProductDto } from '../../gateways/catalog/CatalogGateway.js';
 import { renderWishlistPage, WishlistPageEntry } from '../../views/account/renderWishlistPage.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 const addItemSchema = z.object({ productId: z.string().trim().min(1).max(128) }).strict();
 const publicProduct = (product: CatalogProductDto) => ({
@@ -17,8 +17,7 @@ export class WishlistController {
   public static createRoutes(wishlist: WishlistGateway, identity: IdentityGateway, catalog: CatalogGateway): Hono<{ Bindings: Env }> {
     const app = new Hono<{ Bindings: Env }>();
     const customerSession = async (c: any) => {
-      const authorization = c.req.header('Authorization');
-      const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : getCookie(c, '__Host-session');
+      const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
       if (!token) return null;
       try {
         const session = await identity.validateSession(token);

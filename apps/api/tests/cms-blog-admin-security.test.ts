@@ -5,6 +5,8 @@ import { CmsGateway } from '../src/bff/gateways/cms/CmsGateway.js';
 import { sanitizeHtml } from '../src/modules/cms/domain/sanitizeHtml.js';
 import { sanitizeBlogHtml } from '../src/modules/cms/domain/sanitizeBlogHtml.js';
 
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
+
 describe('blog admin authorization and pagination',()=>{
   it('strips executable HTML, dangerous schemes, remote image sources and event handlers',()=>{
     const html=sanitizeBlogHtml('<p onclick="run()">Safe <a href="java&#x73;cript:alert(1)">link</a></p><img src="https://attacker.test/x.png" onerror="run()"><script>run()</script>');
@@ -33,25 +35,25 @@ describe('blog admin authorization and pagination',()=>{
     })} as unknown as IdentityGateway;
     const cms={listBlogPosts:vi.fn().mockResolvedValue({items:[],total:0})} as unknown as CmsGateway;
     const app=CmsBlogAdminController.createRoutes(cms,identity,{} as any,{} as any);
-    expect((await app.request('/api/v1/admin/cms/blog/posts')).status).toBe(401);
-    expect((await app.request('/api/v1/admin/cms/blog/posts',{headers:{Authorization:'Bearer customer'}})).status).toBe(403);
-    expect((await app.request('/api/v1/admin/cms/blog/posts?page=2&pageSize=10',{headers:{Authorization:'Bearer editor'}})).status).toBe(200);
+    expect((await app.request('/api/v1/admin/cms/blog/posts', {}, writeRateLimitEnv)).status).toBe(401);
+    expect((await app.request('/api/v1/admin/cms/blog/posts',{headers:{Cookie: '__Host-admin-session=customer'}}, writeRateLimitEnv)).status).toBe(403);
+    expect((await app.request('/api/v1/admin/cms/blog/posts?page=2&pageSize=10',{headers:{Cookie: '__Host-admin-session=editor'}}, writeRateLimitEnv)).status).toBe(200);
     expect(cms.listBlogPosts).toHaveBeenCalledWith({page:2,pageSize:10,status:undefined});
-    expect((await app.request('/api/v1/admin/cms/blog/posts?page=0&pageSize=500',{headers:{Authorization:'Bearer editor'}})).status).toBe(400);
+    expect((await app.request('/api/v1/admin/cms/blog/posts?page=0&pageSize=500',{headers:{Cookie: '__Host-admin-session=editor'}}, writeRateLimitEnv)).status).toBe(400);
   });
   it('requires cms:update for blog deletion and deletes only the requested article',async()=>{
     const identity={validateSession:vi.fn().mockImplementation(async(token:string)=>({actorId:'admin-id',actorType:'admin',mfaEnabled:true,permissions:token==='editor'?['cms:read','cms:update']:['cms:read']}))} as unknown as IdentityGateway;
     const cms={deleteBlogPost:vi.fn().mockResolvedValue(true)} as unknown as CmsGateway;
     const app=CmsBlogAdminController.createRoutes(cms,identity,{} as any,{} as any);
-    expect((await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Authorization:'Bearer reader'}})).status).toBe(403);
-    const result=await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Authorization:'Bearer editor'}});
+    expect((await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Cookie: '__Host-admin-session=reader'}}, writeRateLimitEnv)).status).toBe(403);
+    const result=await app.request('/api/v1/admin/cms/blog/posts/post-id',{method:'DELETE',headers:{Cookie: '__Host-admin-session=editor'}}, writeRateLimitEnv);
     expect(result.status).toBe(200);expect(cms.deleteBlogPost).toHaveBeenCalledWith('post-id');
   });
   it('exposes individual author and category details for view/edit actions',async()=>{
     const identity={validateSession:vi.fn().mockResolvedValue({actorId:'admin-id',actorType:'admin',mfaEnabled:true,permissions:['cms:read']})} as unknown as IdentityGateway;
     const cms={getBlogAuthor:vi.fn().mockResolvedValue({id:'author-id'}),getBlogCategory:vi.fn().mockResolvedValue({id:'category-id'})} as unknown as CmsGateway;
     const app=CmsBlogAdminController.createRoutes(cms,identity,{} as any,{} as any);
-    expect((await app.request('/api/v1/admin/cms/blog/authors/author-id',{headers:{Authorization:'Bearer editor'}})).status).toBe(200);
-    expect((await app.request('/api/v1/admin/cms/blog/categories/category-id',{headers:{Authorization:'Bearer editor'}})).status).toBe(200);
+    expect((await app.request('/api/v1/admin/cms/blog/authors/author-id',{headers:{Cookie: '__Host-admin-session=editor'}}, writeRateLimitEnv)).status).toBe(200);
+    expect((await app.request('/api/v1/admin/cms/blog/categories/category-id',{headers:{Cookie: '__Host-admin-session=editor'}}, writeRateLimitEnv)).status).toBe(200);
   });
 });

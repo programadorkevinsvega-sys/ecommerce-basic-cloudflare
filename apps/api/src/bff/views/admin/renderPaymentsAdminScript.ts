@@ -10,7 +10,6 @@ export function renderPaymentsAdminScript(): string {
     let _adminPaymentInvoices = new Map();
     const _paymentPages = { transactions: 1, collections: 1, settlements: 1 };
     let _paymentMeta = {};
-
     async function loadAdminPayments(pageChanges = {}) {
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
@@ -35,16 +34,15 @@ export function renderPaymentsAdminScript(): string {
         data.details.forEach(item => { if (item.invoice) _adminPaymentInvoices.set(item.orderId, item.invoice); });
         renderAdminPaymentTransactions();
         const collectionsBody = document.getElementById('cod-collections-table-body');
-        if (collectionsBody) collectionsBody.innerHTML = _adminPaymentCollections.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-collection-id="\${escapeHtml(row.id)}" onclick="viewCodCollection(this)">Ver</button></td></tr>\`).join('') || '<tr><td colspan="6">No hay recaudos registrados.</td></tr>';
+        if (collectionsBody) collectionsBody.innerHTML = _adminPaymentCollections.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code></td><td>\${escapeHtml(row.receiptNumber || '—')}</td><td class="payments-amount">$\${(Number(row.amountInCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(new Date(row.collectedAt || row.createdAt).toLocaleString('es-CO'))}</td><td>\${escapeHtml(row.collectedBy || '—')}</td><td><button class="payments-row-action" type="button" data-payment-action="view-collection" data-collection-id="\${escapeHtml(row.id)}">Ver</button></td></tr>\`).join('') || '<tr><td colspan="6">No hay recaudos registrados.</td></tr>';
         renderPaymentPagination('collections', data.collections);
         const settlementBody = document.getElementById('settlement-table-body');
-        if (settlementBody) settlementBody.innerHTML = _adminPaymentSettlements.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code>\${row.corrected ? '<small class="payments-corrected-label">Corregida</small>' : ''}</td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><div class="payments-row-actions"><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="viewPaymentSettlement(this)">Ver</button><button class="payments-row-action" type="button" data-settlement-order="\${escapeHtml(row.orderId)}" onclick="openSettlementCorrection(this)">Corregir</button></div></td></tr>\`).join('') || '<tr><td colspan="6">Aún no hay conciliaciones registradas.</td></tr>';
+        if (settlementBody) settlementBody.innerHTML = _adminPaymentSettlements.map(row => \`<tr><td><code>\${escapeHtml(row.orderId)}</code>\${row.corrected ? '<small class="payments-corrected-label">Corregida</small>' : ''}</td><td>$\${(Number(row.estimatedFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.actualFeeCents)/100).toLocaleString('es-CO')}</td><td>$\${(Number(row.varianceCents)/100).toLocaleString('es-CO')}</td><td>\${escapeHtml(row.reportReference || '—')}</td><td><div class="payments-row-actions"><button class="payments-row-action" type="button" data-payment-action="view-settlement" data-settlement-order="\${escapeHtml(row.orderId)}">Ver</button><button class="payments-row-action" type="button" data-payment-action="correct-settlement" data-settlement-order="\${escapeHtml(row.orderId)}">Corregir</button></div></td></tr>\`).join('') || '<tr><td colspan="6">Aún no hay conciliaciones registradas.</td></tr>';
         renderPaymentPagination('settlements', data.settlementCosts);
       } catch (e) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:1.5rem; text-align:center; color:#dc2626;">Error al cargar pagos</td></tr>';
       }
     }
-
     function renderPaymentPagination(key, meta) {
       const nav = document.getElementById('payments-pagination-' + key);
       if (!nav) return;
@@ -53,10 +51,9 @@ export function renderPaymentsAdminScript(): string {
       nav.innerHTML = '<button type="button" data-page="previous">Anterior</button><span aria-live="polite">' + from + '–' + to + ' de ' + meta.total + ' · Página ' + meta.page + '</span><button type="button" data-page="next">Siguiente</button>';
       nav.querySelector('[data-page="previous"]').disabled = meta.page <= 1;
       nav.querySelector('[data-page="next"]').disabled = !meta.hasMore;
-      nav.querySelector('[data-page="previous"]').onclick = () => loadAdminPayments({ [key]: meta.page - 1 });
-      nav.querySelector('[data-page="next"]').onclick = () => loadAdminPayments({ [key]: meta.page + 1 });
+      nav.querySelector('[data-page="previous"]').addEventListener('click', () => loadAdminPayments({ [key]: meta.page - 1 }));
+      nav.querySelector('[data-page="next"]').addEventListener('click', () => loadAdminPayments({ [key]: meta.page + 1 }));
     }
-
     function renderAdminPaymentTransactions() {
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
@@ -69,13 +66,11 @@ export function renderPaymentsAdminScript(): string {
       }).join('') || '<tr><td colspan="8">No hay transacciones que coincidan con la búsqueda.</td></tr>';
       renderPaymentPagination('transactions', _paymentMeta.transactions);
     }
-
     function normalizePaymentSearch(value) {
       return String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
     }
 
     ${renderPaymentRecordDetailsScript()}
-
     function paymentStatusClass(status) {
       const normalized = String(status || '').toLowerCase();
       if (normalized === 'approved' || normalized === 'collected') return 'success';
@@ -89,7 +84,6 @@ export function renderPaymentsAdminScript(): string {
       const normalized = String(status || '').toLowerCase();
       return labels[normalized] || status || '—';
     }
-
     let paymentSearchTimer;
     function filterPaymentTransactions() { clearTimeout(paymentSearchTimer); paymentSearchTimer = setTimeout(() => loadAdminPayments({ transactions: 1 }), 250); }
 
@@ -157,6 +151,25 @@ export function renderPaymentsAdminScript(): string {
     window.closeCodCollectionForm = closeCodCollectionForm;
     window.openSettlementForm = openSettlementForm;
     window.closeSettlementForm = closeSettlementForm;
+
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-payment-action]');
+      if (!button) return;
+      const action = button.dataset.paymentAction;
+      if (action === 'open-cod') openCodCollectionForm();
+      if (action === 'close-cod') closeCodCollectionForm();
+      if (action === 'open-settlement') openSettlementForm();
+      if (action === 'close-settlement') closeSettlementForm();
+      if (action === 'close-correction') closePaymentsModal('settlement-correction-modal');
+      if (action === 'view-collection') window.viewCodCollection?.(button);
+      if (action === 'view-settlement') window.viewPaymentSettlement?.(button);
+      if (action === 'correct-settlement') openSettlementCorrection(button);
+    });
+    document.getElementById('payments-search')?.addEventListener('input', filterPaymentTransactions);
+    document.getElementById('cod-order-id')?.addEventListener('change', selectCodCollectionOrder);
+    document.querySelector('[data-payment-form="cod"]')?.addEventListener('submit', (event) => { event.preventDefault(); submitCodCollection(); });
+    document.querySelector('[data-payment-form="settlement"]')?.addEventListener('submit', (event) => { event.preventDefault(); submitSettlementCost(); });
+    document.querySelector('[data-payment-form="correction"]')?.addEventListener('submit', (event) => { event.preventDefault(); submitSettlementCorrection(); });
 
     function showAdminPaymentPage(page) {
       document.querySelectorAll('[data-payment-panel]').forEach(panel => { panel.hidden = panel.dataset.paymentPanel !== page; });

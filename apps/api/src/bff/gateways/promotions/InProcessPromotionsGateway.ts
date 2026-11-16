@@ -131,4 +131,15 @@ export class InProcessPromotionsGateway implements PromotionsGateway {
   }): Promise<CouponValidationDto> {
     return this.publicApi.validateCoupon(input);
   }
+
+  public reserveCouponRedemption(input: {
+    orderId: string; couponCode: string; customerId: string | null;
+    orderSubtotalCents: number; discountAppliedCents: number;
+  }): Promise<boolean> {
+    return this.publicApi.reserveCouponRedemption(input);
+  }
+
+  public releaseCouponRedemption(orderId: string): Promise<void> {
+    return this.publicApi.releaseCouponRedemption(orderId);
+  }
 }

@@ -3,9 +3,9 @@ import { supportedQueueEventSchema } from '../messaging/QueueEventSchemas.js';
 import { QueueEventTelemetry } from '../messaging/QueueEventTelemetry.js';
 import { JsonLogger } from '../JsonLogger.js';
 
-const TABLE = 'invoicing_outbox_events';
 const LEASE_MILLISECONDS = 120_000;
 const MAX_ATTEMPTS = 5;
+type OutboxProducer = 'invoicing' | 'identity';
 
 interface OutboxRow {
   id: string;
@@ -28,12 +28,15 @@ interface OutboxStats {
 export class OutboxRelayService {
   private readonly logger = new JsonLogger('outbox-relay');
   private readonly telemetry: QueueEventTelemetry;
+  private readonly table: string;
 
   public constructor(
     private readonly db: D1Database,
     private readonly queue: Queue,
     analytics?: AnalyticsEngineDataset,
+    private readonly producerModule: OutboxProducer = 'invoicing',
   ) {
+    this.table = producerModule === 'identity' ? 'identity_outbox_events' : 'invoicing_outbox_events';
     this.telemetry = new QueueEventTelemetry(analytics, this.logger);
   }
 
@@ -56,10 +59,12 @@ export class OutboxRelayService {
       try {
         await this.queue.send(event);
         const result = await this.db.prepare(`
-          UPDATE ${TABLE}
-          SET status = 'published', published_at = ?, lease_expires_at = NULL, lease_token = NULL
+          UPDATE ${this.table}
+          SET status = 'published', published_at = ?,
+              payload = CASE WHEN ? = 'identity' THEN '{}' ELSE payload END,
+              lease_expires_at = NULL, lease_token = NULL
           WHERE id = ? AND status = 'publishing' AND lease_token = ?
-        `).bind(new Date().toISOString(), row.id, leaseToken).run();
+        `).bind(new Date().toISOString(), this.producerModule, row.id, leaseToken).run();
         if ((result.meta?.changes || 0) !== 1) throw new Error('OUTBOX_PUBLISH_STATE_CONFLICT');
         published++;
         this.telemetry.record('outbox_published', event.eventType);
@@ -76,17 +81,18 @@ export class OutboxRelayService {
 
   private async quarantineExhaustedRows(now: string): Promise<void> {
     const result = await this.db.prepare(`
-      UPDATE ${TABLE}
-      SET status = 'failed', lease_expires_at = NULL, lease_token = NULL
+      UPDATE ${this.table}
+      SET status = 'failed', payload = CASE WHEN ? = 'identity' THEN '{}' ELSE payload END,
+          lease_expires_at = NULL, lease_token = NULL
       WHERE attempts >= ? AND (
         status = 'pending' OR
         (status = 'publishing' AND (lease_expires_at IS NULL OR lease_expires_at <= ?))
       )
-    `).bind(MAX_ATTEMPTS, now).run();
+    `).bind(this.producerModule, MAX_ATTEMPTS, now).run();
     const count = result.meta?.changes || 0;
     if (count) {
       this.logger.error('Eventos outbox agotaron intentos y quedaron en failed', undefined, { count });
-      this.telemetry.record('outbox_attempts_exhausted', 'invoicing', count);
+      this.telemetry.record('outbox_attempts_exhausted', this.producerModule, count);
     }
   }
 
@@ -94,7 +100,7 @@ export class OutboxRelayService {
     const safeLimit = Math.max(1, Math.min(Math.trunc(limit), 100));
     const result = await this.db.prepare(`
       SELECT id, event_id, event_type, event_version, payload, trace_id, created_at, attempts
-      FROM ${TABLE}
+      FROM ${this.table}
       WHERE attempts < ? AND (
         status = 'pending' OR
         (status = 'publishing' AND (lease_expires_at IS NULL OR lease_expires_at <= ?))
@@ -109,7 +115,7 @@ export class OutboxRelayService {
     const leaseToken = crypto.randomUUID();
     const leaseUntil = new Date(now.getTime() + LEASE_MILLISECONDS).toISOString();
     const result = await this.db.prepare(`
-      UPDATE ${TABLE}
+      UPDATE ${this.table}
       SET status = 'publishing', attempts = attempts + 1, lease_expires_at = ?, lease_token = ?
       WHERE id = ? AND attempts < ? AND (
         status = 'pending' OR
@@ -126,7 +132,7 @@ export class OutboxRelayService {
         eventType: row.event_type,
         eventVersion: Number(row.event_version),
         occurredAt: row.created_at,
-        producerModule: 'invoicing',
+        producerModule: this.producerModule,
         payload: JSON.parse(row.payload),
         traceId: row.trace_id,
       };
@@ -139,20 +145,23 @@ export class OutboxRelayService {
 
   private async rejectClaim(row: OutboxRow, leaseToken: string, metric: string): Promise<void> {
     await this.db.prepare(`
-      UPDATE ${TABLE} SET status = 'failed', lease_expires_at = NULL, lease_token = NULL
+      UPDATE ${this.table} SET status = 'failed',
+        payload = CASE WHEN ? = 'identity' THEN '{}' ELSE payload END,
+        lease_expires_at = NULL, lease_token = NULL
       WHERE id = ? AND status = 'publishing' AND lease_token = ?
-    `).bind(row.id, leaseToken).run();
+    `).bind(this.producerModule, row.id, leaseToken).run();
     this.logger.warn('Evento outbox inválido enviado a estado failed', { eventType: row.event_type });
     this.telemetry.record(metric, row.event_type);
   }
 
   private async releaseClaim(id: string, leaseToken: string): Promise<void> {
     await this.db.prepare(`
-      UPDATE ${TABLE}
+      UPDATE ${this.table}
       SET status = CASE WHEN attempts >= ? THEN 'failed' ELSE 'pending' END,
+          payload = CASE WHEN ? = 'identity' AND attempts >= ? THEN '{}' ELSE payload END,
           lease_expires_at = NULL, lease_token = NULL
       WHERE id = ? AND status = 'publishing' AND lease_token = ?
-    `).bind(MAX_ATTEMPTS, id, leaseToken).run();
+    `).bind(MAX_ATTEMPTS, this.producerModule, MAX_ATTEMPTS, id, leaseToken).run();
   }
 
   private async recordBacklogStats(): Promise<void> {
@@ -162,16 +171,16 @@ export class OutboxRelayService {
         COALESCE(SUM(CASE WHEN status = 'publishing' THEN 1 ELSE 0 END), 0) AS publishing,
         COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) AS failed,
         MIN(CASE WHEN status IN ('pending', 'publishing') THEN created_at END) AS oldest_pending
-      FROM ${TABLE}
+      FROM ${this.table}
     `).first<OutboxStats>();
     const stats = row || { pending: 0, publishing: 0, failed: 0, oldest_pending: null };
     const oldestPendingTimestamp = stats.oldest_pending ? Date.parse(stats.oldest_pending) : Number.NaN;
     const ageSeconds = Number.isFinite(oldestPendingTimestamp)
       ? Math.max(0, Math.floor((Date.now() - oldestPendingTimestamp) / 1000))
       : 0;
-    this.telemetry.record('outbox_pending_count', 'invoicing', stats.pending);
-    this.telemetry.record('outbox_publishing_count', 'invoicing', stats.publishing);
-    this.telemetry.record('outbox_failed_count', 'invoicing', stats.failed);
-    this.telemetry.record('outbox_oldest_pending_age_seconds', 'invoicing', ageSeconds);
+    this.telemetry.record('outbox_pending_count', this.producerModule, stats.pending);
+    this.telemetry.record('outbox_publishing_count', this.producerModule, stats.publishing);
+    this.telemetry.record('outbox_failed_count', this.producerModule, stats.failed);
+    this.telemetry.record('outbox_oldest_pending_age_seconds', this.producerModule, ageSeconds);
   }
 }

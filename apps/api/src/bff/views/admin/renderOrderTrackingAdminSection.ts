@@ -4,12 +4,12 @@ export function renderOrderTrackingAdminSection(): string {
     <section class="card tracking-admin-card">
       <div class="tracking-admin-filters"><label>Buscar pedido o cliente<input id="tracking-admin-query" type="search" placeholder="Número de pedido, nombre o correo" /></label>
       <label>Estado<select id="tracking-admin-status"><option value="">Todos</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option></select></label>
-      <button class="shipping-action primary" type="button" onclick="loadAdminOrderTracking(1)">Buscar</button></div>
+      <button class="shipping-action primary" type="button" data-tracking-action="search">Buscar</button></div>
       <div class="shipping-table-scroll"><table class="shipping-table tracking-admin-table"><thead><tr><th>Pedido / Cliente</th><th>Estado</th><th>Transportadora / Guía</th><th>Entrega estimada</th><th>Acciones</th></tr></thead><tbody id="order-tracking-admin-body"><tr><td colspan="5" class="shipping-empty">Carga el seguimiento de pedidos.</td></tr></tbody></table></div>
       <nav class="admin-pagination" id="order-tracking-admin-pagination" aria-label="Paginación de seguimiento de pedidos"><button class="admin-page-button" type="button" data-page-direction="previous" disabled>Anterior</button><span>Página 1</span><button class="admin-page-button" type="button" data-page-direction="next" disabled>Siguiente</button></nav>
     </section>
     <dialog id="order-tracking-edit-dialog" class="shipping-detail-dialog tracking-admin-dialog" aria-labelledby="tracking-edit-title">
-      <form id="order-tracking-edit-form"><header><div><h2 id="tracking-edit-title">Actualizar seguimiento</h2><p id="tracking-edit-customer"></p></div><button class="shipping-modal-close" type="button" onclick="closeOrderTrackingEditor()" aria-label="Cerrar">×</button></header>
+      <form id="order-tracking-edit-form"><header><div><h2 id="tracking-edit-title">Actualizar seguimiento</h2><p id="tracking-edit-customer"></p></div><button class="shipping-modal-close" type="button" data-tracking-action="close" aria-label="Cerrar">×</button></header>
         <input id="tracking-edit-order-id" type="hidden" />
         <p class="tracking-provider-hint">Al generar o consultar la guía, MiPaquete devuelve la transportadora, el número y el PDF. Aquí se cargan automáticamente; puedes corregirlos si el proveedor informa un dato distinto.</p>
         <label>Transportadora<input id="tracking-edit-carrier" maxlength="100" placeholder="MiPaquete la informa al generar la guía" /></label>
@@ -17,10 +17,10 @@ export function renderOrderTrackingAdminSection(): string {
         <label>PDF de la guía<input id="tracking-edit-url" type="url" placeholder="Enlace devuelto por MiPaquete" /></label>
         <label>Fecha estimada de entrega (opcional)<input id="tracking-edit-date" type="date" /><small>MiPaquete entrega un plazo estimado en la cotización; esta fecha exacta solo se completa si el proveedor la informa.</small></label>
         <section class="tracking-admin-timeline"><h3>Historial del pedido</h3><ol id="tracking-edit-timeline"></ol></section>
-        <label>Estado actual<select id="tracking-edit-status" onchange="updateOrderTrackingStatusActionState()"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
+        <label>Estado actual<select id="tracking-edit-status"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
         <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>
-        <button id="tracking-edit-status-submit" class="shipping-action" type="button" onclick="saveOrderTrackingStatus()">Actualizar estado</button>
-        <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" onclick="closeOrderTrackingEditor()">Cancelar</button><button class="shipping-action" type="button" onclick="createMiPaqueteGuide()">Generar / consultar guía MiPaquete</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
+        <button id="tracking-edit-status-submit" class="shipping-action" type="button" data-tracking-action="save-status">Actualizar estado</button>
+        <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" data-tracking-action="close">Cancelar</button><button class="shipping-action" type="button" data-tracking-action="create-guide">Generar / consultar guía MiPaquete</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
       </form>
     </dialog>
   </section>`;

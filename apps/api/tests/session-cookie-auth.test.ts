@@ -11,7 +11,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('cookie-based login sessions', () => {
   it('shows an account logout button wired to revoke the cookie session', () => {
-    const html = renderCustomerAccountPage({ customer: { id: 'customer-1', email: 'buyer@example.com' }, orders: [], invoices: [] });
+    const html = renderCustomerAccountPage({ customer: { id: 'customer-1', email: 'buyer@example.com', emailVerified: true }, orders: [], invoices: [] });
     expect(html).toContain('id="customer-logout"');
     expect(html).toContain("fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'same-origin' })");
   });
@@ -49,6 +49,21 @@ describe('cookie-based login sessions', () => {
     expect(response.headers.get('set-cookie')).toContain('HttpOnly');
     expect(body).toEqual({ status: 'ok' });
     expect(JSON.stringify(body)).not.toContain('customer-secret-token');
+  });
+
+  it('uses only Cloudflare client IP header for customer login metadata', async () => {
+    const loginCustomer = vi.fn().mockResolvedValue({ rawToken: 'session', expiresAt: '2030-01-01T00:00:00.000Z' });
+    const app = CustomerAuthController.createRoutes(createIdentityGateway({ loginCustomer }));
+    const request = (headers: Record<string, string>) => app.request(new Request('https://shop.example.com/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ email: 'buyer@example.com', password: 'password', turnstileToken: 'test-token' }),
+    }), undefined, env);
+
+    expect((await request({ 'cf-connecting-ip': '203.0.113.8', 'x-forwarded-for': '198.51.100.9' })).status).toBe(200);
+    expect(loginCustomer).toHaveBeenLastCalledWith(expect.objectContaining({ ipAddress: '203.0.113.8' }));
+    expect((await request({ 'x-forwarded-for': '198.51.100.9' })).status).toBe(200);
+    expect(loginCustomer).toHaveBeenLastCalledWith(expect.objectContaining({ ipAddress: undefined }));
   });
 });
 

@@ -13,7 +13,7 @@ export class StructuredDataHelper {
       itemListElement,
     };
 
-    return JSON.stringify(schema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return this.serializeJsonLd(schema);
   }
 
   public static generateWebSiteSchema(storeUrl: string, storeName: string): string {
@@ -29,7 +29,7 @@ export class StructuredDataHelper {
       },
     };
 
-    return JSON.stringify(schema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return this.serializeJsonLd(schema);
   }
 
   public static generateOrganizationSchema(storeUrl: string, storeName: string, logoUrl?: string): string {
@@ -41,7 +41,7 @@ export class StructuredDataHelper {
       logo: logoUrl || `${storeUrl}/media/logo.png`,
     };
 
-    return JSON.stringify(schema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return this.serializeJsonLd(schema);
   }
 
   public static generateItemListSchema(items: Array<{ name: string; url: string; position: number }>): string {
@@ -56,6 +56,14 @@ export class StructuredDataHelper {
       })),
     };
 
-    return JSON.stringify(schema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return this.serializeJsonLd(schema);
+  }
+
+  public static serializeJsonLd(value: unknown): string {
+    const serialized = JSON.stringify(value);
+    if (serialized === undefined) throw new Error('No se pudo serializar JSON-LD');
+    return serialized.replace(/[&<>\u2028\u2029]/g, (char) => ({
+      '&': '\\u0026', '<': '\\u003c', '>': '\\u003e', '\u2028': '\\u2028', '\u2029': '\\u2029',
+    })[char] ?? char);
   }
 }

@@ -21,6 +21,16 @@ export class D1ProductRepository implements IProductRepository {
     return D1ProductMapper.hydrate(row, this.db);
   }
 
+  public async findByIds(ids: string[]): Promise<Product[]> {
+    if (ids.length === 0) return [];
+    if (ids.length > 50) throw new Error('Lista de productos excede el límite permitido');
+    const placeholders = ids.map(() => '?').join(', ');
+    const { results } = await this.db.prepare(
+      `SELECT * FROM catalog_products WHERE id IN (${placeholders})`
+    ).bind(...ids).all<ProductRow>();
+    return D1ProductMapper.hydrateMany(results || [], this.db);
+  }
+
   public async findBySlug(slug: string): Promise<Product | null> {
     const row = await this.db.prepare('SELECT * FROM catalog_products WHERE slug = ?').bind(slug).first<ProductRow>();
     if (!row) return null;

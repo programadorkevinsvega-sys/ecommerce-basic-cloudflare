@@ -18,7 +18,7 @@ Recuperar una versión estable del sistema sin crear incompatibilidades con D1, 
 | **Interfaz de tienda y admin** | Viaja actualmente dentro del Worker | La UI actual es renderizada por el Worker; `apps/admin` es placeholder. Si más adelante se despliega Pages, deberá documentarse su deployment independiente |
 | **D1 única** | No automático | Migraciones por módulo; restauración es una operación aparte |
 | **R2** (medios y documentos) | No | Nunca se borra para "revertir" |
-| **Workers Cache / KV** | Revisar purga de etiquetas al mutar y partición por versión; KV se conserva por separado | Workers Cache almacena HTML SSR público; el binding KV solo guarda el cursor temporal de mantenimiento de medios |
+| **Workers Cache / KV** | Revisar la política de caché de la versión desplegada; KV se conserva por separado | Con CSP por nonce, HTML SSR usa `private, no-store`; releases anteriores pueden seguir cacheando HTML por hasta 30 s |
 | **Queues + DLQ** | No | Mensajes ya publicados siguen existiendo |
 | **Cron Triggers** | Con el Worker | Pausar si el cambio los afecta |
 | **Durable Objects** (si existen) | Limitado | Cambios de clase/migración de DO son delicados |
@@ -68,7 +68,13 @@ En este repositorio Cloudflare Workers Builds está integrado con `main`: el pus
 
 No hay rollback automático de DDL. Las nuevas migraciones deben ser aditivas y compatibles hacia atrás; recuperar una aplicación defectuosa implica detener el release, volver el Worker a la versión compatible y preparar una migración correctiva expand/contract tras respaldar. No borrar datos ni objetos R2 como rollback genérico.
 
-La migración `orders__0002_guest_cart_capability.sql` agrega `orders_orders.guest_cart_id_hash`. Antes de desplegar el Worker que exige ese hash para pedidos invitados, inspeccionar `orders_orders` y verificar que no queden pedidos guest con pago `pending` sin hash; esperar a que se liquiden o reconciliarlos operativamente. La columna acepta `NULL` para preservar pedidos históricos y compatibilidad con la versión previa. Los pedidos nuevos invitados guardan un SHA-256 del cookie aleatorio `vega_cart_id`; el valor del cookie no se persiste en claro.
+La migración `orders__0002_guest_cart_capability.sql` agrega `orders_orders.guest_cart_id_hash`. Antes de desplegar el Worker que exige ese hash para pedidos invitados, inspeccionar `orders_orders` y verificar que no queden pedidos guest con pago `pending` sin hash; esperar a que se liquiden o reconciliarlos operativamente. La columna acepta `NULL` para preservar pedidos históricos y compatibilidad con la versión previa. Los pedidos nuevos invitados guardan un SHA-256 del ID aleatorio contenido en `__Host-cart`; el valor del cookie no se persiste en claro.
+
+La migración `orders__0013_guest_checkout_protection.sql` agrega únicamente las tablas prefijadas `orders_guest_checkout_attempts` y `orders_guest_checkout_email_reservations`; es aditiva y se conserva durante cualquier rollback. Aplicarla y verificar el ledger antes de activar el Worker que escribe en ellas. El checkout invitado requiere `GUEST_CART_HMAC_SECRET` (mínimo 32 bytes UTF-8, distinto por entorno); no desplegar si falta. Rotar o perder este secreto invalida las capacidades vigentes de `__Host-cart`; planear la rotación y la expiración de carritos antes de cambiarlo.
+
+El Worker emite una capacidad aleatoria firmada en `__Host-cart`, con vigencia de 30 días, y deja de emitir el espejo `vega_cart_id`. Una versión anterior puede depender de ese espejo y no verifica Turnstile ni aplica los límites nuevos. Si hay que volver a una versión anterior, deshabilitar temporalmente el checkout invitado; los carritos guest abiertos pueden necesitar reconstruirse. No restaurar la confianza en el valor no firmado ni retirar las tablas o el secreto durante el rollback. Las reservas de correo vencen en una hora; se conservan incluso si un pedido se cancela antes de enviar el correo, por lo que su cuota puede permanecer consumida durante esa ventana. La vigencia persistida de los tokens de seguimiento guest sigue pendiente y debe resolverse antes de certificar SEC-ISO-05.
+
+La migración `orders__0014_guest_tracking_expiration.sql` agrega `guest_tracking_token_expires_at` y la rellena a 90 días de `created_at` para hashes existentes. Es expand-only y no elimina columnas ni pedidos. Aplicarla antes del Worker que exige expiración. Si se revierte a un Worker anterior que no evalúa ese campo, bloquear temporalmente `POST /api/v1/orders/tracking` para visitantes guest en el borde hasta volver a una versión que aplique el vencimiento; la consulta autenticada de clientes puede permanecer disponible. No borrar el campo ni volver a habilitar tokens vencidos.
 
 ```text
 Release candidate
@@ -224,6 +230,12 @@ Para reconciliar objetos faltantes, detener la recolección y las operaciones qu
 
 Al desplegar el control obligatorio, una cuenta con `mfa_enabled=0` solo puede entrar a `/admin/mfa-setup`; APIs y datos de administración permanecen bloqueados hasta confirmar un TOTP con la contraseña revalidada. Después, el login exige TOTP. Antes de revertir el Worker, considerar que una versión anterior podría permitir saltarse MFA. No revertir a una versión sin el gate mientras haya una cuenta con MFA deshabilitado; si se necesita rollback por incidente, mantener acceso de administrador detenido hasta volver a aplicar una versión con el gate. Guardar el secreto TOTP en un gestor de contraseñas seguro durante el enrolamiento.
 
+`identity__0002_admin_login_ip_lockout.sql` agrega una tabla expand-only con contadores por administrador y hash del origen; el Worker anterior no la necesita. Aplicar la migración antes de desplegar el código nuevo y conservar tabla/filas en rollback. El código anterior puede volver a bloquear la cuenta completa, por lo que su reactivación requiere valorar ese riesgo y limitar temporalmente el acceso administrativo.
+
+`identity__0003_admin_totp_replay_protection.sql` agrega columnas para el contador TOTP consumido y el bloqueo de intentos del enrolamiento. Aplicar antes de desplegar el Worker que las consulta y conservar las columnas durante rollback. `identity_admins.mfa_secret` se cifra en la capa de persistencia con AES-256-GCM y `TOTP_ENCRYPTION_KEY`; los secretos heredados se actualizan gradualmente al accederse. La clave no debe perderse ni rotarse sin un procedimiento de re-cifrado. Los Workers anteriores que esperan TOTP en claro no son compatibles con filas cifradas: no activar un rollback a código sin soporte del formato `enc:v1:`. Mantener el Worker con cifrado o preparar y verificar un procedimiento de re-cifrado antes de cualquier reversión.
+
+`identity__0004_customer_auth_flows.sql` agrega tokens de verificación/restablecimiento y contadores de demora por hash de correo, además de leases para el outbox `identity`. Es expand-only: desplegar la migración antes del Worker nuevo y conservar tablas/columnas durante un rollback. Los enlaces en el outbox contienen temporalmente un token secreto en el fragmento URL; el relay los redacta al publicar y al agotar reintentos. Si se revierte antes de publicar, pausar el relay de identidad, mantener restringido el acceso al D1, dejar expirar los tokens y redactar los eventos pendientes mediante un procedimiento aprobado; no copiar payloads a logs ni a reportes. La verificación y recuperación deben mantenerse fuera de servicio mientras el Worker anterior no pueda consumir estos eventos.
+
 ## Queues y eventos (activas en este proyecto)
 
 El proyecto usa Cloudflare Queues con outbox por módulo, ack manual y DLQ (contrato §6.5 y §8).
@@ -248,16 +260,17 @@ El inventario actual del resto de tablas outbox está en [`docs/AUDITORIA_TECNIC
 
 ## Workers Cache y KV
 
-- Workers Cache sirve HTML SSR público con TTL máximo de 30 segundos; Cloudflare separa las entradas por versión del Worker por defecto. Las respuestas usan la etiqueta `storefront-public-html`, purgada después de mutaciones relevantes exitosas del BFF y de publicaciones programadas del blog. Las solicitudes con cookies llevan `Vary: Cookie` y las rutas privadas/transaccionales son `private, no-store`.
-- Workers Cache usa niveles globales y agrupa solicitudes simultáneas con la misma clave. Aun así, no se toma como fuente de verdad; el checkout y las mutaciones consultan sus fuentes autoritativas.
-- Si falla una invalidación, el Worker registra un evento estructurado sin bloquear una escritura ya confirmada; el TTL limita el dato potencialmente obsoleto a 30 segundos. Vigilar `cache.public_html_invalidation_failed` y confirmar `CF-Cache-Status` y `Age` tras el despliegue.
-- En rollback, el Worker anterior vuelve a su espacio de caché versionado; las entradas expiradas no requieren un purge global. Confirmar `CF-Cache-Status` y `Age` tras el despliegue.
+- Con la política CSP por nonce (ADR-0033), todo HTML SSR usa `Cache-Control: private, no-store` y no lleva `Cache-Tag`; no se debe cachear HTML con un nonce reutilizable. Las imágenes inmutables mantienen su caché propia.
+- Los releases anteriores pueden servir HTML público con TTL máximo de 30 segundos y etiqueta `storefront-public-html`; Cloudflare separa las entradas por versión del Worker por defecto. Las solicitudes con cookies llevan `Vary: Cookie` y las rutas privadas/transaccionales son `private, no-store`.
+- El checkout y las mutaciones consultan sus fuentes autoritativas; el caché no es fuente de verdad. Para releases previos con HTML cacheable, vigilar `cache.public_html_invalidation_failed`, `CF-Cache-Status` y `Age`.
+- En rollback, el Worker anterior vuelve a su política y espacio de caché versionado. Confirmar `CF-Cache-Status` y `Age`; purgar etiquetas si datos obsoletos representan un riesgo antes de permitir tráfico.
 - Las solicitudes con cookies o `Authorization`, respuestas privadas y los flujos transaccionales no se almacenan. Verificar SEC-WEB-05 antes de ampliar la lista pública.
 
 ## Proveedores externos
 
 - **Wompi:** no cambiar la URL de eventos ni las llaves durante un rollback salvo que el incidente lo exija; si se rotan secretos, hacerlo con un plan y reconciliar después. Verificar sandbox vs. producción.
 - **Resend:** si el fallo afecta el envío, pausar el consumidor de emails; al reanudar, confiar en la idempotencia y en `notifications_log`.
+- **Have I Been Pwned (HIBP):** registro y cambios/restablecimientos de contraseñas de clientes requieren una respuesta válida de Pwned Passwords; una indisponibilidad bloquea esas operaciones con HTTP 503, pero no bloquea login ni sesiones existentes. No se envían contraseñas ni se persiste la respuesta. No requiere secret ni migración D1. La credencial administrativa `ADMIN_PASSWORD`, configurada fuera de estos flujos, no se consulta automáticamente.
 
 ## Checklist operativo
 

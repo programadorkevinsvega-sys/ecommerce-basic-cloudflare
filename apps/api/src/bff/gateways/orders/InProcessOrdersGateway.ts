@@ -1,5 +1,5 @@
-import { OrdersGateway } from './OrdersGateway.js';
-import { OrdersPublicApi } from '../../../modules/orders/module.public-api.js';
+import { OrderCreationRateLimitError, OrdersGateway } from './OrdersGateway.js';
+import { OrdersPublicApi, OrdersPublicApiError } from '../../../modules/orders/module.public-api.js';
 import { Order } from '../../../modules/orders/domain/entities/Order.js';
 import { CheckoutEvaluationInput, CheckoutEvaluationResult, FreeShippingItemCandidate, FreeShippingRuleCandidate } from '../../../modules/orders/domain/services/OrdersCheckoutPolicy.js';
 import { CreateOrderCommand } from '../../../modules/orders/application/use-cases/CreateOrderUseCase.js';
@@ -22,7 +22,14 @@ export class InProcessOrdersGateway implements OrdersGateway {
   }
 
   public async createOrder(cmd: CreateOrderCommand): Promise<Order> {
-    return this.publicApi.createOrder(cmd);
+    try {
+      return await this.publicApi.createOrder(cmd);
+    } catch (error) {
+      if (error instanceof OrdersPublicApiError && error.code === 'ORDER_CREATION_RATE_LIMITED') {
+        throw new OrderCreationRateLimitError();
+      }
+      throw error;
+    }
   }
 
   public async getOrder(orderId: string): Promise<Order | null> {

@@ -55,14 +55,14 @@ export function renderInvoicingAdminScript(): string {
       nav.innerHTML = '<button type="button" data-invoice-page="previous">Anterior</button><span aria-live="polite">' + start + '–' + end + ' de ' + total + ' · Página ' + _invoicePage + '</span><button type="button" data-invoice-page="next">Siguiente</button>';
       nav.querySelector('[data-invoice-page="previous"]').disabled = _invoicePage <= 1;
       nav.querySelector('[data-invoice-page="next"]').disabled = !_invoiceMeta.hasMore;
-      nav.querySelector('[data-invoice-page="previous"]').onclick = () => loadAdminInvoices(_invoicePage - 1);
-      nav.querySelector('[data-invoice-page="next"]').onclick = () => loadAdminInvoices(_invoicePage + 1);
+      nav.querySelector('[data-invoice-page="previous"]').addEventListener('click', () => loadAdminInvoices(_invoicePage - 1));
+      nav.querySelector('[data-invoice-page="next"]').addEventListener('click', () => loadAdminInvoices(_invoicePage + 1));
     }
 
     function renderInvoiceRow(invoice) {
       const actions = '<a class="invoice-action primary" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document?view=1" target="_blank" rel="noopener noreferrer">Ver PDF</a>' +
         '<a class="invoice-action" href="/api/v1/invoices/' + encodeURIComponent(invoice.id) + '/document">Descargar</a>' +
-        (invoice.status === 'issued' ? '<button class="invoice-action danger" onclick="openCreditNoteModal(' + escapeHtml(JSON.stringify(String(invoice.id))) + ', ' + escapeHtml(JSON.stringify(String(invoice.invoiceNumber))) + ', ' + Number(invoice.totalCents) + ')">Nota crédito</button>' : '');
+        (invoice.status === 'issued' ? '<button class="invoice-action danger" data-invoice-action="credit-note" data-invoice-id="' + escapeHtml(String(invoice.id)) + '" data-invoice-number="' + escapeHtml(String(invoice.invoiceNumber)) + '" data-total-cents="' + Number(invoice.totalCents) + '">Nota crédito</button>' : '');
       return '<tr><td><strong class="invoice-number">' + escapeHtml(invoice.invoiceNumber) + '</strong></td>' +
         '<td><code>#' + escapeHtml(invoice.orderId.replace('ord-', '')) + '</code></td>' +
         '<td><div class="invoice-client"><strong>' + escapeHtml(invoice.customerName) + '</strong><small>' + escapeHtml(invoice.customerEmail) + '</small></div></td>' +
@@ -99,8 +99,10 @@ export function renderInvoicingAdminScript(): string {
       const correctionConceptCode = document.getElementById('cn-concept').value;
       const amountInCents = window.copPesosToCents('cn-amount');
       if (!reason || !Number.isSafeInteger(amountInCents) || amountInCents <= 0) return alert('Por favor indica motivo y monto válido');
+      const headers = await window.adminCriticalHeaders(true);
+      if (!headers) return;
       const response = await fetch('/api/v1/admin/invoices/' + _activeCnInvoiceId + '/credit-notes', {
-        method: 'POST', headers: adminHeaders(true), body: JSON.stringify({ reason, amountInCents, correctionConceptCode }),
+        method: 'POST', headers, body: JSON.stringify({ reason, amountInCents, correctionConceptCode }),
       });
       if (response.ok) {
         alert('Solicitud de nota crédito guardada. La emisión DIAN queda en proceso de validación.');
@@ -118,5 +120,16 @@ export function renderInvoicingAdminScript(): string {
     window.openCreditNoteModal = openCreditNoteModal;
     window.closeCreditNoteModal = closeCreditNoteModal;
     window.submitCreditNote = submitCreditNote;
+    document.getElementById('invoices-search')?.addEventListener('input', filterAdminInvoices);
+    document.getElementById('invoices-electronic-status')?.addEventListener('change', () => loadAdminInvoices(1));
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-invoice-action]');
+      if (!button) return;
+      if (button.dataset.invoiceAction === 'close') closeCreditNoteModal();
+      if (button.dataset.invoiceAction === 'submit-credit-note') submitCreditNote();
+      if (button.dataset.invoiceAction === 'credit-note') {
+        openCreditNoteModal(button.dataset.invoiceId, button.dataset.invoiceNumber, Number(button.dataset.totalCents));
+      }
+    });
   `;
 }

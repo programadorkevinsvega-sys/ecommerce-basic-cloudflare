@@ -10,7 +10,7 @@ export function renderStorefrontProductCard(product: CatalogProductDto, discount
     : `<div class="card-price">${formatPrice(price)}</div>`;
   const badge = discount?.hasDiscount ? `<span class="card-discount-badge">${discount.discountPercentage === undefined ? 'Oferta' : `−${discount.discountPercentage}%`}</span>` : '';
   const image = product.mediaIds[0]
-    ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'product-media-placeholder',textContent:'Imagen no disponible'}))" />`
+    ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />`
     : '<span class="product-media-placeholder">Imagen no disponible</span>';
   const brand = product.brand || 'Vega Store';
   const stock = product.stockQuantity > 0 ? `${product.stockQuantity} disponibles` : 'Sin stock';

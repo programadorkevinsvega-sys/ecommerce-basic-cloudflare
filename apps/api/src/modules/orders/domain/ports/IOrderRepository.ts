@@ -15,10 +15,17 @@ export interface OrderOutboxEvent {
   payload: Record<string, unknown>;
 }
 
+export interface OrderCreationProtection {
+  ipFingerprint: string;
+  emailFingerprint: string;
+  cartFingerprint: string;
+  emailReservations: Array<{ recipientFingerprint: string; count: number }>;
+}
+
 export interface IOrderRepository {
   findById(id: string): Promise<Order | null>;
   save(order: Order): Promise<void>;
-  saveAggregate(order: Order, history: OrderHistoryRecord, event: OrderOutboxEvent): Promise<void>;
+  saveAggregate(order: Order, history: OrderHistoryRecord, event: OrderOutboxEvent, protection?: OrderCreationProtection): Promise<void>;
   list(filters?: { customerId?: string; status?: string; limit?: number; offset?: number }): Promise<Order[]>;
   hasDeliveredProductPurchase(customerId:string,productId:string):Promise<boolean>;
   getDeliveredProductPaymentMethod(customerId:string,productId:string):Promise<'wompi'|'cash_on_delivery'|null>;

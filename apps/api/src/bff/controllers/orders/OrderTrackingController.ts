@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { z } from 'zod';
 import { CmsGateway } from '../../gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
@@ -13,6 +12,7 @@ import { extractAdminToken } from './extractAdminToken.js';
 import { getCustomerActorId, getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
 import { notifyShippingGuideAvailable } from '../shipping/notifyShippingGuideAvailable.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 const TrackingRequest = z.object({
   orderId: z.string().min(8).max(80),
@@ -99,10 +99,7 @@ export class OrderTrackingController {
     c: Context,
     identity: IdentityGateway,
   ): Promise<{ actorId: string } | null> {
-    const authorization = c.req.header('authorization');
-    const token = authorization?.startsWith('Bearer ')
-      ? authorization.slice(7).trim()
-      : getCookie(c, '__Host-session');
+    const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
     if (!token) return null;
     try {
       const session = await identity.validateSession(token);

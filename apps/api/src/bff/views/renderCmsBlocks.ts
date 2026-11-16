@@ -1,6 +1,6 @@
 import { CmsBlockDto } from '../gateways/cms/CmsGateway.js';
 
-export function renderCmsBlocks(blocks: CmsBlockDto[]): string {
+export function renderCmsBlocks(blocks: CmsBlockDto[], sanitizeRichText: (input: string) => string): string {
   const sorted = [...blocks].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return sorted.map((b) => {
@@ -8,7 +8,7 @@ export function renderCmsBlocks(blocks: CmsBlockDto[]): string {
       case 'rich_text': {
         const rawHtml = b.content['html'];
         if (typeof rawHtml === 'string' && rawHtml.trim()) {
-          return `<div class="cms-block cms-rich-text" style="margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.7;">${rawHtml}</div>`;
+          return `<div class="cms-block cms-rich-text" style="margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.7;">${sanitizeRichText(rawHtml)}</div>`;
         }
         return `<div class="cms-block cms-rich-text" style="margin-bottom: 2rem; font-size: 1.05rem; line-height: 1.7;">${escapeHtml(String(b.content['text'] || ''))}</div>`;
       }

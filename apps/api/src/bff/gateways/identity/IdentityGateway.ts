@@ -3,6 +3,7 @@ export interface RegisterCustomerGatewayInput {
   password: string;
   fullName: string;
   phone?: string;
+  publicOrigin: string;
 }
 
 export interface LoginCustomerGatewayInput {
@@ -18,13 +19,16 @@ export interface LoginAdminGatewayInput {
   totpCode?: string;
   ipAddress?: string;
   userAgent?: string;
+  traceId?: string;
 }
 
 export interface AuthenticatedSession {
   actorId: string;
   actorType: 'customer' | 'admin';
+  email?: string;
   permissions: string[];
   mfaEnabled?: boolean;
+  emailVerified?: boolean;
 }
 
 export interface CustomerProfile {
@@ -41,11 +45,12 @@ export interface CustomerSessionInfo {
 }
 
 export interface IdentityGateway {
-  registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ id: string; email: string; fullName: string }>;
+  registerCustomer(input: RegisterCustomerGatewayInput): Promise<{ accepted: true }>;
   loginCustomer(input: LoginCustomerGatewayInput): Promise<{ rawToken: string; expiresAt: string }>;
   loginAdmin(input: LoginAdminGatewayInput): Promise<{ rawToken: string; expiresAt: string; mfaEnabled: boolean }>;
   beginAdminMfaEnrollment(adminId: string, password: string): Promise<{ secret: string; otpauthUri: string }>;
   confirmAdminMfaEnrollment(adminId: string, code: string): Promise<void>;
+  reauthenticateAdmin(input: { adminId: string; password: string; totpCode: string }): Promise<boolean>;
   validateSession(rawToken: string): Promise<AuthenticatedSession>;
   logout(rawToken: string): Promise<void>;
   getCustomerProfile(customerId: string): Promise<CustomerProfile>;
@@ -53,4 +58,8 @@ export interface IdentityGateway {
   changeCustomerPassword(input: { customerId: string; currentPassword: string; newPassword: string; currentSessionToken: string; ipAddress?: string; userAgent?: string }): Promise<{ rawToken: string; expiresAt: string }>;
   listCustomerSessions(customerId: string, currentToken: string): Promise<CustomerSessionInfo[]>;
   revokeCustomerSession(sessionId: string, customerId: string): Promise<boolean>;
+  requestCustomerPasswordReset(email: string, publicOrigin: string): Promise<void>;
+  requestCustomerEmailVerification(customerId: string, publicOrigin: string): Promise<void>;
+  verifyCustomerEmail(token: string): Promise<void>;
+  resetCustomerPassword(token: string, password: string): Promise<void>;
 }

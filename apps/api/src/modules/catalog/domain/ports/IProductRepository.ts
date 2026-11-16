@@ -4,6 +4,7 @@ import { ProductAdminListItem } from './ProductAdminListItem.js';
 
 export interface IProductRepository {
   findById(id: string): Promise<Product | null>;
+  findByIds(ids: string[]): Promise<Product[]>;
   findBySlug(slug: string): Promise<Product | null>;
   save(product: Product): Promise<void>;
   delete(id: string): Promise<void>;

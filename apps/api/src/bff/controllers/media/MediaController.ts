@@ -4,6 +4,7 @@ import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { createAuthMiddleware } from '../../middleware/AuthMiddleware.js';
 import { bodyLimit } from 'hono/body-limit';
 import { JsonLogger } from '../../../platform/JsonLogger.js';
+import { createAdminCountryAccessMiddleware } from '../../middleware/AdminCountryAccessMiddleware.js';
 
 type MediaVariables = {
   Variables: {
@@ -54,6 +55,7 @@ export class MediaController {
     // SEC-R2-04 & SEC-ADM-01: Solo admin con permiso media:create puede subir medios
     router.post(
       '/upload',
+      createAdminCountryAccessMiddleware(identityGateway),
       createAuthMiddleware(identityGateway, 'admin', 'media:create'),
       bodyLimit({ maxSize: 11 * 1024 * 1024, onError: (c) => c.json({ error: 'La solicitud supera el límite de 11 MB' }, 413) }),
       async (c) => {

@@ -1,3 +1,5 @@
+import { StructuredDataHelper } from './StructuredDataHelper.js';
+
 export class ProductSeoHelper {
   public static readonly TITLE_MAX_RECOMMENDED = 70;
   public static readonly DESC_MAX_RECOMMENDED = 160;
@@ -76,6 +78,6 @@ export class ProductSeoHelper {
       },
     };
 
-    return JSON.stringify(schema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return StructuredDataHelper.serializeJsonLd(schema);
   }
 }

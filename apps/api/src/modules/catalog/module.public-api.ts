@@ -22,50 +22,7 @@ import { ProductTag, SaveProductTagInput } from './domain/entities/ProductTag.js
 import { ProductLandingConfig } from './domain/entities/ProductLandingConfig.js';
 import { SaveProductLandingConfigInput } from './application/use-cases/SaveProductLandingConfigUseCase.js';
 import { ProductAdminListItem } from './domain/ports/ProductAdminListItem.js';
-
-export interface ICatalogPublicApi {
-  createProduct(input: CreateProductInput): Promise<Product>;
-  updateProduct(input: UpdateProductInput): Promise<Product>;
-  deleteProduct(id: string): Promise<void>;
-  getProductBySlug(slug: string): Promise<Product>;
-  getProductById(id: string): Promise<Product>;
-  listProducts(input: ListProductsInput): Promise<Product[]>;
-  listAdminProducts(input: { limit?: number; offset?: number; status?: string; query?: string }): Promise<ProductAdminListItem[]>;
-  countProducts(status?: string, query?: string): Promise<number>;
-  createCategory(input: CreateCategoryInput): Promise<Category>;
-  listCategories(query?: CatalogPageQuery): Promise<Category[]>;
-  getCategoryById(id: string): Promise<Category | null>;
-  getBrandById(id: string): Promise<Brand | null>;
-  getAttributeById(id: string): Promise<Attribute | null>;
-  deleteCategory(id: string): Promise<void>;
-  createBrand(input: CreateBrandInput): Promise<Brand>;
-  listBrands(query?: CatalogPageQuery): Promise<Brand[]>;
-  updateBrandDescription(id: string, description: string): Promise<Brand>;
-  createAttribute(input: CreateAttributeInput): Promise<Attribute>;
-  listAttributes(query?: CatalogPageQuery): Promise<Attribute[]>;
-  createSupplier(input: CreateSupplierInput): Promise<Supplier>;
-  listSuppliers(query?: CatalogPageQuery): Promise<Supplier[]>;
-  createProductVariant(input: CreateProductVariantInput): Promise<ProductVariant>;
-  listProductVariants(query?: CatalogPageQuery): Promise<ProductVariant[]>;
-  updateTaxonomy(input: CatalogTaxonomyUpdate): Promise<void>;
-  countTaxonomy(kind: CatalogTaxonomyKind, query?: string): Promise<number>;
-  deleteTaxonomy(kind: CatalogTaxonomyKind, id: string): Promise<void>;
-  listCollections(query?: CatalogPageQuery): Promise<Collection[]>;
-  countCollections(includeInactive?: boolean, query?: string): Promise<number>;
-  getCollectionBySlug(slug: string): Promise<Collection>;
-  findCollectionBySlug(slug: string): Promise<Collection | null>;
-  getCollectionById(id: string): Promise<Collection>;
-  saveCollection(input: CollectionInput, id?: string): Promise<Collection>;
-  deleteCollection(id: string): Promise<void>;
-  listProductTags(includeInactive?: boolean, page?: number, pageSize?: number): Promise<ProductTag[]>;
-  countProductTags(includeInactive?: boolean): Promise<number>;
-  saveProductTag(input: SaveProductTagInput): Promise<ProductTag>;
-  deleteProductTag(id: string): Promise<void>;
-  getProductLandingConfig(productId: string): Promise<ProductLandingConfig | null>;
-  saveProductLandingConfig(input: SaveProductLandingConfigInput): Promise<ProductLandingConfig>;
-  previewLegacyPriceMigration(taxRateBasisPoints: number): Promise<LegacyPriceMigrationPreview>;
-  migrateLegacyPrices(taxRateBasisPoints: number, expectedCount: number, expectedFingerprint: string): Promise<number>;
-}
+import { ICatalogPublicApi } from './ICatalogPublicApi.js';
 
 export class CatalogPublicApi implements ICatalogPublicApi {
   private readonly container: CatalogModuleContainer;
@@ -99,6 +56,12 @@ export class CatalogPublicApi implements ICatalogPublicApi {
 
   public async getProductById(id: string): Promise<Product> {
     const res = await this.container.getProductByIdUseCase.execute(id);
+    if (res.isFail()) throw res.error;
+    return res.value;
+  }
+
+  public async getProductsByIds(ids: string[]): Promise<Product[]> {
+    const res = await this.container.getProductsByIdsUseCase.execute(ids);
     if (res.isFail()) throw res.error;
     return res.value;
   }

@@ -1,4 +1,4 @@
-import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
+import { ICatalogPublicApi } from '../../../modules/catalog/ICatalogPublicApi.js';
 import { ProductLandingGateway, SaveProductLandingConfigRequest } from './ProductLandingGateway.js';
 
 export class InProcessProductLandingGateway implements ProductLandingGateway {

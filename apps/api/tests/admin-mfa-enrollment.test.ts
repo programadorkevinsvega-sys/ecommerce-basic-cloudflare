@@ -12,7 +12,29 @@ describe('admin MFA enrollment', () => {
       fullName: 'Owner', roleId: 'role_superadmin', mfaEnabled: false, failedLoginAttempts: 0,
       isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     });
-    const repository = { findById: async () => admin, save: async () => undefined };
+    let secret: string | undefined;
+    let enabled = false;
+    let failedAttempts = 0;
+    let lockedUntil: string | undefined;
+    const repository = {
+      findById: async () => admin,
+      stageMfaEnrollment: async (_adminId: string, value: string) => { secret = value; return true; },
+      findMfaEnrollment: async () => ({
+        active: true, enabled, secret, failedAttempts, lockedUntil,
+      }),
+      recordMfaEnrollmentFailure: async ({ lockUntil, maxAttempts }: { lockUntil: string; maxAttempts: number }) => {
+        failedAttempts += 1;
+        if (failedAttempts >= maxAttempts) lockedUntil = lockUntil;
+        return true;
+      },
+      completeMfaEnrollment: async (_id: string, value: string) => {
+        if (value !== secret || enabled) return false;
+        enabled = true;
+        admin.enableMfa(value);
+        return true;
+      },
+      save: async () => undefined,
+    };
     const begin = new BeginAdminMfaEnrollmentUseCase(repository as never);
     const confirm = new ConfirmAdminMfaEnrollmentUseCase(repository as never);
 
@@ -28,6 +50,41 @@ describe('admin MFA enrollment', () => {
     expect(admin.mfaEnabled).toBe(true);
   });
 
+  it('limits enrollment confirmation to five failed attempts and blocks for fifteen minutes', async () => {
+    const admin = AdminUser.create({
+      id: 'admin-lockout', email: 'owner@example.test', passwordHash: await PasswordHasher.hash('CorrectHorseBatteryStaple!23'),
+      fullName: 'Owner', roleId: 'role_superadmin', mfaEnabled: false, failedLoginAttempts: 0,
+      isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    let failedAttempts = 0;
+    let lockedUntil: string | undefined;
+    let secret: string | undefined;
+    const repository = {
+      findById: async () => admin,
+      stageMfaEnrollment: async (_id: string, value: string) => { secret = value; return true; },
+      findMfaEnrollment: async () => ({ active: true, enabled: false, secret, failedAttempts, lockedUntil }),
+      recordMfaEnrollmentFailure: async ({
+        lockUntil, maxAttempts,
+      }: { lockUntil: string; maxAttempts: number }) => {
+        failedAttempts += 1;
+        if (failedAttempts >= maxAttempts) lockedUntil = lockUntil;
+        return true;
+      },
+    };
+    const begin = new BeginAdminMfaEnrollmentUseCase(repository as never);
+    const confirm = new ConfirmAdminMfaEnrollmentUseCase(repository as never);
+    const enrollment = await begin.execute(admin.id, 'CorrectHorseBatteryStaple!23');
+    expect(enrollment.isOk()).toBe(true);
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await confirm.execute(admin.id, '000000')).isFail()).toBe(true);
+    }
+    expect(failedAttempts).toBe(5);
+    expect(lockedUntil).toBeDefined();
+    expect((await confirm.execute(admin.id, '000000')).isFail()).toBe(true);
+    expect(failedAttempts).toBe(5);
+  });
+
   it('reauthenticates with the configured Cloudflare secret even when the old D1 hash differs', async () => {
     const admin = AdminUser.create({
       id: 'admin-configured', email: 'legacy-admin@example.test', passwordHash: await PasswordHasher.hash('old-d1-password'),
@@ -35,7 +92,10 @@ describe('admin MFA enrollment', () => {
       isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     });
     const repository = {
-      findById: async () => admin, findSoleActiveSuperadmin: async () => admin, save: async () => undefined,
+      findById: async () => admin,
+      findSoleActiveSuperadmin: async () => admin,
+      stageMfaEnrollment: async () => true,
+      save: async () => undefined,
     };
     const begin = new BeginAdminMfaEnrollmentUseCase(repository as never, {
       email: 'owner@example.test', password: 'cloudflare-secret-password',

@@ -63,8 +63,8 @@ export class FakeOutboxD1 {
 
   private async run(sql: string, values: unknown[]): Promise<{ meta: { changes: number } }> {
     if (sql.includes("SET status = 'failed'") && sql.includes('attempts >= ?')) {
-      if (this.row.attempts < Number(values[0])) return { meta: { changes: 0 } };
-      const now = String(values[1]);
+      if (this.row.attempts < Number(values[1])) return { meta: { changes: 0 } };
+      const now = String(values[2]);
       if (this.row.status === 'publishing' && this.row.lease_expires_at && this.row.lease_expires_at > now) {
         return { meta: { changes: 0 } };
       }
@@ -85,21 +85,24 @@ export class FakeOutboxD1 {
     }
 
     if (sql.includes("SET status = 'published'")) {
-      if (this.row.lease_token !== values[2] || this.failPublishedUpdate) return { meta: { changes: 0 } };
+      const tokenIndex = values.length === 4 ? 3 : 2;
+      if (this.row.lease_token !== values[tokenIndex] || this.failPublishedUpdate) return { meta: { changes: 0 } };
       this.row.status = 'published';
       this.clearLease();
       return { meta: { changes: 1 } };
     }
 
     if (sql.includes("SET status = 'failed'")) {
-      if (this.row.lease_token !== values[1]) return { meta: { changes: 0 } };
+      const tokenIndex = values.length === 3 ? 2 : 1;
+      if (this.row.lease_token !== values[tokenIndex]) return { meta: { changes: 0 } };
       this.row.status = 'failed';
       this.clearLease();
       return { meta: { changes: 1 } };
     }
 
     if (sql.includes('SET status = CASE')) {
-      if (this.row.lease_token !== values[2]) return { meta: { changes: 0 } };
+      const tokenIndex = values.length === 5 ? 4 : 2;
+      if (this.row.lease_token !== values[tokenIndex]) return { meta: { changes: 0 } };
       this.row.status = this.row.attempts >= Number(values[0]) ? 'failed' : 'pending';
       this.clearLease();
       return { meta: { changes: 1 } };

@@ -1,6 +1,7 @@
 import { D1NotificationLogRepository } from './infrastructure/persistence/d1/repositories/D1NotificationLogRepository.js';
 import { ResendEmailAdapter } from './infrastructure/adapters/ResendEmailAdapter.js';
 import { SendTransactionalEmailUseCase } from './application/use-cases/SendTransactionalEmailUseCase.js';
+import { SendCustomerAuthEmailUseCase } from './application/use-cases/SendCustomerAuthEmailUseCase.js';
 
 export interface NotificationsModuleDependencies {
   db: D1Database;
@@ -12,10 +13,12 @@ export class NotificationsModuleContainer {
   public readonly logRepo: D1NotificationLogRepository;
   public readonly emailAdapter: ResendEmailAdapter;
   public readonly sendEmailUseCase: SendTransactionalEmailUseCase;
+  public readonly sendCustomerAuthEmailUseCase: SendCustomerAuthEmailUseCase;
 
   constructor(deps: NotificationsModuleDependencies) {
     this.logRepo = new D1NotificationLogRepository(deps.db);
     this.emailAdapter = new ResendEmailAdapter(deps.resendApiKey, deps.fromEmail);
     this.sendEmailUseCase = new SendTransactionalEmailUseCase(this.emailAdapter, this.logRepo);
+    this.sendCustomerAuthEmailUseCase = new SendCustomerAuthEmailUseCase(this.sendEmailUseCase);
   }
 }

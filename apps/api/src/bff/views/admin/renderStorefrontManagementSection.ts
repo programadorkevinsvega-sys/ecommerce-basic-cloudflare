@@ -1,8 +1,6 @@
 import { BannerItemDto, AnnouncementItemDto } from '../../gateways/storefront/StorefrontGateway.js';
 import type { MarketingDestinationOption } from './AdminDashboardProps.js';
 import { renderMarketingDestinationOptions } from './renderMarketingDestinationOptions.js';
-import { escapeAdminJavaScriptString } from './escapeAdminJavaScriptString.js';
-
 export function renderStorefrontManagementSection(
   banners: BannerItemDto[],
   announcements: AnnouncementItemDto[],
@@ -15,28 +13,23 @@ export function renderStorefrontManagementSection(
   const bannerPlacements = '<option value="home">Inicio</option><option value="category">Categorías</option><option value="product">Producto</option><option value="checkout">Checkout</option><option value="catalog">Catálogo</option><option value="brands">Directorio de marcas</option><option value="collections">Directorio de colecciones</option><option value="blog">Blog</option><option value="cms">Páginas CMS</option>';
   const bannerFilterPlacements = `${bannerPlacements}${destinationOptions}`;
   const announcementPlacements = '<option value="top_bar">Barra superior (todas las páginas)</option><option value="home">Inicio</option><option value="products">Catálogo</option><option value="catalog">Catálogo</option><option value="brands">Directorio de marcas</option><option value="collections">Directorio de colecciones</option><option value="blog">Blog</option><option value="cms">Páginas CMS</option>';
-
   const renderRows = (items: BannerItemDto[], isPromo: boolean): string => {
     if (items.length === 0) {
       return '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay banners en esta sección</td></tr>';
     }
     return items.map((b) => {
-      const toggle = b.isActive
-        ? `<button class="btn-action btn-action-hide" onclick="setBannerStatus('${b.id}', false)">Ocultar</button>`
-        : `<button class="btn-action btn-action-publish" onclick="setBannerStatus('${b.id}', true)">Publicar</button>`;
-
+      const toggle = `<button class="btn-action ${b.isActive ? 'btn-action-hide' : 'btn-action-publish'}" data-storefront-action="toggle-banner" data-id="${escapeHtml(b.id)}" data-active="${!b.isActive}">${b.isActive ? 'Ocultar' : 'Publicar'}</button>`;
       const hasCta = Boolean(b.buttonText?.trim() && b.linkUrl?.trim());
       const ctaMeta = isPromo && hasCta
         ? `<div style="font-size:0.75rem; color:#6ee7b7;">Botón: "${escapeHtml(b.buttonText || 'Explorar colección')}" → ${escapeHtml(b.linkUrl)}</div>`
         : isPromo ? '<div style="font-size:0.75rem; color:#94a3b8;">Sin botón CTA</div>'
         : `<div style="font-size:0.75rem; color:#94a3b8;">Informativo (Sin botón de acción)</div>`;
-
       return `
         <tr data-banner-row="1" data-title="${escapeHtml(b.title.toLowerCase())}" data-type="${b.bannerType || 'promotional'}" data-placement="${b.placement}" data-active="${b.isActive ? 'active' : 'inactive'}">
           <td style="padding:0.6rem; border-bottom:1px solid #334155; font-weight:600;">
             <div style="display:flex; align-items:center; gap:0.6rem;">
               <div style="width:40px; height:40px; border-radius:6px; background:#1e293b; overflow:hidden; flex-shrink:0; display:grid; place-items:center;">
-                ${b.imageUrl ? `<img src="${escapeHtml(b.imageUrl)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'" />` : '<span style="font-size:0.6rem; color:#64748b;">Sin img</span>'}
+                ${b.imageUrl ? `<img src="${escapeHtml(b.imageUrl)}" data-storefront-row-image style="width:100%; height:100%; object-fit:cover;" />` : '<span style="font-size:0.6rem; color:#64748b;">Sin img</span>'}
               </div>
               <div>
                 ${escapeHtml(b.title)}
@@ -51,16 +44,15 @@ export function renderStorefrontManagementSection(
           </td>
           <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
             ${isPromo && hasCta ? `<a class="btn-action btn-action-view" href="${escapeHtml(b.linkUrl)}" target="_blank">Ver</a>` : ''}
-            <button class="btn-action" style="background:#475569; color:#fff;" onclick="editBanner('${b.id}', '${escapeAdminJavaScriptString(b.title)}', '${escapeAdminJavaScriptString(b.linkUrl)}', '${escapeAdminJavaScriptString(b.altText)}', '${escapeAdminJavaScriptString(b.imageUrl)}', '${b.placement}', '${escapeAdminJavaScriptString(b.description || '')}', '${b.bannerType || 'promotional'}', '${escapeAdminJavaScriptString(b.buttonText || '')}', '${b.startsAt || ''}', '${b.endsAt || ''}', '${b.sortOrder}')">Editar</button>
-            <button class="btn-action" onclick="duplicateBanner('${b.id}')">Duplicar</button>
+            <button class="btn-action" style="background:#475569; color:#fff;" data-storefront-action="edit-banner" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}" data-link="${escapeHtml(b.linkUrl)}" data-alt="${escapeHtml(b.altText)}" data-image="${escapeHtml(b.imageUrl)}" data-placement="${escapeHtml(b.placement)}" data-description="${escapeHtml(b.description || '')}" data-type="${escapeHtml(b.bannerType || 'promotional')}" data-button-text="${escapeHtml(b.buttonText || '')}" data-starts-at="${escapeHtml(b.startsAt || '')}" data-ends-at="${escapeHtml(b.endsAt || '')}" data-sort-order="${b.sortOrder}">Editar</button>
+            <button class="btn-action" data-storefront-action="duplicate-banner" data-id="${escapeHtml(b.id)}">Duplicar</button>
             ${toggle}
-            <button class="btn-action btn-action-delete" onclick="deleteBanner('${b.id}')">Eliminar</button>
+            <button class="btn-action btn-action-delete" data-storefront-action="delete-banner" data-id="${escapeHtml(b.id)}">Eliminar</button>
           </td>
         </tr>
       `;
     }).join('');
   };
-
   return `
     <dialog id="banner-preview-dialog" aria-labelledby="banner-preview-title" style="max-width:900px; border:0; border-radius:12px; padding:1.5rem;"><h2 id="banner-preview-title"></h2><p></p><img alt="" style="display:block; max-width:100%; max-height:55vh; object-fit:contain;" /><a hidden></a><form method="dialog"><button class="btn-primary">Cerrar vista previa</button></form></dialog>
     <!-- SECCIÓN 1: BANNERS HERO PROMOCIONALES CON BOTÓN -->
@@ -71,7 +63,7 @@ export function renderStorefrontManagementSection(
           <small style="color:#94a3b8;">Banners de campañas con botón CTA. Sube una foto a R2 o escribe una URL externa.</small>
         </div>
       </div>
-      <form id="newPromoBannerForm" onsubmit="handleBannerSubmit(event, 'promotional')" style="margin-bottom: 1.5rem;">
+      <form id="newPromoBannerForm" data-banner-form="promotional" style="margin-bottom: 1.5rem;">
         <input type="hidden" id="pbEditId" value="" />
         <div class="form-grid">
           <div><label>Título Promocional</label><input type="text" id="pbTitle" required placeholder="Ej. Colección Verano 2026" /></div>
@@ -87,33 +79,30 @@ export function renderStorefrontManagementSection(
           <div><label>Finalización (opcional)</label><input type="datetime-local" id="pbEndsAt" /></div>
           <div><label>Prioridad / orden</label><input type="number" id="pbSortOrder" value="0" /></div>
         </div>
-
         <div style="border: 1px dashed #475569; border-radius: 8px; padding: 0.9rem; margin: 0.85rem 0; background: #0f172a;">
           <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
           <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
             <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
-              <img id="pbImgPreview" alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false" onload="this.hidden=false;this.nextElementSibling.hidden=true" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
+              <img id="pbImgPreview" data-banner-preview alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
             </div>
             <div style="flex:1; min-width:240px;">
-              <input type="file" id="pbFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'pb')" />
-              <input type="text" id="pbImg" value="" required placeholder="https://... o /media/..." oninput="const p=document.getElementById('pbImgPreview');p.src=this.value;p.hidden=!this.value; p.nextElementSibling.hidden=!!this.value" />
+              <input type="file" id="pbFileInput" data-banner-upload="pb" accept="image/*" style="margin-bottom:0.4rem;" />
+              <input type="text" id="pbImg" value="" required data-banner-image-input="pb" placeholder="https://... o /media/..." />
               <div id="pbUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
             </div>
           </div>
         </div>
-
-        <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button><button type="button" class="btn-action" onclick="previewBanner('pb', 'promotional')">Vista previa</button>
-        <button type="button" class="btn-action" id="pbCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetPromoBannerForm()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="pbSubmitBtn">Publicar Banner Promocional</button><button type="button" class="btn-action" data-storefront-control="preview" data-prefix="pb" data-banner-type="promotional">Vista previa</button>
+        <button type="button" class="btn-action" id="pbCancelBtn" data-storefront-control="reset-promo" style="display:none; padding:0.75rem 1rem;">Cancelar</button>
         <div id="pbMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners promocionales"><input type="search" data-storefront-filter="query" placeholder="Buscar banner" /><select data-storefront-filter="placement" aria-label="Filtrar ubicación"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select data-storefront-filter="active" aria-label="Filtrar estado"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
       <table data-server-pagination="true">
         <thead><tr><th>Título y Botón CTA</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody id="promo-banners-body">${renderRows(promoBanners, true)}</tbody>
       </table>
       <nav class="admin-pagination" id="promo-banners-pagination" aria-label="Paginación de banners promocionales"><button type="button" data-storefront-page="previous" disabled>Anterior</button><span>Página 1</span><button type="button" data-storefront-page="next" disabled>Siguiente</button></nav>
     </div>
-
     <!-- SECCIÓN 2: BANNERS HERO INFORMATIVOS SIN BOTÓN -->
     <div class="card" data-marketing-page="info-banners" style="margin-top:2rem;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -122,7 +111,7 @@ export function renderStorefrontManagementSection(
           <small style="color:#94a3b8;">Banners de comunicado sin botón CTA. Sube una foto a R2 o escribe una URL externa.</small>
         </div>
       </div>
-      <form id="newInfoBannerForm" onsubmit="handleBannerSubmit(event, 'informative')" style="margin-bottom: 1.5rem;">
+      <form id="newInfoBannerForm" data-banner-form="informative" style="margin-bottom: 1.5rem;">
         <input type="hidden" id="ibEditId" value="" />
         <div class="form-grid">
           <div><label>Título Informativo</label><input type="text" id="ibTitle" required placeholder="Ej. Envíos Nacionales Seguros" /></div>
@@ -141,21 +130,21 @@ export function renderStorefrontManagementSection(
           <label style="display:block; font-weight:700; color:#e2e8f0; margin-bottom:0.4rem;">🖼️ Imagen del Banner (Subir archivo a R2 o usar URL)</label>
           <div style="display:flex; gap:0.9rem; align-items:center; flex-wrap:wrap;">
             <div style="width:70px; height:50px; border-radius:6px; background:#1e293b; overflow:hidden; border:1px solid #334155; display:grid; place-items:center;">
-              <img id="ibImgPreview" alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" onerror="this.hidden=true;this.nextElementSibling.hidden=false" onload="this.hidden=false;this.nextElementSibling.hidden=true" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
+              <img id="ibImgPreview" data-banner-preview alt="Vista previa del banner" hidden style="width:100%; height:100%; object-fit:cover;" /><span aria-hidden="true" style="font-size:11px; color:#687283;">Sin imagen</span>
             </div>
             <div style="flex:1; min-width:240px;">
-              <input type="file" id="ibFileInput" accept="image/*" style="margin-bottom:0.4rem;" onchange="handleBannerFileUpload(this, 'ib')" />
-              <input type="text" id="ibImg" value="" required placeholder="https://... o /media/..." oninput="const p=document.getElementById('ibImgPreview');p.src=this.value;p.hidden=!this.value; p.nextElementSibling.hidden=!!this.value" />
+              <input type="file" id="ibFileInput" data-banner-upload="ib" accept="image/*" style="margin-bottom:0.4rem;" />
+              <input type="text" id="ibImg" value="" required data-banner-image-input="ib" placeholder="https://... o /media/..." />
               <div id="ibUploadStatus" style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Sube PNG/JPEG a Cloudflare R2 o pega cualquier enlace web.</div>
             </div>
           </div>
         </div>
 
-        <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button><button type="button" class="btn-action" onclick="previewBanner('ib', 'informative')">Vista previa</button>
-        <button type="button" class="btn-action" id="ibCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetInfoBannerForm()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="ibSubmitBtn">Publicar Banner Informativo</button><button type="button" class="btn-action" data-storefront-control="preview" data-prefix="ib" data-banner-type="informative">Vista previa</button>
+        <button type="button" class="btn-action" id="ibCancelBtn" data-storefront-control="reset-info" style="display:none; padding:0.75rem 1rem;">Cancelar</button>
         <div id="ibMsg" class="msg"></div>
       </form>
-      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" placeholder="Buscar banner" oninput="filterBanners(this.closest('.card'))" /><select aria-label="Filtrar ubicación" onchange="filterBanners(this.closest('.card'))"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select aria-label="Filtrar estado" onchange="filterBanners(this.closest('.card'))"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
+      <div class="form-grid banner-filters" aria-label="Filtros de banners informativos"><input type="search" data-storefront-filter="query" placeholder="Buscar banner" /><select data-storefront-filter="placement" aria-label="Filtrar ubicación"><option value="">Todas las ubicaciones</option>${bannerFilterPlacements}</select><select data-storefront-filter="active" aria-label="Filtrar estado"><option value="">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></div>
       <table data-server-pagination="true">
         <thead><tr><th>Título y Mensaje</th><th>Ubicación</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead>
         <tbody id="info-banners-body">${renderRows(infoBanners, false)}</tbody>
@@ -177,7 +166,7 @@ export function renderStorefrontManagementSection(
           </div>
         </div>
         <button type="submit" class="btn-primary" id="aSubmitBtn">Publicar Anuncio</button>
-        <button type="button" class="btn-action" id="aCancelBtn" style="display:none; padding:0.75rem 1rem;" onclick="resetAnnouncementForm()">Cancelar</button>
+        <button type="button" class="btn-action" id="aCancelBtn" data-storefront-control="reset-announcement" style="display:none; padding:0.75rem 1rem;">Cancelar</button>
         <div id="aMsg" class="msg"></div>
       </form>
       <table data-server-pagination="true">
@@ -194,9 +183,9 @@ export function renderStorefrontManagementSection(
             </td>
             <td style="padding:0.6rem; border-bottom:1px solid #334155; text-align:right; white-space:nowrap;">
               ${a.linkUrl ? `<a class="btn-action btn-action-view" href="${escapeHtml(a.linkUrl)}" target="_blank">Ver</a>` : ''}
-              <button class="btn-action" style="background:#475569; color:#fff;" onclick="editAnnouncement('${a.id}', '${escapeAdminJavaScriptString(a.message)}', '${escapeAdminJavaScriptString(a.linkUrl || '')}', '${a.placement}')">Editar</button>
-              ${a.isActive ? `<button class="btn-action btn-action-hide" onclick="setAnnouncementStatus('${a.id}', false)">Ocultar</button>` : `<button class="btn-action btn-action-publish" onclick="setAnnouncementStatus('${a.id}', true)">Publicar</button>`}
-              <button class="btn-action btn-action-delete" onclick="deleteAnnouncement('${a.id}')">Eliminar</button>
+              <button class="btn-action" style="background:#475569; color:#fff;" data-storefront-action="edit-announcement" data-id="${escapeHtml(a.id)}" data-message="${escapeHtml(a.message)}" data-link="${escapeHtml(a.linkUrl || '')}" data-placement="${escapeHtml(a.placement)}">Editar</button>
+              <button class="btn-action ${a.isActive ? 'btn-action-hide' : 'btn-action-publish'}" data-storefront-action="toggle-announcement" data-id="${escapeHtml(a.id)}" data-active="${!a.isActive}">${a.isActive ? 'Ocultar' : 'Publicar'}</button>
+              <button class="btn-action btn-action-delete" data-storefront-action="delete-announcement" data-id="${escapeHtml(a.id)}">Eliminar</button>
             </td>
           </tr>
         `).join('') || '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#94a3b8;">No hay anuncios registrados</td></tr>'}</tbody>
@@ -209,4 +198,3 @@ export function renderStorefrontManagementSection(
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
-

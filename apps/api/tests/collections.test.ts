@@ -67,7 +67,7 @@ describe('Colecciones', () => {
     }) };
     const editor = CollectionAdminController.createRoutes(catalog as never, identity as never, audit as never);
     const response = await editor.request('/admin/collections', {
-      method: 'POST', headers: { Authorization: 'Bearer admin-session', 'Content-Type': 'application/json' },
+      method: 'POST', headers: { Cookie: '__Host-admin-session=admin-session', 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Verano', slug: 'verano', description: '', status: 'active', productIds: [] }),
     });
     expect(response.status).toBe(403);
@@ -78,7 +78,7 @@ describe('Colecciones', () => {
     const catalog = { listProducts: vi.fn().mockResolvedValue([{ id:'p1', name:'Gafas', sku:'SUN-1', status:'published' }, { id:'p2', name:'Borrador', sku:'DRAFT', status:'draft' }]) };
     const identity = { validateSession: vi.fn().mockResolvedValue({ actorId:'admin-1', actorType:'admin', permissions:['catalog:read'], mfaEnabled:true }) };
     const app = CollectionAdminController.createRoutes(catalog as never, identity as never, { record:vi.fn() } as never);
-    const response = await app.request('/admin/collection-products?q=SUN-1', { headers:{ Authorization:'Bearer admin-session' } });
+    const response = await app.request('/admin/collection-products?q=SUN-1', { headers:{ Cookie: '__Host-admin-session=admin-session' } });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ data:[{ id:'p1', name:'Gafas', sku:'SUN-1' }] });
     expect(catalog.listProducts).toHaveBeenCalledWith({ limit:26, offset:0, status:'published', searchQuery:'SUN 1' });

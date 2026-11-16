@@ -9,7 +9,7 @@ export const createSupplierSchema = z.object({
 
 export const createVariantSchema = z.object({
   productId: z.string().uuid(), name: z.string().trim().min(1).max(120),
-  sku: z.string().trim().min(1).max(60), options: z.record(z.string().max(100)).default({}),
+  sku: z.string().trim().min(1).max(60), options: z.record(z.string(), z.string().max(100)).default({}),
   priceInCents: z.number().int().nonnegative().optional(), stockQuantity: z.number().int().nonnegative(),
   status: z.enum(['active', 'inactive']).default('active'),
 }).strict();

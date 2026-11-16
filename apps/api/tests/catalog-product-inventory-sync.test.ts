@@ -30,14 +30,16 @@ function makeCatalogController(options: {
   return { app, catalog, inventory, identity, settings, shipping };
 }
 
-const headers = { Authorization: 'Bearer admin-session', 'Content-Type': 'application/json' };
+const headers = { Cookie: '__Host-admin-session=admin-session', 'Content-Type': 'application/json' };
+
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
 
 describe('catalog and inventory stock synchronization', () => {
   it('does not push a stale catalog stock value into Inventory during an ordinary product edit', async () => {
     const { app, catalog, inventory } = makeCatalogController({ stockQuantity: 20 });
     const response = await app.request('/admin/products/product-1', {
       method: 'PUT', headers, body: JSON.stringify({ stockQuantity: 20, name: 'Renamed product' }),
-    });
+    }, writeRateLimitEnv);
 
     expect(response.status).toBe(200);
     expect(inventory.adjustStock).not.toHaveBeenCalled();
@@ -48,7 +50,7 @@ describe('catalog and inventory stock synchronization', () => {
     const { app, catalog, inventory } = makeCatalogController({ stockQuantity: 20 });
     const response = await app.request('/admin/products/product-1', {
       method: 'PUT', headers, body: JSON.stringify({ stockQuantity: 15 }),
-    });
+    }, writeRateLimitEnv);
 
     expect(response.status).toBe(409);
     expect(inventory.adjustStock).not.toHaveBeenCalled();
@@ -60,7 +62,7 @@ describe('catalog and inventory stock synchronization', () => {
     const response = await app.request('/admin/products/product-1', {
       method: 'PUT', headers,
       body: JSON.stringify({ stockQuantity: 15, syncStockToInventory: true }),
-    });
+    }, writeRateLimitEnv);
 
     expect(response.status).toBe(200);
     expect(inventory.adjustStock).toHaveBeenCalledWith('product-1', 15, 'catalog_product_stock_edit');
@@ -76,7 +78,7 @@ describe('catalog and inventory stock synchronization', () => {
     const response = await app.request('/admin/products/product-1', {
       method: 'PUT', headers,
       body: JSON.stringify({ stockQuantity: 1, syncStockToInventory: true }),
-    });
+    }, writeRateLimitEnv);
 
     expect(response.status).toBe(409);
     const body = await response.json() as { error?: string };
@@ -93,7 +95,7 @@ describe('catalog and inventory stock synchronization', () => {
         priceInCents: 1000, supplierCostCents: 500, allowedPaymentMethods: ['wompi'],
         sku: 'NEW-001', stockQuantity: 5,
       }),
-    });
+    }, writeRateLimitEnv);
 
     expect(response.status).toBe(201);
     expect(catalog.createProduct).toHaveBeenCalledOnce();

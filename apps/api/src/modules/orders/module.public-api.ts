@@ -8,6 +8,17 @@ import { FreeShippingItemCandidate, FreeShippingRuleCandidate } from './domain/s
 import { LocalDeliveryLabelPage } from './domain/ports/LocalDeliveryLabel.js';
 import { LocalCodCollectionCandidate } from './domain/ports/LocalCodCollectionCandidate.js';
 import { AdminOrderListPage, AdminOrderListQuery } from './domain/ports/AdminOrderListPage.js';
+import { GuestOrderCreationLimitExceeded } from './domain/errors/GuestOrderCreationLimitExceeded.js';
+
+export class OrdersPublicApiError extends Error {
+  public readonly code: 'ORDER_CREATION_RATE_LIMITED';
+
+  public constructor(code: 'ORDER_CREATION_RATE_LIMITED') {
+    super(code);
+    this.name = 'OrdersPublicApiError';
+    this.code = code;
+  }
+}
 
 export class OrdersPublicApi {
   private readonly container: OrdersModuleContainer;
@@ -25,7 +36,14 @@ export class OrdersPublicApi {
   }
 
   public async createOrder(cmd: CreateOrderCommand): Promise<Order> {
-    return this.container.createOrderUseCase.execute(cmd);
+    try {
+      return await this.container.createOrderUseCase.execute(cmd);
+    } catch (error) {
+      if (error instanceof GuestOrderCreationLimitExceeded) {
+        throw new OrdersPublicApiError('ORDER_CREATION_RATE_LIMITED');
+      }
+      throw error;
+    }
   }
 
   public async getOrder(orderId: string): Promise<Order | null> {

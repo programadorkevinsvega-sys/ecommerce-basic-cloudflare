@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { z } from 'zod';
 import { Env } from '../../../platform/Env.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
+import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
 import { calculateOrderPricing } from './calculateOrderPricing.js';
@@ -21,7 +23,7 @@ const CarrierQuoteInput = z.object({
 
 export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
   catalog: CatalogGateway; orders: OrdersGateway; shipping: ShippingGateway;
-  settings: SettingsGateway; promotions: PromotionsGateway;
+  settings: SettingsGateway; promotions: PromotionsGateway; identity: IdentityGateway;
 }): void {
   app.post('/api/v1/shipping/carrier-quotes', async (c) => {
     const rate = await c.env.CHECKOUT_LIMITER.limit({ key: c.req.header('cf-connecting-ip') || 'unknown' });
@@ -29,11 +31,24 @@ export function registerCarrierQuoteRoute(app: Hono<{ Bindings: Env }>, deps: {
     const parsed = CarrierQuoteInput.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Datos de cotización inválidos' }, 400);
     const input = parsed.data;
+    let customerId: string | null = null;
+    if (input.couponCode) {
+      const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
+      if (token) {
+        try {
+          const session = await deps.identity.validateSession(token);
+          if (session.actorType !== 'customer') return c.json({ error: 'No autorizado' }, 403);
+          customerId = session.actorId;
+        } catch {
+          return c.json({ error: 'Sesión inválida' }, 401);
+        }
+      }
+    }
     const zone = await deps.shipping.getZone(input.destinationZoneId);
     if (!zone?.isActive || zone.type !== 'national') return c.json({ error: 'La cotización de transportadora aplica a destinos nacionales.' }, 400);
     try {
       const pricing = await calculateOrderPricing(deps.catalog, deps.promotions, deps.settings,
-        input.lines, input.couponCode, null, 0, input.paymentMethod);
+        input.lines, input.couponCode, customerId, 0, input.paymentMethod);
       const freeShippingRule = await evaluateFreeShippingRule({ ...deps, lines: input.lines,
         subtotalCents: pricing.subtotalCents, discountCents: pricing.discountCents });
       const policyError = await validateOrderPolicy(deps.orders, zone, pricing, input.paymentMethod,

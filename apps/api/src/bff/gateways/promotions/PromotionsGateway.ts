@@ -140,4 +140,12 @@ export interface PromotionsGateway {
     customerId?: string;
     items?: Array<{ productId: string; categoryId?: string; categoryIds?: string[]; priceCents: number }>;
   }): Promise<CouponValidationDto>;
+  reserveCouponRedemption(input: {
+    orderId: string;
+    couponCode: string;
+    customerId: string | null;
+    orderSubtotalCents: number;
+    discountAppliedCents: number;
+  }): Promise<boolean>;
+  releaseCouponRedemption(orderId: string): Promise<void>;
 }

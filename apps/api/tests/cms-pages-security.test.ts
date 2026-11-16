@@ -8,6 +8,9 @@ import { StorefrontGateway } from '../src/bff/gateways/storefront/StorefrontGate
 import { CreatePageUseCase } from '../src/modules/cms/application/use-cases/CreatePageUseCase.js';
 import { IPageRepository } from '../src/modules/cms/domain/ports/IPageRepository.js';
 import { Page } from '../src/modules/cms/domain/entities/Page.js';
+import { sanitizeHtml } from '../src/modules/cms/domain/sanitizeHtml.js';
+
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
 
 describe('CMS page HTML security', () => {
   it('saves through an authorized admin route and serves sanitized SSR content', async () => {
@@ -22,6 +25,7 @@ describe('CMS page HTML security', () => {
     };
     const createPage = new CreatePageUseCase(repository);
     const cms = {
+      sanitizeRichText: sanitizeHtml,
       createPage: async (input: Parameters<CreatePageUseCase['execute']>[0]) => {
         const result = await createPage.execute(input);
         if (result.isFail()) throw result.error;
@@ -44,7 +48,7 @@ describe('CMS page HTML security', () => {
 
     const created = await app.request('/api/v1/admin/cms/pages', {
       method: 'POST',
-      headers: { authorization: 'Bearer cms-editor', 'content-type': 'application/json' },
+      headers: { Cookie: '__Host-admin-session=cms-editor', 'content-type': 'application/json' },
       body: JSON.stringify({
         title: 'Sobre nosotros', slug: 'sobre-nosotros', status: 'published',
         blocks: [
@@ -54,14 +58,14 @@ describe('CMS page HTML security', () => {
           { id: 'block-4', type: 'faq', sortOrder: 3, content: { items: [{ question: '<img src=x onerror=run()>', answer: 'Respuesta' }] } },
         ],
       }),
-    });
+    }, writeRateLimitEnv);
     expect(created.status).toBe(201);
     const savedBlocks = [...pages.values()][0]?.blocks || [];
     expect(savedBlocks[0]?.content['html']).toContain('<strong>válido</strong>');
     expect(savedBlocks[1]?.content['url']).toBe('/');
     expect(savedBlocks.some((block) => block.type === 'image')).toBe(false);
 
-    const response = await app.request('/sobre-nosotros');
+    const response = await app.request('/sobre-nosotros', {}, writeRateLimitEnv);
     const html = await response.text();
     expect(response.status).toBe(200);
     expect(html).toContain('<strong>válido</strong>');

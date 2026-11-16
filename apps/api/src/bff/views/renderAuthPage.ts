@@ -23,6 +23,7 @@ export function renderAuthPage(redirectTo = '/cuenta', siteKey?: string): string
 
       <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center; font-size: 0.9rem;">
         ¿Aún no tienes cuenta? <a href="/auth/register" style="color: var(--accent); font-weight: 600; text-decoration: none;">Regístrate aquí</a>
+        <p><a href="/auth/reset-password">¿Olvidaste tu contraseña?</a></p>
       </div>
     </div>
 

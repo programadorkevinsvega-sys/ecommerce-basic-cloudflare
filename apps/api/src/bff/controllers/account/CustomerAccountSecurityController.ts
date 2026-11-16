@@ -69,6 +69,12 @@ export class CustomerAccountSecurityController {
         return c.json({ status: 'ok', message: 'Contraseña actualizada. Se cerraron las demás sesiones.' });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'No fue posible cambiar la contraseña';
+        if (message === 'PASSWORD_COMPROMISED') {
+          return c.json({ error: 'Elige una contraseña que no haya aparecido en filtraciones.' }, 400);
+        }
+        if (message === 'PASSWORD_BREACH_CHECK_UNAVAILABLE') {
+          return c.json({ error: 'No se pudo comprobar la seguridad de la contraseña. Inténtalo más tarde.' }, 503);
+        }
         return c.json({ error: message }, 400);
       }
     });

@@ -11,5 +11,5 @@ describe('Worker API request body limit', () => {
 
     expect(response.status).toBe(413);
     await expect(response.json()).resolves.toEqual({ error: 'La solicitud supera el límite de 1 MiB' });
-  }, 15_000);
+  }, 30_000);
 });

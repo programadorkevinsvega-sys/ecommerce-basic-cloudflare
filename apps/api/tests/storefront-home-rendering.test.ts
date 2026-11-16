@@ -226,6 +226,11 @@ describe('storefront presentation', () => {
     expect(html).not.toContain('Gafas de Sol Polarizadas');
     expect(html).toContain("fetch('/api/v1/orders'");
     expect(html).toContain("fetch('/api/v1/payments/wompi/init'");
+    expect(html).toContain('pendingWompiOrderId = orderId');
+    expect(html).toContain('turnstileToken ? { turnstileToken } : {}');
+    const guestCheckout = renderCheckoutPage(cart, new Map([[product.id, product]]), [zone], 19, undefined, new Map(), true, 'turnstile-site-key');
+    expect(guestCheckout).toContain('data-requires-turnstile="true"');
+    expect(guestCheckout).toContain('data-sitekey="turnstile-site-key"');
     expect(html).toContain("setCheckoutStatus('Validando cobertura y opciones de pago…', 'idle')");
     expect(html).toContain("document.getElementById('checkout-cta-label').textContent");
     const fullPage = renderBaseLayout({ title: 'Checkout', description: 'Compra segura', bodyHtml: html, checkoutMode: true });

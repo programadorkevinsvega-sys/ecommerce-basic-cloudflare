@@ -9,11 +9,13 @@ import { CmsGateway } from '../src/bff/gateways/cms/CmsGateway.js';
 import { IdentityGateway } from '../src/bff/gateways/identity/IdentityGateway.js';
 import { SettingsGateway } from '../src/bff/gateways/settings/SettingsGateway.js';
 import { StorefrontGateway } from '../src/bff/gateways/storefront/StorefrontGateway.js';
-import { hashGuestCartId } from '../src/bff/security/GuestCartCapability.js';
+import { createGuestCartCapability, hashGuestCartId } from '../src/bff/security/GuestCartCapability.js';
 
 describe('guest checkout result ownership', () => {
   it('requires the matching HttpOnly cart capability, not just an order identifier', async () => {
-    const cartId = 'cart_123e4567-e89b-42d3-a456-426614174000';
+    const secret = 'checkout-test-secret-'.padEnd(32, 'x');
+    const cartId = `cart_${'a'.repeat(64)}`;
+    const capability = await createGuestCartCapability(cartId, secret);
     const order = new Order({
       id: 'ord-private-order', customerId: null, guestCartIdHash: await hashGuestCartId(cartId),
       customerEmail: 'buyer@example.com', customerName: 'Buyer', customerPhone: '3000000000',
@@ -28,10 +30,11 @@ describe('guest checkout result ownership', () => {
       { validateSession: vi.fn() } as unknown as IdentityGateway, {} as SettingsGateway, {} as StorefrontGateway,
     );
 
-    const denied = await app.request('/checkout/resultado?orderId=ord-private-order');
+    const testEnv = { GUEST_CART_HMAC_SECRET: secret };
+    const denied = await app.request('/checkout/resultado?orderId=ord-private-order', {}, testEnv);
     const allowed = await app.request('/checkout/resultado?orderId=ord-private-order', {
-      headers: { Cookie: `vega_cart_id=${cartId}` },
-    });
+      headers: { Cookie: `__Host-cart=${capability}` },
+    }, testEnv);
 
     expect(denied.status).toBe(404);
     expect(allowed.status).toBe(200);

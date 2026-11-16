@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { Env } from '../../../platform/Env.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
 import { OrdersGateway } from '../../gateways/orders/OrdersGateway.js';
 import { InvoicingGateway } from '../../gateways/invoicing/InvoicingGateway.js';
 import { renderCustomerAccountPage } from '../../views/account/renderCustomerAccountPage.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 export class CustomerAccountController {
   public static createRoutes(
@@ -15,8 +15,7 @@ export class CustomerAccountController {
     const app = new Hono<{ Bindings: Env }>();
 
     const getCustomerSession = async (c: any) => {
-      const auth = c.req.header('Authorization');
-      const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
+      const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
       if (!token) return null;
       try {
         const ver = await identityGateway.validateSession(token);
@@ -44,6 +43,7 @@ export class CustomerAccountController {
           id: session.actorId,
           email: profile.email,
           fullName: profile.fullName,
+          emailVerified: session.emailVerified === true,
         },
         orders: orders.map((o) => o.toJSON()),
         invoices: invoices.map((i) => i.toJSON()),

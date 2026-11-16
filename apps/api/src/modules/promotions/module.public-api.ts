@@ -8,6 +8,7 @@ import { ValidateCouponInput, CouponValidationResult } from './application/use-c
 import { CartDiscountItemInput, CartDiscountItemResult } from './application/use-cases/EvaluateCartDiscountsUseCase.js';
 import { PromotionRule } from './domain/entities/PromotionRule.js';
 import { Coupon } from './domain/entities/Coupon.js';
+import { ReserveCouponRedemptionInput } from './application/use-cases/ManageCouponRedemptionUseCase.js';
 
 export interface IPromotionsPublicApi {
   createPromotionRule(input: CreatePromotionRuleInput): Promise<PromotionRule>;
@@ -27,6 +28,8 @@ export interface IPromotionsPublicApi {
   evaluateProductDiscount(input: EvaluateProductDiscountInput): Promise<ProductDiscountResult>;
   evaluateCartDiscounts(items: CartDiscountItemInput[]): Promise<CartDiscountItemResult[]>;
   validateCoupon(input: ValidateCouponInput): Promise<CouponValidationResult>;
+  reserveCouponRedemption(input: ReserveCouponRedemptionInput): Promise<boolean>;
+  releaseCouponRedemption(orderId: string): Promise<void>;
 }
 
 export class PromotionsPublicApi implements IPromotionsPublicApi {
@@ -114,5 +117,13 @@ export class PromotionsPublicApi implements IPromotionsPublicApi {
     const res = await this.container.validateCouponUseCase.execute(input);
     if (res.isFail()) throw res.error;
     return res.value;
+  }
+
+  public reserveCouponRedemption(input: ReserveCouponRedemptionInput): Promise<boolean> {
+    return this.container.manageCouponRedemptionUseCase.reserve(input);
+  }
+
+  public releaseCouponRedemption(orderId: string): Promise<void> {
+    return this.container.manageCouponRedemptionUseCase.release(orderId);
   }
 }

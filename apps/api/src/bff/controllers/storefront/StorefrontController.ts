@@ -13,6 +13,7 @@ import { renderProductList } from '../../views/renderProductList.js';
 import { renderCatalogPage } from '../../views/renderCatalogPage.js';
 import { renderAuthPage } from '../../views/renderAuthPage.js';
 import { renderCustomerRegisterPage } from '../../views/renderCustomerRegisterPage.js';
+import { CustomerAuthPagesController } from './CustomerAuthPagesController.js';
 import { StructuredDataHelper } from '../../../modules/catalog/domain/services/StructuredDataHelper.js';
 import { getCustomerEmail, getStorefrontNavMenus } from './StorefrontNavigationHelper.js';
 import { resolveProductDiscounts } from './StorefrontDiscountResolver.js';
@@ -157,7 +158,7 @@ export class StorefrontController {
     });
 
     router.route('/', ProductDetailController.createRoutes(catalogGateway, productLandingGateway, identityGateway, storefrontGateway, cmsGateway, promotionsGateway, settingsGateway, reviewsGateway));
-
+    router.route('/', CustomerAuthPagesController.createRoutes(cmsGateway, settingsGateway));
     router.get('/auth/login', async (c) => {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       const html = renderBaseLayout({
@@ -170,7 +171,6 @@ export class StorefrontController {
       });
       return c.html(html, 200, { 'Cache-Control': 'private, no-store' });
     });
-
     router.get('/auth/register', async (c) => {
       const nav = await getStorefrontNavMenus(cmsGateway, settingsGateway);
       const siteKey = (c as typeof c & { env?: { TURNSTILE_SITE_KEY?: string } }).env?.TURNSTILE_SITE_KEY;

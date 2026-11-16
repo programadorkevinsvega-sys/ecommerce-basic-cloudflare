@@ -159,9 +159,11 @@ export function renderStorefrontFormsScript(): string {
         msg.style.display = 'block';
       }
       try {
+        const headers = await window.adminCriticalHeaders(true);
+        if (!headers) return;
         const res = await fetch('/api/v1/settings', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(payload)
         });
         const data = await res.json().catch(() => ({}));

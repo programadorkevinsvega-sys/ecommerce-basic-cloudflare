@@ -21,7 +21,7 @@ Todos los recursos operan directamente en el entorno de producción configurado 
 
 Esta configuración referencia recursos de producción. No hay que leer estos nombres como prueba de que un release concreto esté desplegado o saludable; verificar deployments, `/health` y el ledger antes de una operación productiva.
 
-Workers Cache no es un binding ni un namespace KV: está habilitado para el Worker en Wrangler, cachea HTML SSR público con TTL de 30 segundos y purga la etiqueta `storefront-public-html` tras las mutaciones relevantes. La evidencia de producción está en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md).
+Workers Cache no es un binding ni un namespace KV. El HTML SSR actual usa nonce CSP por respuesta y `private, no-store`; las imágenes inmutables conservan su caché. El historial y evidencia del despliegue anterior con TTL de 30 segundos están en [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md), y la decisión vigente está en [ADR-0033](./adr/ADR-0033-csp-nonce-y-cache-html.md).
 
 Staging tiene una configuración Wrangler separada en [`apps/api/wrangler.staging.jsonc`](../apps/api/wrangler.staging.jsonc) y un Worker dedicado `ecommerce-basic-cloudflare-staging`. Sus recursos D1/R2/KV/Queues y namespaces de rate limit deben ser exclusivos; los IDs placeholder bloquean el despliegue hasta provisionarlos. El config de producción `apps/api/wrangler.jsonc` y el Worker `ecommerce-basic-cloudflare` no se reutilizan. Procedimiento y secretos: [`CI_STAGING_SETUP.md`](./CI_STAGING_SETUP.md).
 
@@ -68,10 +68,11 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | Variable | Tipo | Valor Predeterminado / Ejemplo | Descripción |
 |---|---|---|---|
 | `ENVIRONMENT` | String | `production` | Entorno de despliegue activo (`production`, `staging`, `development`). |
-| `ADMIN_EMAIL` | String | `admin@tudominio.com` | Identificador de login para la única cuenta Superadmin activa. No se usa para enviar TOTP. |
+| `ADMIN_EMAIL` | String | `admin@tudominio.com` | Identificador de login para la única cuenta Superadmin activa; acceso administrativo limitado a Colombia. No se usa para enviar TOTP. |
+| `ADMIN_DEMO_EMAIL` | String | Sin valor por defecto | Correo opcional de una cuenta admin demo activa y de mínimo privilegio en D1; puede iniciar sesión desde cualquier país. Los demás correos no pueden iniciar sesión como admin. No guardar un correo real en el repositorio. |
 | `RESEND_FROM_EMAIL` | String | `Vega Store <onboarding@resend.dev>` | Dirección de correo del remitente configurada en Resend para todos los envíos transaccionales. |
 | `WOMPI_PUBLIC_KEY` | String | `pub_prod_...` / `pub_test_...` | Llave pública de comercio para checkout cliente y validación de contexto. |
-| `TURNSTILE_SITE_KEY` | String | Clave pública de Cloudflare Turnstile | Site key mostrada por el widget de registro y logins. |
+| `TURNSTILE_SITE_KEY` | String | Clave pública de Cloudflare Turnstile | Site key mostrada por el widget de registro, logins y checkout invitado. |
 | `TURNSTILE_HOSTNAMES` | String | `https://tienda.example.com` | Hosts de tienda permitidos, separados por coma; se normalizan y comparan contra el hostname devuelto por `siteverify`. |
 
 ---
@@ -87,6 +88,8 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 | `WOMPI_EVENTS_SECRET` | Wompi Colombia | Secreto de eventos para verificación de la firma criptográfica (`x-event-checksum`) de los webhooks de Wompi. |
 | `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; el host se configura como `MI_PAQUETE_API_URL`. |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile | Secreto enviado únicamente desde el Worker a `siteverify`; nunca se expone al navegador. |
+| `GUEST_CART_HMAC_SECRET` | Cloudflare Workers | Clave aleatoria de al menos 32 bytes UTF-8 para firmar capacidades de carrito invitado y generar fingerprints de límites; provisionar una distinta por entorno. |
+| `TOTP_ENCRYPTION_KEY` | Cloudflare Workers | Clave aleatoria de 32 bytes codificada en Base64 para cifrar `identity_admins.mfa_secret` con AES-256-GCM; generar una distinta por entorno y conservarla en el gestor de secretos. No perderla ni rotarla sin un procedimiento de re-cifrado. |
 
 `RESEND_WEBHOOK_SECRET` está declarado opcionalmente en el tipo de entorno heredado, pero no hay ruta de webhook de Resend en el Worker actual; no configurarlo como si el webhook estuviera operativo.
 | `MI_PAQUETE_TRANSPORTADORA` | MiPaquete | Credencial de API de transportadora; host HTTPS configurable mediante `MI_PAQUETE_API_URL` y no es un secreto. |
@@ -98,6 +101,7 @@ Cada módulo posee soberanía exclusiva sobre sus tablas D1 con su prefijo (`<mo
 - **Guest Checkout (Compra como invitado):**
   - Si el usuario no tiene una sesión activa (`vega_customer_token` o cookie `__Host-session`), la orden se crea con `customer_id = NULL` en la tabla `orders_orders`.
   - Los datos de contacto, identificación fiscal (`customerTaxId` / Cédula / NIT), teléfono y dirección de entrega se almacenan inmutables en el campo JSON `shipping_address` de la orden y en el snapshot fiscal de `invoicing_invoices`.
+  - El checkout invitado requiere Turnstile verificado en el Worker y una capacidad de carrito HMAC en `__Host-cart`; el antiguo `vega_cart_id` no se acepta como autoridad. Los límites son 3 pedidos pendientes por IP, 2 por correo y 2 por carrito en 30 minutos, y 3 correos de pedido por destinatario en una hora. Ver [ADR-0034](./adr/ADR-0034-guest-checkout-protection.md).
 - **Registered Customer Checkout (Compra autenticada):**
   - Si el usuario cuenta con sesión validada por `IdentityGateway`, `customer_id` se vincula con su identificador UUID en `identity_customers`.
   - Esto habilita al cliente a consultar el pedido y descargar sus facturas formalmente desde el portal `/cuenta`.
@@ -127,4 +131,3 @@ La integración Factus recibe `FACTUS_API_URL` como variable Cloudflare HTTPS; s
   - Para pruebas iniciales, el dominio de desarrollo permitido es `onboarding@resend.dev` (limitado a envíos a la cuenta del titular de Resend).
 - **Entregabilidad y Filtros Anti-Spam:**
   - Los correos transaccionales deben usar remitente y enlaces con dominios públicos coherentes con la tienda, incluir alternativa de texto plano cuando la plantilla la provea y evitar asuntos agresivos, exceso de mayúsculas o enlaces acortados. SPF y DKIM deben aprobar; publicar una política DMARC alineada después de identificar todos los remitentes legítimos del dominio.
-

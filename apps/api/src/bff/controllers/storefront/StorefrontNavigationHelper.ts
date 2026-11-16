@@ -3,17 +3,17 @@ import { CmsGateway, CmsMenuItemDto } from '../../gateways/cms/CmsGateway.js';
 import { LayoutMenuItem } from '../../views/renderBaseLayout.js';
 import { mergeInstitutionalFooterLinks } from '../../cms/mergeInstitutionalFooterLinks.js';
 import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 
 export async function getCustomerEmail(
-  c: { req: { header: (k: string) => string | undefined } },
+  c: { req: { raw: Request } },
   identityGateway: IdentityGateway
 ): Promise<string | undefined> {
-  const cookieHeader = c.req.header('cookie') || '';
-  const match = cookieHeader.match(/__Host-session=([^;]+)/);
-  if (!match || !match[1]) return undefined;
+  const token = extractSessionToken(c.req.raw, '__Host-session');
+  if (!token) return undefined;
 
   try {
-    const session = await identityGateway.validateSession(match[1]);
+    const session = await identityGateway.validateSession(token);
     if (session.actorType === 'customer') {
       const profile = await identityGateway.getCustomerProfile(session.actorId);
       return profile.email;
@@ -25,13 +25,13 @@ export async function getCustomerEmail(
 }
 
 export async function getCustomerActorId(
-  c: { req: { header: (k: string) => string | undefined } },
+  c: { req: { raw: Request } },
   identityGateway: IdentityGateway
 ): Promise<string | undefined> {
-  const match = (c.req.header('cookie') || '').match(/(?:^|;\s*)__Host-session=([^;]+)/);
-  if (!match?.[1]) return undefined;
+  const token = extractSessionToken(c.req.raw, '__Host-session');
+  if (!token) return undefined;
   try {
-    const session = await identityGateway.validateSession(match[1]);
+    const session = await identityGateway.validateSession(token);
     return session.actorType === 'customer' ? session.actorId : undefined;
   } catch { return undefined; }
 }

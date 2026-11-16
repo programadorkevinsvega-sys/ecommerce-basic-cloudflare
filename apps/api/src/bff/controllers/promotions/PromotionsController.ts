@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
+import { Env } from '../../../platform/Env.js';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
 import { z } from 'zod';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { IdentityGateway } from '../../gateways/identity/IdentityGateway.js';
@@ -14,15 +15,15 @@ const CouponPreviewInput = z.object({
 }).strict();
 
 export class PromotionsController {
-  public static createRoutes(promotionsGateway: PromotionsGateway, identityGateway: IdentityGateway): Hono {
-    const router = new Hono();
+  public static createRoutes(promotionsGateway: PromotionsGateway, identityGateway: IdentityGateway): Hono<{ Bindings: Env }> {
+    const router = new Hono<{ Bindings: Env }>();
 
     // Validar cupón (Público / Carrito / Checkout)
     router.post('/api/v1/promotions/coupons/validate', async (c) => {
       try {
         const parsed = CouponPreviewInput.safeParse(await c.req.json());
         if (!parsed.success) return c.json({ error: 'Código o contenido del carrito inválido.' }, 400);
-        const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '') || getCookie(c, '__Host-session');
+        const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
         let customerId: string | undefined;
         if (token) {
           try {

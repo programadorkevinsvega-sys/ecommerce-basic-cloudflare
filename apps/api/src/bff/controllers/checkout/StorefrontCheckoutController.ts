@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { getCookie, setCookie } from 'hono/cookie';
+import { extractSessionToken } from '../../security/extractSessionToken.js';
+import { Env } from '../../../platform/Env.js';
 import { CartGateway } from '../../gateways/cart/CartGateway.js';
 import { CatalogGateway } from '../../gateways/catalog/CatalogGateway.js';
 import { ShippingGateway } from '../../gateways/shipping/ShippingGateway.js';
@@ -11,12 +12,14 @@ import { renderBaseLayout } from '../../views/renderBaseLayout.js';
 import { renderCartPage } from '../../views/renderCartPage.js';
 import { renderCheckoutPage } from '../../views/renderCheckoutPage.js';
 import { renderCheckoutResultPage } from '../../views/renderCheckoutResultPage.js';
-import { getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
+import { getCustomerActorId, getCustomerEmail, getStorefrontNavMenus } from '../storefront/StorefrontNavigationHelper.js';
 import { StorefrontGateway } from '../../gateways/storefront/StorefrontGateway.js';
 import { PromotionsGateway } from '../../gateways/promotions/PromotionsGateway.js';
 import { getPageMarketingContent } from '../storefront/StorefrontPageMarketing.js';
-import { hashGuestCartId, isValidGuestCartId } from '../../security/GuestCartCapability.js';
+import { GuestCartCapabilityConfigurationError, hashGuestCartId } from '../../security/GuestCartCapability.js';
+import { resolveGuestCartCookie } from '../../security/resolveGuestCartCookie.js';
 import { resolveCartDiscounts } from '../storefront/StorefrontDiscountResolver.js';
+import { getProductsForCart } from './getProductsForCart.js';
 
 export class StorefrontCheckoutController {
   public static createRoutes(
@@ -29,35 +32,37 @@ export class StorefrontCheckoutController {
     settingsGateway: SettingsGateway,
     storefrontGateway: StorefrontGateway,
     promotionsGateway?: PromotionsGateway
-  ): Hono {
-    const router = new Hono();
-
-    const getOrCreateCartId = (c: any): string => {
-      let cartId = getCookie(c, 'vega_cart_id');
-      if (!isValidGuestCartId(cartId)) {
-        cartId = `cart_${crypto.randomUUID()}`;
-        setCookie(c, 'vega_cart_id', cartId, {
-          path: '/',
-          httpOnly: true,
-          secure: true,
-          sameSite: 'Lax',
-          maxAge: 60 * 60 * 24 * 30,
-        });
+  ): Hono<{ Bindings: Env }> {
+    const router = new Hono<{ Bindings: Env }>();
+    const cartIds = new WeakMap<object, string>();
+    router.use('*', async (c, next) => {
+      try {
+        cartIds.set(c, await resolveGuestCartCookie(c));
+      } catch (error) {
+        if (error instanceof GuestCartCapabilityConfigurationError) {
+          return c.text('El carrito no está disponible temporalmente.', 503);
+        }
+        throw error;
       }
+      return next();
+    });
+    const getCartId = (c: object): string => {
+      const cartId = cartIds.get(c);
+      if (!cartId) throw new Error('Guest cart capability middleware was not applied');
       return cartId;
     };
 
     // GET /carrito
     router.get('/carrito', async (c) => {
-      const cartId = getOrCreateCartId(c);
+      const cartId = getCartId(c);
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [cart, nav, allProducts] = await Promise.all([
+      const [cart, nav] = await Promise.all([
         cartGateway.getCart(cartId),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
-        catalogGateway.listProducts({ limit: 100 }),
       ]);
 
-      const productsMap = new Map();
+      const allProducts = await getProductsForCart(catalogGateway, cart.items.map((item) => item.productId));
+      const productsMap = new Map<string, (typeof allProducts)[number]>();
       allProducts.forEach((p) => productsMap.set(p.id, p));
 
       const discounts = promotionsGateway ? await resolveCartDiscounts(cart.items, productsMap, promotionsGateway) : new Map();
@@ -77,13 +82,13 @@ export class StorefrontCheckoutController {
 
     // GET /checkout
     router.get('/checkout', async (c) => {
-      const cartId = getOrCreateCartId(c);
+      const cartId = getCartId(c);
+      const customerId = await getCustomerActorId(c, identityGateway);
       const customerEmail = await getCustomerEmail(c, identityGateway);
-      const [cart, zones, nav, allProducts, settings] = await Promise.all([
+      const [cart, zones, nav, settings] = await Promise.all([
         cartGateway.getCart(cartId),
         shippingGateway.listZones(true),
         getStorefrontNavMenus(cmsGateway, settingsGateway),
-        catalogGateway.listProducts({ limit: 100 }),
         settingsGateway.getSettings(),
       ]);
 
@@ -91,13 +96,16 @@ export class StorefrontCheckoutController {
         return c.redirect('/carrito', 302);
       }
 
-      const productsMap = new Map();
+      const allProducts = await getProductsForCart(catalogGateway, cart.items.map((item) => item.productId));
+      const productsMap = new Map<string, (typeof allProducts)[number]>();
       allProducts.forEach((p) => productsMap.set(p.id, p));
       const discounts = promotionsGateway ? await resolveCartDiscounts(cart.items, productsMap, promotionsGateway) : new Map();
 
       const taxRate = settings?.taxRatePercent ?? 19;
       const marketing = await getPageMarketingContent(storefrontGateway, 'checkout', 'Información para tu compra');
-      const bodyHtml = `${marketing.bannersHtml}${renderCheckoutPage(cart, productsMap, zones, taxRate, nav.footerStoreProfile, discounts)}`;
+      const bodyHtml = `${marketing.bannersHtml}${renderCheckoutPage(
+        cart, productsMap, zones, taxRate, nav.footerStoreProfile, discounts, !customerId, c.env.TURNSTILE_SITE_KEY,
+      )}`;
       const html = renderBaseLayout({
         title: 'Checkout Seguro',
         description: 'Ingresa tus datos y selecciona tu método de pago preferido.',
@@ -132,15 +140,14 @@ export class StorefrontCheckoutController {
       }
 
       if (order.customerId) {
-        const auth = c.req.header('Authorization');
-        const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, '__Host-session');
+        const token = extractSessionToken(c.req.raw, '__Host-session', c.env?.ENVIRONMENT);
         if (!token) return c.redirect('/auth/login', 302);
         try {
           const session = await identityGateway.validateSession(token);
           if (session.actorType !== 'customer' || session.actorId !== order.customerId) return c.notFound();
         } catch { return c.notFound(); }
       } else {
-        const cartHash = await hashGuestCartId(getCookie(c, 'vega_cart_id'));
+        const cartHash = await hashGuestCartId(getCartId(c));
         if (!cartHash || !order.guestCartIdHash || cartHash !== order.guestCartIdHash) return c.notFound();
       }
 

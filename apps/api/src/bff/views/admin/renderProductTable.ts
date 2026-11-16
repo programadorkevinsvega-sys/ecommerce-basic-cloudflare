@@ -12,9 +12,9 @@ export function renderProductTable(products: ProductAdminListItem[]): string {
 
   return `
     <section class="products-screen" aria-labelledby="products-title">
-      <header class="products-heading"><div><span class="products-eyebrow">CATÁLOGO</span><h1 id="products-title">Productos</h1><p>Administra el catálogo, precios, existencias y publicación.</p></div><button class="products-primary-button" type="button" onclick="startCreateProduct()"><span aria-hidden="true">＋</span>Crear producto</button></header>
+      <header class="products-heading"><div><span class="products-eyebrow">CATÁLOGO</span><h1 id="products-title">Productos</h1><p>Administra el catálogo, precios, existencias y publicación.</p></div><button class="products-primary-button" type="button" data-product-action="create"><span aria-hidden="true">＋</span>Crear producto</button></header>
       <section class="products-kpis" aria-label="Resumen de productos"><article><span>Productos</span><strong id="products-total">${products.length}</strong></article><article><span>Publicados</span><strong id="products-published">${published}</strong></article><article><span>Borradores</span><strong id="products-drafts">${drafts}</strong></article><article><span>Stock bajo</span><strong id="products-low-stock">${lowStock}</strong></article></section>
-      <details class="products-maintenance"><summary>Herramientas de mantenimiento de precios históricos</summary><p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p><button type="button" class="products-secondary-button" onclick="previewLegacyPriceMigration()">Previsualizar conversión</button><div id="legacy-price-preview" aria-live="polite"></div></details>
+      <details class="products-maintenance"><summary>Herramientas de mantenimiento de precios históricos</summary><p>Previsualiza antes de convertir. El cambio conserva el precio anterior en el catálogo y mantiene los totales actuales con la tasa de IVA configurada.</p><button type="button" class="products-secondary-button" data-product-action="preview-price-migration">Previsualizar conversión</button><div id="legacy-price-preview" aria-live="polite"></div></details>
       <section class="products-list-card" aria-label="Lista de productos">
         <div class="products-list-toolbar"><div><h2>Todos los productos</h2><p id="products-results-count">${products.length} productos</p></div><label class="products-search"><span class="sr-only">Buscar productos</span><input id="products-search" type="search" placeholder="Buscar por nombre, SKU o marca" autocomplete="off"></label></div>
         <div class="products-filter-tabs" role="group" aria-label="Filtrar productos por estado">${filterButton('all', 'Todos', products.length, true)}${filterButton('published', 'Publicados', published)}${filterButton('draft', 'Borradores', drafts)}${filterButton('archived', 'Archivados', products.filter((p) => p.status === 'archived').length)}</div>
@@ -43,8 +43,8 @@ export function renderProductRows(products: ProductAdminListItem[]): string {
       : '<span class="badge badge-archived">Archivado</span>';
 
     const toggleAction = p.status === 'published'
-      ? `<button class="btn-action btn-action-hide" onclick="setProductStatus('${p.id}', 'draft')">Ocultar</button>`
-      : `<button class="btn-action btn-action-publish" onclick="setProductStatus('${p.id}', 'published')">Publicar</button>`;
+      ? `<button class="btn-action btn-action-hide" data-product-action="set-status" data-product-id="${escapeHtml(p.id)}" data-product-status="draft">Ocultar</button>`
+      : `<button class="btn-action btn-action-publish" data-product-action="set-status" data-product-id="${escapeHtml(p.id)}" data-product-status="published">Publicar</button>`;
 
     return `
       <tr class="products-row" data-search="${escapeHtml(`${p.name} ${p.sku} ${p.slug} ${p.brand || ''}`.toLocaleLowerCase())}" data-status="${escapeHtml(p.status)}">
@@ -58,9 +58,9 @@ export function renderProductRows(products: ProductAdminListItem[]): string {
         <td class="products-actions">
           <a class="btn-action btn-action-view" href="/productos/${escapeHtml(p.slug)}" target="_blank" rel="noopener noreferrer">Ver</a>
           <button class="btn-action btn-action-landing" type="button" data-open-product-landing="${escapeHtml(p.id)}">Landing</button>
-          <button class="btn-action btn-action-edit" onclick="editProduct('${p.id}')">Editar</button>
+          <button class="btn-action btn-action-edit" data-product-action="edit" data-product-id="${escapeHtml(p.id)}">Editar</button>
           ${toggleAction}
-          <button class="btn-action btn-action-delete" onclick="deleteProduct('${p.id}')">Eliminar</button>
+          <button class="btn-action btn-action-delete" data-product-action="delete" data-product-id="${escapeHtml(p.id)}">Eliminar</button>
         </td>
       </tr>
     `;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { calculateRecommendedPrice } from '../src/modules/catalog/domain/services/CalculateRecommendedPrice.js';
 
 describe('precio recomendado por margen sobre venta', () => {
-  it('resuelve un margen objetivo del 20% después del costo, IVA incluido y tarifa Wompi estimada', () => {
+  it('resuelve un margen objetivo del 20% después del costo, IVA incluido y costo Wompi del comercio', () => {
     const result = calculateRecommendedPrice({ supplierCostCents: 120000000, targetMarginBasisPoints: 2000, taxRateBasisPoints: 1900, includeWompi: true, transactionShippingCents: 0 });
     expect(result.priceInCents % 100).toBe(0);
     expect(result.estimatedMarginBasisPoints).toBeGreaterThanOrEqual(2000);

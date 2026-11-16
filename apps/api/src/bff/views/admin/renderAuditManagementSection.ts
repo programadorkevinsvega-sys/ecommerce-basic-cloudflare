@@ -11,9 +11,9 @@ export function renderAuditManagementSection(): string {
           <tbody id="audit-table-body"><tr><td colspan="5" class="audit-empty">Cargando auditorías…</td></tr></tbody>
         </table></div>
         <footer class="audit-pagination" aria-label="Paginación de auditorías">
-          <button id="audit-page-previous" class="audit-page-button" onclick="changeAuditPage(-1)" disabled>Anterior</button>
+          <button id="audit-page-previous" class="audit-page-button" data-audit-action="page" data-page-delta="-1" disabled>Anterior</button>
           <span id="audit-page-label" aria-live="polite">Página 1</span>
-          <button id="audit-page-next" class="audit-page-button" onclick="changeAuditPage(1)" disabled>Siguiente</button>
+          <button id="audit-page-next" class="audit-page-button" data-audit-action="page" data-page-delta="1" disabled>Siguiente</button>
         </footer>
       </div>
       <dialog id="audit-detail-dialog" class="audit-detail-dialog" aria-labelledby="audit-detail-title">

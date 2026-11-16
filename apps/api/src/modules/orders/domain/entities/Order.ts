@@ -38,6 +38,7 @@ export interface OrderProps {
   estimatedPaymentFeeCents?: number;
   transactionFeeCents?: number;
   guestTrackingTokenHash?: string | null;
+  guestTrackingTokenExpiresAt?: string | null;
   minEstimatedDays?: number | null;
   maxEstimatedDays?: number | null;
   paymentMethod: 'wompi' | 'cash_on_delivery';
@@ -74,6 +75,7 @@ export class Order {
   public readonly estimatedPaymentFeeCents: number;
   public readonly transactionFeeCents: number;
   public readonly guestTrackingTokenHash: string | null;
+  public readonly guestTrackingTokenExpiresAt: string | null;
   public readonly minEstimatedDays: number | null;
   public readonly maxEstimatedDays: number | null;
   public readonly paymentMethod: 'wompi' | 'cash_on_delivery';
@@ -112,6 +114,7 @@ export class Order {
     this.estimatedPaymentFeeCents = props.estimatedPaymentFeeCents ?? 0;
     this.transactionFeeCents = props.transactionFeeCents ?? 0;
     this.guestTrackingTokenHash = props.guestTrackingTokenHash || null;
+    this.guestTrackingTokenExpiresAt = props.guestTrackingTokenExpiresAt || null;
     this.minEstimatedDays = props.minEstimatedDays ?? null;
     this.maxEstimatedDays = props.maxEstimatedDays ?? null;
     this.paymentMethod = props.paymentMethod;

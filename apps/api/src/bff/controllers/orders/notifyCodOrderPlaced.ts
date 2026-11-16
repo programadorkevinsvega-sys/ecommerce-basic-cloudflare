@@ -1,12 +1,11 @@
 import { Order } from '../../../modules/orders/domain/entities/Order.js';
 import { NotificationsGateway } from '../../gateways/notifications/NotificationsGateway.js';
-import { SettingsGateway } from '../../gateways/settings/SettingsGateway.js';
 import { OrderEmailTemplates } from '../payments/OrderEmailTemplates.js';
 
 export async function notifyCodOrderPlaced(
   order: Order,
   notificationsGateway: NotificationsGateway,
-  settingsGateway: SettingsGateway,
+  adminEmail: string,
   traceId: string
 ): Promise<void> {
   try {
@@ -21,8 +20,6 @@ export async function notifyCodOrderPlaced(
     });
 
     // 2. Email de alerta a la empresa
-    const storeSettings = await settingsGateway.getSettings().catch(() => null);
-    const adminEmail = storeSettings?.supportEmail || 'contacto@tienda.com';
     const adminHtml = OrderEmailTemplates.renderAdminCodAlertEmail(order);
 
     await notificationsGateway.sendEmail({

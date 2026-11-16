@@ -39,8 +39,8 @@ export function renderInventoryListScript(): string {
       nav.innerHTML = '<button type="button" data-inventory-page="previous">Anterior</button><span aria-live="polite">Página ' + Number(meta.page || 1) + ' · ' + Number(meta.total || 0) + ' productos</span><button type="button" data-inventory-page="next">Siguiente</button>';
       nav.querySelector('[data-inventory-page="previous"]').disabled = Number(meta.page) <= 1;
       nav.querySelector('[data-inventory-page="next"]').disabled = !meta.hasMore;
-      nav.querySelector('[data-inventory-page="previous"]').onclick = () => loadAdminInventory(meta.page - 1);
-      nav.querySelector('[data-inventory-page="next"]').onclick = () => loadAdminInventory(meta.page + 1);
+      nav.querySelector('[data-inventory-page="previous"]').addEventListener('click', () => loadAdminInventory(meta.page - 1));
+      nav.querySelector('[data-inventory-page="next"]').addEventListener('click', () => loadAdminInventory(meta.page + 1));
     }
 
     function renderInventoryRow(stock) {

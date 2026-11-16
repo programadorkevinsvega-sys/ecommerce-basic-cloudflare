@@ -8,6 +8,7 @@ import { UpdateProductUseCase } from './application/use-cases/UpdateProductUseCa
 import { DeleteProductUseCase } from './application/use-cases/DeleteProductUseCase.js';
 import { GetProductBySlugUseCase } from './application/use-cases/GetProductBySlugUseCase.js';
 import { GetProductByIdUseCase } from './application/use-cases/GetProductByIdUseCase.js';
+import { GetProductsByIdsUseCase } from './application/use-cases/GetProductsByIdsUseCase.js';
 import { ListProductsUseCase } from './application/use-cases/ListProductsUseCase.js';
 import { CreateCategoryUseCase } from './application/use-cases/CreateCategoryUseCase.js';
 import { ListCategoriesUseCase } from './application/use-cases/ListCategoriesUseCase.js';
@@ -39,6 +40,7 @@ export interface CatalogModuleContainer {
   deleteProductUseCase: DeleteProductUseCase;
   getProductBySlugUseCase: GetProductBySlugUseCase;
   getProductByIdUseCase: GetProductByIdUseCase;
+  getProductsByIdsUseCase: GetProductsByIdsUseCase;
   listProductsUseCase: ListProductsUseCase;
   createCategoryUseCase: CreateCategoryUseCase;
   listCategoriesUseCase: ListCategoriesUseCase;
@@ -77,6 +79,7 @@ export function createCatalogModule(env: Env): CatalogModuleContainer {
     deleteProductUseCase: new DeleteProductUseCase(productRepo),
     getProductBySlugUseCase: new GetProductBySlugUseCase(productRepo),
     getProductByIdUseCase: new GetProductByIdUseCase(productRepo),
+    getProductsByIdsUseCase: new GetProductsByIdsUseCase(productRepo),
     listProductsUseCase: new ListProductsUseCase(productRepo),
     createCategoryUseCase: new CreateCategoryUseCase(categoryRepo),
     listCategoriesUseCase: new ListCategoriesUseCase(categoryRepo),

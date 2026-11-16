@@ -8,6 +8,10 @@ export class InProcessCmsGateway implements CmsGateway {
     this.publicApi = publicApi;
   }
 
+  public sanitizeRichText(input: string): string {
+    return this.publicApi.sanitizeRichText(input);
+  }
+
   public async createPage(input: {
     title: string;
     slug: string;

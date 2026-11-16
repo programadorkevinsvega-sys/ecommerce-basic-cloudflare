@@ -1,6 +1,7 @@
 import { Coupon } from '../../../../domain/entities/Coupon.js';
 import { DiscountType, TargetType } from '../../../../domain/entities/PromotionRule.js';
 import { ICouponRepository } from '../../../../domain/ports/ICouponRepository.js';
+import { D1CouponRedemptionRepository } from './D1CouponRedemptionRepository.js';
 
 interface CouponRow {
   id: string;
@@ -23,9 +24,11 @@ interface CouponRow {
 
 export class D1CouponRepository implements ICouponRepository {
   private readonly db: D1Database;
+  private readonly redemptions: D1CouponRedemptionRepository;
 
   public constructor(db: D1Database) {
     this.db = db;
+    this.redemptions = new D1CouponRedemptionRepository(db);
   }
 
   public async findById(id: string): Promise<Coupon | null> {
@@ -58,7 +61,6 @@ export class D1CouponRepository implements ICouponRepository {
          min_order_amount_cents = excluded.min_order_amount_cents,
          max_uses_global = excluded.max_uses_global,
          max_uses_per_customer = excluded.max_uses_per_customer,
-         current_uses_count = excluded.current_uses_count,
          starts_at = excluded.starts_at,
          ends_at = excluded.ends_at,
          is_active = excluded.is_active,
@@ -92,32 +94,15 @@ export class D1CouponRepository implements ICouponRepository {
   }
 
   public async getCustomerUsageCount(couponId: string, customerId: string): Promise<number> {
-    const row = await this.db.prepare(
-      'SELECT COUNT(*) as count FROM promotions_redemptions WHERE coupon_id = ? AND customer_id = ?'
-    ).bind(couponId, customerId).first<{ count: number }>();
-    return row?.count ?? 0;
+    return this.redemptions.getCustomerUsageCount(couponId, customerId);
   }
 
-  public async recordRedemption(redemption: {
-    id: string;
-    couponId: string;
-    orderId?: string;
-    customerId: string;
-    discountAppliedCents: number;
-    redeemedAt: string;
-  }): Promise<void> {
-    await this.db.batch([
-      this.db.prepare(
-        `INSERT INTO promotions_redemptions (id, coupon_id, order_id, customer_id, discount_applied_cents, redeemed_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      ).bind(
-        redemption.id, redemption.couponId, redemption.orderId ?? null, redemption.customerId,
-        redemption.discountAppliedCents, redemption.redeemedAt
-      ),
-      this.db.prepare(
-        'UPDATE promotions_coupons SET current_uses_count = current_uses_count + 1 WHERE id = ?'
-      ).bind(redemption.couponId),
-    ]);
+  public reserveRedemption(redemption: Parameters<ICouponRepository['reserveRedemption']>[0]): Promise<boolean> {
+    return this.redemptions.reserveRedemption(redemption);
+  }
+
+  public releaseRedemption(orderId: string): Promise<void> {
+    return this.redemptions.releaseRedemption(orderId);
   }
 
   private hydrate(row: CouponRow): Coupon {

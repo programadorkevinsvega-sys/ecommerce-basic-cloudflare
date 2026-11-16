@@ -7,6 +7,8 @@ import { renderMenuAdminScript } from '../src/bff/views/admin/renderMenuAdminScr
 import { SaveMenuUseCase } from '../src/modules/cms/application/use-cases/SaveMenuUseCase.js';
 import { Menu } from '../src/modules/cms/domain/entities/Menu.js';
 
+const writeRateLimitEnv = { API_WRITE_LIMITER: { limit: async () => ({ success: true }) } };
+
 describe('CMS menu management', () => {
   it('saves nested groups and rejects unsafe destinations', async () => {
     const repository = { findByCode: vi.fn().mockResolvedValue(null), save: vi.fn() };
@@ -28,9 +30,9 @@ describe('CMS menu management', () => {
     const menu = new Menu({ id: 'menu-id', code: 'header', title: 'Principal', items: [], createdAt: '', updatedAt: '' });
     const cms = { getMenuByCode: vi.fn().mockResolvedValue(menu), saveMenu: vi.fn().mockResolvedValue(menu) } as unknown as CmsGateway;
     const app = CmsMenuAdminController.createRoutes(cms, identity);
-    expect((await app.request('/api/v1/admin/cms/menus')).status).toBe(401);
-    expect((await app.request('/api/v1/admin/cms/menus/header', { method: 'PUT', headers: { authorization: 'Bearer reader', 'content-type': 'application/json' }, body: JSON.stringify({ title: 'X', items: [] }) })).status).toBe(403);
-    expect((await app.request('/api/v1/admin/cms/menus/header', { method: 'PUT', headers: { authorization: 'Bearer editor', 'content-type': 'application/json' }, body: JSON.stringify({ title: 'Principal', items: [] }) })).status).toBe(200);
+    expect((await app.request('/api/v1/admin/cms/menus', {}, writeRateLimitEnv)).status).toBe(401);
+    expect((await app.request('/api/v1/admin/cms/menus/header', { method: 'PUT', headers: { Cookie: '__Host-admin-session=reader', 'content-type': 'application/json' }, body: JSON.stringify({ title: 'X', items: [] }) }, writeRateLimitEnv)).status).toBe(403);
+    expect((await app.request('/api/v1/admin/cms/menus/header', { method: 'PUT', headers: { Cookie: '__Host-admin-session=editor', 'content-type': 'application/json' }, body: JSON.stringify({ title: 'Principal', items: [] }) }, writeRateLimitEnv)).status).toBe(200);
   });
 
   it('renders the independent menu page inside the CMS admin group', () => {

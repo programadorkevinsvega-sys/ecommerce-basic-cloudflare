@@ -15,8 +15,16 @@ export function renderTaxonomyActionsScript():string {
     window.editTaxonomyItem=(id,key)=>{const item=tagPages[key]?.records?.find((record)=>record.id===id);if(item)window.openTaxonomyModal(key,item);};
     window.setTaxonomyStatus=async(id,key,status)=>{if(!confirm(status==='inactive'?'¿Desactivar este registro?':'¿Volver a activarlo?'))return;const item=tagPages[key]?.records?.find((record)=>record.id===id);let response;if(key==='tags')response=await fetch('/api/v1/admin/product-tags/'+encodeURIComponent(id),{method:'PUT',headers:adminHeaders(true),body:JSON.stringify({name:item.name,description:item.description,status})});else response=key==='collections'?await fetch('/api/v1/admin/collections/'+encodeURIComponent(id),{method:'PUT',headers:adminHeaders(true),body:JSON.stringify({status})}):await fetch('/api/v1/admin/catalog/'+key+'/'+encodeURIComponent(id)+'/status',{method:'PATCH',headers:adminHeaders(true),body:JSON.stringify({status})});if(!response.ok)return alert('No se pudo cambiar el estado. Verifica el permiso catalog:edit.');window.loadCatalogPage(key,tagPages[key].page);};
     window.deleteTaxonomyItem=async(id,key)=>{if(!confirm('¿Eliminar definitivamente este registro? Esta acción no se puede deshacer.'))return;const endpoint=key==='tags'?'/api/v1/admin/product-tags/':key==='collections'?'/api/v1/admin/collections/':'/api/v1/admin/catalog/'+key+'/';const response=await fetch(endpoint+encodeURIComponent(id),{method:'DELETE',headers:adminHeaders(true)});if(!response.ok){const result=await response.json().catch(()=>({}));return alert(result.error||'No se pudo eliminar. Verifica permisos y dependencias.');}window.loadCatalogPage(key,tagPages[key].page);};
-    const firstCatalogLink=Array.from(document.querySelectorAll('.admin-nav-link[data-tab="taxonomies"]')).find((link)=>link.getAttribute('onclick')?.includes("showCatalogPage('categories'"));
+    const firstCatalogLink=Array.from(document.querySelectorAll('.admin-nav-link[data-tab="taxonomies"]')).find((link)=>link.textContent.trim()==='Categorías');
     window.showCatalogPage('categories',firstCatalogLink);
-    document.addEventListener('click',(event)=>{const button=event.target.closest('[data-taxonomy-action]');if(!button)return;const{taxonomyAction,taxonomyId,taxonomyKey,taxonomyStatus}=button.dataset;if(taxonomyAction==='view')window.viewTaxonomyItem(taxonomyId,taxonomyKey);if(taxonomyAction==='edit')window.editTaxonomyItem(taxonomyId,taxonomyKey);if(taxonomyAction==='status')window.setTaxonomyStatus(taxonomyId,taxonomyKey,taxonomyStatus);if(taxonomyAction==='delete')window.deleteTaxonomyItem(taxonomyId,taxonomyKey);});
+    document.addEventListener('click',(event)=>{
+      const target=event.target;
+      const button=target.closest('[data-taxonomy-action]');
+      if(button){const{taxonomyAction,taxonomyId,taxonomyKey,taxonomyStatus}=button.dataset;if(taxonomyAction==='view')window.viewTaxonomyItem(taxonomyId,taxonomyKey);if(taxonomyAction==='edit')window.editTaxonomyItem(taxonomyId,taxonomyKey);if(taxonomyAction==='status')window.setTaxonomyStatus(taxonomyId,taxonomyKey,taxonomyStatus);if(taxonomyAction==='delete')window.deleteTaxonomyItem(taxonomyId,taxonomyKey);}
+      const category=target.closest('[data-category-delete]');
+      if(category)window.deleteCategory(category.dataset.categoryDelete);
+      const brand=target.closest('[data-brand-description-save]');
+      if(brand)window.saveBrandDescription(brand.dataset.brandDescriptionSave);
+    });
   `;
 }

@@ -22,7 +22,7 @@ export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogPr
     const name = product?.name || 'Producto';
     const detailsUrl = product ? `/productos/${encodeURIComponent(product.slug)}` : '/productos';
     const image = product?.mediaIds[0]
-      ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="" loading="lazy" onerror="this.hidden=true;this.parentElement.classList.add('has-no-image')" />`
+      ? `<img src="/media/${escapeHtml(product.mediaIds[0])}" alt="" loading="lazy" />`
       : '<span aria-hidden="true">▢</span>';
     const promotionPrice = discount?.discountAppliedCents ? `<del>${formatPrice(basePrice)}</del> <strong>${formatPrice(unitPrice)}</strong> <small>−${discount.discountPercentage ?? ''}%</small>` : `${formatPrice(unitPrice)}`;
     const promotionName = discount?.promotionName ? `<small class="cart-promotion-name">${escapeHtml(discount.promotionName)}</small>` : '';
@@ -37,6 +37,12 @@ export function renderCartPage(cart: CartDto, productsMap: Map<string, CatalogPr
 
 function renderCartScript(couponItems: Array<{ productId: string; categoryIds?: string[]; priceCents: number }> = [], subtotalCents = 0): string {
   return `<script>
+    document.querySelectorAll('.cart-item-image img').forEach(image => image.addEventListener('error', () => {
+      const placeholder = document.createElement('span');
+      placeholder.setAttribute('aria-hidden', 'true');
+      placeholder.textContent = '▢';
+      image.replaceWith(placeholder);
+    }, { once: true }));
     const cartDialog = document.getElementById('cart-confirm-dialog');
     const cartConfirm = document.getElementById('cart-confirm-action');
     let cartPendingAction = null;

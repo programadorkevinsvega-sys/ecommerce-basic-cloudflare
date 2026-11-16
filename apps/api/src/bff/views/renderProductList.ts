@@ -42,7 +42,7 @@ export function renderProductList(
         <p>${escapeHtml(item.description || (isInformative ? '' : 'Descubre productos elegidos para acompañarte todos los días.'))}</p>
         ${ctaHtml}
       </div>
-      ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" onerror="this.remove();this.parentElement.classList.add('campaign-image-missing')" /></div>` : ''}
+      ${item.imageUrl ? `<div class="campaign-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.altText || item.title)}" loading="${index === 0 ? 'eager' : 'lazy'}" /></div>` : ''}
     </article>`;
   };
 
@@ -69,7 +69,7 @@ export function renderProductList(
 
   if (products.length === 0) {
     html += `<div style="background: #fff; padding: 3rem; text-align: center; border-radius: 8px; border: 1px solid var(--border);"><h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No se encontraron productos</h3><p style="color: var(--muted);">Intenta buscando con otro término.</p></div>`;
-    return `${html}</section>${banners.length > 1 ? renderStorefrontCarouselScript('heroCarousel') : ''}`;
+    return `${html}</section>${banners.length ? renderStorefrontCarouselScript('heroCarousel') : ''}`;
   }
 
   html += '<p id="catalog-cart-feedback" class="catalog-cart-feedback" role="status" aria-live="polite" hidden></p><div class="grid">';
@@ -77,7 +77,7 @@ export function renderProductList(
   const pageStatus = pagination ? `Mostrando ${(pagination.page - 1) * 12 + 1}–${(pagination.page - 1) * 12 + products.length} productos · Página ${pagination.page}` : '';
   html += `</div>${pagination ? renderStorefrontPagination('Paginación de productos destacados', pageStatus, pagination.page > 1 ? `/?products_page=${pagination.page - 1}#products-title` : undefined, pagination.hasNext ? `/?products_page=${pagination.page + 1}#products-title` : undefined) : ''}</section>
   <section class="benefits-strip" aria-label="Información de compra"><article><span aria-hidden="true">↗</span><div><strong>Envíos locales y nacionales</strong><p>La cobertura se indica en cada producto.</p></div></article><article><span aria-hidden="true">⌂</span><div><strong>Opciones de pago</strong><p>Consulta las alternativas disponibles al comprar.</p></div></article><article><span aria-hidden="true">✓</span><div><strong>Compra con confianza</strong><p>Revisa los detalles y políticas de cada producto.</p></div></article></section>
-  ${banners.length > 1 ? renderStorefrontCarouselScript('heroCarousel') : ''}${renderProductCardActionsScript}`;
+  ${banners.length ? renderStorefrontCarouselScript('heroCarousel') : ''}${renderProductCardActionsScript}`;
   return html;
 }
 

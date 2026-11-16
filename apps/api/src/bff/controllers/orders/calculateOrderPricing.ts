@@ -27,14 +27,16 @@ export async function calculateOrderPricing(
   paymentMethod: 'wompi' | 'cash_on_delivery' = 'wompi',
 ): Promise<AuthoritativeOrderPricing> {
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 50) throw new Error('Líneas de pedido inválidas');
-  const products = await catalog.listProducts({ limit: 100 });
+  const orderInputs = inputs as Array<{ productId?: unknown; quantity?: unknown }>;
+  const productIds = orderInputs.map((input) => typeof input?.productId === 'string' ? input.productId : '');
+  const products = await catalog.getProductsByIds([...new Set(productIds)]);
   const byId = new Map(products.filter((product) => product.status === 'published').map((product) => [product.id, product]));
   const policyItems: AuthoritativeOrderPricing['policyItems'] = [];
   const versions = new Set<number>();
   let allowedPaymentMethods: Array<'wompi' | 'cash_on_delivery'> | null = null;
   const discountInputs: Array<{ productId: string; categoryIds: string[]; unitPriceCents: number; quantity: number }> = [];
   const lineProducts = new Map<string, { productName: string; productSku: string; electronicInvoiceEnabled: boolean }>();
-  for (const input of inputs as Array<{ productId?: unknown; quantity?: unknown }>) {
+  for (const input of orderInputs) {
     const product = byId.get(String(input?.productId ?? ''));
     const quantity = Number(input?.quantity);
     if (!product || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99) throw new Error('Producto o cantidad inválida');
@@ -83,10 +85,10 @@ export async function calculateOrderPricing(
   const taxCents = pricingVersion === 2
     ? Math.round(discountedSubtotal * taxRate / (100 + taxRate))
     : Math.round(discountedSubtotal * taxRate / 100);
-  const transactionFeeCents = paymentMethod === 'wompi' ? 70000 : 0;
+  const transactionFeeCents = 0;
   const totalCents = (pricingVersion === 2
     ? discountedSubtotal + shippingCostCents
-    : discountedSubtotal + taxCents + shippingCostCents) + transactionFeeCents;
+    : discountedSubtotal + taxCents + shippingCostCents);
   const estimatedPaymentFeeCents = paymentMethod === 'wompi'
     ? Math.round((Math.ceil(totalCents * 409 / 10000) + 70000) * 1.19)
     : 0;

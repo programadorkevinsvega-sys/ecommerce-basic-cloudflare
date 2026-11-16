@@ -1,7 +1,9 @@
 import { MiddlewareHandler } from 'hono';
+import { Env } from '../../platform/Env.js';
 import { AuditGateway } from '../gateways/audit/AuditGateway.js';
 import { AuthenticatedSession, IdentityGateway } from '../gateways/identity/IdentityGateway.js';
 import { auditFieldDiff } from './AdminMutationFieldDiff.js';
+import { extractSessionToken } from '../security/extractSessionToken.js';
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS']);
 interface SnapshotReader {
@@ -9,11 +11,10 @@ interface SnapshotReader {
   createdResourcePath(path: string, id: string): string | null;
 }
 
-export function createAdminMutationAuditMiddleware(identity: IdentityGateway, audit: AuditGateway, snapshots?: SnapshotReader): MiddlewareHandler {
+export function createAdminMutationAuditMiddleware(identity: IdentityGateway, audit: AuditGateway, snapshots?: SnapshotReader): MiddlewareHandler<{ Bindings: Env }> {
   return async (c, next) => {
     if (SAFE.has(c.req.method) || isReadOnlyAdminPost(c.req.method, c.req.path) || !isAdminMutationRoute(c.req.path) || c.req.path === '/api/v1/admin/auth/login') return next();
-    const token = c.req.header('cookie')?.match(/(?:^|;\s*)__Host-admin-session=([^;]+)/)?.[1]
-      || c.req.header('authorization')?.replace(/^Bearer\s+/, '');
+    const token = extractSessionToken(c.req.raw, '__Host-admin-session', c.env?.ENVIRONMENT);
     if (!token) return next();
     let actor: AuthenticatedSession;
     try {
@@ -148,4 +149,3 @@ function isAdminMutationRoute(path: string): boolean {
   return path.startsWith('/api/v1/admin/') || path === '/api/v1/settings' || path === '/media/upload'
     || path === '/api/v1/realtime/notifications/read';
 }
-

@@ -21,7 +21,7 @@ export class CmsController {
       try {
         const page = await cmsGateway.getPageBySlug(slug);
         if (page.status !== 'published') throw new Error('Página no publicada');
-        const rendered = renderCmsPage(page);
+        const rendered = renderCmsPage(page, (html) => cmsGateway.sanitizeRichText(html));
         const marketing = await getPageMarketingContent(storefront, `cms:${slug}`, 'Contenido destacado');
         const canonical = `https://vega.jnmtortas.com${requestedPath}`;
 

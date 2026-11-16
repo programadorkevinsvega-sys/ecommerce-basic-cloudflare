@@ -10,7 +10,7 @@ import {
   ProductVariantDto,
   CatalogCollectionDto,
 } from './CatalogGateway.js';
-import { ICatalogPublicApi } from '../../../modules/catalog/module.public-api.js';
+import { ICatalogPublicApi } from '../../../modules/catalog/ICatalogPublicApi.js';
 import { ProductListFilters } from '../../../modules/catalog/domain/ports/ProductListQuery.js';
 
 export class InProcessCatalogGateway implements CatalogGateway {
@@ -42,6 +42,11 @@ export class InProcessCatalogGateway implements CatalogGateway {
   public async getProductById(id: string): Promise<CatalogProductDto> {
     const product = await this.publicApi.getProductById(id);
     return product.toPrimitives();
+  }
+
+  public async getProductsByIds(ids: string[]): Promise<CatalogProductDto[]> {
+    const products = await this.publicApi.getProductsByIds(ids);
+    return products.map((product) => product.toPrimitives());
   }
 
   public async listProducts(params: {

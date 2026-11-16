@@ -23,7 +23,7 @@ export class D1RedirectRepository implements IRedirectRepository {
       .bind(fromPath)
       .first<RedirectRow>();
 
-    return row
+    return row && Redirect.isSafeSource(row.from_path) && Redirect.isSafeDestination(row.to_path)
       ? new Redirect({
           id: row.id,
           fromPath: row.from_path,
@@ -56,7 +56,7 @@ export class D1RedirectRepository implements IRedirectRepository {
       .bind(limit, offset)
       .all<RedirectRow>();
 
-    return (results || []).map(
+    return (results || []).filter((row) => Redirect.isSafeSource(row.from_path) && Redirect.isSafeDestination(row.to_path)).map(
       (r) =>
         new Redirect({
           id: r.id,

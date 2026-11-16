@@ -19,11 +19,12 @@ describe('public media edge cache', () => {
     const media = createMediaModule(env);
     const gateway = new InProcessMediaGateway(new MediaPublicApi(media));
     const identity: IdentityGateway = {
-      registerCustomer: async () => ({ id: '', email: '', fullName: '' }),
+      registerCustomer: async () => ({ accepted: true }),
       loginCustomer: async () => ({ rawToken: '', expiresAt: '' }),
       loginAdmin: async () => ({ rawToken: '', expiresAt: '', mfaEnabled: true }),
       beginAdminMfaEnrollment: async () => ({ secret: '', otpauthUri: '' }),
       confirmAdminMfaEnrollment: async () => undefined,
+      reauthenticateAdmin: async () => false,
       validateSession: async () => { throw new Error('not used'); },
       logout: async () => undefined,
       getCustomerProfile: async () => ({ id: '', email: '', fullName: '', isActive: true, createdAt: '' }),
@@ -31,6 +32,10 @@ describe('public media edge cache', () => {
       changeCustomerPassword: async () => ({ rawToken: '', expiresAt: '' }),
       listCustomerSessions: async () => [],
       revokeCustomerSession: async () => true,
+      requestCustomerPasswordReset: async () => undefined,
+      requestCustomerEmailVerification: async () => undefined,
+      verifyCustomerEmail: async () => undefined,
+      resetCustomerPassword: async () => undefined,
     };
     const app = MediaController.createRoutes(gateway, identity);
     const bytes = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='), (char) => char.charCodeAt(0));

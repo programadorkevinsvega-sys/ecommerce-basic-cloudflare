@@ -49,8 +49,8 @@ import { ReviewsAdminController } from './controllers/reviews/ReviewsAdminContro
 import { OrderTrackingController } from './controllers/orders/OrderTrackingController.js';
 import type { AppCompositionRoot } from '../composition-root.js';
 import { CsrfProtectionMiddleware } from './middleware/CsrfProtectionMiddleware.js';
-import { RateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
-import { createAdminMfaGateMiddleware } from './middleware/AdminMfaGateMiddleware.js';
+import { createRateLimitMiddleware } from './middleware/RateLimitMiddleware.js';
+import { createAdminSecurityMiddleware } from './middleware/AdminSecurityMiddleware.js';
 import { createAdminMutationAuditMiddleware } from './middleware/AdminMutationAuditMiddleware.js';
 import { AdminMutationSnapshotProvider } from './middleware/AdminMutationSnapshotProvider.js';
 import { renderBaseLayout } from './views/renderBaseLayout.js';
@@ -75,10 +75,11 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     maxSize: 1024 * 1024,
     onError: (c) => c.json({ error: 'La solicitud supera el límite de 1 MiB' }, 413),
   }));
-  app.use('/api/*', RateLimitMiddleware);
-  app.use('/media/upload', RateLimitMiddleware);
+  const rateLimitMiddleware = createRateLimitMiddleware(cRoot.identityGateway);
+  app.use('/api/*', rateLimitMiddleware);
+  app.use('/media/upload', rateLimitMiddleware);
   app.use('/api/*', CsrfProtectionMiddleware);
-  app.use('/api/v1/admin/*', createAdminMfaGateMiddleware(cRoot.identityGateway));
+  app.use('/api/*', createAdminSecurityMiddleware(cRoot.identityGateway));
   const mutationSnapshots = new AdminMutationSnapshotProvider(cRoot);
   app.use('*', createAdminMutationAuditMiddleware(
     cRoot.identityGateway,
@@ -127,6 +128,7 @@ export function createBffApp(cRoot: AppCompositionRoot): Hono<{ Bindings: Env }>
     cRoot.notificationsGateway,
     cRoot.auditGateway,
     cRoot.settingsGateway,
+    cRoot.promotionsGateway,
     cRoot.shippingGateway
   ));
   app.route('/', RealtimeController.createRoutes(cRoot.realtimeGateway, cRoot.identityGateway));
