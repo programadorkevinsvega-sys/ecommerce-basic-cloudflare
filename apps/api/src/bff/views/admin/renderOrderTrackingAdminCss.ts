@@ -25,14 +25,29 @@ export function renderOrderTrackingAdminCss(): string {
     #admin-legacy-tabs .tracking-admin-dialog header p { margin:5px 0 0; color:#636b7b; font-size:13px; overflow-wrap:anywhere; }
     #admin-legacy-tabs .tracking-admin-dialog .shipping-modal-close { flex:none; width:38px; height:38px; border:1px solid #e3e6ec; background:#f8f9fb; color:#394253; }
     #admin-legacy-tabs .tracking-admin-timeline { grid-column:1/-1; min-width:0; border:1px solid #e8eaf0; border-radius:11px; padding:16px; background:#fafbfa; }
-    #admin-legacy-tabs .tracking-admin-timeline h3 { margin:0 0 13px; color:#283142; font-size:15px; }
+    #admin-legacy-tabs .tracking-admin-block { grid-column:1/-1; min-width:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 20px; border:1px solid #e3e6ec; border-radius:12px; padding:18px; background:#fff; }
+    #admin-legacy-tabs .tracking-admin-block h3,
+    #admin-legacy-tabs .tracking-admin-block>p,
+    #admin-legacy-tabs .tracking-admin-block .tracking-admin-timeline,
+    #admin-legacy-tabs .tracking-admin-block #tracking-order-message,
+    #admin-legacy-tabs .tracking-admin-block #tracking-shipment-message,
+    #admin-legacy-tabs .tracking-admin-block .tracking-provider-hint,
+    #admin-legacy-tabs .tracking-admin-block .tracking-shipment-state,
+    #admin-legacy-tabs .tracking-admin-block .tracking-shipment-actions { grid-column:1/-1; }
+    #admin-legacy-tabs .tracking-admin-block h3 { margin:0; color:#283142; font-size:16px; }
+    #admin-legacy-tabs .tracking-admin-block>p { margin:0; color:#636b7b; font-size:13px; line-height:1.5; }
+    #admin-legacy-tabs .tracking-admin-timeline h4 { margin:0 0 13px; color:#283142; font-size:14px; }
+    #admin-legacy-tabs .tracking-shipment-status { background:#f8faf8; border-color:#dbe7dc; }
+    #admin-legacy-tabs .tracking-shipment-state { border-radius:8px; padding:11px 13px; background:#eef4ef; color:#20563d!important; }
+    #admin-legacy-tabs .tracking-shipment-actions { display:flex; flex-wrap:wrap; gap:10px; }
     #admin-legacy-tabs .tracking-admin-timeline ol { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px; margin:0; padding:0; list-style:none; }
     #admin-legacy-tabs .tracking-admin-timeline li { min-width:0; border:1px solid #e3e6ec; border-left:3px solid #648b72; border-radius:8px; padding:10px 11px; background:#fff; color:#394253; font-size:12px; }
     #admin-legacy-tabs .tracking-admin-timeline li strong,
     #admin-legacy-tabs .tracking-admin-timeline li time { display:block; }
     #admin-legacy-tabs .tracking-admin-timeline li strong { margin-bottom:5px; color:#20563d; }
     #admin-legacy-tabs .tracking-admin-timeline li time { color:#737b89; font-size:11px; line-height:1.4; }
-    #admin-legacy-tabs #tracking-edit-message { grid-column:1/-1; margin:0; color:#a23b33; font-size:13px; }
+    #admin-legacy-tabs #tracking-order-message,
+    #admin-legacy-tabs #tracking-shipment-message { margin:0; color:#a23b33; font-size:13px; }
     #admin-legacy-tabs .tracking-admin-dialog form>button.shipping-action { justify-self:start; min-height:40px; }
     #admin-legacy-tabs .tracking-admin-dialog footer { grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; margin:0; border-top:1px solid #e8eaf0; padding-top:16px; }
     #admin-legacy-tabs .tracking-admin-dialog footer button { min-height:42px; padding:0 16px; }
@@ -43,9 +58,18 @@ export function renderOrderTrackingAdminCss(): string {
       #admin-legacy-tabs dialog.tracking-admin-dialog { width:calc(100vw - 20px); max-height:94dvh; border-radius:14px; }
       #admin-legacy-tabs .tracking-admin-dialog form { grid-template-columns:1fr; gap:14px; padding:0 17px 17px; }
       #admin-legacy-tabs .tracking-admin-dialog form>header { margin:0 -17px; padding:17px; }
+      #admin-legacy-tabs .tracking-admin-block,
+      #admin-legacy-tabs .tracking-admin-block .tracking-admin-timeline,
+      #admin-legacy-tabs .tracking-admin-block>p,
+      #admin-legacy-tabs .tracking-admin-block h3,
+      #admin-legacy-tabs .tracking-admin-block #tracking-order-message,
+      #admin-legacy-tabs .tracking-admin-block #tracking-shipment-message,
+      #admin-legacy-tabs .tracking-admin-block .tracking-provider-hint,
+      #admin-legacy-tabs .tracking-admin-block .tracking-shipment-state,
+      #admin-legacy-tabs .tracking-admin-block .tracking-shipment-actions,
       #admin-legacy-tabs .tracking-admin-timeline,
-      #admin-legacy-tabs #tracking-edit-message,
       #admin-legacy-tabs .tracking-admin-dialog footer { grid-column:1; }
+      #admin-legacy-tabs .tracking-admin-block { grid-template-columns:1fr; }
       #admin-legacy-tabs .tracking-admin-timeline ol { grid-template-columns:1fr 1fr; }
     }
     @media(max-width:420px) {

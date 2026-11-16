@@ -132,6 +132,10 @@ export class ShippingPublicApi {
     return this.container.listCarrierShipmentsUseCase.execute(input);
   }
 
+  public getCarrierShipmentForOrder(orderId: string): Promise<CarrierShipment | null> {
+    return this.container.getCarrierShipmentForOrderUseCase.execute(orderId);
+  }
+
   public async markCarrierShipmentPrinted(id: string, actorId: string): Promise<CarrierShipment | null> {
     return this.container.markCarrierShipmentPrintedUseCase.execute(id, actorId);
   }

@@ -11,16 +11,24 @@ export function renderOrderTrackingAdminSection(): string {
     <dialog id="order-tracking-edit-dialog" class="shipping-detail-dialog tracking-admin-dialog" aria-labelledby="tracking-edit-title">
       <form id="order-tracking-edit-form"><header><div><h2 id="tracking-edit-title">Actualizar seguimiento</h2><p id="tracking-edit-customer"></p></div><button class="shipping-modal-close" type="button" data-tracking-action="close" aria-label="Cerrar">×</button></header>
         <input id="tracking-edit-order-id" type="hidden" />
-        <p class="tracking-provider-hint">Al generar o consultar la guía, MiPaquete devuelve la transportadora, el número y el PDF. Aquí se cargan automáticamente; puedes corregirlos si el proveedor informa un dato distinto.</p>
-        <label>Transportadora<input id="tracking-edit-carrier" maxlength="100" placeholder="MiPaquete la informa al generar la guía" /></label>
-        <label>Número de guía<input id="tracking-edit-number" maxlength="120" placeholder="MiPaquete lo informa al generar la guía" /></label>
-        <label>PDF de la guía<input id="tracking-edit-url" type="url" placeholder="Enlace devuelto por MiPaquete" /></label>
-        <label>Fecha estimada de entrega (opcional)<input id="tracking-edit-date" type="date" /><small>MiPaquete entrega un plazo estimado en la cotización; esta fecha exacta solo se completa si el proveedor la informa.</small></label>
-        <section class="tracking-admin-timeline"><h3>Historial del pedido</h3><ol id="tracking-edit-timeline"></ol></section>
-        <label>Estado actual<select id="tracking-edit-status"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
-        <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>
-        <button id="tracking-edit-status-submit" class="shipping-action" type="button" data-tracking-action="save-status">Actualizar estado</button>
-        <p id="tracking-edit-message" role="status"></p><footer><button class="shipping-action" type="button" data-tracking-action="close">Cancelar</button><button class="shipping-action" type="button" data-tracking-action="create-guide">Generar / consultar guía MiPaquete</button><button class="shipping-action primary" type="submit">Guardar seguimiento</button></footer>
+        <section class="tracking-admin-block tracking-order-status"><h3>Estado del pedido</h3><p>Este estado describe la preparación y entrega del pedido; no indica si MiPaquete ya confirmó una guía.</p>
+          <section class="tracking-admin-timeline"><h4>Historial del pedido</h4><ol id="tracking-edit-timeline"></ol></section>
+          <label>Estado del pedido<select id="tracking-edit-status"><option value="placed">Recibido</option><option value="confirmed">Confirmado</option><option value="prepared">Preparado</option><option value="shipped">Enviado</option><option value="delivered">Entregado</option><option value="cancelled">Cancelado</option></select></label>
+          <label>Nota del cambio (opcional)<input id="tracking-edit-status-note" maxlength="300" /></label>
+          <button id="tracking-edit-status-submit" class="shipping-action" type="button" data-tracking-action="save-status">Actualizar estado del pedido</button>
+          <p id="tracking-order-message" role="status"></p>
+        </section>
+        <section class="tracking-admin-block tracking-shipment-status"><h3>Guía y estado del envío</h3><p>Estado independiente del pedido, informado por MiPaquete. Una guía pendiente no debe generarse de nuevo.</p>
+          <p class="tracking-shipment-state"><strong>Estado de la guía:</strong> <span id="tracking-shipment-status">Consultando…</span></p>
+          <p id="tracking-shipment-provider-status" class="tracking-provider-hint" role="status"></p>
+          <label>Transportadora<input id="tracking-edit-carrier" maxlength="100" placeholder="Se completa con la respuesta de MiPaquete" /></label>
+          <label>Número de guía<input id="tracking-edit-number" maxlength="120" placeholder="Se completa cuando MiPaquete confirma la guía" /></label>
+          <label>PDF de la guía<input id="tracking-edit-url" type="url" placeholder="Enlace del PDF devuelto por MiPaquete" /></label>
+          <label>Fecha estimada de entrega (opcional)<input id="tracking-edit-date" type="date" /><small>Completa una fecha exacta solo si el proveedor la informa.</small></label>
+          <p id="tracking-shipment-message" role="status"></p>
+          <div class="tracking-shipment-actions"><button class="shipping-action" type="button" data-tracking-action="create-guide">Generar guía MiPaquete</button><button class="shipping-action primary" type="submit">Guardar datos de guía</button></div>
+        </section>
+        <footer><button class="shipping-action" type="button" data-tracking-action="close">Cerrar</button></footer>
       </form>
     </dialog>
   </section>`;

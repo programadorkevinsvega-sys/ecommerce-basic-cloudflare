@@ -34,6 +34,7 @@ import { ReconcilePendingMiPaqueteShipmentUseCase } from './application/use-case
 import { SyncCarrierLocationsUseCase } from './application/use-cases/SyncCarrierLocationsUseCase.js';
 import { D1FreeShippingRuleRepository } from './infrastructure/persistence/d1/repositories/D1FreeShippingRuleRepository.js';
 import { ManageFreeShippingRulesUseCase } from './application/use-cases/ManageFreeShippingRulesUseCase.js';
+import { GetCarrierShipmentForOrderUseCase } from './application/use-cases/GetCarrierShipmentForOrderUseCase.js';
 
 export interface ShippingModuleContainer {
   carrierApiConfigured: boolean;
@@ -57,6 +58,7 @@ export interface ShippingModuleContainer {
   syncPendingMiPaqueteShipmentsUseCase: SyncPendingMiPaqueteShipmentsUseCase;
   manageCarrierPackageProfilesUseCase: ManageCarrierPackageProfilesUseCase;
   listCarrierShipmentsUseCase: ListCarrierShipmentsUseCase;
+  getCarrierShipmentForOrderUseCase: GetCarrierShipmentForOrderUseCase;
   markCarrierShipmentPrintedUseCase: MarkCarrierShipmentPrintedUseCase;
   syncCarrierLocationsUseCase: SyncCarrierLocationsUseCase;
   manageFreeShippingRulesUseCase: ManageFreeShippingRulesUseCase;
@@ -100,6 +102,7 @@ export function createShippingModule(env: Env): ShippingModuleContainer {
     syncPendingMiPaqueteShipmentsUseCase: new SyncPendingMiPaqueteShipmentsUseCase(carrierShipmentRepo, syncMiPaqueteShipmentUseCase),
     manageCarrierPackageProfilesUseCase: new ManageCarrierPackageProfilesUseCase(carrierConfigRepo),
     listCarrierShipmentsUseCase: new ListCarrierShipmentsUseCase(carrierShipmentRepo),
+    getCarrierShipmentForOrderUseCase: new GetCarrierShipmentForOrderUseCase(carrierShipmentRepo),
     markCarrierShipmentPrintedUseCase: new MarkCarrierShipmentPrintedUseCase(carrierShipmentRepo),
     syncCarrierLocationsUseCase: new SyncCarrierLocationsUseCase(divipolaRepo, carrier),
     manageFreeShippingRulesUseCase: new ManageFreeShippingRulesUseCase(freeShippingRuleRepo),
